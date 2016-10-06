@@ -107,7 +107,7 @@ class Slash(object):
         else:
             return False
 
-    def matches(other):
+    def matches(self, other):
         return self._slash == Slash.Either or \
                 self._slash == other._slash
 
@@ -209,7 +209,7 @@ class Functor(Cat):
             res = self.left.get_substitution(other.left)
         return res
 
-    def matches(other):
+    def matches(self, other):
         return other.is_functor and \
                self.left.matches(other.left) and \
                self.right.matches(other.right) and \
@@ -300,7 +300,7 @@ class Atomic(Cat):
             return self.feat
         return None
 
-    def matches(other):
+    def matches(self, other):
         return not other.is_functor and \
                self.type == other.type and \
                (self.feat == None or \
