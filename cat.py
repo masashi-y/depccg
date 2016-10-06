@@ -8,78 +8,6 @@ WILDCARD = "X"
 bracket_and_quote_cat = ["LRB", "RRB", "LQU", "RQU"]
 cache = {}
 
-def parse(cat):
-    """
-    Args:
-        cat (str)
-    Returns:
-        Cat
-    """
-    if cat in cache:
-        return cache[cat]
-    else:
-        name = utils.drop_brackets(cat)
-        if name in cache:
-            res = cache[name]
-        else:
-            res = parse_uncached(name)
-            if name != cat:
-                cache[name] = res
-        cache[cat] = res
-        return res
-
-
-def parse_uncached(cat):
-    new_cat = cat
-    if new_cat.endswith("}"):
-        open_idx = new_cat.find("{")
-        semantics = new_cat[open_idx + 1:-1]
-        new_cat = new_cat[0:open_idx]
-    else:
-        semantics = None
-
-    if new_cat.startswith("("):
-        close_idx = utils.find_closing_bracket(new_cat, 0)
-
-        if not any(slash in new_cat for slash in "/\\|"):
-            new_cat = new_cat[1:close_idx]
-            res = parse_uncached(new_cat)
-            return res
-
-    end_idx = len(new_cat)
-    op_idx = utils.find_non_nested_char(new_cat, "/\\|")
-
-    if op_idx == -1:
-        # atomic category
-        feat_idx = new_cat.find("[")
-        feats = []
-        base = new_cat if feat_idx == -1 else new_cat[0:feat_idx]
-        while feat_idx > -1:
-            feats.append(new_cat[feat_idx + 1:new_cat.find("]", feat_idx)])
-            feat_idx = new_cat.find("[", feat_idx + 1)
-        if len(feats) > 1:
-            raise RuntimeError("Can only handle single features: " + source)
-
-        feat = None if len(feats) == 0 else feats[0]
-        return Atomic(base, feat, semantics)
-    else:
-        # functor category
-        left = parse(new_cat[:op_idx])
-        slash = Slash(new_cat[op_idx:op_idx + 1])
-        right = parse(new_cat[op_idx + 1:end_idx])
-        return Functor(left, slash, right, semantics)
-
-
-def make_cat(left, op, right):
-    """
-    Args:
-        left (Cat)
-        op (Slash)
-        right (Cat)
-    Returns:
-        (Cat)
-    """
-    parse(left.with_brackets + op + right.with_brackets)
 
 class Slash(object):
     FwdApp = 0
@@ -133,8 +61,81 @@ class Cat(object):
         return self.id
 
     def substitute(self, sub):
-        return parse(self.string.replace(WILDCARD, sub))
+        return Cat.parse(self.string.replace(WILDCARD, sub))
 
+    @staticmethod
+    def parse(cat):
+        """
+        Args:
+            cat (str)
+        Returns:
+            Cat
+        """
+        if cat in cache:
+            return cache[cat]
+        else:
+            name = utils.drop_brackets(cat)
+            if name in cache:
+                res = cache[name]
+            else:
+                res = Cat.parse_uncached(name)
+                if name != cat:
+                    cache[name] = res
+            cache[cat] = res
+            return res
+
+    @staticmethod
+    def parse_uncached(cat):
+        new_cat = cat
+        if new_cat.endswith("}"):
+            open_idx = new_cat.find("{")
+            semantics = new_cat[open_idx + 1:-1]
+            new_cat = new_cat[0:open_idx]
+        else:
+            semantics = None
+
+        if new_cat.startswith("("):
+            close_idx = utils.find_closing_bracket(new_cat, 0)
+
+            if not any(slash in new_cat for slash in "/\\|"):
+                new_cat = new_cat[1:close_idx]
+                res = Cat.parse_uncached(new_cat)
+                return res
+
+        end_idx = len(new_cat)
+        op_idx = utils.find_non_nested_char(new_cat, "/\\|")
+
+        if op_idx == -1:
+            # atomic category
+            feat_idx = new_cat.find("[")
+            feats = []
+            base = new_cat if feat_idx == -1 else new_cat[0:feat_idx]
+            while feat_idx > -1:
+                feats.append(new_cat[feat_idx + 1:new_cat.find("]", feat_idx)])
+                feat_idx = new_cat.find("[", feat_idx + 1)
+            if len(feats) > 1:
+                raise RuntimeError("Can only handle single features: " + source)
+
+            feat = None if len(feats) == 0 else feats[0]
+            return Atomic(base, feat, semantics)
+        else:
+            # functor category
+            left = Cat.parse(new_cat[:op_idx])
+            slash = Slash(new_cat[op_idx:op_idx + 1])
+            right = Cat.parse(new_cat[op_idx + 1:end_idx])
+            return Functor(left, slash, right, semantics)
+
+    @staticmethod
+    def make_cat(left, op, right):
+        """
+        Args:
+            left (Cat)
+            op (Slash)
+            right (Cat)
+        Returns:
+            (Cat)
+        """
+        Cat.parse(left.with_brackets + op + right.with_brackets)
 
 class Functor(Cat):
     def __init__(self, left, slash, right, semantics):
@@ -332,22 +333,22 @@ class Atomic(Cat):
             raise RuntimeError("Only one feat is allowed")
         new_feat = new_feat.replace("/", "")
         new_feat = new_feat.replace("\\", "")
-        return parse("{}[{}]".format(self.type, new_feat))
+        return Cat.parse("{}[{}]".format(self.type, new_feat))
 
     def drop_PP_and_PR_feat(self):
         if self.type == "PP" or self.type == "PR":
-            return parse(self.type)
+            return Cat.parse(self.type)
         else:
             return self
 
-COMMA       = parse(",")
-SEMICOLON   = parse(";")
-CONJ        = parse("conj")
-N           = parse("N")
-LQU         = parse("LQU")
-LRB         = parse("LRB")
-NP          = parse("NP")
-PP          = parse("PP")
-PREPOSITION = parse("PP/NP")
-PR          = parse("PR")
+COMMA       = Cat.parse(",")
+SEMICOLON   = Cat.parse(";")
+CONJ        = Cat.parse("conj")
+N           = Cat.parse("N")
+LQU         = Cat.parse("LQU")
+LRB         = Cat.parse("LRB")
+NP          = Cat.parse("NP")
+PP          = Cat.parse("PP")
+PREPOSITION = Cat.parse("PP/NP")
+PR          = Cat.parse("PR")
 
