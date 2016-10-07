@@ -12,7 +12,7 @@ cache = {}
 class Slash(object):
     FwdApp = 0
     BwdApp = 1
-    Either = 2
+    EitherApp = 2
 
     def __init__(self, string):
         if string == "/":
@@ -20,7 +20,7 @@ class Slash(object):
         elif string == "\\":
             self._slash = Slash.BwdApp
         elif string == "|":
-            self._slash = Slash.Either
+            self._slash = Slash.EitherApp
         else:
             raise RuntimeError("Invalid slash: " + string)
 
@@ -35,8 +35,20 @@ class Slash(object):
         else:
             return False
 
+    @property
+    def Fwd():
+        return Slash("/")
+
+    @staticmethod
+    def Bwd():
+        return Slash("\\")
+
+    @staticmethod
+    def Either():
+        return Slash("|")
+
     def matches(self, other):
-        return self._slash == Slash.Either or \
+        return self._slash == Slash.EitherApp or \
                 self._slash == other._slash
 
 
@@ -126,7 +138,7 @@ class Cat(object):
             return Functor(left, slash, right, semantics)
 
     @staticmethod
-    def make_cat(left, op, right):
+    def make(left, op, right):
         """
         Args:
             left (Cat)
@@ -204,7 +216,7 @@ class Functor(Cat):
         raise NotImplementedError()
 
     @property
-    def get_substitution(self):
+    def get_substitution(self, other):
         res = self.right.get_substitution(other.right)
         if res is None:
             res = self.left.get_substitution(other.left)
@@ -218,9 +230,9 @@ class Functor(Cat):
 
     def replace_arg(self, argn, new_cat):
         if argn == self.n_args:
-            return make_cat(self.left, self.slash, new_cat)
+            return Cat.make(self.left, self.slash, new_cat)
         else:
-            return make_cat(
+            return Cat.make(
                     self.left.replace_arg(argn, new_cat), self.slash, self.right)
 
     def arg(self, argn):
@@ -242,7 +254,7 @@ class Functor(Cat):
                 self.left.is_modifier
 
     def drop_PP_and_PR_feat(self):
-        return make_cat(self.left.drop_PP_and_PR_feat(),
+        return Cat.make(self.left.drop_PP_and_PR_feat(),
                          self.slash,
                          self.right.drop_PP_and_PR_feat())
 
@@ -294,7 +306,7 @@ class Atomic(Cat):
         return 0
 
     @property
-    def get_substitution(self):
+    def get_substitution(self, other):
         if self.feat == WILDCARD:
             return other.feat
         elif other.feat == WILDCARD:
