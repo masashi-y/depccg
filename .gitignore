@@ -2,4 +2,4 @@
 *.pyc
 build
 __pycache__
-
+*.c
