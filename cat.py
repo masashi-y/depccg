@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 import utils
 import re
@@ -35,7 +36,7 @@ class Slash(object):
         else:
             return False
 
-    @property
+    @staticmethod
     def Fwd():
         return Slash("/")
 
@@ -73,6 +74,8 @@ class Cat(object):
         return self.id
 
     def substitute(self, sub):
+        if sub is None:
+            return self
         return Cat.parse(self.string.replace(WILDCARD, sub))
 
     @staticmethod
@@ -147,7 +150,7 @@ class Cat(object):
         Returns:
             (Cat)
         """
-        Cat.parse(left.with_brackets + op + right.with_brackets)
+        return Cat.parse(left.with_brackets + str(op) + right.with_brackets)
 
 class Functor(Cat):
     def __init__(self, left, slash, right, semantics):
@@ -215,7 +218,6 @@ class Functor(Cat):
     def type(self):
         raise NotImplementedError()
 
-    @property
     def get_substitution(self, other):
         res = self.right.get_substitution(other.right)
         if res is None:
@@ -305,7 +307,6 @@ class Atomic(Cat):
     def n_args(self):
         return 0
 
-    @property
     def get_substitution(self, other):
         if self.feat == WILDCARD:
             return other.feat

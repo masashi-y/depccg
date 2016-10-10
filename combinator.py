@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from cat import Cat, Slash
 import cat
@@ -26,7 +27,6 @@ class RuleProduction(object):
 
 
 class Combinator(object):
-    STANDARD_COMBINATORS = []
     def __init__(self, rule_type):
         self.rule_type = rule_type
 
@@ -71,6 +71,9 @@ class Combinator(object):
                     rule.apply(left, right), c.head_is_left(left, right)))
         return res
 
+    def __str__(self):
+        return "<*>"
+
 
 class Conjunction(Combinator):
     """
@@ -87,6 +90,9 @@ class Conjunction(Combinator):
     """
     def __init__(self):
         super(Conjunction, self).__init__(RuleType.CONJ)
+
+    def __str__(self):
+        return "<Φ>"
 
     def can_apply(self, left, right):
         """
@@ -105,12 +111,12 @@ class Conjunction(Combinator):
         if Cat.parse("NP\\NP").matches(right):
             return False
 
-        return (self.left == cat.CONJ or \
-                self.left == cat.COMMA or \
-                self.left == cat.SEMICOLON) and \
-                not self.right.is_punct and \
-                not self.right.is_type_raised and \
-                not (not self.right.is_functor and self.right.type == "N")
+        return (left == cat.CONJ or \
+                left == cat.COMMA or \
+                left == cat.SEMICOLON) and \
+                not right.is_punct and \
+                not right.is_type_raised and \
+                not (not right.is_functor and right.type == "N")
 
 
     def head_is_left(self, left, right):
@@ -124,6 +130,9 @@ class RemovePunctuation(Combinator):
     def __init__(self, punct_is_left):
         super(RemovePunctuation, self).__init__(RuleType.RP)
         self.punct_is_left = punct_is_left
+
+    def __str__(self):
+        return "<Rmp>"
 
     def can_apply(self, left, right):
         """
@@ -147,6 +156,9 @@ class RemovePunctuationLeft(Combinator):
     def __init__(self):
         super(RemovePunctuationLeft, self).__init__(RuleType.LP)
 
+    def __str__(self):
+        return "<Rmp>"
+
     def can_apply(self, left, right):
         return left == cat.LQU or left == cat.LRB
 
@@ -165,6 +177,9 @@ class SpecialCombinator(Combinator):
         self.result = result
         self.head_is_left = head_is_left
 
+    def __str__(self):
+        return "<Sp>"
+
     def can_apply(self, left, right):
         return self.left.matches(left) and \
                 self.right.matches(right)
@@ -180,8 +195,11 @@ class ForwardApplication(Combinator):
     def __init__(self):
         super(ForwardApplication, self).__init__(RuleType.FA)
 
+    def __str__(self):
+        return ">"
+
     def can_apply(self, left, right):
-        return self.left.is_functor and \
+        return left.is_functor and \
                 left.slash == Slash.Fwd() and \
                 left.right.matches(right)
 
@@ -200,6 +218,9 @@ class ForwardApplication(Combinator):
 class BackwardApplication(Combinator):
     def __init__(self):
         super(BackwardApplication, self).__init__(RuleType.BA)
+
+    def __str__(self):
+        return "<"
 
     def can_apply(self, left, right):
         return right.is_functor and \
@@ -223,7 +244,10 @@ class ForwardComposition(Combinator):
         super(ForwardComposition, self).__init__(RuleType.FC)
         self.left_slash = left
         self.right_slash = right
-        self.result_slash = result
+        self.result_slash = slash
+
+    def __str__(self):
+        return ">B"
 
     def can_apply(self, left, right):
         return left.is_functor and \
@@ -236,10 +260,10 @@ class ForwardComposition(Combinator):
         return not ( left.is_modifier or left.is_type_raised )
 
     def apply(self, left, right):
-        result = right if left.is_modifier else \
+        res = right if left.is_modifier else \
                 Cat.make(left.left, self.result_slash, right.right)
         return Combinator.correct_wildcard_features(
-                result, right.left, left.right)
+                res, right.left, left.right)
 
 
 class BackwardComposition(Combinator):
@@ -250,7 +274,10 @@ class BackwardComposition(Combinator):
         super(BackwardComposition, self).__init__(RuleType.BX)
         self.left_slash = left
         self.right_slash = right
-        self.result_slash = result
+        self.result_slash = slash
+
+    def __str__(self):
+        return "<B"
 
     def can_apply(self, left, right):
         return left.is_functor and \
@@ -267,7 +294,7 @@ class BackwardComposition(Combinator):
         res = left if right.is_modifier else \
                 Cat.make(right.left, self.result_slash, left.right)
         return Combinator.correct_wildcard_features(
-                result, left.left, right.right)
+                res, left.left, right.right)
 
 
 class GeneralizedForwardComposition(Combinator):
@@ -278,7 +305,10 @@ class GeneralizedForwardComposition(Combinator):
         super(GeneralizedForwardComposition, self).__init__(RuleType.GFC)
         self.left_slash = left
         self.right_slash = right
-        self.result_slash = result
+        self.result_slash = slash
+
+    def __str__(self):
+        return ">Bx"
 
     def can_apply(self, left, right):
         if left.is_functor and \
@@ -299,7 +329,7 @@ class GeneralizedForwardComposition(Combinator):
             left.left, self.result_slash, right.left.right),
             right.slash, right.right)
         return Combinator.correct_wildcard_features(
-                result, right.left.left, left.right)
+                res, right.left.left, left.right)
 
 
 class GeneralizedBackwardComposition(Combinator):
@@ -310,7 +340,10 @@ class GeneralizedBackwardComposition(Combinator):
         super(GeneralizedBackwardComposition, self).__init__(RuleType.GBX)
         self.left_slash = left
         self.right_slash = right
-        self.result_slash = result
+        self.result_slash = slash
+
+    def __str__(self):
+        return "<Bx"
 
     def can_apply(self, left, right):
         if left.is_functor and \
@@ -332,6 +365,16 @@ class GeneralizedBackwardComposition(Combinator):
                     right.left, self.result_slash, left.left.right),
                 left.slash, left.right)
         return Combinator.correct_wildcard_features(
-                result, left.left.left, right.right)
+                res, left.left.left, right.right)
 
 
+standard_combinators = \
+    [Conjunction(),
+    RemovePunctuation(False),
+    RemovePunctuationLeft(),
+    ForwardApplication(),
+    BackwardApplication(),
+    ForwardComposition(Slash.Fwd(), Slash.Fwd(), Slash.Fwd()),
+    BackwardComposition(Slash.Fwd(), Slash.Bwd(), Slash.Fwd()),
+    GeneralizedForwardComposition(Slash.Fwd(), Slash.Fwd(), Slash.Fwd()),
+    GeneralizedBackwardComposition(Slash.Fwd(), Slash.Bwd(), Slash.Fwd())]
