@@ -15,18 +15,54 @@ from chainer.training import extensions
 lpad = "LPAD", "PAD", "0"
 rpad = "RPAD", "PAD", "0"
 
+# class CCGBankDataset(chainer.dataset.DatasetMixin):
+#     def __init__(self, model_path):
+#         self.model_path = model_path
+#         self.dataset = np.load(os.path.join(model_path, "traindata.npz"))
+#         self.xs = self.dataset["xs"]
+#         self.ts = self.dataset["ts"]
+#
+#     def __len__(self):
+#         return len(self.xs)
+#
+#     def get_example(self, i):
+#         return self.xs[i], self.ts[i]
+
+
 class CCGBankDataset(chainer.dataset.DatasetMixin):
-    def __init__(self, model_path):
+    def __init__(self, model_path, samples_path):
         self.model_path = model_path
-        self.dataset = np.load(os.path.join(model_path, "traindata.npz"))
-        self.xs = self.dataset["xs"]
-        self.ts = self.dataset["ts"]
+        self.words = self._read(os.path.join(model_path, "words.txt"))
+        self.suffixes = self._read(os.path.join(model_path, "suffixes.txt"))
+        self.caps = self._read(os.path.join(model_path, "caps.txt"))
+        self.targets = self._read(os.path.join(model_path, "target.txt"))
+        self.samples = open(samples_path).readlines()
+        self.unk_word = self.words["*UNKNOWN*"]
+        self.unk_suffix = self.suffixes["NN"]
 
     def __len__(self):
-        return len(self.xs)
+        return len(self.samples)
 
     def get_example(self, i):
-        return self.xs[i], self.ts[i]
+        line = self.samples[i]
+        items = line.strip().split(" ")
+        t = np.asarray(self.targets.get(items[-1], -1), 'i')
+        # t = np.int(self.targets.get(items[-1], -1))
+        x = np.zeros((3 * 7), "i")
+        for i, item in enumerate(items[:-1]):
+            word, suffix, cap = item.split("|")
+            x[i] = self.words.get(word, self.unk_word)
+            x[7 + i] = self.suffixes.get(suffix, self.unk_suffix)
+            x[14 + i] = self.caps[cap]
+        return x, t
+
+    def _read(self, path):
+        res = {}
+        for line in open(path):
+            i, word, _ = line.strip().split(" ")
+            res[word] = int(i)
+        return res
+
 
 class EmbeddingTagger(chainer.Chain):
     """
@@ -73,8 +109,11 @@ class EmbeddingTagger(chainer.Chain):
         chainer.report({
             "loss": loss,
             "accuracy": acc
-            })
+            }, self)
         return loss
+
+    def predict(self, tokens):
+        pass
 
     @staticmethod
     def _read_pretrained_embeddings(filepath):
@@ -176,24 +215,29 @@ def feature_extract(leaf):
 def train(args):
     embed_path = os.path.join(args.path, "embeddings-scaled.EMBEDDING_SIZE=50.vectors")
     model = EmbeddingTagger(args.path, embed_path, 20, 30)
-    train = CCGBankDataset(args.path)
+    train = CCGBankDataset(args.path, "data/traindata.txt")
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
+    val = CCGBankDataset(args.path, "data/valdata.txt")
+    val_iter = chainer.iterators.SerialIterator(
+            val, args.batchsize, repeat=False, shuffle=False)
     optimizer = chainer.optimizers.MomentumSGD(lr=0.01, momentum=0.9)
     optimizer.setup(model)
     updater = training.StandardUpdater(train_iter, optimizer)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.outdir)
 
-    val_interval = 100000, 'iteration'
-    log_interval = 1000, 'iteration'
+    val_interval = 5000, 'iteration'
+    log_interval = 200, 'iteration'
+    val_model = model.copy()
 
-    # trainer.extend(extensions.dump_graph('main/loss'))
+    trainer.extend(extensions.Evaluator(val_iter, val_model), trigger=val_interval)
+    trainer.extend(extensions.dump_graph('main/loss'))
     trainer.extend(extensions.snapshot(), trigger=val_interval)
     trainer.extend(extensions.snapshot_object(
         model, 'model_iter_{.updater.iteration}'), trigger=val_interval)
     trainer.extend(extensions.LogReport(trigger=log_interval))
     trainer.extend(extensions.PrintReport([
         'epoch', 'iteration', 'main/loss', 'validation/main/loss',
-        'main/accuracy', 'validation/main/accuracy'
+        'main/accuracy', 'validation/main/accuracy',
     ]), trigger=log_interval)
     trainer.extend(extensions.ProgressBar(update_interval=10))
 
@@ -215,7 +259,7 @@ if __name__ == "__main__":
     parser.add_argument("--outdir",
             help="output directory path")
     parser.add_argument("--batchsize",
-            default=1000, help="batch size")
+            type=int, default=1000, help="batch size")
     parser.add_argument("--epoch",
             default=20, help="epoch")
     parser.set_defaults(train=True)
