@@ -1,6 +1,7 @@
 data
 *.so
 *.pyc
+*.swp
 build
 __pycache__
 *.c
