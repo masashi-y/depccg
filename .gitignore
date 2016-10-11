@@ -3,5 +3,6 @@ data
 *.pyc
 *.swp
 build
+result
 __pycache__
 *.c
