@@ -132,7 +132,7 @@ class RemovePunctuation(Combinator):
         self.punct_is_left = punct_is_left
 
     def __str__(self):
-        return "<Rmp>"
+        return "<*>"
 
     def can_apply(self, left, right):
         """
@@ -157,7 +157,7 @@ class RemovePunctuationLeft(Combinator):
         super(RemovePunctuationLeft, self).__init__(RuleType.LP)
 
     def __str__(self):
-        return "<Rmp>"
+        return "<*>"
 
     def can_apply(self, left, right):
         return left == cat.LQU or left == cat.LRB

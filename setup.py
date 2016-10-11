@@ -7,7 +7,13 @@ from Cython.Distutils import build_ext
 ext_modules = [
         Extension("utils",
                   ["utils.pyx"],
-                  )
+                  ),
+        Extension("astar",
+                  ["astar.pyx"],
+                  ),
+        Extension("pqueue",
+                  ["pqueue.pyx"],
+                  ),
         ]
 
 setup(

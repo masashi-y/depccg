@@ -129,7 +129,7 @@ class Cat(object):
                 feats.append(new_cat[feat_idx + 1:new_cat.find("]", feat_idx)])
                 feat_idx = new_cat.find("[", feat_idx + 1)
             if len(feats) > 1:
-                raise RuntimeError("Can only handle single features: " + source)
+                raise RuntimeError("Can only handle single features: " + cat)
 
             feat = None if len(feats) == 0 else feats[0]
             return Atomic(base, feat, semantics)

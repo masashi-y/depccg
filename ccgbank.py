@@ -6,7 +6,13 @@ class AutoReader(object):
     def __init__(self, filename):
         self.lines = open(filename).readlines()
 
-    def readall(self):
+    def readall(self, suppress_error=False):
+        """
+        Inputs:
+        suppress_error (bool): Some CCGbank annotations are not supported and
+            can raise RuntimeError in Tree.parse. Setting this option True
+            suppresss the error and ignores the sentence with that annotation.
+        """
         res = {}
         for line in self.lines:
             line = line.strip()
@@ -14,8 +20,14 @@ class AutoReader(object):
             if line.startswith("ID"):
                 key = line
             else:
-                tree = Tree.parse(AutoLineReader(line))
-                res[key] = tree
+                try:
+                    tree = Tree.parse(AutoLineReader(line))
+                    res[key] = tree
+                except RuntimeError as e:
+                    if suppress_error:
+                        continue
+                    else:
+                        raise e
         return res.values()
 
 class AutoLineReader(object):
@@ -106,7 +118,7 @@ class Tree(object):
 
     def resolve_op(self, ops):
         if len(self.children) == 1:
-            self.op = "<Un>"
+            self.op = "<U>"
         else:
             left, right = self.children
             for op in ops:
@@ -115,7 +127,7 @@ class Tree(object):
                     self.op = op
                     break
             if self.op is None:
-                self.op = "<UNK>"
+                self.op = "<?>"
 
 def resolve_op(tree, ops):
     tree.resolve_op(ops)

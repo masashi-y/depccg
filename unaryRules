@@ -1,0 +1,26 @@
+# Unary type-changing rules, which allow the left hand category to convert to the right hand category.
+# There's plenty of scope for improving these.
+
+# Rule used to allow nouns to become noun-phrases without needed a determiner.
+N       NP
+
+# Relativization, as in "the boy playing tennis"    
+S[pss]\NP      NP\NP
+S[ng]\NP       NP\NP
+S[adj]\NP      NP\NP
+S[to]\NP       NP\NP
+S[to]\NP       N\N
+S[dcl]/NP       NP\NP
+
+# Rules that let verb-phrases modify sentences, as in "Born in Hawaii, Obama is the 44th president."
+S[pss]\NP      S/S
+S[ng]\NP       S/S
+S[to]\NP       S/S
+S[ng]\NP       S\S
+
+S[ng]\NP       NP
+
+# Type raising
+NP      S[X]/(S[X]\NP)
+NP      (S[X]\NP)\((S[X]\NP)/NP)
+PP      (S[X]\NP)\((S[X]\NP)/PP)
