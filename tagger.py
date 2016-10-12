@@ -6,6 +6,7 @@ import numpy as np
 from ccgbank import Leaf, AutoReader, get_leaves
 from utils import get_context_by_window
 import chainer
+import multiprocessing
 import chainer.functions as F
 import chainer.links as L
 from chainer import training, Variable
@@ -14,6 +15,14 @@ from chainer.training import extensions
 
 lpad = "LPAD", "PAD", "0"
 rpad = "RPAD", "PAD", "0"
+
+re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
+            "test": re.compile(r"wsj_23..\.auto"),
+            "val": re.compile(r"wsj_00..\.auto"),
+            "all": re.compile(r"wsj_....\.auto") }
+
+num = re.compile(r"[0-9]+")
+
 
 # class CCGBankDataset(chainer.dataset.DatasetMixin):
 #     def __init__(self, model_path):
@@ -29,16 +38,27 @@ rpad = "RPAD", "PAD", "0"
 #         return self.xs[i], self.ts[i]
 
 
+def read_model_defs(path):
+    """
+    input file is made up of lines, "ITEM FREQUENCY".
+    """
+    res = {}
+    for i, line in enumerate(open(path)):
+        word, _ = line.strip().split(" ")
+        res[word] = i
+    return res
+
+
 class CCGBankDataset(chainer.dataset.DatasetMixin):
     def __init__(self, model_path, samples_path):
         self.model_path = model_path
-        self.words = self._read(os.path.join(model_path, "words.txt"))
-        self.suffixes = self._read(os.path.join(model_path, "suffixes.txt"))
-        self.caps = self._read(os.path.join(model_path, "caps.txt"))
-        self.targets = self._read(os.path.join(model_path, "target.txt"))
+        self.words = read_model_defs(os.path.join(model_path, "words.txt"))
+        self.suffixes = read_model_defs(os.path.join(model_path, "suffixes.txt"))
+        self.caps = read_model_defs(os.path.join(model_path, "caps.txt"))
+        self.targets = read_model_defs(os.path.join(model_path, "target.txt"))
         self.samples = open(samples_path).readlines()
         self.unk_word = self.words["*UNKNOWN*"]
-        self.unk_suffix = self.suffixes["NN"]
+        self.unk_suffix = self.suffixes["UNK"]
 
     def __len__(self):
         return len(self.samples)
@@ -55,13 +75,6 @@ class CCGBankDataset(chainer.dataset.DatasetMixin):
             x[7 + i] = self.suffixes.get(suffix, self.unk_suffix)
             x[14 + i] = self.caps[cap]
         return x, t
-
-    def _read(self, path):
-        res = {}
-        for line in open(path):
-            i, word, _ = line.strip().split(" ")
-            res[word] = int(i)
-        return res
 
 
 class EmbeddingTagger(chainer.Chain):
@@ -130,15 +143,16 @@ class EmbeddingTagger(chainer.Chain):
         io.close()
         return res
 
-def compress_traindata(trainfile, outdir, vocabfile):
+def compress_traindata(args):
     words = OrderedDict()
     print "reading embedding vocabulary"
-    for word in open(vocabfile):
+    for word in open(args.vocab):
         words[word.strip()] = 1
     suffixes = defaultdict(int)
+    suffixes["UNK"] = 1
     caps = defaultdict(int)
     target = defaultdict(int)
-    traindata = open(trainfile)
+    traindata = open(args.path)
     len_traindata = 0
     print "reading training file"
     for line in traindata:
@@ -157,47 +171,83 @@ def compress_traindata(trainfile, outdir, vocabfile):
         print "writing to {}".format(outfile)
         res = {}
         with open(outfile, "w") as out:
-            for i, (item, n) in enumerate(d.items()):
+            i = 0
+            for item, n in d.items():
                 if freq_cut <= n:
-                    out.write("{} {} {}\n".format(i, item, n))
+                    out.write("{} {}\n".format(item, n))
                     res[item] = i
+                    i += 1
         return res
-    word2id = out_dict(words, os.path.join(outdir, "words.txt"))
-    suffix2id = out_dict(suffixes, os.path.join(outdir, "suffixes.txt"))
-    cap2id = out_dict(caps, os.path.join(outdir, "caps.txt"))
-    target2id = out_dict(target, os.path.join(outdir, "target.txt"), freq_cut=10)
+    word2id = out_dict(words, os.path.join(args.out, "words.txt"))
+    suffix2id = out_dict(suffixes, os.path.join(args.out, "suffixes.txt"))
+    cap2id = out_dict(caps, os.path.join(args.out, "caps.txt"))
+    target2id = out_dict(target, os.path.join(args.out, "target.txt"), freq_cut=10)
     traindata.seek(0)
+    new_traindata = os.path.join(args.out, "traindata.txt")
+    print "writing to {}".format(new_traindata)
+    with open(new_traindata, "w") as out:
+        for i, line in enumerate(traindata):
+            items = line.strip().split(" ")
+            if not target2id.has_key(items[-1]):
+                continue
+            target =items[-1]
+            new_line = ""
+            for j, item in enumerate(items[:-1]):
+                word, suffix, cap = item.split("|")
+                if not word2id.has_key(word):
+                    word = "*UNKNOWN*"
+                if not suffix2id.has_key(suffix):
+                    suffix = "UNK"
+                new_line += "|".join([word, suffix, cap]) + " "
+            out.write(new_line + target + "\n")
      # (word_id, suffix_id, cap_id) * 7 tokens
-    xs = np.zeros(
-            (len_traindata + 1, 3 * 7), dtype='i')
-    ts = np.zeros(len_traindata + 1, dtype='i')
-    print "creating traindata.npz"
-    for i, line in enumerate(traindata):
-        items = line.strip().split(" ")
-        target_id = target2id[items[-1]]
-        ts[i] = target_id
-        for j, item in enumerate(items[:-1]):
-            word, suffix, cap = item.split("|")
-            xs[i, j] = word2id[word]
-            xs[i, 7 + j] = suffix2id[suffix]
-            xs[i, 14 + j] = cap2id[cap]
-    np.savez(
-            os.path.join(outdir, "traindata.npz"), xs=xs, ts=ts)
+    # xs = np.zeros(
+    #         (len_traindata + 1, 3 * 7), dtype='i')
+    # ts = np.zeros(len_traindata + 1, dtype='i')
+    # print "creating traindata.npz"
+    # for i, line in enumerate(traindata):
+    #     items = line.strip().split(" ")
+    #     target_id = target2id[items[-1]]
+    #     ts[i] = target_id
+    #     for j, item in enumerate(items[:-1]):
+    #         word, suffix, cap = item.split("|")
+    #         xs[i, j] = word2id[word]
+    #         xs[i, 7 + j] = suffix2id[suffix]
+    #         xs[i, 14 + j] = cap2id[cap]
+    # np.savez(
+    #         os.path.join(args.out, "traindata.npz"), xs=xs, ts=ts)
 
 
-def create_traindata(autofile, outdir, window_size=3):
-    outpath = os.path.join(outdir, os.path.basename(autofile))
-    with open(outpath, "w") as out:
-        for tree in AutoReader(autofile).readall(suppress_error=True):
-            leaves = get_leaves(tree)
-            feats = map(feature_extract, leaves)
-            contexts = get_context_by_window(
-                    feats, window_size, lpad=lpad, rpad=rpad)
-            for leaf, context in zip(leaves, contexts):
-                out.write(" ".join(map(lambda c: "|".join(c), context)))
-                out.write(" {}\n".format(leaf.cat))
+def _worker(inp):
+    autofile, window_size = inp
+    res = []
+    for tree in AutoReader(autofile).readall(suppress_error=True):
+        leaves = get_leaves(tree)
+        feats = map(feature_extract, leaves)
+        contexts = get_context_by_window(
+                feats, window_size, lpad=lpad, rpad=rpad)
+        for leaf, context in zip(leaves, contexts):
+            res.append(" ".join(map(lambda c: "|".join(c), context)) + \
+                    " " + str(leaf.cat) + "\n")
+    return res
 
-num = re.compile(r"[0-9]+")
+
+def create_traindata(args):
+    matcher = re_subset[args.subset]
+    autos = []
+    for root, dirs, files in os.walk(args.path):
+        for autofile in files:
+            if matcher.match(autofile):
+                autos.append(
+                        (os.path.join(root, autofile), args.windowsize))
+    n_process = multiprocessing.cpu_count()
+    p = multiprocessing.Pool(n_process)
+    with open(args.out, "w") as out:
+        for lines in p.map(_worker, autos):
+            for line in lines:
+                out.write(line)
+
+
 def feature_extract(leaf):
     if leaf is lpad or leaf is rpad:
         return leaf.word, "PAD", "0"
@@ -212,18 +262,18 @@ def feature_extract(leaf):
     suffix = normalizd.ljust(2, "_")[-2:]
     return normalizd, suffix, str(isupper)
 
+
 def train(args):
-    embed_path = os.path.join(args.path, "embeddings-scaled.EMBEDDING_SIZE=50.vectors")
-    model = EmbeddingTagger(args.path, embed_path, 20, 30)
-    train = CCGBankDataset(args.path, "data/traindata.txt")
+    model = EmbeddingTagger(args.model, args.embed, 20, 30)
+    train = CCGBankDataset(args.model, args.train)
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    val = CCGBankDataset(args.path, "data/valdata.txt")
+    val = CCGBankDataset(args.model, args.val)
     val_iter = chainer.iterators.SerialIterator(
             val, args.batchsize, repeat=False, shuffle=False)
     optimizer = chainer.optimizers.MomentumSGD(lr=0.01, momentum=0.9)
     optimizer.setup(model)
     updater = training.StandardUpdater(train_iter, optimizer)
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.outdir)
+    trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)
 
     val_interval = 5000, 'iteration'
     log_interval = 200, 'iteration'
@@ -243,31 +293,58 @@ def train(args):
 
     trainer.run()
 
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
                 "CCG parser's supertag tagger")
-    parser.add_argument("path", help="Path to auto file")
-    parser.add_argument("--create", action='store_true',
-            help="create training data")
-    parser.add_argument("--train", action='store_true',
-            help="train")
-    parser.add_argument("--compress", action='store_true',
-            help="compress training data")
-    parser.add_argument("--vocab",
-            help="embedding vocab file")
-    parser.add_argument("--outdir",
-            help="output directory path")
-    parser.add_argument("--batchsize",
-            type=int, default=1000, help="batch size")
-    parser.add_argument("--epoch",
-            default=20, help="epoch")
-    parser.set_defaults(train=True)
-    args = parser.parse_args()
+    subparsers = parser.add_subparsers()
 
-    if args.train:
-        train(args)
-    elif args.create:
-        create_traindata(args.path, args.outdir)
-    elif args.compress:
-        compress_traindata(args.path, args.outdir, args.vocab)
+    # Creating training data from CCGBank AUTO files
+    parser_c = subparsers.add_parser(
+            "create", help="create tagger input data")
+    parser_c.add_argument("path",
+            help="path to AUTO directory")
+    parser_c.add_argument("out",
+            help="output file path")
+    parser_c.add_argument("--windowsize",
+            type=int, default=3,
+            help="window size to extract features")
+    parser_c.add_argument("--subset",
+            choices=["train", "val", "test", "all"],
+            default="train",
+            help="train: 02-21, val: 00, test: 23, (default: train)")
+    parser_c.set_defaults(func=create_traindata)
+
+    # Do training using training data created through `create`
+    parser_t = subparsers.add_parser(
+            "train", help="train supertagger model")
+    parser_t.add_argument("model",
+            help="path to model directory")
+    parser_t.add_argument("embed",
+            help="path to embedding file")
+    parser_t.add_argument("vocab",
+            help="path to embedding vocab file")
+    parser_t.add_argument("train",
+            help="training data file path")
+    parser_t.add_argument("val",
+            help="validation data file path")
+    parser_t.add_argument("--batchsize",
+            type=int, default=1000, help="batch size")
+    parser_t.add_argument("--epoch",
+            default=20, help="epoch")
+    parser_t.set_defaults(func=train)
+
+    # Compress
+    parser_co = subparsers.add_parser(
+            "compress", help="compress tagger input data")
+    parser_co.add_argument("path",
+            help="path to a file to compress")
+    parser_co.add_argument("out",
+            help="output directory path")
+    parser_co.add_argument("vocab",
+            help="embedding vocabulary file")
+    parser_co.set_defaults(func=compress_traindata)
+
+    args = parser.parse_args()
+    args.func(args)
