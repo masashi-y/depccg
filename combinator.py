@@ -67,8 +67,9 @@ class Combinator(object):
         res = []
         for rule in rules:
             if rule.can_apply(left, right):
-                res.append(RuleProduction(rule.rule_type,
-                    rule.apply(left, right), c.head_is_left(left, right)))
+                res.append(rule.rule_type,
+                    rule.apply(left, right),
+                    rule.head_is_left(left, right))
         return res
 
     def __str__(self):

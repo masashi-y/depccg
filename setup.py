@@ -10,6 +10,8 @@ ext_modules = [
                   ),
         Extension("astar",
                   ["astar.pyx"],
+                  language="c++",
+                  libraries=["m"]
                   ),
         Extension("pqueue",
                   ["pqueue.pyx"],

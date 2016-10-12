@@ -4,7 +4,7 @@ import re
 from collections import defaultdict, OrderedDict
 import numpy as np
 from ccgbank import Leaf, AutoReader, get_leaves
-from utils import get_context_by_window
+from utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
 import chainer
 import multiprocessing
 import chainer.functions as F
@@ -22,31 +22,6 @@ re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
             "all": re.compile(r"wsj_....\.auto") }
 
 num = re.compile(r"[0-9]+")
-
-def read_pretrained_embeddings(filepath):
-    io = open(filepath)
-    dim = len(io.readline().split())
-    io.seek(0)
-    nvocab = sum(1 for line in io)
-    io.seek(0)
-    res = np.empty((nvocab, dim), dtype=np.float32)
-    for i, line in enumerate(io):
-        line = line.strip()
-        if len(line) == 0: continue
-        res[i] = line.split()
-    io.close()
-    return res
-
-
-def read_model_defs(path):
-    """
-    input file is made up of lines, "ITEM FREQUENCY".
-    """
-    res = {}
-    for i, line in enumerate(open(path)):
-        word, _ = line.strip().split(" ")
-        res[word] = i
-    return res
 
 
 class CCGBankDataset(chainer.dataset.DatasetMixin):
@@ -67,7 +42,7 @@ class CCGBankDataset(chainer.dataset.DatasetMixin):
         line = self.samples[i]
         items = line.strip().split(" ")
         t = np.asarray(self.targets.get(items[-1], -1), 'i')
-        # t = np.int(self.targets.get(items[-1], -1))
+
         x = np.zeros((3 * 7), "i")
         for i, item in enumerate(items[:-1]):
             word, suffix, cap = item.split("|")
@@ -83,20 +58,26 @@ class EmbeddingTagger(chainer.Chain):
     A* CCG Parsing with a Supertag-factored Model, Lewis and Steedman, EMNLP 2014
     """
     def __init__(self, model_path, embed_path, caps_dim, suffix_dim):
+        self.words = read_model_defs(os.path.join(model_path, "words.txt"))
+        self.suffixes = read_model_defs(os.path.join(model_path, "suffixes.txt"))
+        self.caps = read_model_defs(os.path.join(model_path, "caps.txt"))
+        self.targets = read_model_defs(os.path.join(model_path, "target.txt"))
+
+        self.unk_word = self.words["*UNKNOWN*"]
+        self.unk_suffix = self.suffixes["UNK"]
+
         emb_w = read_pretrained_embeddings(embed_path)
-        nwords = sum(1 for line in open(os.path.join(model_path, "words.txt")))
-        new_emb_w = 0.02 * np.random.random_sample((nwords, emb_w.shape[1])).astype('f') - 0.01
+        new_emb_w = 0.02 * np.random.random_sample(
+                (len(self.words), emb_w.shape[1])).astype('f') - 0.01
         for i in xrange(len(emb_w)):
             new_emb_w[i] = emb_w[i]
 
-        ncaps = sum(1 for line in open(os.path.join(model_path, "caps.txt")))
-        nsuffixes = sum(1 for line in open(os.path.join(model_path, "suffixes.txt")))
-        ntargets  = sum(1 for line in open(os.path.join(model_path, "target.txt")))
+        in_dim = 7 * (new_emb_w.shape[1] + caps_dim + suffix_dim)
         super(EmbeddingTagger, self).__init__(
                 emb_word=L.EmbedID(*new_emb_w.shape, initialW=new_emb_w),
-                emb_caps=L.EmbedID(ncaps, caps_dim),
-                emb_suffix=L.EmbedID(nsuffixes, suffix_dim),
-                linear=L.Linear(7 * (new_emb_w.shape[1] + caps_dim + suffix_dim), ntargets),
+                emb_caps=L.EmbedID(len(self.caps), caps_dim),
+                emb_suffix=L.EmbedID(len(self.suffixes), suffix_dim),
+                linear=L.Linear(in_dim, len(self.targets)),
                 )
 
     def __call__(self, xs, ts):
@@ -126,7 +107,57 @@ class EmbeddingTagger(chainer.Chain):
         return loss
 
     def predict(self, tokens):
-        pass
+        """
+        Inputs:
+            tokens (list[str])
+        Returns
+            list[Leaf]
+        """
+        contexts = get_context_by_window(
+                map(feature_extract, tokens), 3, lpad=lpad, rpad=rpad)
+
+        words = np.zeros((len(tokens), 7), 'i')
+        suffixes = np.zeros((len(tokens), 7), 'i')
+        caps = np.zeros((len(tokens), 7), 'i')
+        for i, context in enumerate(contexts):
+            w, s, c = zip(*context)
+            words[i] = map(lambda x:
+                    self.words.get(x, self.unk_word), w)
+            suffixes[i] = map(lambda x:
+                    self.suffixes.get(x, self.unk_suffix), s)
+            caps[i] = map(lambda x:
+                    self.caps[x], c)
+
+        h_w = self.emb_word(np.asarray(words, "i"))
+        h_c = self.emb_caps(np.asarray(caps, "i"))
+        h_s = self.emb_suffix(np.asarray(suffixes, "i"))
+        h = F.concat([h_w, h_c, h_s], 2)
+        batchsize, ntokens, hidden = h.data.shape
+        h = F.reshape(h, (batchsize, ntokens * hidden))
+        ys = self.linear(h)
+        return ys.data
+
+    @property
+    def cats(self):
+        return zip(*sorted(self.targets.items(), key=lambda x: x[1]))[0]
+
+class ScoredLeaf(Leaf):
+    def __init__(self, word, cat, score):
+        super(ScoredLeaf, self).__init__(
+                word, cat, None)
+        self.score = score
+
+
+def feature_extract(word_str):
+    isupper = "1" if word_str.isupper() else "0"
+    normalizd = word_str.lower()
+    normalizd = num.sub("#", normalizd)
+    if normalizd == "-lrb-":
+        normalizd = "("
+    elif normalizd == "-rrb-":
+        normalizd = ")"
+    suffix = normalizd.ljust(2, "_")[-2:]
+    return normalizd, suffix, str(isupper)
 
 
 def compress_traindata(args):
@@ -209,7 +240,7 @@ def _worker(inp):
     res = []
     for tree in AutoReader(autofile).readall(suppress_error=True):
         leaves = get_leaves(tree)
-        feats = map(feature_extract, leaves)
+        feats = map(feature_extract, [leaf.word for leaf in leaves])
         contexts = get_context_by_window(
                 feats, window_size, lpad=lpad, rpad=rpad)
         for leaf, context in zip(leaves, contexts):
@@ -218,23 +249,12 @@ def _worker(inp):
     return res
 
 
-def feature_extract(leaf):
-    if leaf is lpad or leaf is rpad:
-        return leaf.word, "PAD", "0"
-    word_str = leaf.word
-    isupper = "1" if word_str.isupper() else "0"
-    normalizd = word_str.lower()
-    normalizd = num.sub("#", normalizd)
-    if normalizd == "-lrb-":
-        normalizd = "("
-    elif normalizd == "-rrb-":
-        normalizd = ")"
-    suffix = normalizd.ljust(2, "_")[-2:]
-    return normalizd, suffix, str(isupper)
-
-
 def train(args):
     model = EmbeddingTagger(args.model, args.embed, 20, 30)
+    if args.initmodel:
+        print('Load model from', args.initmodel)
+        chainer.serializers.load_npz(args.initmodel, model)
+
     train = CCGBankDataset(args.model, args.train)
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
     val = CCGBankDataset(args.model, args.val)
@@ -302,7 +322,9 @@ if __name__ == "__main__":
     parser_t.add_argument("--batchsize",
             type=int, default=1000, help="batch size")
     parser_t.add_argument("--epoch",
-            default=20, help="epoch")
+            type=int, default=20, help="epoch")
+    parser_t.add_argument("--initmodel",
+            help="initialize model with `initmodel`")
     parser_t.set_defaults(func=train)
 
     # Compress
