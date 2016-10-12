@@ -23,19 +23,19 @@ re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
 
 num = re.compile(r"[0-9]+")
 
-
-# class CCGBankDataset(chainer.dataset.DatasetMixin):
-#     def __init__(self, model_path):
-#         self.model_path = model_path
-#         self.dataset = np.load(os.path.join(model_path, "traindata.npz"))
-#         self.xs = self.dataset["xs"]
-#         self.ts = self.dataset["ts"]
-#
-#     def __len__(self):
-#         return len(self.xs)
-#
-#     def get_example(self, i):
-#         return self.xs[i], self.ts[i]
+def read_pretrained_embeddings(filepath):
+    io = open(filepath)
+    dim = len(io.readline().split())
+    io.seek(0)
+    nvocab = sum(1 for line in io)
+    io.seek(0)
+    res = np.empty((nvocab, dim), dtype=np.float32)
+    for i, line in enumerate(io):
+        line = line.strip()
+        if len(line) == 0: continue
+        res[i] = line.split()
+    io.close()
+    return res
 
 
 def read_model_defs(path):
@@ -83,7 +83,7 @@ class EmbeddingTagger(chainer.Chain):
     A* CCG Parsing with a Supertag-factored Model, Lewis and Steedman, EMNLP 2014
     """
     def __init__(self, model_path, embed_path, caps_dim, suffix_dim):
-        emb_w = self._read_pretrained_embeddings(embed_path)
+        emb_w = read_pretrained_embeddings(embed_path)
         nwords = sum(1 for line in open(os.path.join(model_path, "words.txt")))
         new_emb_w = 0.02 * np.random.random_sample((nwords, emb_w.shape[1])).astype('f') - 0.01
         for i in xrange(len(emb_w)):
@@ -128,20 +128,6 @@ class EmbeddingTagger(chainer.Chain):
     def predict(self, tokens):
         pass
 
-    @staticmethod
-    def _read_pretrained_embeddings(filepath):
-        io = open(filepath)
-        dim = len(io.readline().split())
-        io.seek(0)
-        nvocab = sum(1 for line in io)
-        io.seek(0)
-        res = np.empty((nvocab, dim), dtype=np.float32)
-        for i, line in enumerate(io):
-            line = line.strip()
-            if len(line) == 0: continue
-            res[i] = line.split()
-        io.close()
-        return res
 
 def compress_traindata(args):
     words = OrderedDict()
@@ -200,36 +186,6 @@ def compress_traindata(args):
                     suffix = "UNK"
                 new_line += "|".join([word, suffix, cap]) + " "
             out.write(new_line + target + "\n")
-     # (word_id, suffix_id, cap_id) * 7 tokens
-    # xs = np.zeros(
-    #         (len_traindata + 1, 3 * 7), dtype='i')
-    # ts = np.zeros(len_traindata + 1, dtype='i')
-    # print "creating traindata.npz"
-    # for i, line in enumerate(traindata):
-    #     items = line.strip().split(" ")
-    #     target_id = target2id[items[-1]]
-    #     ts[i] = target_id
-    #     for j, item in enumerate(items[:-1]):
-    #         word, suffix, cap = item.split("|")
-    #         xs[i, j] = word2id[word]
-    #         xs[i, 7 + j] = suffix2id[suffix]
-    #         xs[i, 14 + j] = cap2id[cap]
-    # np.savez(
-    #         os.path.join(args.out, "traindata.npz"), xs=xs, ts=ts)
-
-
-def _worker(inp):
-    autofile, window_size = inp
-    res = []
-    for tree in AutoReader(autofile).readall(suppress_error=True):
-        leaves = get_leaves(tree)
-        feats = map(feature_extract, leaves)
-        contexts = get_context_by_window(
-                feats, window_size, lpad=lpad, rpad=rpad)
-        for leaf, context in zip(leaves, contexts):
-            res.append(" ".join(map(lambda c: "|".join(c), context)) + \
-                    " " + str(leaf.cat) + "\n")
-    return res
 
 
 def create_traindata(args):
@@ -246,6 +202,20 @@ def create_traindata(args):
         for lines in p.map(_worker, autos):
             for line in lines:
                 out.write(line)
+
+
+def _worker(inp):
+    autofile, window_size = inp
+    res = []
+    for tree in AutoReader(autofile).readall(suppress_error=True):
+        leaves = get_leaves(tree)
+        feats = map(feature_extract, leaves)
+        contexts = get_context_by_window(
+                feats, window_size, lpad=lpad, rpad=rpad)
+        for leaf, context in zip(leaves, contexts):
+            res.append(" ".join(map(lambda c: "|".join(c), context)) + \
+                    " " + str(leaf.cat) + "\n")
+    return res
 
 
 def feature_extract(leaf):
