@@ -97,7 +97,7 @@ class AStarParser(object):
                     break
                 leaf = Leaf(token, self.cats[k], None)
                 prob = score / totals[i]
-                log_prob = -math.log(score)
+                log_prob = -math.log(prob)
                 res[i].append((leaf, log_prob))
         return res
 
