@@ -2,7 +2,7 @@
 Reimplementation of:
     "A* CCG Parsing with a Supertag-factored Model", Lewis and Steedman, EMNLP 2014
 
-```python
+```
 In [1]: from astar import AStarParser
 
 In [2]: parser = AStarParser("model")
@@ -30,5 +30,5 @@ S[X]/(S[X]\NP)
 ```
 
 I owe very much to:
-    easyCCG: https://github.com/mikelewis0/easyccg
-    NLTK: for nice pretty printing for derivation tree
+- easyCCG: https://github.com/mikelewis0/easyccg
+- NLTK: for nice pretty printing for derivation tree
