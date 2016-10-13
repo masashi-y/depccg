@@ -76,27 +76,27 @@ class AStarParser(object):
         res = self._parse(supertags)
         return res
 
-    def assign_supertags(self, tokens):
+    def assign_supertags(self, tokens, beta=0.00001):
         """
         Inputs:
             tokens (list[str])
         """
         # TODO: threshold cut with beta
         threshold = 0.0
-        scores = self.tagger.predict(tokens)
+        scores = np.exp(self.tagger.predict(tokens))
         index = np.argsort(scores, 1)
-        # totals = np.sum(scores, 1)
+        totals = np.sum(scores, 1)
 
         res = [[] for _ in tokens]
         for i, token in enumerate(tokens):
+            threshold = beta * scores[i, index[i, -1]]
             for j in xrange(self.tag_size - 1, -1, -1):
                 k = index[i, j]
                 score = scores[i, k]
                 if score <= threshold:
                     break
                 leaf = Leaf(token, self.cats[k], None)
-                # prob = score / totals[i]
-                # print prob, score, totals[i]
+                prob = score / totals[i]
                 log_prob = -math.log(score)
                 res[i].append((leaf, log_prob))
         return res

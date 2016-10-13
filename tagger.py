@@ -90,6 +90,14 @@ class EmbeddingTagger(chainer.Chain):
                 )
 
     def setup_training(self, pretrained_path):
+        """
+        Augment word embedding matrix in `pretrained_path` with
+        randomly intialized ones for those words that are in self.words
+        but not in the original embedding matrix and initialize self.emb_word
+        with it. Write out model definitions to `tagger_defs.txt`
+        Inputs:
+            pretrained_path (str): path to pretrained embedding file
+        """
         emb_w = read_pretrained_embeddings(pretrained_path)
         new_emb_w = 0.02 * np.random.random_sample(
                 (len(self.words), emb_w.shape[1])).astype('f') - 0.01
@@ -156,7 +164,6 @@ class EmbeddingTagger(chainer.Chain):
         batchsize, ntokens, hidden = h.data.shape
         h = F.reshape(h, (batchsize, ntokens * hidden))
         ys = self.linear(h)
-        ys = F.softmax(ys)
         return ys.data
 
     @property
