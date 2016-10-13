@@ -19,13 +19,6 @@ class RuleType(object):
     LEXICON = 11
 
 
-class RuleProduction(object):
-    def __init__(rule_type, result, head_is_left):
-        self.rule_type = rule_type
-        self.cat = result
-        self.head_is_left = head_is_left
-
-
 class Combinator(object):
     def __init__(self, rule_type):
         self.rule_type = rule_type
@@ -67,14 +60,20 @@ class Combinator(object):
         res = []
         for rule in rules:
             if rule.can_apply(left, right):
-                res.append(rule.rule_type,
+                res.append((rule,
                     rule.apply(left, right),
-                    rule.head_is_left(left, right))
+                    rule.head_is_left(left, right)))
         return res
 
     def __str__(self):
         return "<*>"
 
+class UnaryRule(Combinator):
+    def __init__(self):
+        super(UnaryRule, self).__init__(RuleType.UNARY)
+
+    def __str__(self):
+        return "<un>"
 
 class Conjunction(Combinator):
     """
@@ -133,7 +132,7 @@ class RemovePunctuation(Combinator):
         self.punct_is_left = punct_is_left
 
     def __str__(self):
-        return "<*>"
+        return "<rp>"
 
     def can_apply(self, left, right):
         """
@@ -158,7 +157,7 @@ class RemovePunctuationLeft(Combinator):
         super(RemovePunctuationLeft, self).__init__(RuleType.LP)
 
     def __str__(self):
-        return "<*>"
+        return "<rp>"
 
     def can_apply(self, left, right):
         return left == cat.LQU or left == cat.LRB
@@ -232,7 +231,7 @@ class BackwardApplication(Combinator):
         return right.is_modifier or right.is_type_raised
 
     def apply(self, left, right):
-        res = left if right.is_modifier else right.left
+        res = right.left
         return Combinator.correct_wildcard_features(
                 res, right.right, left)
 
@@ -316,8 +315,8 @@ class GeneralizedForwardComposition(Combinator):
             right.is_functor and \
             right.left.is_functor:
                 return left.right.matches(right.left.left) and \
-                        left.slash == left_slash and \
-                        right.left.slash == right_slash
+                        left.slash == self.left_slash and \
+                        right.left.slash == self.right_slash
         return False
 
     def head_is_left(self, left, right):
@@ -351,8 +350,8 @@ class GeneralizedBackwardComposition(Combinator):
             right.is_functor and \
             left.left.is_functor:
                 return right.right.matches(left.left.left) and \
-                        left.left.slash == left_slash and \
-                        right.slash == right_slash and \
+                        left.left.slash == self.left_slash and \
+                        right.slash == self.right_slash and \
                         not left.left.is_N_or_NP
         return False
 
@@ -379,3 +378,4 @@ standard_combinators = \
     BackwardComposition(Slash.Fwd(), Slash.Bwd(), Slash.Fwd()),
     GeneralizedForwardComposition(Slash.Fwd(), Slash.Fwd(), Slash.Fwd()),
     GeneralizedBackwardComposition(Slash.Fwd(), Slash.Bwd(), Slash.Fwd())]
+unary_rule = UnaryRule()

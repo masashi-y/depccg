@@ -8,11 +8,11 @@ ext_modules = [
         Extension("utils",
                   ["utils.pyx"],
                   ),
-        Extension("astar",
-                  ["astar.pyx"],
-                  language="c++",
-                  libraries=["m"]
-                  ),
+        # Extension("astar",
+        #           ["astar.pyx"],
+        #           language="c++",
+        #           libraries=["m"]
+        #           ),
         Extension("pqueue",
                   ["pqueue.pyx"],
                   ),

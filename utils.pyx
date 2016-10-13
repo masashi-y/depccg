@@ -1,7 +1,9 @@
 
 cimport numpy as np
 import numpy as np
-from cat import Cat
+
+import cat
+import re
 
 ctypedef np.float32_t FLOAT_T
 
@@ -109,13 +111,35 @@ cpdef dict read_model_defs(str filepath):
     return res
 
 
-cpdef dict load_unary(str filename):
+cpdef np.ndarray[FLOAT_T, ndim=2] compute_outsize_probs(list supertags):
+    cdef int sent_size = len(supertags)
+    cdef int i, j
     cdef:
-        dict res = {}
-        list items
-        str line
-        int comment
-        object inp, out
+        np.ndarray[FLOAT_T, ndim=2] res = \
+            np.zeros((sent_size + 1, sent_size + 1), 'f')
+        np.ndarray[FLOAT_T, ndim=1] from_left = \
+            np.zeros((sent_size + 1,), 'f')
+        np.ndarray[FLOAT_T, ndim=1] from_right = \
+            np.zeros((sent_size + 1,), 'f')
+
+    for i in xrange(sent_size - 1):
+        j = sent_size - i
+        from_left[i + 1]  = from_left[i] + supertags[i][0][1]
+        from_right[j - 1] = from_right[j] + supertags[j - 1][0][1]
+
+    for i in xrange(sent_size + 1):
+        for j in xrange(i, sent_size + 1):
+            res[i, j] = from_left[i] + from_right[j]
+
+    return res
+
+
+cpdef dict load_unary(str filename):
+    cdef dict res = {}
+    cdef str line
+    cdef int comment
+    cdef list items
+    cdef object inp, out
 
     for line in open(filename):
         comment = line.find("#")
@@ -126,12 +150,35 @@ cpdef dict load_unary(str filename):
             continue
         items = line.split()
         assert len(items) == 2
-        inp = Cat.parse(items[0])
-        out = Cat.parse(items[1])
+        inp = cat.Cat.parse(items[0])
+        out = cat.Cat.parse(items[1])
         if res.has_key(inp):
             res[inp].append(out)
         else:
             res[inp] = [out]
+    return res
+
+
+feat = re.compile("\[nb\]|\[X\]")
+cpdef dict load_seen_rules(str filename):
+    cdef dict res = {}
+    cdef str line
+    cdef int comment
+    cdef list items
+    cdef object cat1, cat2
+
+    for line in open(filename):
+        comment = line.find("#")
+        if comment > -1:
+            line = line[:comment]
+        line = line.strip()
+        if len(line) == 0:
+            continue
+        items = line.split()
+        assert len(items) == 2
+        cat1 = cat.Cat.parse(feat.sub("", items[0]))
+        cat2 = cat.Cat.parse(feat.sub("", items[1]))
+        res[(cat1, cat2)] = True
     return res
 
 

@@ -1,6 +1,7 @@
 
 import os
 import re
+import json
 from collections import defaultdict, OrderedDict
 import numpy as np
 from ccgbank import Leaf, AutoReader, get_leaves
@@ -57,7 +58,21 @@ class EmbeddingTagger(chainer.Chain):
     model proposed in:
     A* CCG Parsing with a Supertag-factored Model, Lewis and Steedman, EMNLP 2014
     """
-    def __init__(self, model_path, embed_path, caps_dim, suffix_dim):
+    def __init__(self, model_path, word_dim=None, caps_dim=None, suffix_dim=None):
+        self.model_path = model_path
+        if word_dim is None:
+            # use as supertagger
+            with open(os.path.join(model_path, "tagger_defs.txt")) as defs_file:
+                defs = json.load(defs_file)
+            self.word_dim = defs["word_dim"]
+            self.caps_dim = defs["caps_dim"]
+            self.suffix_dim = defs["suffix_dim"]
+        else:
+            # training
+            self.word_dim = word_dim
+            self.caps_dim = caps_dim
+            self.suffix_dim = suffix_dim
+
         self.words = read_model_defs(os.path.join(model_path, "words.txt"))
         self.suffixes = read_model_defs(os.path.join(model_path, "suffixes.txt"))
         self.caps = read_model_defs(os.path.join(model_path, "caps.txt"))
@@ -66,19 +81,25 @@ class EmbeddingTagger(chainer.Chain):
         self.unk_word = self.words["*UNKNOWN*"]
         self.unk_suffix = self.suffixes["UNK"]
 
-        emb_w = read_pretrained_embeddings(embed_path)
+        in_dim = 7 * (self.word_dim + self.caps_dim + self.suffix_dim)
+        super(EmbeddingTagger, self).__init__(
+                emb_word=L.EmbedID(len(self.words), self.word_dim),
+                emb_caps=L.EmbedID(len(self.caps), self.caps_dim),
+                emb_suffix=L.EmbedID(len(self.suffixes), self.suffix_dim),
+                linear=L.Linear(in_dim, len(self.targets)),
+                )
+
+    def setup_training(self, pretrained_path):
+        emb_w = read_pretrained_embeddings(pretrained_path)
         new_emb_w = 0.02 * np.random.random_sample(
                 (len(self.words), emb_w.shape[1])).astype('f') - 0.01
         for i in xrange(len(emb_w)):
             new_emb_w[i] = emb_w[i]
-
-        in_dim = 7 * (new_emb_w.shape[1] + caps_dim + suffix_dim)
-        super(EmbeddingTagger, self).__init__(
-                emb_word=L.EmbedID(*new_emb_w.shape, initialW=new_emb_w),
-                emb_caps=L.EmbedID(len(self.caps), caps_dim),
-                emb_suffix=L.EmbedID(len(self.suffixes), suffix_dim),
-                linear=L.Linear(in_dim, len(self.targets)),
-                )
+        self.emb_word.W.data = new_emb_w
+        with open(os.path.join(self.model_path, "tagger_defs.txt"), "w") as out:
+            json.dump({"word_dim": self.word_dim,
+                       "suffix_dim": self.suffix_dim,
+                       "caps_dim": self.caps_dim}, out)
 
     def __call__(self, xs, ts):
         """
@@ -135,6 +156,7 @@ class EmbeddingTagger(chainer.Chain):
         batchsize, ntokens, hidden = h.data.shape
         h = F.reshape(h, (batchsize, ntokens * hidden))
         ys = self.linear(h)
+        ys = F.softmax(ys)
         return ys.data
 
     @property
@@ -250,7 +272,8 @@ def _worker(inp):
 
 
 def train(args):
-    model = EmbeddingTagger(args.model, args.embed, 20, 30)
+    model = EmbeddingTagger(args.model, 50, 20, 30)
+    model.setup_training(args.embed)
     if args.initmodel:
         print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)

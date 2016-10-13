@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from cat import Cat
+import combinator
 
 class AutoReader(object):
     def __init__(self, filename):
@@ -66,6 +67,7 @@ class Leaf(object):
         self.word = word
         self.cat  = cat
         self.pos  = pos
+        self.rule_type = combinator.RuleType.LEXICON
 
     def __str__(self):
         return "(<L {0} {1} {1} {2} {0}>)".format(
@@ -89,11 +91,12 @@ class Tree(object):
     """
     (<T N 1 2> (<L N/N JJ JJ nonexecutive N_43/N_43>) (<L N NN NN director N>) )
     """
-    def __init__(self, cat, left_is_head, children):
+    def __init__(self, cat, left_is_head, children, rule=None):
         self.cat          = cat
         self.children     = children
         self.left_is_head = left_is_head
-        self.op = None
+        self.rule_type = rule.rule_type
+        self.op = rule
 
     def __str__(self):
         left_is_head = 0 if self.left_is_head else 1
@@ -118,16 +121,53 @@ class Tree(object):
 
     def resolve_op(self, ops):
         if len(self.children) == 1:
-            self.op = "<U>"
+            self.rule_type = "<U>"
         else:
             left, right = self.children
             for op in ops:
                 if op.can_apply(left.cat, right.cat) and \
                     op.apply(left.cat, right.cat) == self.cat:
-                    self.op = op
+                    self.rule_type = op
                     break
-            if self.op is None:
-                self.op = "<?>"
+            if self.rule_type is None:
+                self.rule_type = "<?>"
+
+    def show_derivation(self):
+        catstr  = ""
+        wordstr = ""
+        for leaf in get_leaves(self):
+            str_cat   = str(leaf.cat)
+            str_word  = leaf.word
+            nextlen   = 2 + max(len(str_word), len(str_cat))
+            lcatlen   = (nextlen - len(str_cat)) // 2
+            rcatlen   = lcatlen + (nextlen - len(str_cat)) % 2
+            catstr   += " " * lcatlen + str_cat + " " * rcatlen
+            lwordlen  = (nextlen - len(str_word)) // 2
+            rwordlen  = lwordlen + (nextlen - len(str_word)) % 2
+            wordstr  += " " * lwordlen + str_word + " " * rwordlen
+
+        def rec(lwidth, node):
+            rwidth = lwidth
+
+            if isinstance(node, Leaf):
+                return max(rwidth, 2 + lwidth + len(str(node.cat)),
+                        2 + lwidth + len(node.word))
+
+            if isinstance(node, Tree):
+                for child in node.children:
+                    rwidth = max(rwidth, rec(rwidth, child))
+
+                op = "" if node.op is None else str(node.op)
+                print(lwidth * " " + (rwidth - lwidth) * "-" + str(op))
+                str_res = str(node.cat)
+                respadlen = (rwidth - lwidth - len(str_res)) // 2 + lwidth
+                print(respadlen * " " + str_res)
+                return rwidth
+
+        print(catstr.rstrip())
+        print(wordstr.rstrip())
+        rec(0, self)
+
 
 def resolve_op(tree, ops):
     tree.resolve_op(ops)
@@ -149,38 +189,3 @@ def get_leaves(tree):
     return res
 
 
-def show_derivation(tree):
-    catstr  = ""
-    wordstr = ""
-    for leaf in get_leaves(tree):
-        str_cat   = str(leaf.cat)
-        str_word  = leaf.word
-        nextlen   = 2 + max(len(str_word), len(str_cat))
-        lcatlen   = (nextlen - len(str_cat)) // 2
-        rcatlen   = lcatlen + (nextlen - len(str_cat)) % 2
-        catstr   += " " * lcatlen + str_cat + " " * rcatlen
-        lwordlen  = (nextlen - len(str_word)) // 2
-        rwordlen  = lwordlen + (nextlen - len(str_word)) % 2
-        wordstr  += " " * lwordlen + str_word + " " * rwordlen
-
-    def rec(lwidth, node):
-        rwidth = lwidth
-
-        if isinstance(node, Leaf):
-            return max(rwidth, 2 + lwidth + len(str(node.cat)),
-                    2 + lwidth + len(node.word))
-
-        if isinstance(node, Tree):
-            for child in node.children:
-                rwidth = max(rwidth, rec(rwidth, child))
-
-            op = "" if node.op is None else str(node.op)
-            print(lwidth * " " + (rwidth - lwidth) * "-" + str(op))
-            str_res = str(node.cat)
-            respadlen = (rwidth - lwidth - len(str_res)) // 2 + lwidth
-            print(respadlen * " " + str_res)
-            return rwidth
-
-    print(catstr.rstrip())
-    print(wordstr.rstrip())
-    rec(0, tree)

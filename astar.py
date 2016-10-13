@@ -1,30 +1,17 @@
+# -*- coding: utf-8 -*-
 
+import os
 import math
 import heapq
-from utils import load_unary
+import numpy as np
+import chainer
+from utils import compute_outsize_probs, load_unary, load_seen_rules
 from ccgbank import Tree, Leaf
 from combinator import standard_combinators as binary_rules
-from combinator import RuleType
-import combinator
-
-
-def compute_outsize_probs(supertags):
-    sent_size = len(supertags)
-    res = [ [.0 for _ in range(sent_size + 1)] for _ in range(sent_size + 1)]
-    from_left = [.0 for _ in range(sent_size + 1)]
-    from_right = [.0 for _ in range(sent_size + 1)]
-
-    for i in xrange(sent_size - 1):
-        j = sent_size - i
-        from_left[i + 1]  = from_left[i] + supertags[i][0][1]
-        from_right[j - 1] = from_right[j] + supertags[j - 1][0][1]
-
-    for i in xrange(sent_size + 1):
-        for j in xrange(i, sent_size + 1):
-            res[i, j] = from_left[i] + from_right[j]
-
-    return res
-
+from combinator import unary_rule
+from combinator import RuleType, Combinator
+from tagger import EmbeddingTagger
+from cat import Cat
 
 class AgendaItem(object):
     def __init__(self, parse, in_prob, out_prob, start_of_span, span_len):
@@ -46,43 +33,47 @@ class ChartCell(object):
             return False
         else:
             self.items[parse.cat] = parse, prob
-            if prob > self.best_prob:
-                self.best_prob = prob
-                self.best = parse
+            # if prob > self.best_prob:
+            self.best_prob = prob
+            self.best = parse
             return True
 
     def __iter__(self):
         for parse, prob in self.items.values():
             yield parse, prob
 
+    @property
     def best_item(self):
         if self.best is None:
             return None
-        return self.items[self.best]
+        return self.items[self.best.cat]
 
     @property
     def isempty(self):
         return len(self.items) == 0
 
 
-class SeenRules(object):
-    def __init__(self, filepath):
-        pass
-
-
 class AStarParser(object):
-    def __init__(self, tagger, unary_rule_path):
-        self.tagger = tagger
-        self.tag_size = len(tagger.targets)
-        self.cats = map(Cat.parse, tagger.cats)
-        self.unary_rules = load_unary(unary_rule_path)
+    def __init__(self, model_path):
+        self.tagger = EmbeddingTagger(model_path)
+        chainer.serializers.load_npz(os.path.join(
+                            model_path, "tagger_model"), self.tagger)
+        self.tag_size = len(self.tagger.targets)
+        self.cats = map(Cat.parse, self.tagger.cats)
+        self.unary_rules = load_unary(os.path.join(
+                            model_path, "unary_rules.txt"))
         self.rule_cache = {}
+        self.seen_rules = load_seen_rules(os.path.join(
+                            model_path, "seen_rules.txt"))
+        self.possible_root_cats = \
+            map(Cat.parse,
+                    ["S[dcl]", "S[wq]", "S[q]", "S[qem]", "NP"])
 
     def parse(self, tokens):
         if isinstance(tokens, str):
             tokens = tokens.split(" ")
         supertags = self.assign_supertags(tokens)
-        res = _parse(supertags)
+        res = self._parse(supertags)
         return res
 
     def assign_supertags(self, tokens):
@@ -94,38 +85,40 @@ class AStarParser(object):
         threshold = 0.0
         scores = self.tagger.predict(tokens)
         index = np.argsort(scores, 1)
-        totals = np.sum(scores, 1)
+        # totals = np.sum(scores, 1)
 
         res = [[] for _ in tokens]
         for i, token in enumerate(tokens):
-            for j in xrange(ntargets - 1, -1, -1):
+            for j in xrange(self.tag_size - 1, -1, -1):
                 k = index[i, j]
                 score = scores[i, k]
-                if score < threshold:
+                if score <= threshold:
                     break
-                cat = self.cats[k]
-                leaf = Leaf(tokens[i], cat, None)
-                log_prob = math.log(score / totals[i])
+                leaf = Leaf(token, self.cats[k], None)
+                # prob = score / totals[i]
+                # print prob, score, totals[i]
+                log_prob = -math.log(score)
                 res[i].append((leaf, log_prob))
         return res
 
     def _parse(self, supertags):
-        def gen_agenda_item(index, leaf, cost):
-            out_prob = out_probs[index][index+1]
-            heuristic = cost + out_prob
-            item =  AgendaItem(leaf, cost, out_prob, index, 1)
+        def gen_agenda_item(index, leaf, in_prob):
+            out_prob = out_probs[index, index+1]
+            heuristic = in_prob + out_prob
+            item =  AgendaItem(leaf, in_prob, out_prob, index, 1)
             return heuristic, item
 
         def update_agenda(start_of_span, span_len,
                     left, right, left_prob, right_prob, out_prob):
-            if self.seen_rules.not_seen(left.cat, right.cat):
-                for rule_type, res, head_is_left in \
-                        self.get_rules(left, right, binary_rules):
+            if not self.seen_rules.has_key((left.cat, right.cat)):
+                for rule, out, head_is_left in \
+                        self.get_rules(left.cat, right.cat, binary_rules):
+                    rule_type = rule.rule_type
                     if (left.rule_type == RuleType.FC or \
                             left.rule_type == RuleType.GFC) and \
                         (rule_type == RuleType.FA or \
                             rule_type == RuleType.FC or \
-                            rule_type == RuleType.FGC):
+                            rule_type == RuleType.GFC):
                         continue
                     elif (right.rule_type == RuleType.BX or \
                             left.rule_type == RuleType.GBX) and \
@@ -142,10 +135,11 @@ class AStarParser(object):
                             right.cat.is_backward_type_raised:
                         continue
                     elif span_len == sent_size and \
-                            not res in self.possible_root_cats:
+                            not out in self.possible_root_cats:
                         continue
                     else:
-                        subtree = Tree(res, head_is_left, [left, right])
+                        subtree = Tree(
+                                out, head_is_left, [left, right], rule)
                         in_prob = left_prob + right_prob
                         new_item = AgendaItem(subtree, in_prob,
                                 out_prob, start_of_span, span_len)
@@ -160,7 +154,7 @@ class AStarParser(object):
         chart = [[ChartCell() for _ in range(sent_size)] \
                     for _ in range(sent_size)]
 
-        while chart[0][sent_size - 1].isempty():
+        while chart[0][sent_size - 1].isempty:
             if len(agenda) == 0: break
 
             prob, item = heapq.heappop(agenda)
@@ -170,9 +164,9 @@ class AStarParser(object):
 
                 if item.span_len != sent_size:
                     for unary in self.unary_rules.get(item.parse.cat, []):
-                        subtree = Tree(unary, True, [item.parse])
-                        out_prob = out_probs[item.start_of_span]\
-                                [item.start_of_span + item.span_len]
+                        subtree = Tree(unary, True, [item.parse], unary_rule)
+                        out_prob = out_probs[item.start_of_span,
+                                item.start_of_span + item.span_len]
                         new_item = AgendaItem(subtree,
                                             item.in_prob,
                                             out_prob,
@@ -193,8 +187,8 @@ class AStarParser(object):
                                       left, right,
                                       item.in_prob,
                                       right_prob,
-                                      out_probs[item.span_len]\
-                                          [item.start_of_span + span_len])
+                                      out_probs[item.span_len,
+                                          item.start_of_span + span_len])
 
                 for start_of_span in range(0, item.start_of_span):
                     span_len = item.start_of_span + item.span_len - start_of_span
@@ -208,23 +202,18 @@ class AStarParser(object):
                                     left, right,
                                     left_prob,
                                     item.in_prob,
-                                    out_probs[start_of_span]\
-                                            [start_of_span + span_len])
+                                    out_probs[start_of_span,
+                                            start_of_span + span_len])
 
-            heapq.heapify(agenda)
-        if chart[0][sent_size - 1].isempty:
-            return None
-        else:
-            return chart[0][sent_size - 1]
+                heapq.heapify(agenda)
 
-    def get_rules(self, left, right):
-        if not self.rule_cache.has_key(left):
-            self.rule_cache[left] = []
+        return chart[0][sent_size - 1].best_item
 
-        if not self.rule_cache.has_key(right):
-            res = combinator.get_rules(left, right, binary_rules)
-            self.rule_cache[right] = res
+    def get_rules(self, left, right, rules):
+        if not self.rule_cache.has_key((left, right)):
+            res = Combinator.get_rules(left, right, rules)
+            self.rule_cache[(left, right)] = res
             return res
         else:
-            return self.rule_cache[right]
+            return self.rule_cache[(left, right)]
 

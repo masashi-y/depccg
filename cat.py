@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import utils
+from utils import find_closing_bracket, \
+    find_non_nested_char, drop_brackets
 import re
 
 reg_non_punct = re.compile(r"[A-Za-z]+")
@@ -89,7 +90,7 @@ class Cat(object):
         if cat in cache:
             return cache[cat]
         else:
-            name = utils.drop_brackets(cat)
+            name = drop_brackets(cat)
             if name in cache:
                 res = cache[name]
             else:
@@ -110,7 +111,7 @@ class Cat(object):
             semantics = None
 
         if new_cat.startswith("("):
-            close_idx = utils.find_closing_bracket(new_cat, 0)
+            close_idx = find_closing_bracket(new_cat, 0)
 
             if not any(slash in new_cat for slash in "/\\|"):
                 new_cat = new_cat[1:close_idx]
@@ -118,7 +119,7 @@ class Cat(object):
                 return res
 
         end_idx = len(new_cat)
-        op_idx = utils.find_non_nested_char(new_cat, "/\\|")
+        op_idx = find_non_nested_char(new_cat, "/\\|")
 
         if op_idx == -1:
             # atomic category
