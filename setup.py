@@ -10,14 +10,11 @@ ext_modules = [
                   ["utils.pyx"],
                   include_dirs=[numpy.get_include()]
                   ),
-        # Extension("astar",
-        #           ["astar.pyx"],
-        #           language="c++",
-        #           libraries=["m"]
-        #           ),
-        # Extension("pqueue",
-        #           ["pqueue.pyx"],
-        #           ),
+        Extension("astar",
+                  ["astar.pyx"],
+                  libraries=["m"],
+                  # include_dirs=["c"],
+                  ),
         ]
 
 setup(

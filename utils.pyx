@@ -1,11 +1,8 @@
 
-cimport numpy as np
 import numpy as np
 
 import cat
 import re
-
-ctypedef np.float32_t FLOAT_T
 
 cpdef str drop_brackets(str cat):
     if cat.startswith('(') and \
@@ -45,7 +42,7 @@ cpdef int find_non_nested_char(str haystack, str needles):
 
 
 cpdef list get_context_by_window(
-        list items, int window_size, object lpad=None, object rpad=None):
+        list items, int window_size, object lpad, object rpad):
     cdef list res = []
     cdef list context
     cdef int i, j
@@ -111,7 +108,7 @@ cpdef dict read_model_defs(str filepath):
     return res
 
 
-cpdef np.ndarray[FLOAT_T, ndim=2] compute_outsize_probs(list supertags):
+cdef np.ndarray[FLOAT_T, ndim=2] compute_outsize_probs(list supertags):
     cdef int sent_size = len(supertags)
     cdef int i, j
     cdef:

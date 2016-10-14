@@ -18,8 +18,3 @@ input_text = "this is a new sentence ."
 res = parser.parse(input_text)
 print res
 
-parse, cost = res
-print cost
-parse.show_derivation()
-print parse
-
