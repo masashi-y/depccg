@@ -70,8 +70,15 @@ class Leaf(object):
         self.rule_type = combinator.RuleType.LEXICON
 
     def __str__(self):
+        pos = self.pos if self.pos is not None else "POS"
+        if self.word in ["{", "("]:
+            word = "-LRB-"
+        elif self.word in ["}", ")"]:
+            word = "-RRB-"
+        else:
+            word = self.word
         return "(<L {0} {1} {1} {2} {0}>)".format(
-                self.cat, self.pos, self.word)
+                self.cat, pos, word)
 
     @staticmethod
     def parse(reader):

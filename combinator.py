@@ -378,4 +378,5 @@ standard_combinators = \
     BackwardComposition(Slash.Fwd(), Slash.Bwd(), Slash.Fwd()),
     GeneralizedForwardComposition(Slash.Fwd(), Slash.Fwd(), Slash.Fwd()),
     GeneralizedBackwardComposition(Slash.Fwd(), Slash.Bwd(), Slash.Fwd())]
+
 unary_rule = UnaryRule()

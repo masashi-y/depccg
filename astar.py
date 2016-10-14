@@ -172,8 +172,7 @@ class AStarParser(object):
                                             out_prob,
                                             item.start_of_span,
                                             item.span_len)
-                        heapq.heappush(agenda,
-                                (item.in_prob + out_prob, new_item))
+                        agenda.append((item.in_prob + out_prob, new_item))
 
                 for span_len in range(
                         item.span_len + 1, 1 + sent_size - item.start_of_span):
