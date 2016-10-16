@@ -18,11 +18,11 @@ from combinator import unary_rule
 from combinator import RuleType, Combinator
 from tagger import EmbeddingTagger
 from cat import Cat
-from preshed.maps cimport PreshMap
 
 
 cdef extern from "<math.h>":
     float logf(float)
+    float fabsf(float)
 
 # reference count gets 0 when casting to void* ?
 refs = []
@@ -51,7 +51,19 @@ cdef AgendaItem* agendaitem_new(Pool mem, object parse,
     return item
 
 cdef int agendaitem_compare(const void* a1, const void* a2):
-    return <int>((<AgendaItem*>a1).cost - (<AgendaItem*>a2).cost)
+    cdef AgendaItem* item1 = <AgendaItem*>a1
+    cdef AgendaItem* item2 = <AgendaItem*>a2
+    cdef object p1, p2
+    cdef float res = item2.cost - item1.cost
+    if res != 0 and fabsf(res) < 0.0000001:
+        res = 0
+    if res == 0:
+        p1 = <object>item1.parse
+        p2 = <object>item2.parse
+        return p1.deplen - p2.deplen
+    else:
+        return <int>res
+
 
 ctypedef pair[void*, float] cell_item
 
@@ -153,7 +165,7 @@ cdef class AStarParser(object):
                 k = index[i, j]
                 if scores[i, k] <= threshold:
                     break
-                leaf = Leaf(token, self.cats[k], None)
+                leaf = Leaf(token, self.cats[k], i)
                 item = agendaitem_new(mem, leaf, log_probs[i, k], out_probs[i * s_len + (i + 1)], i, 1)
                 pqueue_enqueue(agenda, item)
 
@@ -218,7 +230,7 @@ cdef class AStarParser(object):
                                         self.acceptable_root_or_subtree(out, span_len, s_len):
                                     subtree = Tree(out, head_is_left, [parse, right], rule)
                                     in_prob = item.in_prob + prob
-                                    out_prob = out_probs[item.span_len * s_len + item.start_of_span + span_len]
+                                    out_prob = out_probs[item.start_of_span * s_len + item.start_of_span + span_len]
                                     new_item = agendaitem_new(mem, subtree, in_prob,
                                             out_prob, item.start_of_span, span_len)
                                     pqueue_enqueue(agenda, new_item)
@@ -278,7 +290,7 @@ cdef bint is_normal_form(int rule_type, object left, object right):
         return False
     if left.rule_type == RuleType.UNARY and \
             rule_type == RuleType.FA and \
-            right.cat.is_forward_type_raised:
+            left.cat.is_forward_type_raised:
         return False
     if right.rule_type == RuleType.UNARY and \
             rule_type == RuleType.BA and \

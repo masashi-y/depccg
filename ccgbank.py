@@ -80,6 +80,14 @@ class Leaf(object):
         return "(<L {0} {1} {1} {2} {0}>)".format(
                 self.cat, pos, word)
 
+    @property
+    def headid(self):
+        return self.pos
+
+    @property
+    def deplen(self):
+        return 0
+
     @staticmethod
     def parse(reader):
         reader.check("(")
@@ -138,6 +146,27 @@ class Tree(object):
                     break
             if self.rule_type is None:
                 self.rule_type = "<?>"
+
+    @property
+    def headid(self):
+        children = self.children
+        if len(children) == 1:
+            return children[0].headid
+        elif len(children) == 2:
+            return children[0].headid if self.left_is_head else children[1].headid
+        else:
+            raise RuntimeError("Number of children of Tree must be 1 or 2.")
+
+    @property
+    def deplen(self):
+        children = self.children
+        if len(children) == 1:
+            return children[0].deplen
+        elif len(children) == 2:
+            return (children[1].headid - children[0].headid) + \
+                    children[0].deplen + children[1].deplen
+        else:
+            raise RuntimeError("Number of children of Tree must be 1 or 2.")
 
     def show_derivation(self):
         catstr  = ""
