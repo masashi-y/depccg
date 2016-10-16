@@ -143,7 +143,7 @@ cdef class AStarParser(object):
             np.ndarray[FLOAT_T, ndim=2]  log_probs = \
                 -np.log(scores / totals.reshape((s_len, 1)))
             np.ndarray[FLOAT_T, ndim=1]  best_log_probs = \
-                np.min(log_probs)
+                np.min(log_probs, 1)
 
         compute_outsize_probs(best_log_probs, out_probs)
 
@@ -209,7 +209,6 @@ cdef class AStarParser(object):
                     other = chart[(item.start_of_span + item.span_len) * s_len +
                                                 (span_len - item.span_len - 1)]
                     if other.items.size() != 0:
-                        # for right, prob in chartcell_iter(other):
                         for it in other.items[0]:
                             right = <object>it.second.first
                             prob = it.second.second
@@ -230,7 +229,6 @@ cdef class AStarParser(object):
                     other = chart[start_of_span * s_len +
                                         (span_len - item.span_len - 1)]
                     if other.items.size() != 0:
-                        # for left, prob in chartcell_iter(other):
                         for it in other.items[0]:
                             left = <object>it.second.first
                             prob = it.second.second
