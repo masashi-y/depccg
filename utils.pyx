@@ -108,29 +108,6 @@ cpdef dict read_model_defs(str filepath):
     return res
 
 
-cdef np.ndarray[FLOAT_T, ndim=2] compute_outsize_probs(list supertags):
-    cdef int sent_size = len(supertags)
-    cdef int i, j
-    cdef:
-        np.ndarray[FLOAT_T, ndim=2] res = \
-            np.zeros((sent_size + 1, sent_size + 1), 'f')
-        np.ndarray[FLOAT_T, ndim=1] from_left = \
-            np.zeros((sent_size + 1,), 'f')
-        np.ndarray[FLOAT_T, ndim=1] from_right = \
-            np.zeros((sent_size + 1,), 'f')
-
-    for i in xrange(sent_size - 1):
-        j = sent_size - i
-        from_left[i + 1]  = from_left[i] + supertags[i][0][1]
-        from_right[j - 1] = from_right[j] + supertags[j - 1][0][1]
-
-    for i in xrange(sent_size + 1):
-        for j in xrange(i, sent_size + 1):
-            res[i, j] = from_left[i] + from_right[j]
-
-    return res
-
-
 cpdef dict load_unary(str filename):
     cdef dict res = {}
     cdef str line

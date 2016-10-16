@@ -25,7 +25,7 @@ typedef struct PQueue_s {
     int (*cmp)(const void *d1, const void *d2);
 } PQueue;
 
-PQueue *pqueue_new(int (*cmp)(const void *d1, const void *d2));
+PQueue *pqueue_new(int (*compare)(const void *d1, const void *d2));
 
 void pqueue_delete(PQueue *q);
 

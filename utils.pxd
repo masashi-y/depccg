@@ -1,5 +1,6 @@
 
 cimport numpy as np
+# from libcpp.unordered_map cimport unordered_map
 
 ctypedef np.float32_t FLOAT_T
 
@@ -14,8 +15,6 @@ cpdef list get_context_by_window(list items, int window_size, object lpad, objec
 cpdef np.ndarray[FLOAT_T, ndim=2] read_pretrained_embeddings(str filepath)
 
 cpdef dict read_model_defs(str filepath)
-
-cdef np.ndarray[FLOAT_T, ndim=2] compute_outsize_probs(list supertags)
 
 cpdef dict load_unary(str filename)
 

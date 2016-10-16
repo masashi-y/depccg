@@ -4,6 +4,10 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy
+import os
+
+os.environ["CC"] = "g++"
+os.environ["CXX"] = "g++"
 
 ext_modules = [
         Extension("utils",
@@ -11,9 +15,10 @@ ext_modules = [
                   include_dirs=[numpy.get_include()]
                   ),
         Extension("astar",
-                  ["astar.pyx"],
-                  libraries=["m"],
-                  # include_dirs=["c"],
+                  ["astar.pyx", "c/pqueue.c"],
+                  libraries=["m", "stdc++"],
+                  language="c++",
+                  extra_compile_args=["-O3", "-ffast-math", "-fPIC", "-std=c++11"]
                   ),
         ]
 
