@@ -6,8 +6,8 @@ from Cython.Distutils import build_ext
 import numpy
 import os
 
-os.environ["CC"] = "g++"
-os.environ["CXX"] = "g++"
+# os.environ["CC"] = "g++"
+# os.environ["CXX"] = "g++"
 
 ext_modules = [
         Extension("utils",
@@ -16,9 +16,7 @@ ext_modules = [
                   ),
         Extension("astar",
                   ["astar.pyx", "c/pqueue.c"],
-                  libraries=["m", "stdc++"],
-                  language="c++",
-                  extra_compile_args=["-O3", "-ffast-math", "-fPIC", "-std=c++11"]
+                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
                   ),
         ]
 

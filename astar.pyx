@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
 cimport cython
-# from libcpp.vector cimport vector
+from cpython cimport Py_INCREF
+from mypool import MyPool
+import multiprocessing
 from cymem.cymem cimport Pool
-from libcpp.unordered_map cimport unordered_map
-from libcpp.pair cimport pair
 from utils cimport load_unary, load_seen_rules
 from pqueue cimport PQueue, pqueue_new, pqueue_delete
 from pqueue cimport pqueue_enqueue, pqueue_dequeue
+from preshed.maps cimport map_init, key_t, \
+        MapStruct, map_set, map_get, map_iter
 cimport numpy as np
 import os
 import numpy as np
@@ -24,9 +26,6 @@ cdef extern from "<math.h>":
     float logf(float)
     float fabsf(float)
 
-# reference count gets 0 when casting to void* ?
-refs = []
-
 ctypedef np.float32_t FLOAT_T
 ctypedef long LONG_T
 
@@ -40,7 +39,7 @@ ctypedef struct AgendaItem:
 
 cdef AgendaItem* agendaitem_new(Pool mem, object parse,
         float in_prob, float out_prob, int start_of_span, int span_len):
-    refs.append(parse)
+    Py_INCREF(parse) # reference count gets 0 when casting to void* ?
     cdef AgendaItem* item = <AgendaItem *>mem.alloc(1, sizeof(AgendaItem))
     item.parse = <void *>parse
     item.in_prob = in_prob
@@ -64,40 +63,40 @@ cdef int agendaitem_compare(const void* a1, const void* a2):
     else:
         return <int>res
 
-
-ctypedef pair[void*, float] cell_item
-
 ctypedef struct ChartCell:
-    unordered_map[int, cell_item]* items
+    MapStruct* items
     float best_cost
     void* best
 
+ctypedef struct CellItem:
+    void* item
+    float cost
 
 cdef ChartCell *chartcell_new(Pool mem):
     cdef ChartCell* cell = <ChartCell *>mem.alloc(1, sizeof(ChartCell))
-    cell.items = new unordered_map[int, cell_item]()
+    cell.items = <MapStruct*>mem.alloc(1, sizeof(MapStruct))
+    map_init(mem, cell.items, 16)
     cell.best_cost = 1000000
     cell.best = NULL
     return cell
 
 
-cdef int chartcell_update(ChartCell* cell, object parse, float cost):
-    cdef unordered_map[int, cell_item]* items = cell.items
-    cdef int key = parse.cat.id
+cdef bint chartcell_update(Pool mem, ChartCell* cell, object parse, float cost):
+    cdef MapStruct* items = cell.items
+    cdef key_t key = parse.cat.id
     cdef void* parse_ptr = <void*>parse
-    if items.count(key):
-        if cost < cell.best_cost:
-            items[0][key] = cell_item(parse_ptr, cost)
+    cdef CellItem* item
+    if map_get(items, key) != NULL and cost >= cell.best_cost:
+        return False
+    else:
+        item = <CellItem*>mem.alloc(1, sizeof(CellItem))
+        item.item = parse_ptr
+        item.cost = cost
+        map_set(mem, items, key, <void*>item)
+        if cell.best_cost > cost:
             cell.best_cost = cost
             cell.best = parse_ptr
-            return 1
-        else:
-            return 0
-    else:
-        items[0][key] = cell_item(parse_ptr, cost)
-        cell.best_cost = cost
-        cell.best = parse_ptr
-        return 1
+        return True
 
 
 cdef class AStarParser(object):
@@ -132,6 +131,10 @@ cdef class AStarParser(object):
         res = self._parse(tokens)
         return res
 
+    def parse_doc(self, list doc):
+        p = MyPool(multiprocessing.cpu_count())
+        return p.map(self.parse, doc)
+
     @cython.cdivision(True)
     @cython.boundscheck(False)
     cdef void initialize(self, Pool mem,
@@ -144,6 +147,7 @@ cdef class AStarParser(object):
         cdef object leaf
         cdef str token
         cdef int i, j, k
+        cdef AgendaItem* item
         cdef int s_len = len(tokens)
         cdef:
             np.ndarray[FLOAT_T, ndim=2] scores = \
@@ -166,7 +170,8 @@ cdef class AStarParser(object):
                 if scores[i, k] <= threshold:
                     break
                 leaf = Leaf(token, self.cats[k], i)
-                item = agendaitem_new(mem, leaf, log_probs[i, k], out_probs[i * s_len + (i + 1)], i, 1)
+                item = agendaitem_new(mem, leaf, \
+                        log_probs[i, k], out_probs[i * s_len + (i + 1)], i, 1)
                 pqueue_enqueue(agenda, item)
 
 
@@ -186,6 +191,9 @@ cdef class AStarParser(object):
         cdef AgendaItem* new_item
         cdef ChartCell* cell
         cdef ChartCell* other
+        cdef key_t key
+        cdef void* value
+        cdef CellItem* cell_item
 
         self.initialize(mem, tokens, agenda, out_probs)
 
@@ -194,13 +202,13 @@ cdef class AStarParser(object):
         for i in xrange(s_len * s_len):
             chart[i] = chartcell_new(mem)
 
-        while chart[s_len - 1].items.size() == 0 and agenda.size > 0:
+        while chart[s_len - 1].items.filled == 0 and agenda.size > 0:
 
             item = <AgendaItem *>pqueue_dequeue(agenda)
             parse = <object>item.parse
             cell = chart[item.start_of_span * s_len + (item.span_len - 1)]
 
-            if chartcell_update(cell, parse, item.in_prob):
+            if chartcell_update(mem, cell, parse, item.in_prob):
 
                 # unary rules
                 if item.span_len != s_len:
@@ -216,44 +224,46 @@ cdef class AStarParser(object):
                         pqueue_enqueue(agenda, new_item)
 
                 # binary rule `parse` being left argument
-                for span_len in range(
+                for span_len in xrange(
                         item.span_len + 1, 1 + s_len - item.start_of_span):
                     other = chart[(item.start_of_span + item.span_len) * s_len +
                                                 (span_len - item.span_len - 1)]
-                    if other.items.size() != 0:
-                        for it in other.items[0]:
-                            right = <object>it.second.first
-                            prob = it.second.second
-                            if not self.seen_rules.has_key((parse.cat, right.cat)): continue
-                            for rule, out, head_is_left in self.get_rules(parse.cat, right.cat):
-                                if is_normal_form(rule.rule_type, parse, right) and \
-                                        self.acceptable_root_or_subtree(out, span_len, s_len):
-                                    subtree = Tree(out, head_is_left, [parse, right], rule)
-                                    in_prob = item.in_prob + prob
-                                    out_prob = out_probs[item.start_of_span * s_len + item.start_of_span + span_len]
-                                    new_item = agendaitem_new(mem, subtree, in_prob,
-                                            out_prob, item.start_of_span, span_len)
-                                    pqueue_enqueue(agenda, new_item)
+                    i = 0
+                    while map_iter(other.items, &i, &key, &value):
+                        cell_item = <CellItem*>value
+                        right = <object>cell_item.item
+                        prob = cell_item.cost
+                        if not self.seen_rules.has_key((parse.cat, right.cat)): continue
+                        for rule, out, head_is_left in self.get_rules(parse.cat, right.cat):
+                            if is_normal_form(rule.rule_type, parse, right) and \
+                                    self.acceptable_root_or_subtree(out, span_len, s_len):
+                                subtree = Tree(out, head_is_left, [parse, right], rule)
+                                in_prob = item.in_prob + prob
+                                out_prob = out_probs[item.start_of_span * s_len + item.start_of_span + span_len]
+                                new_item = agendaitem_new(mem, subtree, in_prob,
+                                        out_prob, item.start_of_span, span_len)
+                                pqueue_enqueue(agenda, new_item)
 
                 # binary rule `parse` being right argument
-                for start_of_span in range(0, item.start_of_span):
+                for start_of_span in xrange(0, item.start_of_span):
                     span_len = item.start_of_span + item.span_len - start_of_span
                     other = chart[start_of_span * s_len +
                                         (span_len - item.span_len - 1)]
-                    if other.items.size() != 0:
-                        for it in other.items[0]:
-                            left = <object>it.second.first
-                            prob = it.second.second
-                            if not self.seen_rules.has_key((left.cat, parse.cat)): continue
-                            for rule, out, head_is_left in self.get_rules(left.cat, parse.cat):
-                                if is_normal_form(rule.rule_type, left, parse) and \
-                                        self.acceptable_root_or_subtree(out, span_len, s_len):
-                                    subtree = Tree(out, head_is_left, [left, parse], rule)
-                                    in_prob = prob + item.in_prob
-                                    out_prob = out_probs[start_of_span * s_len + start_of_span + span_len]
-                                    new_item = agendaitem_new(mem, subtree, in_prob,
-                                            out_prob, start_of_span, span_len)
-                                    pqueue_enqueue(agenda, new_item)
+                    i = 0
+                    while map_iter(other.items, &i, &key, &value):
+                        cell_item = <CellItem*>value
+                        left = <object>cell_item.item
+                        prob = cell_item.cost
+                        if not self.seen_rules.has_key((left.cat, parse.cat)): continue
+                        for rule, out, head_is_left in self.get_rules(left.cat, parse.cat):
+                            if is_normal_form(rule.rule_type, left, parse) and \
+                                    self.acceptable_root_or_subtree(out, span_len, s_len):
+                                subtree = Tree(out, head_is_left, [left, parse], rule)
+                                in_prob = prob + item.in_prob
+                                out_prob = out_probs[start_of_span * s_len + start_of_span + span_len]
+                                new_item = agendaitem_new(mem, subtree, in_prob,
+                                        out_prob, start_of_span, span_len)
+                                pqueue_enqueue(agenda, new_item)
 
         parse = <object>(chart[s_len - 1].best)
         return parse

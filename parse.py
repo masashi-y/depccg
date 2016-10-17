@@ -19,9 +19,14 @@ args = parser.parse_args()
 
 a_parser = AStarParser(args.model)
 fr = time()
+# sents = [inp.strip().split(" ") for inp in open("test.txt")]
+# for res in a_parser.parse_doc(sents):
+#     print res
 for inp in open("test.txt"):
     res = a_parser.parse(inp.strip())
     res.show_derivation()
 to = time()
 
 print "time elapsed: ", to - fr
+
+

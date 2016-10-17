@@ -70,7 +70,8 @@ class Leaf(object):
         self.rule_type = combinator.RuleType.LEXICON
 
     def __str__(self):
-        pos = self.pos if self.pos is not None else "POS"
+        # pos = self.pos if self.pos is not None else "POS"
+        pos = "POS"
         if self.word in ["{", "("]:
             word = "-LRB-"
         elif self.word in ["}", ")"]:
@@ -95,11 +96,11 @@ class Leaf(object):
         reader.check("L", 2)
         _    = reader.next()
         cat  = Cat.parse(reader.next())
-        pos  = reader.next()
+        _    = reader.next() # POS tag
         _    = reader.next()
         word = reader.next()
         end  = reader.next()
-        return Leaf(word, cat, pos)
+        return Leaf(word, cat, 0)
 
 
 class Tree(object):

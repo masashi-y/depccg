@@ -170,12 +170,12 @@ class EmbeddingTagger(chainer.Chain):
     def cats(self):
         return zip(*sorted(self.targets.items(), key=lambda x: x[1]))[0]
 
-class ScoredLeaf(Leaf):
-    def __init__(self, word, cat, score):
-        super(ScoredLeaf, self).__init__(
-                word, cat, None)
-        self.score = score
-
+# class ScoredLeaf(Leaf):
+#     def __init__(self, word, cat, score):
+#         super(ScoredLeaf, self).__init__(
+#                 word, cat, None)
+#         self.score = score
+#
 
 def feature_extract(word_str):
     isupper = "1" if word_str.isupper() else "0"
