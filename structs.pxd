@@ -14,17 +14,21 @@ cdef enum RuleType:
     LEXICON = 11
     NONE = 12
 
-# cdef int RuleType_FA = 0
-# cdef int RuleType_BA = 1
-# cdef int RuleType_FC = 2
-# cdef int RuleType_BX = 3
-# cdef int RuleType_GFC = 4
-# cdef int RuleType_GBX = 5
-# cdef int RuleType_CONJ = 6
-# cdef int RuleType_RP = 7
-# cdef int RuleType_LP = 8
-# cdef int RuleType_NOISE = 9
-# cdef int RuleType_UNARY = 10
-# cdef int RuleType_LEXICON = 11
-# cdef int RuleType_NONE = 12
+# cdef struct LeafC:
+#     char* word
+#     int pos
+#     Cat cat
+#     int rule_type
 #
+# cdef struct TreeC:
+#     void* lchild
+#     void* rchild
+#     bint left_is_head
+#     Combinator op
+#     Cat cat
+#     int rule_type
+#
+# cdef struct NodeC:
+
+
+

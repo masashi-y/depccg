@@ -9,7 +9,7 @@ In [2]: parser = AStarParser("model")
 
 In [3]: sent = "this is a new sentence ."
 
-In [4]: res, cost = parser.parse(sent)
+In [4]: res = parser.parse(sent)
 
 In [5]: res.show_derivation()
   NP   (S[dcl]\NP)/NP  NP/NP  NP[nb]/N     N      .
@@ -32,3 +32,6 @@ S[X]/(S[X]\NP)
 I owe very much to:
 - easyCCG: https://github.com/mikelewis0/easyccg
 - NLTK: for nice pretty printing for derivation tree
+- spacy: https://github.com/explosion/spaCy
+- http://andreinc.net/2011/06/01/implementing-a-generic-priority-queue-in-c/
+

@@ -179,7 +179,7 @@ cdef class AStarParser(object):
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
-    cdef Tree _parse(self, list tokens):
+    cdef Node _parse(self, list tokens):
 
         cdef int s_len = len(tokens)
         cdef Pool mem = Pool()
