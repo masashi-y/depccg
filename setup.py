@@ -12,7 +12,20 @@ import os
 ext_modules = [
         Extension("utils",
                   ["utils.pyx"],
-                  include_dirs=[numpy.get_include()]
+                  include_dirs=[numpy.get_include()],
+                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
+                  ),
+        Extension("cat",
+                  ["cat.pyx"],
+                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
+                  ),
+        Extension("combinator",
+                  ["combinator.pyx"],
+                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
+                  ),
+        Extension("ccgbank",
+                  ["ccgbank.pyx"],
+                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
                   ),
         Extension("astar",
                   ["astar.pyx", "c/pqueue.c"],

@@ -1,7 +1,7 @@
 
 import numpy as np
 
-import cat
+cimport cat
 import re
 
 cpdef str drop_brackets(str cat):
@@ -124,8 +124,8 @@ cpdef dict load_unary(str filename):
             continue
         items = line.split()
         assert len(items) == 2
-        inp = cat.Cat.parse(items[0])
-        out = cat.Cat.parse(items[1])
+        inp = cat.parse(items[0])
+        out = cat.parse(items[1])
         if res.has_key(inp):
             res[inp].append(out)
         else:
@@ -150,8 +150,8 @@ cpdef dict load_seen_rules(str filename):
             continue
         items = line.split()
         assert len(items) == 2
-        cat1 = cat.Cat.parse(feat.sub("", items[0]))
-        cat2 = cat.Cat.parse(feat.sub("", items[1]))
+        cat1 = cat.parse(feat.sub("", items[0]))
+        cat2 = cat.parse(feat.sub("", items[1]))
         res[(cat1, cat2)] = True
     return res
 

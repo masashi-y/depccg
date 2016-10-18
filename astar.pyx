@@ -14,12 +14,14 @@ cimport numpy as np
 import os
 import numpy as np
 import chainer
-from ccgbank import Tree, Leaf
-from combinator import standard_combinators as binary_rules
-from combinator import unary_rule
-from combinator import RuleType, Combinator
+from ccgbank cimport Tree, Leaf, Node
+from combinator cimport standard_combinators as binary_rules
+from combinator cimport unary_rule
+from combinator cimport Combinator
+from structs cimport FC, GFC, FA, BX, GBX, BA, UNARY
 from tagger import EmbeddingTagger
-from cat import Cat
+cimport cat
+from cat cimport Cat
 
 
 cdef extern from "<math.h>":
@@ -109,12 +111,12 @@ cdef class AStarParser(object):
     cdef list possible_root_cats
     cdef list binary_rules
 
-    def __init__(self, model_path):
+    def __cinit__(self, model_path):
         self.tagger = EmbeddingTagger(model_path)
         chainer.serializers.load_npz(os.path.join(
                             model_path, "tagger_model"), self.tagger)
         self.tag_size = len(self.tagger.targets)
-        self.cats = map(Cat.parse, self.tagger.cats)
+        self.cats = map(cat.parse, self.tagger.cats)
         self.unary_rules = load_unary(os.path.join(
                             model_path, "unary_rules.txt"))
         self.binary_rules = binary_rules
@@ -122,7 +124,7 @@ cdef class AStarParser(object):
         self.seen_rules = load_seen_rules(os.path.join(
                             model_path, "seen_rules.txt"))
         self.possible_root_cats = \
-            map(Cat.parse,
+            map(cat.parse,
                     ["S[dcl]", "S[wq]", "S[q]", "S[qem]", "NP"])
 
     def parse(self, tokens):
@@ -144,7 +146,7 @@ cdef class AStarParser(object):
             tokens (list[str])
         """
         cdef float threshold, log_prob
-        cdef object leaf
+        cdef Leaf leaf
         cdef str token
         cdef int i, j, k
         cdef AgendaItem* item
@@ -177,7 +179,7 @@ cdef class AStarParser(object):
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
-    cdef object _parse(self, list tokens):
+    cdef Tree _parse(self, list tokens):
 
         cdef int s_len = len(tokens)
         cdef Pool mem = Pool()
@@ -186,7 +188,9 @@ cdef class AStarParser(object):
                             (s_len + 1) * (s_len + 1), sizeof(float))
         cdef int span_len, start_of_span, i, head_is_left
         cdef float prob, in_prob, out_prob
-        cdef object unary, parse, subtree, out, left, right, rule
+        cdef object parse, subtree, left, right
+        cdef Combinator rule
+        cdef Cat unary, out
         cdef AgendaItem* item
         cdef AgendaItem* new_item
         cdef ChartCell* cell
@@ -265,11 +269,13 @@ cdef class AStarParser(object):
                                         out_prob, start_of_span, span_len)
                                 pqueue_enqueue(agenda, new_item)
 
-        parse = <object>(chart[s_len - 1].best)
+        if chart[s_len - 1].items.filled == 0:
+            return None
+        parse = <Tree>(chart[s_len - 1].best)
         return parse
 
 
-    cdef list get_rules(self, object left, object right):
+    cdef list get_rules(self, Cat left, Cat right):
         cdef list res
         if not self.rule_cache.has_key((left, right)):
             res = Combinator.get_rules(left, right, self.binary_rules)
@@ -278,32 +284,32 @@ cdef class AStarParser(object):
         else:
             return self.rule_cache[(left, right)]
 
-    cdef bint acceptable_root_or_subtree(self, object out, int span_len, int s_len):
+    cdef bint acceptable_root_or_subtree(self, Cat out, int span_len, int s_len):
         if span_len == s_len and \
                 not out in self.possible_root_cats:
             return False
         return True
 
 
-cdef bint is_normal_form(int rule_type, object left, object right):
-    if (left.rule_type == RuleType.FC or \
-            left.rule_type == RuleType.GFC) and \
-        (rule_type == RuleType.FA or \
-            rule_type == RuleType.FC or \
-            rule_type == RuleType.GFC):
+cdef bint is_normal_form(int rule_type, Node left, Node right):
+    if (left.rule_type == FC or \
+            left.rule_type == GFC) and \
+        (rule_type == FA or \
+            rule_type == FC or \
+            rule_type == GFC):
         return False
-    if (right.rule_type == RuleType.BX or \
-            left.rule_type == RuleType.GBX) and \
-        (rule_type == RuleType.BA or \
-            rule_type == RuleType.BX or \
-            left.rule_type == RuleType.GBX):
+    if (right.rule_type == BX or \
+            left.rule_type == GBX) and \
+        (rule_type == BA or \
+            rule_type == BX or \
+            left.rule_type == GBX):
         return False
-    if left.rule_type == RuleType.UNARY and \
-            rule_type == RuleType.FA and \
+    if left.rule_type == UNARY and \
+            rule_type == FA and \
             left.cat.is_forward_type_raised:
         return False
-    if right.rule_type == RuleType.UNARY and \
-            rule_type == RuleType.BA and \
+    if right.rule_type == UNARY and \
+            rule_type == BA and \
             right.cat.is_backward_type_raised:
         return False
     return True
