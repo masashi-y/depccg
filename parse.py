@@ -20,17 +20,15 @@ args = parser.parse_args()
 
 a_parser = AStarParser(args.model)
 fr = time()
-# sents = [inp.strip().split(" ") for inp in open("test.txt")]
+# sents = [inp.strip().split(" ") for inp in args.sents]
 # for res in a_parser.parse_doc(sents):
 #     print res
-sents = [sent.strip() for sent in args.sents]
+sents = a_parser.parse_doc([sent.strip().split(" ") for sent in args.sents])
 with open("result.txt", "w") as f:
-    for inp in tqdm(sents):
-        # print inp
-        res = a_parser.parse(inp)
-        # res.show_derivation()
-        f.write(str(res) + "\n")
+    for i, res in enumerate([sent for sent in sents]):
         # print res
+        continue
+print len(sents)
 to = time()
 
 print "time elapsed: ", to - fr

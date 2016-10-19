@@ -142,8 +142,11 @@ class EmbeddingTagger(chainer.Chain):
         Returns
             list[Leaf]
         """
-        contexts = get_context_by_window(
+        if isinstance(tokens[0], str):
+            contexts = get_context_by_window(
                 map(feature_extract, tokens), 3, lpad=lpad, rpad=rpad)
+        else:
+            contexts = tokens
 
         words = np.zeros((len(tokens), 7), 'i')
         suffixes = np.zeros((len(tokens), 7), 'i')
@@ -165,6 +168,60 @@ class EmbeddingTagger(chainer.Chain):
         h = F.reshape(h, (batchsize, ntokens * hidden))
         ys = self.linear(h)
         return ys.data
+
+    def predict_doc(self, doc, batchsize=100):
+        """
+        doc list(tuple(id, sent))
+        """
+        def feature_extractor(in_queue, out_queue):
+            while True:
+                task = in_queue.get()
+                if task is None:
+                    in_queue.task_done()
+                    break
+                i, tokens = task
+                feature = get_context_by_window(
+                        map(feature_extract, tokens), 3, lpad=lpad, rpad=rpad)
+                in_queue.task_done()
+                out_queue.put((i, feature))
+            return
+
+        data_queue = multiprocessing.JoinableQueue()
+        res_queue = multiprocessing.Queue()
+        n_process = multiprocessing.cpu_count()
+        for i in range(n_process):
+            p = multiprocessing.Process(
+                    target=feature_extractor, args=(data_queue, res_queue))
+            p.start()
+
+        for i, sent in enumerate(doc):
+            data_queue.put((i, sent))
+
+        for _ in range(n_process):
+            data_queue.put(None)
+
+        data_queue.join()
+        batch_feats = []
+        batch_lens = []
+        batch_ids = []
+        res = []
+        for _ in xrange(0, len(doc), batchsize):
+            for i in range(batchsize):
+                if res_queue.empty(): break
+                idx, feat = res_queue.get()
+                batch_feats.extend(feat)
+                batch_lens.append(len(feat))
+                batch_ids.append(idx)
+            ys = self.predict(batch_feats)
+            prev = 0
+            for idx, length in zip(batch_ids, batch_lens):
+                res.append((doc[idx], ys[prev:prev+length]))
+                prev += length
+            assert prev == ys.shape[0]
+            batch_feats = []
+            batch_lens = []
+            batch_ids = []
+        return res
 
     @property
     def cats(self):

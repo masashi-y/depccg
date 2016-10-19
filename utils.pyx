@@ -134,7 +134,7 @@ cpdef dict load_unary(str filename):
 
 
 feat = re.compile("\[nb\]|\[X\]")
-cpdef dict load_seen_rules(str filename):
+cdef dict load_seen_rules(str filename):
     cdef dict res = {}
     cdef str line
     cdef int comment
@@ -152,7 +152,7 @@ cpdef dict load_seen_rules(str filename):
         assert len(items) == 2
         cat1 = cat.parse(feat.sub("", items[0]))
         cat2 = cat.parse(feat.sub("", items[1]))
-        res[(cat1, cat2)] = True
+        res[(cat1, cat2)] = 1
     return res
 
 

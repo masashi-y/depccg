@@ -1,5 +1,6 @@
 
 cimport numpy as np
+from preshed.maps cimport PreshMap
 # from libcpp.unordered_map cimport unordered_map
 
 ctypedef np.float32_t FLOAT_T
@@ -18,4 +19,4 @@ cpdef dict read_model_defs(str filepath)
 
 cpdef dict load_unary(str filename)
 
-cpdef dict load_seen_rules(str filename)
+cdef dict load_seen_rules(str filename)

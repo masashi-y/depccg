@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 cimport cython
+from preshed.maps cimport PreshMap
 from cpython cimport Py_INCREF
 from mypool import MyPool
 import multiprocessing
@@ -100,6 +101,8 @@ cdef bint chartcell_update(Pool mem, ChartCell* cell, object parse, float cost):
             cell.best = parse_ptr
         return True
 
+cdef inline hash_(Cat c1, Cat c2):
+    return c1.id ^ c2.id
 
 cdef class AStarParser(object):
     cdef object tagger
@@ -130,30 +133,74 @@ cdef class AStarParser(object):
     def parse(self, tokens):
         if isinstance(tokens, str):
             tokens = tokens.split(" ")
-        res = self._parse(tokens)
+        cdef np.ndarray[FLOAT_T, ndim=2] scores = \
+            self.tagger.predict(tokens)
+        res = self._parse(tokens, scores)
         return res
 
+    def worker(self, in_queue, out_queue):
+            while True:
+                task = in_queue.get()
+                if task is None:
+                    in_queue.task_done()
+                    break
+                i, tokens, scores = task
+                res = self._parse(tokens, scores)
+                in_queue.task_done()
+                out_queue.put((i, res))
+
     def parse_doc(self, list doc):
-        p = MyPool(multiprocessing.cpu_count())
-        return p.map(self.parse, doc)
+        cdef int n_process = multiprocessing.cpu_count()
+        cdef object data_queue = multiprocessing.JoinableQueue()
+        cdef object res_queue = multiprocessing.Queue()
+        cdef object p, tokens, parse
+        cdef int i, _
+        cdef dict res = {}
+        cdef list scored_doc = \
+                self.tagger.predict_doc(doc, batchsize=100)
+
+        for _ in range(n_process):
+            p = multiprocessing.Process(
+                    target=self.worker, args=(data_queue, res_queue))
+            p.start()
+
+        scored_doc = sorted(scored_doc, key=lambda x: len(x[0]), reverse=True)
+        for i, (tokens, scores) in enumerate(scored_doc):
+            data_queue.put((i, tokens, scores))
+        for _ in range(n_process):
+            data_queue.put(None)
+        data_queue.join()
+        for _ in range(len(doc)):
+            i, parse = res_queue.get()
+            res[i] = parse
+        return zip(*sorted(res.items(), key=lambda x: x[0]))[1]
+
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
-    cdef void initialize(self, Pool mem,
-            list tokens, PQueue* agenda, float* out_probs, float beta=0.00001):
-        """
-        Inputs:
-            tokens (list[str])
-        """
-        cdef float threshold, log_prob
+    cdef Node _parse(self, list tokens,
+            np.ndarray[FLOAT_T, ndim=2] scores, beta=0.00001):
+        cdef int s_len = len(tokens)
+        cdef Pool mem = Pool()
+        cdef PQueue* agenda = pqueue_new(agendaitem_compare)
+        cdef int span_len, start_of_span, i, j, k, head_is_left
+        cdef float prob, in_prob, out_prob, threshold
+        cdef object parse, subtree, left, right
+        cdef Combinator rule
+        cdef Cat unary, out
+        cdef AgendaItem* item
+        cdef AgendaItem* new_item
+        cdef ChartCell* cell
+        cdef ChartCell* other
+        cdef key_t key
+        cdef void* value
+        cdef CellItem* cell_item
         cdef Leaf leaf
         cdef str token
-        cdef int i, j, k
-        cdef AgendaItem* item
-        cdef int s_len = len(tokens)
+
+        # Initialization
+        scores = np.exp(scores)
         cdef:
-            np.ndarray[FLOAT_T, ndim=2] scores = \
-                np.exp(self.tagger.predict(tokens))
             np.ndarray[LONG_T, ndim=2]  index = \
                 np.argsort(scores, 1)
             np.ndarray[FLOAT_T, ndim=1]  totals = \
@@ -163,8 +210,12 @@ cdef class AStarParser(object):
             np.ndarray[FLOAT_T, ndim=1]  best_log_probs = \
                 np.min(log_probs, 1)
 
+        # Compute outside probabiliities
+        cdef float* out_probs = <float*>mem.alloc(
+                            (s_len + 1) * (s_len + 1), sizeof(float))
         compute_outsize_probs(best_log_probs, out_probs)
 
+        # Initialize agenda
         for i, token in enumerate(tokens):
             threshold = beta * scores[i, index[i, -1]]
             for j in xrange(self.tag_size - 1, -1, -1):
@@ -176,36 +227,13 @@ cdef class AStarParser(object):
                         log_probs[i, k], out_probs[i * s_len + (i + 1)], i, 1)
                 pqueue_enqueue(agenda, item)
 
-
-    @cython.cdivision(True)
-    @cython.boundscheck(False)
-    cdef Node _parse(self, list tokens):
-
-        cdef int s_len = len(tokens)
-        cdef Pool mem = Pool()
-        cdef PQueue* agenda = pqueue_new(agendaitem_compare)
-        cdef float* out_probs = <float*>mem.alloc(
-                            (s_len + 1) * (s_len + 1), sizeof(float))
-        cdef int span_len, start_of_span, i, head_is_left
-        cdef float prob, in_prob, out_prob
-        cdef object parse, subtree, left, right
-        cdef Combinator rule
-        cdef Cat unary, out
-        cdef AgendaItem* item
-        cdef AgendaItem* new_item
-        cdef ChartCell* cell
-        cdef ChartCell* other
-        cdef key_t key
-        cdef void* value
-        cdef CellItem* cell_item
-
-        self.initialize(mem, tokens, agenda, out_probs)
-
+        # Initialize chart
         cdef ChartCell** chart = \
                 <ChartCell **>mem.alloc(s_len * s_len, sizeof(ChartCell*))
         for i in xrange(s_len * s_len):
             chart[i] = chartcell_new(mem)
 
+        # Start chart parsing
         while chart[s_len - 1].items.filled == 0 and agenda.size > 0:
 
             item = <AgendaItem *>pqueue_dequeue(agenda)
@@ -237,7 +265,7 @@ cdef class AStarParser(object):
                         cell_item = <CellItem*>value
                         right = <object>cell_item.item
                         prob = cell_item.cost
-                        if not self.seen_rules.has_key((parse.cat, right.cat)): continue
+                        if not (parse.cat, right.cat) in self.seen_rules: continue
                         for rule, out, head_is_left in self.get_rules(parse.cat, right.cat):
                             if is_normal_form(rule.rule_type, parse, right) and \
                                     self.acceptable_root_or_subtree(out, span_len, s_len):
@@ -258,7 +286,7 @@ cdef class AStarParser(object):
                         cell_item = <CellItem*>value
                         left = <object>cell_item.item
                         prob = cell_item.cost
-                        if not self.seen_rules.has_key((left.cat, parse.cat)): continue
+                        if not (left.cat, parse.cat) in self.seen_rules: continue
                         for rule, out, head_is_left in self.get_rules(left.cat, parse.cat):
                             if is_normal_form(rule.rule_type, left, parse) and \
                                     self.acceptable_root_or_subtree(out, span_len, s_len):
