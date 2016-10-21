@@ -132,10 +132,9 @@ cpdef dict load_unary(str filename):
             res[inp] = [out]
     return res
 
-
 feat = re.compile("\[nb\]|\[X\]")
-cdef dict load_seen_rules(str filename):
-    cdef dict res = {}
+cdef PreshMap load_seen_rules(str filename):
+    cdef PreshMap res = PreshMap()
     cdef str line
     cdef int comment
     cdef list items
@@ -152,7 +151,7 @@ cdef dict load_seen_rules(str filename):
         assert len(items) == 2
         cat1 = cat.parse(feat.sub("", items[0]))
         cat2 = cat.parse(feat.sub("", items[1]))
-        res[(cat1, cat2)] = 1
+        res[hash_int_int(cat1.id, cat2.id)] = 1
     return res
 
 

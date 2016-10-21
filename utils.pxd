@@ -1,7 +1,6 @@
 
 cimport numpy as np
 from preshed.maps cimport PreshMap
-# from libcpp.unordered_map cimport unordered_map
 
 ctypedef np.float32_t FLOAT_T
 
@@ -19,4 +18,7 @@ cpdef dict read_model_defs(str filepath)
 
 cpdef dict load_unary(str filename)
 
-cdef dict load_seen_rules(str filename)
+cdef inline int hash_int_int(int x, int y):
+    return (x * x + x + y) if x >= y else (y * y + x)
+
+cdef PreshMap load_seen_rules(str filename)

@@ -3,10 +3,9 @@
 cimport cython
 from preshed.maps cimport PreshMap
 from cpython cimport Py_INCREF
-from mypool import MyPool
 import multiprocessing
 from cymem.cymem cimport Pool
-from utils cimport load_unary, load_seen_rules
+from utils cimport load_unary, load_seen_rules, hash_int_int
 from pqueue cimport PQueue, pqueue_new, pqueue_delete
 from pqueue cimport pqueue_enqueue, pqueue_dequeue
 from preshed.maps cimport map_init, key_t, \
@@ -24,6 +23,9 @@ from tagger import EmbeddingTagger
 cimport cat
 from cat cimport Cat
 
+cdef inline void* to_void_ptr(object pyob):
+    Py_INCREF(pyob) # reference count gets 0 when casting to void* ?
+    return <void*>pyob
 
 cdef extern from "<math.h>":
     float logf(float)
@@ -42,9 +44,8 @@ ctypedef struct AgendaItem:
 
 cdef AgendaItem* agendaitem_new(Pool mem, object parse,
         float in_prob, float out_prob, int start_of_span, int span_len):
-    Py_INCREF(parse) # reference count gets 0 when casting to void* ?
     cdef AgendaItem* item = <AgendaItem *>mem.alloc(1, sizeof(AgendaItem))
-    item.parse = <void *>parse
+    item.parse = to_void_ptr(parse)
     item.in_prob = in_prob
     item.out_prob = out_prob
     item.cost = in_prob + out_prob
@@ -101,16 +102,13 @@ cdef bint chartcell_update(Pool mem, ChartCell* cell, object parse, float cost):
             cell.best = parse_ptr
         return True
 
-cdef inline hash_(Cat c1, Cat c2):
-    return c1.id ^ c2.id
-
 cdef class AStarParser(object):
     cdef object tagger
     cdef int tag_size
     cdef list cats
     cdef dict unary_rules
-    cdef dict rule_cache
-    cdef dict seen_rules
+    cdef PreshMap rule_cache
+    cdef PreshMap seen_rules
     cdef list possible_root_cats
     cdef list binary_rules
 
@@ -123,7 +121,7 @@ cdef class AStarParser(object):
         self.unary_rules = load_unary(os.path.join(
                             model_path, "unary_rules.txt"))
         self.binary_rules = binary_rules
-        self.rule_cache = {}
+        self.rule_cache = PreshMap()
         self.seen_rules = load_seen_rules(os.path.join(
                             model_path, "seen_rules.txt"))
         self.possible_root_cats = \
@@ -139,15 +137,15 @@ cdef class AStarParser(object):
         return res
 
     def worker(self, in_queue, out_queue):
-            while True:
-                task = in_queue.get()
-                if task is None:
-                    in_queue.task_done()
-                    break
-                i, tokens, scores = task
-                res = self._parse(tokens, scores)
+        while True:
+            task = in_queue.get()
+            if task is None:
                 in_queue.task_done()
-                out_queue.put((i, res))
+                break
+            i, tokens, scores = task
+            res = self._parse(tokens, scores)
+            in_queue.task_done()
+            out_queue.put((i, res))
 
     def parse_doc(self, list doc):
         cdef int n_process = multiprocessing.cpu_count()
@@ -164,7 +162,7 @@ cdef class AStarParser(object):
                     target=self.worker, args=(data_queue, res_queue))
             p.start()
 
-        scored_doc = sorted(scored_doc, key=lambda x: len(x[0]), reverse=True)
+        # scored_doc = sorted(scored_doc, key=lambda x: len(x[0]), reverse=True)
         for i, (tokens, scores) in enumerate(scored_doc):
             data_queue.put((i, tokens, scores))
         for _ in range(n_process):
@@ -179,7 +177,7 @@ cdef class AStarParser(object):
     @cython.cdivision(True)
     @cython.boundscheck(False)
     cdef Node _parse(self, list tokens,
-            np.ndarray[FLOAT_T, ndim=2] scores, beta=0.00001):
+            np.ndarray[FLOAT_T, ndim=2] scores, beta=0.0001):
         cdef int s_len = len(tokens)
         cdef Pool mem = Pool()
         cdef PQueue* agenda = pqueue_new(agendaitem_compare)
@@ -188,10 +186,8 @@ cdef class AStarParser(object):
         cdef object parse, subtree, left, right
         cdef Combinator rule
         cdef Cat unary, out
-        cdef AgendaItem* item
-        cdef AgendaItem* new_item
-        cdef ChartCell* cell
-        cdef ChartCell* other
+        cdef AgendaItem *item, *new_item
+        cdef ChartCell *cell, *other
         cdef key_t key
         cdef void* value
         cdef CellItem* cell_item
@@ -265,7 +261,7 @@ cdef class AStarParser(object):
                         cell_item = <CellItem*>value
                         right = <object>cell_item.item
                         prob = cell_item.cost
-                        if not (parse.cat, right.cat) in self.seen_rules: continue
+                        if not self.is_seen(parse.cat, right.cat): continue
                         for rule, out, head_is_left in self.get_rules(parse.cat, right.cat):
                             if is_normal_form(rule.rule_type, parse, right) and \
                                     self.acceptable_root_or_subtree(out, span_len, s_len):
@@ -286,7 +282,7 @@ cdef class AStarParser(object):
                         cell_item = <CellItem*>value
                         left = <object>cell_item.item
                         prob = cell_item.cost
-                        if not (left.cat, parse.cat) in self.seen_rules: continue
+                        if not self.is_seen(left.cat, parse.cat): continue
                         for rule, out, head_is_left in self.get_rules(left.cat, parse.cat):
                             if is_normal_form(rule.rule_type, left, parse) and \
                                     self.acceptable_root_or_subtree(out, span_len, s_len):
@@ -302,15 +298,18 @@ cdef class AStarParser(object):
         parse = <Tree>(chart[s_len - 1].best)
         return parse
 
+    cdef inline bint is_seen(self, Cat cat1, Cat cat2):
+        return hash_int_int(cat1.id, cat2.id) in self.seen_rules
 
     cdef list get_rules(self, Cat left, Cat right):
         cdef list res
-        if not self.rule_cache.has_key((left, right)):
+        cdef int hash_ = hash_int_int(left.id, right.id)
+        if not hash_ in self.rule_cache:
             res = Combinator.get_rules(left, right, self.binary_rules)
-            self.rule_cache[(left, right)] = res
+            self.rule_cache.set(hash_, to_void_ptr(res))
             return res
         else:
-            return self.rule_cache[(left, right)]
+            return <list>self.rule_cache.get(hash_)
 
     cdef bint acceptable_root_or_subtree(self, Cat out, int span_len, int s_len):
         if span_len == s_len and \
