@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 
 cimport cython
-from preshed.maps cimport PreshMap
 from cpython cimport Py_INCREF
-import multiprocessing
+from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 from utils cimport load_unary, load_seen_rules, hash_int_int
-from pqueue cimport PQueue, pqueue_new, pqueue_delete
-from pqueue cimport pqueue_enqueue, pqueue_dequeue
+from pqueue cimport PQueue, pqueue_new, pqueue_delete, \
+                    pqueue_enqueue, pqueue_dequeue
 from preshed.maps cimport map_init, key_t, \
         MapStruct, map_set, map_get, map_iter
-cimport numpy as np
-import os
-import numpy as np
-import chainer
 from ccgbank cimport Tree, Leaf, Node
-from combinator cimport standard_combinators as binary_rules
-from combinator cimport unary_rule
-from combinator cimport Combinator
+from combinator cimport standard_combinators, unary_rule, Combinator
 from structs cimport FC, GFC, FA, BX, GBX, BA, UNARY
 from tagger import EmbeddingTagger
 cimport cat
 from cat cimport Cat
+import os
+cimport numpy as np
+import numpy as np
+import chainer
+import multiprocessing
+
+failure_node = Leaf("**FAILED**", cat.parse("FAILED"), 0)
 
 cdef inline void* to_void_ptr(object pyob):
     Py_INCREF(pyob) # reference count gets 0 when casting to void* ?
@@ -120,7 +120,7 @@ cdef class AStarParser(object):
         self.cats = map(cat.parse, self.tagger.cats)
         self.unary_rules = load_unary(os.path.join(
                             model_path, "unary_rules.txt"))
-        self.binary_rules = binary_rules
+        self.binary_rules = standard_combinators
         self.rule_cache = PreshMap()
         self.seen_rules = load_seen_rules(os.path.join(
                             model_path, "seen_rules.txt"))
@@ -137,6 +137,7 @@ cdef class AStarParser(object):
         return res
 
     def worker(self, in_queue, out_queue):
+        cdef object res
         while True:
             task = in_queue.get()
             if task is None:
@@ -145,7 +146,9 @@ cdef class AStarParser(object):
             i, tokens, scores = task
             res = self._parse(tokens, scores)
             in_queue.task_done()
-            out_queue.put((i, res))
+            #TODO: cython object is not picklable
+            out_queue.put((i, str(res)))
+        return
 
     def parse_doc(self, list doc):
         cdef int n_process = multiprocessing.cpu_count()
@@ -162,8 +165,8 @@ cdef class AStarParser(object):
                     target=self.worker, args=(data_queue, res_queue))
             p.start()
 
-        # scored_doc = sorted(scored_doc, key=lambda x: len(x[0]), reverse=True)
-        for i, (tokens, scores) in enumerate(scored_doc):
+        scored_doc = sorted(scored_doc, key=lambda x: len(x[1]), reverse=True)
+        for i, tokens, scores in scored_doc:
             data_queue.put((i, tokens, scores))
         for _ in range(n_process):
             data_queue.put(None)
@@ -294,7 +297,7 @@ cdef class AStarParser(object):
                                 pqueue_enqueue(agenda, new_item)
 
         if chart[s_len - 1].items.filled == 0:
-            return None
+            return failure_node
         parse = <Tree>(chart[s_len - 1].best)
         return parse
 

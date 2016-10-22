@@ -5,7 +5,7 @@
 /* Util macros */
 #define LEFT(x) (2 * (x) + 1)
 #define RIGHT(x) (2 * (x) + 2)
-#define PARENT(x) ((x) / 2)
+#define PARENT(x) (((x) - 1) / 2)
  
 void pqueue_heapify(PQueue *q, size_t idx);
  
@@ -53,7 +53,6 @@ void pqueue_enqueue(PQueue *q, const void *data) {
     if (q->size >= q->capacity) {
         q->capacity = q->capacity * 2;
         q->data = realloc(q->data, q->capacity * sizeof(*(q->data)));
-        return;
     }
     /* Adds element last */
     q->data[q->size] = (void*) data;

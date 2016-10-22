@@ -1,6 +1,7 @@
 
 import numpy as np
 
+from preshed.maps cimport PreshMap
 cimport cat
 import re
 

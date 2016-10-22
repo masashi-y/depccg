@@ -1124,6 +1124,23 @@ static CYTHON_INLINE int __Pyx_PyUnicode_Equals(PyObject* s1, PyObject* s2, int 
 #define __Pyx_PyString_Equals __Pyx_PyBytes_Equals
 #endif
 
+/* ListAppend.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE int __Pyx_PyList_Append(PyObject* list, PyObject* x) {
+    PyListObject* L = (PyListObject*) list;
+    Py_ssize_t len = Py_SIZE(list);
+    if (likely(L->allocated > len) & likely(len > (L->allocated >> 1))) {
+        Py_INCREF(x);
+        PyList_SET_ITEM(list, len, x);
+        Py_SIZE(list) = len+1;
+        return 0;
+    }
+    return PyList_Append(list, x);
+}
+#else
+#define __Pyx_PyList_Append(L,x) PyList_Append(L,x)
+#endif
+
 /* ListCompAppend.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE int __Pyx_ListComp_Append(PyObject* list, PyObject* x) {
@@ -1157,23 +1174,6 @@ static CYTHON_INLINE int __Pyx_ListComp_Append(PyObject* list, PyObject* x) {
     #endif
 #else
 static CYTHON_INLINE PyObject* __Pyx_PyBytes_Join(PyObject* sep, PyObject* values);
-#endif
-
-/* ListAppend.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE int __Pyx_PyList_Append(PyObject* list, PyObject* x) {
-    PyListObject* L = (PyListObject*) list;
-    Py_ssize_t len = Py_SIZE(list);
-    if (likely(L->allocated > len) & likely(len > (L->allocated >> 1))) {
-        Py_INCREF(x);
-        PyList_SET_ITEM(list, len, x);
-        Py_SIZE(list) = len+1;
-        return 0;
-    }
-    return PyList_Append(list, x);
-}
-#else
-#define __Pyx_PyList_Append(L,x) PyList_Append(L,x)
 #endif
 
 /* RaiseTooManyValuesToUnpack.proto */
@@ -1274,9 +1274,6 @@ static int __pyx_CyFunction_init(void);
 
 /* Import.proto */
 static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
-
-/* GetNameInClass.proto */
-static PyObject *__Pyx_GetNameInClass(PyObject *nmspace, PyObject *name);
 
 /* CodeObjectCache.proto */
 typedef struct {
@@ -1389,7 +1386,6 @@ static PyTypeObject *__pyx_ptype_7ccgbank___pyx_scope_struct_1_get_leaves = 0;
 int __pyx_module_is_main_ccgbank = 0;
 
 /* Implementation of 'ccgbank' */
-static PyObject *__pyx_builtin_staticmethod;
 static PyObject *__pyx_builtin_open;
 static PyObject *__pyx_builtin_RuntimeError;
 static PyObject *__pyx_builtin_super;
@@ -1398,25 +1394,22 @@ static const char __pyx_k_0[] = "0";
 static const char __pyx_k_L[] = "L";
 static const char __pyx_k_T[] = "T";
 static const char __pyx_k_ID[] = "ID";
-static const char __pyx_k__3[] = "{";
-  static const char __pyx_k__4[] = "(";
-static const char __pyx_k__5[] = "}";
-static const char __pyx_k__6[] = ")";
-static const char __pyx_k__8[] = "<";
+static const char __pyx_k__3[] = "(";
+static const char __pyx_k__5[] = "<";
 static const char __pyx_k_op[] = "op";
 static const char __pyx_k_LRB[] = "-LRB-";
 static const char __pyx_k_POS[] = "POS";
 static const char __pyx_k_RRB[] = "-RRB-";
+static const char __pyx_k__11[] = ")";
+static const char __pyx_k__12[] = "{";
+static const char __pyx_k__13[] = "}";
 static const char __pyx_k__16[] = "";
 static const char __pyx_k__17[] = "-";
-static const char __pyx_k__22[] = "_";
 static const char __pyx_k_cat[] = "cat";
 static const char __pyx_k_end[] = "end";
 static const char __pyx_k_ops[] = "ops";
-static const char __pyx_k_pos[] = "pos";
 static const char __pyx_k_rec[] = "rec";
 static const char __pyx_k_res[] = "res";
-static const char __pyx_k_cate[] = "cate";
 static const char __pyx_k_file[] = "file";
 static const char __pyx_k_find[] = "find";
 static const char __pyx_k_init[] = "__init__";
@@ -1435,7 +1428,6 @@ static const char __pyx_k_word[] = "word";
 static const char __pyx_k_apply[] = "apply";
 static const char __pyx_k_check[] = "check";
 static const char __pyx_k_child[] = "child";
-static const char __pyx_k_parse[] = "parse";
 static const char __pyx_k_print[] = "print";
 static const char __pyx_k_strip[] = "strip";
 static const char __pyx_k_super[] = "super";
@@ -1445,7 +1437,6 @@ static const char __pyx_k_headid[] = "headid";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_lwidth[] = "lwidth";
 static const char __pyx_k_offset[] = "offset";
-static const char __pyx_k_reader[] = "reader";
 static const char __pyx_k_rstrip[] = "rstrip";
 static const char __pyx_k_rwidth[] = "rwidth";
 static const char __pyx_k_values[] = "values";
@@ -1453,23 +1444,25 @@ static const char __pyx_k_ccgbank[] = "ccgbank";
 static const char __pyx_k_str_res[] = "str_res";
 static const char __pyx_k_children[] = "children";
 static const char __pyx_k_filename[] = "filename";
+static const char __pyx_k_position[] = "position";
 static const char __pyx_k_T_0_1_2_3[] = "(<T {0} {1} {2}> {3} )";
 static const char __pyx_k_can_apply[] = "can_apply";
+static const char __pyx_k_next_node[] = "next_node";
 static const char __pyx_k_readlines[] = "readlines";
 static const char __pyx_k_respadlen[] = "respadlen";
 static const char __pyx_k_rule_type[] = "rule_type";
 static const char __pyx_k_get_leaves[] = "get_leaves";
+static const char __pyx_k_parse_leaf[] = "parse_leaf";
+static const char __pyx_k_parse_tree[] = "parse_tree";
 static const char __pyx_k_resolve_op[] = "resolve_op";
 static const char __pyx_k_L_0_1_1_2_0[] = "(<L {0} {1} {1} {2} {0}>)";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
 static const char __pyx_k_left_is_head[] = "left_is_head";
-static const char __pyx_k_staticmethod[] = "staticmethod";
-static const char __pyx_k_next_node_type[] = "next_node_type";
 static const char __pyx_k_suppress_error[] = "suppress_error";
 static const char __pyx_k_get_leaves_locals_rec[] = "get_leaves.<locals>.rec";
 static const char __pyx_k_show_derivation_locals_rec[] = "show_derivation.<locals>.rec";
 static const char __pyx_k_Number_of_children_of_Tree_must[] = "Number of children of Tree must be 1 or 2.";
-static const char __pyx_k_home_masashi_y_myccg_ccgbank_py[] = "/home/masashi-y/myccg/ccgbank.pyx";
+static const char __pyx_k_home_cl_masashi_y_aaa_myccg_ccg[] = "/home/cl/masashi-y/aaa/myccg/ccgbank.pyx";
 static const char __pyx_k_AutoLineReader_check_catches_par[] = "AutoLineReader.check catches parse error";
 static PyObject *__pyx_kp_s_;
 static PyObject *__pyx_kp_s_0;
@@ -1484,18 +1477,16 @@ static PyObject *__pyx_kp_s_RRB;
 static PyObject *__pyx_n_s_RuntimeError;
 static PyObject *__pyx_n_s_T;
 static PyObject *__pyx_kp_s_T_0_1_2_3;
+static PyObject *__pyx_kp_s__11;
+static PyObject *__pyx_kp_s__12;
+static PyObject *__pyx_kp_s__13;
 static PyObject *__pyx_kp_s__16;
 static PyObject *__pyx_kp_s__17;
-static PyObject *__pyx_n_s__22;
 static PyObject *__pyx_kp_s__3;
-static PyObject *__pyx_kp_s__4;
 static PyObject *__pyx_kp_s__5;
-static PyObject *__pyx_kp_s__6;
-static PyObject *__pyx_kp_s__8;
 static PyObject *__pyx_n_s_apply;
 static PyObject *__pyx_n_s_can_apply;
 static PyObject *__pyx_n_s_cat;
-static PyObject *__pyx_n_s_cate;
 static PyObject *__pyx_n_s_ccgbank;
 static PyObject *__pyx_n_s_check;
 static PyObject *__pyx_n_s_child;
@@ -1509,7 +1500,7 @@ static PyObject *__pyx_n_s_format;
 static PyObject *__pyx_n_s_get_leaves;
 static PyObject *__pyx_n_s_get_leaves_locals_rec;
 static PyObject *__pyx_n_s_headid;
-static PyObject *__pyx_kp_s_home_masashi_y_myccg_ccgbank_py;
+static PyObject *__pyx_kp_s_home_cl_masashi_y_aaa_myccg_ccg;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_init;
 static PyObject *__pyx_n_s_join;
@@ -1518,17 +1509,17 @@ static PyObject *__pyx_n_s_line;
 static PyObject *__pyx_n_s_lwidth;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_next;
-static PyObject *__pyx_n_s_next_node_type;
+static PyObject *__pyx_n_s_next_node;
 static PyObject *__pyx_n_s_node;
 static PyObject *__pyx_n_s_offset;
 static PyObject *__pyx_n_s_op;
 static PyObject *__pyx_n_s_open;
 static PyObject *__pyx_n_s_ops;
-static PyObject *__pyx_n_s_parse;
+static PyObject *__pyx_n_s_parse_leaf;
+static PyObject *__pyx_n_s_parse_tree;
 static PyObject *__pyx_n_s_peek;
-static PyObject *__pyx_n_s_pos;
+static PyObject *__pyx_n_s_position;
 static PyObject *__pyx_n_s_print;
-static PyObject *__pyx_n_s_reader;
 static PyObject *__pyx_n_s_readlines;
 static PyObject *__pyx_n_s_rec;
 static PyObject *__pyx_n_s_res;
@@ -1539,7 +1530,6 @@ static PyObject *__pyx_n_s_rule;
 static PyObject *__pyx_n_s_rule_type;
 static PyObject *__pyx_n_s_rwidth;
 static PyObject *__pyx_n_s_show_derivation_locals_rec;
-static PyObject *__pyx_n_s_staticmethod;
 static PyObject *__pyx_n_s_str_res;
 static PyObject *__pyx_n_s_strip;
 static PyObject *__pyx_n_s_super;
@@ -1555,25 +1545,25 @@ static int __pyx_pf_7ccgbank_14AutoLineReader___init__(struct __pyx_obj_7ccgbank
 static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_4check(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self, PyObject *__pyx_v_text, int __pyx_v_offset); /* proto */
 static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_6peek(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_14next_node_type___get__(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_9next_node___get__(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_8parse_leaf(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_10parse_tree(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self); /* proto */
 static int __pyx_pf_7ccgbank_4Node___init__(struct __pyx_obj_7ccgbank_Node *__pyx_v_self, struct __pyx_obj_3cat_Cat *__pyx_v_cat, int __pyx_v_rule_type); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Node_3cat___get__(struct __pyx_obj_7ccgbank_Node *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Node_9rule_type___get__(struct __pyx_obj_7ccgbank_Node *__pyx_v_self); /* proto */
-static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self, PyObject *__pyx_v_word, struct __pyx_obj_3cat_Cat *__pyx_v_cat, int __pyx_v_pos); /* proto */
+static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self, PyObject *__pyx_v_word, struct __pyx_obj_3cat_Cat *__pyx_v_cat, int __pyx_v_position); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Leaf_6headid___get__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Leaf_6deplen___get__(CYTHON_UNUSED struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_7ccgbank_4Leaf_4parse(PyObject *__pyx_v_reader); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Leaf_4word___get__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Leaf_3pos___get__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self); /* proto */
 static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self, PyObject *__pyx_v_cat, PyObject *__pyx_v_left_is_head, PyObject *__pyx_v_children, PyObject *__pyx_v_rule); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_7ccgbank_4Tree_4parse(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_reader); /* proto */
-static PyObject *__pyx_pf_7ccgbank_4Tree_6resolve_op(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self, PyObject *__pyx_v_ops); /* proto */
+static PyObject *__pyx_pf_7ccgbank_4Tree_4resolve_op(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self, PyObject *__pyx_v_ops); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Tree_6headid___get__(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Tree_6deplen___get__(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Tree_15show_derivation_rec(PyObject *__pyx_self, PyObject *__pyx_v_lwidth, PyObject *__pyx_v_node); /* proto */
-static PyObject *__pyx_pf_7ccgbank_4Tree_8show_derivation(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_7ccgbank_4Tree_6show_derivation(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Tree_8children___get__(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Tree_12left_is_head___get__(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_7ccgbank_4Tree_2op___get__(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self); /* proto */
@@ -1592,26 +1582,22 @@ static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 static PyObject *__pyx_int_2;
 static PyObject *__pyx_tuple__2;
+static PyObject *__pyx_tuple__4;
+static PyObject *__pyx_tuple__6;
 static PyObject *__pyx_tuple__7;
+static PyObject *__pyx_tuple__8;
 static PyObject *__pyx_tuple__9;
 static PyObject *__pyx_tuple__10;
-static PyObject *__pyx_tuple__11;
-static PyObject *__pyx_tuple__12;
-static PyObject *__pyx_tuple__13;
 static PyObject *__pyx_tuple__14;
 static PyObject *__pyx_tuple__15;
 static PyObject *__pyx_tuple__18;
 static PyObject *__pyx_tuple__20;
-static PyObject *__pyx_tuple__23;
-static PyObject *__pyx_tuple__25;
-static PyObject *__pyx_tuple__27;
-static PyObject *__pyx_tuple__29;
+static PyObject *__pyx_tuple__22;
+static PyObject *__pyx_tuple__24;
 static PyObject *__pyx_codeobj__19;
 static PyObject *__pyx_codeobj__21;
-static PyObject *__pyx_codeobj__24;
-static PyObject *__pyx_codeobj__26;
-static PyObject *__pyx_codeobj__28;
-static PyObject *__pyx_codeobj__30;
+static PyObject *__pyx_codeobj__23;
+static PyObject *__pyx_codeobj__25;
 
 /* "ccgbank.pyx":10
  * 
@@ -1831,9 +1817,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
   PyObject *__pyx_t_8 = NULL;
   PyObject *__pyx_t_9 = NULL;
   PyObject *__pyx_t_10 = NULL;
-  PyObject *__pyx_t_11 = NULL;
-  PyObject *__pyx_t_12 = NULL;
-  int __pyx_t_13;
+  int __pyx_t_11;
   __Pyx_RefNannySetupContext("readall", 0);
 
   /* "ccgbank.pyx":18
@@ -1954,7 +1938,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
  *                 key = line
  *             else:
  *                 try:             # <<<<<<<<<<<<<<
- *                     tree = Tree.parse(AutoLineReader(line))
+ *                     tree = AutoLineReader(line).parse_tree()
  *                     res[key] = tree
  */
     /*else*/ {
@@ -1970,19 +1954,20 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
           /* "ccgbank.pyx":29
  *             else:
  *                 try:
- *                     tree = Tree.parse(AutoLineReader(line))             # <<<<<<<<<<<<<<
+ *                     tree = AutoLineReader(line).parse_tree()             # <<<<<<<<<<<<<<
  *                     res[key] = tree
  *                 except RuntimeError as e:
  */
-          __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_7ccgbank_Tree), __pyx_n_s_parse); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 29, __pyx_L7_error)
+          __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 29, __pyx_L7_error)
           __Pyx_GOTREF(__pyx_t_4);
-          __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 29, __pyx_L7_error)
-          __Pyx_GOTREF(__pyx_t_5);
           __Pyx_INCREF(__pyx_v_line);
           __Pyx_GIVEREF(__pyx_v_line);
-          PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_v_line);
-          __pyx_t_11 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_7ccgbank_AutoLineReader), __pyx_t_5, NULL); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 29, __pyx_L7_error)
-          __Pyx_GOTREF(__pyx_t_11);
+          PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_v_line);
+          __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_7ccgbank_AutoLineReader), __pyx_t_4, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 29, __pyx_L7_error)
+          __Pyx_GOTREF(__pyx_t_5);
+          __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+          __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_parse_tree); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 29, __pyx_L7_error)
+          __Pyx_GOTREF(__pyx_t_4);
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __pyx_t_5 = NULL;
           if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_4))) {
@@ -1994,21 +1979,13 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
               __Pyx_DECREF_SET(__pyx_t_4, function);
             }
           }
-          if (!__pyx_t_5) {
-            __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_11); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 29, __pyx_L7_error)
-            __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-            __Pyx_GOTREF(__pyx_t_3);
+          if (__pyx_t_5) {
+            __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 29, __pyx_L7_error)
+            __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           } else {
-            __pyx_t_12 = PyTuple_New(1+1); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 29, __pyx_L7_error)
-            __Pyx_GOTREF(__pyx_t_12);
-            __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_5); __pyx_t_5 = NULL;
-            __Pyx_GIVEREF(__pyx_t_11);
-            PyTuple_SET_ITEM(__pyx_t_12, 0+1, __pyx_t_11);
-            __pyx_t_11 = 0;
-            __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_12, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 29, __pyx_L7_error)
-            __Pyx_GOTREF(__pyx_t_3);
-            __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+            __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 29, __pyx_L7_error)
           }
+          __Pyx_GOTREF(__pyx_t_3);
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
           if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_7ccgbank_Tree))))) __PYX_ERR(0, 29, __pyx_L7_error)
           __Pyx_XDECREF_SET(__pyx_v_tree, ((struct __pyx_obj_7ccgbank_Tree *)__pyx_t_3));
@@ -2016,7 +1993,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
 
           /* "ccgbank.pyx":30
  *                 try:
- *                     tree = Tree.parse(AutoLineReader(line))
+ *                     tree = AutoLineReader(line).parse_tree()
  *                     res[key] = tree             # <<<<<<<<<<<<<<
  *                 except RuntimeError as e:
  *                     if suppress_error:
@@ -2028,7 +2005,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
  *                 key = line
  *             else:
  *                 try:             # <<<<<<<<<<<<<<
- *                     tree = Tree.parse(AutoLineReader(line))
+ *                     tree = AutoLineReader(line).parse_tree()
  *                     res[key] = tree
  */
         }
@@ -2039,25 +2016,23 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
         __pyx_L7_error:;
         __Pyx_PyThreadState_assign
         __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-        __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
-        __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
         __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
 
         /* "ccgbank.pyx":31
- *                     tree = Tree.parse(AutoLineReader(line))
+ *                     tree = AutoLineReader(line).parse_tree()
  *                     res[key] = tree
  *                 except RuntimeError as e:             # <<<<<<<<<<<<<<
  *                     if suppress_error:
  *                         continue
  */
-        __pyx_t_13 = __Pyx_PyErr_ExceptionMatches(__pyx_builtin_RuntimeError);
-        if (__pyx_t_13) {
+        __pyx_t_11 = __Pyx_PyErr_ExceptionMatches(__pyx_builtin_RuntimeError);
+        if (__pyx_t_11) {
           __Pyx_AddTraceback("ccgbank.AutoReader.readall", __pyx_clineno, __pyx_lineno, __pyx_filename);
-          if (__Pyx_GetException(&__pyx_t_3, &__pyx_t_4, &__pyx_t_12) < 0) __PYX_ERR(0, 31, __pyx_L9_except_error)
+          if (__Pyx_GetException(&__pyx_t_3, &__pyx_t_4, &__pyx_t_5) < 0) __PYX_ERR(0, 31, __pyx_L9_except_error)
           __Pyx_GOTREF(__pyx_t_3);
           __Pyx_GOTREF(__pyx_t_4);
-          __Pyx_GOTREF(__pyx_t_12);
+          __Pyx_GOTREF(__pyx_t_5);
           __Pyx_INCREF(__pyx_t_4);
           __Pyx_XDECREF_SET(__pyx_v_e, __pyx_t_4);
 
@@ -2103,7 +2078,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
           __pyx_L16_except_continue:;
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+          __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           goto __pyx_L13_try_continue;
         }
         goto __pyx_L9_except_error;
@@ -2113,7 +2088,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
  *                 key = line
  *             else:
  *                 try:             # <<<<<<<<<<<<<<
- *                     tree = Tree.parse(AutoLineReader(line))
+ *                     tree = AutoLineReader(line).parse_tree()
  *                     res[key] = tree
  */
         __Pyx_PyThreadState_assign
@@ -2150,7 +2125,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
  *                         raise e
  *         return res.values()             # <<<<<<<<<<<<<<
  * 
- * cdef class AutoLineReader(object):
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_1 = __Pyx_PyDict_Values(__pyx_v_res); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 36, __pyx_L1_error)
@@ -2173,8 +2148,6 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_XDECREF(__pyx_t_11);
-  __Pyx_XDECREF(__pyx_t_12);
   __Pyx_AddTraceback("ccgbank.AutoReader.readall", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -2188,7 +2161,7 @@ static PyObject *__pyx_pf_7ccgbank_10AutoReader_2readall(struct __pyx_obj_7ccgba
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":39
+/* "ccgbank.pyx":40
  * 
  * cdef class AutoLineReader(object):
  *     def __init__(self, line):             # <<<<<<<<<<<<<<
@@ -2221,7 +2194,7 @@ static int __pyx_pw_7ccgbank_14AutoLineReader_1__init__(PyObject *__pyx_v_self, 
         else goto __pyx_L5_argtuple_error;
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 39, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 40, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 1) {
       goto __pyx_L5_argtuple_error;
@@ -2232,7 +2205,7 @@ static int __pyx_pw_7ccgbank_14AutoLineReader_1__init__(PyObject *__pyx_v_self, 
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 39, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 40, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("ccgbank.AutoLineReader.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2251,14 +2224,14 @@ static int __pyx_pf_7ccgbank_14AutoLineReader___init__(struct __pyx_obj_7ccgbank
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "ccgbank.pyx":40
+  /* "ccgbank.pyx":41
  * cdef class AutoLineReader(object):
  *     def __init__(self, line):
  *         self.line = line             # <<<<<<<<<<<<<<
  *         self.index = 0
  * 
  */
-  if (!(likely(PyString_CheckExact(__pyx_v_line))||((__pyx_v_line) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_line)->tp_name), 0))) __PYX_ERR(0, 40, __pyx_L1_error)
+  if (!(likely(PyString_CheckExact(__pyx_v_line))||((__pyx_v_line) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_line)->tp_name), 0))) __PYX_ERR(0, 41, __pyx_L1_error)
   __pyx_t_1 = __pyx_v_line;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -2267,7 +2240,7 @@ static int __pyx_pf_7ccgbank_14AutoLineReader___init__(struct __pyx_obj_7ccgbank
   __pyx_v_self->line = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "ccgbank.pyx":41
+  /* "ccgbank.pyx":42
  *     def __init__(self, line):
  *         self.line = line
  *         self.index = 0             # <<<<<<<<<<<<<<
@@ -2276,7 +2249,7 @@ static int __pyx_pf_7ccgbank_14AutoLineReader___init__(struct __pyx_obj_7ccgbank
  */
   __pyx_v_self->index = 0;
 
-  /* "ccgbank.pyx":39
+  /* "ccgbank.pyx":40
  * 
  * cdef class AutoLineReader(object):
  *     def __init__(self, line):             # <<<<<<<<<<<<<<
@@ -2296,7 +2269,7 @@ static int __pyx_pf_7ccgbank_14AutoLineReader___init__(struct __pyx_obj_7ccgbank
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":43
+/* "ccgbank.pyx":44
  *         self.index = 0
  * 
  *     def next(self):             # <<<<<<<<<<<<<<
@@ -2331,16 +2304,16 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgb
   int __pyx_t_7;
   __Pyx_RefNannySetupContext("next", 0);
 
-  /* "ccgbank.pyx":46
+  /* "ccgbank.pyx":47
  *         cdef int end
  *         cdef str res
  *         end = self.line.find(" ", self.index)             # <<<<<<<<<<<<<<
  *         res = self.line[self.index:end]
  *         self.index = end + 1
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_self->line, __pyx_n_s_find); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_self->line, __pyx_n_s_find); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_self->index); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_self->index); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -2354,7 +2327,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgb
       __pyx_t_5 = 1;
     }
   }
-  __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   if (__pyx_t_4) {
     __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -2365,15 +2338,15 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgb
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_5, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_7 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_end = __pyx_t_7;
 
-  /* "ccgbank.pyx":47
+  /* "ccgbank.pyx":48
  *         cdef str res
  *         end = self.line.find(" ", self.index)
  *         res = self.line[self.index:end]             # <<<<<<<<<<<<<<
@@ -2382,14 +2355,14 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgb
  */
   if (unlikely(__pyx_v_self->line == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-    __PYX_ERR(0, 47, __pyx_L1_error)
+    __PYX_ERR(0, 48, __pyx_L1_error)
   }
-  __pyx_t_1 = PySequence_GetSlice(__pyx_v_self->line, __pyx_v_self->index, __pyx_v_end); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 47, __pyx_L1_error)
+  __pyx_t_1 = PySequence_GetSlice(__pyx_v_self->line, __pyx_v_self->index, __pyx_v_end); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 48, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_res = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "ccgbank.pyx":48
+  /* "ccgbank.pyx":49
  *         end = self.line.find(" ", self.index)
  *         res = self.line[self.index:end]
  *         self.index = end + 1             # <<<<<<<<<<<<<<
@@ -2398,7 +2371,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgb
  */
   __pyx_v_self->index = (__pyx_v_end + 1);
 
-  /* "ccgbank.pyx":49
+  /* "ccgbank.pyx":50
  *         res = self.line[self.index:end]
  *         self.index = end + 1
  *         return res             # <<<<<<<<<<<<<<
@@ -2410,7 +2383,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgb
   __pyx_r = __pyx_v_res;
   goto __pyx_L0;
 
-  /* "ccgbank.pyx":43
+  /* "ccgbank.pyx":44
  *         self.index = 0
  * 
  *     def next(self):             # <<<<<<<<<<<<<<
@@ -2434,7 +2407,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_2next(struct __pyx_obj_7ccgb
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":51
+/* "ccgbank.pyx":52
  *         return res
  * 
  *     def check(self, str text, int offset=0):             # <<<<<<<<<<<<<<
@@ -2474,7 +2447,7 @@ static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_5check(PyObject *__pyx_v_sel
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "check") < 0)) __PYX_ERR(0, 51, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "check") < 0)) __PYX_ERR(0, 52, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -2486,20 +2459,20 @@ static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_5check(PyObject *__pyx_v_sel
     }
     __pyx_v_text = ((PyObject*)values[0]);
     if (values[1]) {
-      __pyx_v_offset = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_offset == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 51, __pyx_L3_error)
+      __pyx_v_offset = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_offset == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 52, __pyx_L3_error)
     } else {
       __pyx_v_offset = ((int)0);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("check", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 51, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("check", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 52, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("ccgbank.AutoLineReader.check", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_text), (&PyString_Type), 1, "text", 1))) __PYX_ERR(0, 51, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_text), (&PyString_Type), 1, "text", 1))) __PYX_ERR(0, 52, __pyx_L1_error)
   __pyx_r = __pyx_pf_7ccgbank_14AutoLineReader_4check(((struct __pyx_obj_7ccgbank_AutoLineReader *)__pyx_v_self), __pyx_v_text, __pyx_v_offset);
 
   /* function exit code */
@@ -2519,7 +2492,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_4check(struct __pyx_obj_7ccg
   int __pyx_t_3;
   __Pyx_RefNannySetupContext("check", 0);
 
-  /* "ccgbank.pyx":52
+  /* "ccgbank.pyx":53
  * 
  *     def check(self, str text, int offset=0):
  *         if self.line[self.index + offset] != text:             # <<<<<<<<<<<<<<
@@ -2527,26 +2500,26 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_4check(struct __pyx_obj_7ccg
  * 
  */
   __pyx_t_1 = (__pyx_v_self->index + __pyx_v_offset);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_t_1, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 52, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_t_1, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 53, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_v_text, Py_NE)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 52, __pyx_L1_error)
+  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_v_text, Py_NE)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 53, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_3) {
 
-    /* "ccgbank.pyx":53
+    /* "ccgbank.pyx":54
  *     def check(self, str text, int offset=0):
  *         if self.line[self.index + offset] != text:
  *             raise RuntimeError("AutoLineReader.check catches parse error")             # <<<<<<<<<<<<<<
  * 
  *     def peek(self):
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 53, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 54, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 53, __pyx_L1_error)
+    __PYX_ERR(0, 54, __pyx_L1_error)
 
-    /* "ccgbank.pyx":52
+    /* "ccgbank.pyx":53
  * 
  *     def check(self, str text, int offset=0):
  *         if self.line[self.index + offset] != text:             # <<<<<<<<<<<<<<
@@ -2555,7 +2528,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_4check(struct __pyx_obj_7ccg
  */
   }
 
-  /* "ccgbank.pyx":51
+  /* "ccgbank.pyx":52
  *         return res
  * 
  *     def check(self, str text, int offset=0):             # <<<<<<<<<<<<<<
@@ -2576,7 +2549,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_4check(struct __pyx_obj_7ccg
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":55
+/* "ccgbank.pyx":56
  *             raise RuntimeError("AutoLineReader.check catches parse error")
  * 
  *     def peek(self):             # <<<<<<<<<<<<<<
@@ -2603,7 +2576,7 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_6peek(struct __pyx_obj_7ccgb
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("peek", 0);
 
-  /* "ccgbank.pyx":56
+  /* "ccgbank.pyx":57
  * 
  *     def peek(self):
  *         return self.line[self.index]             # <<<<<<<<<<<<<<
@@ -2611,13 +2584,13 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_6peek(struct __pyx_obj_7ccgb
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_v_self->index, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 56, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_v_self->index, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "ccgbank.pyx":55
+  /* "ccgbank.pyx":56
  *             raise RuntimeError("AutoLineReader.check catches parse error")
  * 
  *     def peek(self):             # <<<<<<<<<<<<<<
@@ -2636,28 +2609,28 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_6peek(struct __pyx_obj_7ccgb
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":59
+/* "ccgbank.pyx":60
  * 
  *     @property
- *     def next_node_type(self):             # <<<<<<<<<<<<<<
+ *     def next_node(self):             # <<<<<<<<<<<<<<
  *         if self.line[self.index+2] == "L":
- *             return Leaf
+ *             return self.parse_leaf
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_14next_node_type_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_14next_node_type_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_9next_node_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_9next_node_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_7ccgbank_14AutoLineReader_14next_node_type___get__(((struct __pyx_obj_7ccgbank_AutoLineReader *)__pyx_v_self));
+  __pyx_r = __pyx_pf_7ccgbank_14AutoLineReader_9next_node___get__(((struct __pyx_obj_7ccgbank_AutoLineReader *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_14next_node_type___get__(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self) {
+static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_9next_node___get__(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   long __pyx_t_1;
@@ -2665,103 +2638,107 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_14next_node_type___get__(str
   int __pyx_t_3;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "ccgbank.pyx":60
+  /* "ccgbank.pyx":61
  *     @property
- *     def next_node_type(self):
+ *     def next_node(self):
  *         if self.line[self.index+2] == "L":             # <<<<<<<<<<<<<<
- *             return Leaf
+ *             return self.parse_leaf
  *         elif self.line[self.index+2] == "T":
  */
   __pyx_t_1 = (__pyx_v_self->index + 2);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_t_1, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_t_1, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 61, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_L, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_L, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 61, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_3) {
 
-    /* "ccgbank.pyx":61
- *     def next_node_type(self):
+    /* "ccgbank.pyx":62
+ *     def next_node(self):
  *         if self.line[self.index+2] == "L":
- *             return Leaf             # <<<<<<<<<<<<<<
+ *             return self.parse_leaf             # <<<<<<<<<<<<<<
  *         elif self.line[self.index+2] == "T":
- *             return Tree
+ *             return self.parse_tree
  */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_INCREF(((PyObject *)__pyx_ptype_7ccgbank_Leaf));
-    __pyx_r = ((PyObject *)__pyx_ptype_7ccgbank_Leaf);
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_parse_leaf); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 62, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_r = __pyx_t_2;
+    __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "ccgbank.pyx":60
+    /* "ccgbank.pyx":61
  *     @property
- *     def next_node_type(self):
+ *     def next_node(self):
  *         if self.line[self.index+2] == "L":             # <<<<<<<<<<<<<<
- *             return Leaf
+ *             return self.parse_leaf
  *         elif self.line[self.index+2] == "T":
  */
   }
 
-  /* "ccgbank.pyx":62
+  /* "ccgbank.pyx":63
  *         if self.line[self.index+2] == "L":
- *             return Leaf
+ *             return self.parse_leaf
  *         elif self.line[self.index+2] == "T":             # <<<<<<<<<<<<<<
- *             return Tree
+ *             return self.parse_tree
  *         else:
  */
   __pyx_t_1 = (__pyx_v_self->index + 2);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_t_1, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 62, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_self->line, __pyx_t_1, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_T, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 62, __pyx_L1_error)
+  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_T, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_3) {
 
-    /* "ccgbank.pyx":63
- *             return Leaf
+    /* "ccgbank.pyx":64
+ *             return self.parse_leaf
  *         elif self.line[self.index+2] == "T":
- *             return Tree             # <<<<<<<<<<<<<<
+ *             return self.parse_tree             # <<<<<<<<<<<<<<
  *         else:
  *             raise RuntimeError()
  */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_INCREF(((PyObject *)__pyx_ptype_7ccgbank_Tree));
-    __pyx_r = ((PyObject *)__pyx_ptype_7ccgbank_Tree);
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_parse_tree); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 64, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_r = __pyx_t_2;
+    __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "ccgbank.pyx":62
+    /* "ccgbank.pyx":63
  *         if self.line[self.index+2] == "L":
- *             return Leaf
+ *             return self.parse_leaf
  *         elif self.line[self.index+2] == "T":             # <<<<<<<<<<<<<<
- *             return Tree
+ *             return self.parse_tree
  *         else:
  */
   }
 
-  /* "ccgbank.pyx":65
- *             return Tree
+  /* "ccgbank.pyx":66
+ *             return self.parse_tree
  *         else:
  *             raise RuntimeError()             # <<<<<<<<<<<<<<
  * 
- * cdef class Node(object):
+ *     def parse_leaf(self):
  */
   /*else*/ {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_builtin_RuntimeError); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 65, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_builtin_RuntimeError); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 66, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 65, __pyx_L1_error)
+    __PYX_ERR(0, 66, __pyx_L1_error)
   }
 
-  /* "ccgbank.pyx":59
+  /* "ccgbank.pyx":60
  * 
  *     @property
- *     def next_node_type(self):             # <<<<<<<<<<<<<<
+ *     def next_node(self):             # <<<<<<<<<<<<<<
  *         if self.line[self.index+2] == "L":
- *             return Leaf
+ *             return self.parse_leaf
  */
 
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("ccgbank.AutoLineReader.next_node_type.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("ccgbank.AutoLineReader.next_node.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2770,6 +2747,690 @@ static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_14next_node_type___get__(str
 }
 
 /* "ccgbank.pyx":68
+ *             raise RuntimeError()
+ * 
+ *     def parse_leaf(self):             # <<<<<<<<<<<<<<
+ *         cdef str _, word, end
+ *         cdef Cat cate
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_9parse_leaf(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_9parse_leaf(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("parse_leaf (wrapper)", 0);
+  __pyx_r = __pyx_pf_7ccgbank_14AutoLineReader_8parse_leaf(((struct __pyx_obj_7ccgbank_AutoLineReader *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_8parse_leaf(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self) {
+  CYTHON_UNUSED PyObject *__pyx_v__ = 0;
+  PyObject *__pyx_v_word = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_end = 0;
+  struct __pyx_obj_3cat_Cat *__pyx_v_cate = 0;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  __Pyx_RefNannySetupContext("parse_leaf", 0);
+
+  /* "ccgbank.pyx":71
+ *         cdef str _, word, end
+ *         cdef Cat cate
+ *         self.check("(")             # <<<<<<<<<<<<<<
+ *         self.check("<", 1)
+ *         self.check("L", 2)
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 71, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":72
+ *         cdef Cat cate
+ *         self.check("(")
+ *         self.check("<", 1)             # <<<<<<<<<<<<<<
+ *         self.check("L", 2)
+ *         _    = self.next()
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_check); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 72, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 72, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":73
+ *         self.check("(")
+ *         self.check("<", 1)
+ *         self.check("L", 2)             # <<<<<<<<<<<<<<
+ *         _    = self.next()
+ *         cate = cat.parse(self.next())
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":74
+ *         self.check("<", 1)
+ *         self.check("L", 2)
+ *         _    = self.next()             # <<<<<<<<<<<<<<
+ *         cate = cat.parse(self.next())
+ *         _    = self.next() # POS tag
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 74, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_v__ = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":75
+ *         self.check("L", 2)
+ *         _    = self.next()
+ *         cate = cat.parse(self.next())             # <<<<<<<<<<<<<<
+ *         _    = self.next() # POS tag
+ *         _    = self.next()
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 75, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 75, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__pyx_f_3cat_parse(((PyObject*)__pyx_t_2))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_cate = ((struct __pyx_obj_3cat_Cat *)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":76
+ *         _    = self.next()
+ *         cate = cat.parse(self.next())
+ *         _    = self.next() # POS tag             # <<<<<<<<<<<<<<
+ *         _    = self.next()
+ *         word = self.next()
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 76, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 76, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 76, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 76, __pyx_L1_error)
+  __Pyx_DECREF_SET(__pyx_v__, ((PyObject*)__pyx_t_1));
+  __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":77
+ *         cate = cat.parse(self.next())
+ *         _    = self.next() # POS tag
+ *         _    = self.next()             # <<<<<<<<<<<<<<
+ *         word = self.next()
+ *         end  = self.next()
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 77, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 77, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 77, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 77, __pyx_L1_error)
+  __Pyx_DECREF_SET(__pyx_v__, ((PyObject*)__pyx_t_1));
+  __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":78
+ *         _    = self.next() # POS tag
+ *         _    = self.next()
+ *         word = self.next()             # <<<<<<<<<<<<<<
+ *         end  = self.next()
+ *         return Leaf(word, cate, 0)
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 78, __pyx_L1_error)
+  __pyx_v_word = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":79
+ *         _    = self.next()
+ *         word = self.next()
+ *         end  = self.next()             # <<<<<<<<<<<<<<
+ *         return Leaf(word, cate, 0)
+ * 
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 79, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 79, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 79, __pyx_L1_error)
+  __pyx_v_end = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":80
+ *         word = self.next()
+ *         end  = self.next()
+ *         return Leaf(word, cate, 0)             # <<<<<<<<<<<<<<
+ * 
+ *     def parse_tree(self):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__pyx_v_word);
+  __Pyx_GIVEREF(__pyx_v_word);
+  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_word);
+  __Pyx_INCREF(((PyObject *)__pyx_v_cate));
+  __Pyx_GIVEREF(((PyObject *)__pyx_v_cate));
+  PyTuple_SET_ITEM(__pyx_t_1, 1, ((PyObject *)__pyx_v_cate));
+  __Pyx_INCREF(__pyx_int_0);
+  __Pyx_GIVEREF(__pyx_int_0);
+  PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_int_0);
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_7ccgbank_Leaf), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_r = __pyx_t_2;
+  __pyx_t_2 = 0;
+  goto __pyx_L0;
+
+  /* "ccgbank.pyx":68
+ *             raise RuntimeError()
+ * 
+ *     def parse_leaf(self):             # <<<<<<<<<<<<<<
+ *         cdef str _, word, end
+ *         cdef Cat cate
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_AddTraceback("ccgbank.AutoLineReader.parse_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v__);
+  __Pyx_XDECREF(__pyx_v_word);
+  __Pyx_XDECREF(__pyx_v_end);
+  __Pyx_XDECREF((PyObject *)__pyx_v_cate);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "ccgbank.pyx":82
+ *         return Leaf(word, cate, 0)
+ * 
+ *     def parse_tree(self):             # <<<<<<<<<<<<<<
+ *         cdef str _, end
+ *         cdef Cat cate
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_11parse_tree(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_7ccgbank_14AutoLineReader_11parse_tree(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("parse_tree (wrapper)", 0);
+  __pyx_r = __pyx_pf_7ccgbank_14AutoLineReader_10parse_tree(((struct __pyx_obj_7ccgbank_AutoLineReader *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_7ccgbank_14AutoLineReader_10parse_tree(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_self) {
+  CYTHON_UNUSED PyObject *__pyx_v__ = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_end = 0;
+  struct __pyx_obj_3cat_Cat *__pyx_v_cate = 0;
+  int __pyx_v_left_is_head;
+  PyObject *__pyx_v_children = 0;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  int __pyx_t_4;
+  int __pyx_t_5;
+  __Pyx_RefNannySetupContext("parse_tree", 0);
+
+  /* "ccgbank.pyx":88
+ *         cdef list children
+ * 
+ *         self.check("(")             # <<<<<<<<<<<<<<
+ *         self.check("<", 1)
+ *         self.check("T", 2)
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":89
+ * 
+ *         self.check("(")
+ *         self.check("<", 1)             # <<<<<<<<<<<<<<
+ *         self.check("T", 2)
+ *         self.next()
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_check); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":90
+ *         self.check("(")
+ *         self.check("<", 1)
+ *         self.check("T", 2)             # <<<<<<<<<<<<<<
+ *         self.next()
+ *         cate = cat.parse(self.next())
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 90, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 90, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":91
+ *         self.check("<", 1)
+ *         self.check("T", 2)
+ *         self.next()             # <<<<<<<<<<<<<<
+ *         cate = cat.parse(self.next())
+ *         left_is_head = self.next() == "0"
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 91, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 91, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 91, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":92
+ *         self.check("T", 2)
+ *         self.next()
+ *         cate = cat.parse(self.next())             # <<<<<<<<<<<<<<
+ *         left_is_head = self.next() == "0"
+ *         _ = self.next()
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 92, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 92, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 92, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__pyx_f_3cat_parse(((PyObject*)__pyx_t_2))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_cate = ((struct __pyx_obj_3cat_Cat *)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "ccgbank.pyx":93
+ *         self.next()
+ *         cate = cat.parse(self.next())
+ *         left_is_head = self.next() == "0"             # <<<<<<<<<<<<<<
+ *         _ = self.next()
+ *         children = []
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 93, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 93, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_kp_s_0, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 93, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_left_is_head = __pyx_t_4;
+
+  /* "ccgbank.pyx":94
+ *         cate = cat.parse(self.next())
+ *         left_is_head = self.next() == "0"
+ *         _ = self.next()             # <<<<<<<<<<<<<<
+ *         children = []
+ *         while self.peek() != ")":
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 94, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 94, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 94, __pyx_L1_error)
+  __pyx_v__ = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":95
+ *         left_is_head = self.next() == "0"
+ *         _ = self.next()
+ *         children = []             # <<<<<<<<<<<<<<
+ *         while self.peek() != ")":
+ *             children.append(self.next_node())
+ */
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_v_children = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":96
+ *         _ = self.next()
+ *         children = []
+ *         while self.peek() != ")":             # <<<<<<<<<<<<<<
+ *             children.append(self.next_node())
+ *         end = self.next()
+ */
+  while (1) {
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_peek); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 96, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_3 = NULL;
+    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+      if (likely(__pyx_t_3)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+        __Pyx_INCREF(__pyx_t_3);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_1, function);
+      }
+    }
+    if (__pyx_t_3) {
+      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 96, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    } else {
+      __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 96, __pyx_L1_error)
+    }
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_4 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_kp_s__11, Py_NE)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 96, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    if (!__pyx_t_4) break;
+
+    /* "ccgbank.pyx":97
+ *         children = []
+ *         while self.peek() != ")":
+ *             children.append(self.next_node())             # <<<<<<<<<<<<<<
+ *         end = self.next()
+ *         return Tree(cate, left_is_head, children, combinator.UnaryRule())
+ */
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next_node); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_3 = NULL;
+    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+      if (likely(__pyx_t_3)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+        __Pyx_INCREF(__pyx_t_3);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_1, function);
+      }
+    }
+    if (__pyx_t_3) {
+      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 97, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    } else {
+      __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 97, __pyx_L1_error)
+    }
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_children, __pyx_t_2); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 97, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  }
+
+  /* "ccgbank.pyx":98
+ *         while self.peek() != ")":
+ *             children.append(self.next_node())
+ *         end = self.next()             # <<<<<<<<<<<<<<
+ *         return Tree(cate, left_is_head, children, combinator.UnaryRule())
+ * 
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = NULL;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 98, __pyx_L1_error)
+  __pyx_v_end = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "ccgbank.pyx":99
+ *             children.append(self.next_node())
+ *         end = self.next()
+ *         return Tree(cate, left_is_head, children, combinator.UnaryRule())             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_2 = __Pyx_PyBool_FromLong(__pyx_v_left_is_head); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_10combinator_UnaryRule), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = PyTuple_New(4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_INCREF(((PyObject *)__pyx_v_cate));
+  __Pyx_GIVEREF(((PyObject *)__pyx_v_cate));
+  PyTuple_SET_ITEM(__pyx_t_3, 0, ((PyObject *)__pyx_v_cate));
+  __Pyx_GIVEREF(__pyx_t_2);
+  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
+  __Pyx_INCREF(__pyx_v_children);
+  __Pyx_GIVEREF(__pyx_v_children);
+  PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_v_children);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_3, 3, __pyx_t_1);
+  __pyx_t_2 = 0;
+  __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_7ccgbank_Tree), __pyx_t_3, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "ccgbank.pyx":82
+ *         return Leaf(word, cate, 0)
+ * 
+ *     def parse_tree(self):             # <<<<<<<<<<<<<<
+ *         cdef str _, end
+ *         cdef Cat cate
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_AddTraceback("ccgbank.AutoLineReader.parse_tree", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v__);
+  __Pyx_XDECREF(__pyx_v_end);
+  __Pyx_XDECREF((PyObject *)__pyx_v_cate);
+  __Pyx_XDECREF(__pyx_v_children);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "ccgbank.pyx":103
  * 
  * cdef class Node(object):
  *     def __init__(self, Cat cat, int rule_type):             # <<<<<<<<<<<<<<
@@ -2805,11 +3466,11 @@ static int __pyx_pw_7ccgbank_4Node_1__init__(PyObject *__pyx_v_self, PyObject *_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_rule_type)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 1, 2, 2, 1); __PYX_ERR(0, 68, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 2, 2, 1); __PYX_ERR(0, 103, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 68, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 103, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -2818,17 +3479,17 @@ static int __pyx_pw_7ccgbank_4Node_1__init__(PyObject *__pyx_v_self, PyObject *_
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
     __pyx_v_cat = ((struct __pyx_obj_3cat_Cat *)values[0]);
-    __pyx_v_rule_type = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_rule_type == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 68, __pyx_L3_error)
+    __pyx_v_rule_type = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_rule_type == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 68, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 103, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("ccgbank.Node.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cat), __pyx_ptype_3cat_Cat, 1, "cat", 0))) __PYX_ERR(0, 68, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cat), __pyx_ptype_3cat_Cat, 1, "cat", 0))) __PYX_ERR(0, 103, __pyx_L1_error)
   __pyx_r = __pyx_pf_7ccgbank_4Node___init__(((struct __pyx_obj_7ccgbank_Node *)__pyx_v_self), __pyx_v_cat, __pyx_v_rule_type);
 
   /* function exit code */
@@ -2845,7 +3506,7 @@ static int __pyx_pf_7ccgbank_4Node___init__(struct __pyx_obj_7ccgbank_Node *__py
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "ccgbank.pyx":69
+  /* "ccgbank.pyx":104
  * cdef class Node(object):
  *     def __init__(self, Cat cat, int rule_type):
  *         self.cat = cat             # <<<<<<<<<<<<<<
@@ -2858,16 +3519,16 @@ static int __pyx_pf_7ccgbank_4Node___init__(struct __pyx_obj_7ccgbank_Node *__py
   __Pyx_DECREF(((PyObject *)__pyx_v_self->cat));
   __pyx_v_self->cat = __pyx_v_cat;
 
-  /* "ccgbank.pyx":70
+  /* "ccgbank.pyx":105
  *     def __init__(self, Cat cat, int rule_type):
  *         self.cat = cat
  *         self.rule_type = rule_type             # <<<<<<<<<<<<<<
  * 
- * cdef class Leaf(Node):
+ * 
  */
   __pyx_v_self->rule_type = __pyx_v_rule_type;
 
-  /* "ccgbank.pyx":68
+  /* "ccgbank.pyx":103
  * 
  * cdef class Node(object):
  *     def __init__(self, Cat cat, int rule_type):             # <<<<<<<<<<<<<<
@@ -2962,10 +3623,10 @@ static PyObject *__pyx_pf_7ccgbank_4Node_9rule_type___get__(struct __pyx_obj_7cc
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":74
+/* "ccgbank.pyx":110
  * cdef class Leaf(Node):
  *     # (<L N/N NNP NNP Pierre N_73/N_73>)
- *     def __init__(self, str word, Cat cat, int pos):             # <<<<<<<<<<<<<<
+ *     def __init__(self, str word, Cat cat, int position):             # <<<<<<<<<<<<<<
  *         super(Leaf, self).__init__(cat, LEXICON)
  *         self.word = word
  */
@@ -2975,12 +3636,12 @@ static int __pyx_pw_7ccgbank_4Leaf_1__init__(PyObject *__pyx_v_self, PyObject *_
 static int __pyx_pw_7ccgbank_4Leaf_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_word = 0;
   struct __pyx_obj_3cat_Cat *__pyx_v_cat = 0;
-  int __pyx_v_pos;
+  int __pyx_v_position;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__init__ (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_word,&__pyx_n_s_cat,&__pyx_n_s_pos,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_word,&__pyx_n_s_cat,&__pyx_n_s_position,0};
     PyObject* values[3] = {0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -3000,16 +3661,16 @@ static int __pyx_pw_7ccgbank_4Leaf_1__init__(PyObject *__pyx_v_self, PyObject *_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_cat)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 1, 3, 3, 1); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 3, 3, 1); __PYX_ERR(0, 110, __pyx_L3_error)
         }
         case  2:
-        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_pos)) != 0)) kw_args--;
+        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_position)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 1, 3, 3, 2); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 3, 3, 2); __PYX_ERR(0, 110, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 74, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 110, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -3020,19 +3681,19 @@ static int __pyx_pw_7ccgbank_4Leaf_1__init__(PyObject *__pyx_v_self, PyObject *_
     }
     __pyx_v_word = ((PyObject*)values[0]);
     __pyx_v_cat = ((struct __pyx_obj_3cat_Cat *)values[1]);
-    __pyx_v_pos = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_pos == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 74, __pyx_L3_error)
+    __pyx_v_position = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_position == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 110, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 74, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 110, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("ccgbank.Leaf.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_word), (&PyString_Type), 1, "word", 1))) __PYX_ERR(0, 74, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cat), __pyx_ptype_3cat_Cat, 1, "cat", 0))) __PYX_ERR(0, 74, __pyx_L1_error)
-  __pyx_r = __pyx_pf_7ccgbank_4Leaf___init__(((struct __pyx_obj_7ccgbank_Leaf *)__pyx_v_self), __pyx_v_word, __pyx_v_cat, __pyx_v_pos);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_word), (&PyString_Type), 1, "word", 1))) __PYX_ERR(0, 110, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cat), __pyx_ptype_3cat_Cat, 1, "cat", 0))) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_r = __pyx_pf_7ccgbank_4Leaf___init__(((struct __pyx_obj_7ccgbank_Leaf *)__pyx_v_self), __pyx_v_word, __pyx_v_cat, __pyx_v_position);
 
   /* function exit code */
   goto __pyx_L0;
@@ -3043,7 +3704,7 @@ static int __pyx_pw_7ccgbank_4Leaf_1__init__(PyObject *__pyx_v_self, PyObject *_
   return __pyx_r;
 }
 
-static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self, PyObject *__pyx_v_word, struct __pyx_obj_3cat_Cat *__pyx_v_cat, int __pyx_v_pos) {
+static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__pyx_v_self, PyObject *__pyx_v_word, struct __pyx_obj_3cat_Cat *__pyx_v_cat, int __pyx_v_position) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -3054,14 +3715,14 @@ static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__py
   PyObject *__pyx_t_6 = NULL;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "ccgbank.pyx":75
+  /* "ccgbank.pyx":111
  *     # (<L N/N NNP NNP Pierre N_73/N_73>)
- *     def __init__(self, str word, Cat cat, int pos):
+ *     def __init__(self, str word, Cat cat, int position):
  *         super(Leaf, self).__init__(cat, LEXICON)             # <<<<<<<<<<<<<<
  *         self.word = word
- *         self.pos  = pos
+ *         self.pos  = position
  */
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(((PyObject *)__pyx_ptype_7ccgbank_Leaf));
   __Pyx_GIVEREF(((PyObject *)__pyx_ptype_7ccgbank_Leaf));
@@ -3069,13 +3730,13 @@ static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__py
   __Pyx_INCREF(((PyObject *)__pyx_v_self));
   __Pyx_GIVEREF(((PyObject *)__pyx_v_self));
   PyTuple_SET_ITEM(__pyx_t_2, 1, ((PyObject *)__pyx_v_self));
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_super, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_super, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_init); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_init); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyInt_From_enum____pyx_t_7structs_RuleType(__pyx_e_7structs_LEXICON); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_enum____pyx_t_7structs_RuleType(__pyx_e_7structs_LEXICON); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -3089,7 +3750,7 @@ static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__py
       __pyx_t_5 = 1;
     }
   }
-  __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   if (__pyx_t_4) {
     __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -3100,17 +3761,17 @@ static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__py
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_5, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "ccgbank.pyx":76
- *     def __init__(self, str word, Cat cat, int pos):
+  /* "ccgbank.pyx":112
+ *     def __init__(self, str word, Cat cat, int position):
  *         super(Leaf, self).__init__(cat, LEXICON)
  *         self.word = word             # <<<<<<<<<<<<<<
- *         self.pos  = pos
+ *         self.pos  = position
  * 
  */
   __Pyx_INCREF(__pyx_v_word);
@@ -3119,19 +3780,19 @@ static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__py
   __Pyx_DECREF(__pyx_v_self->word);
   __pyx_v_self->word = __pyx_v_word;
 
-  /* "ccgbank.pyx":77
+  /* "ccgbank.pyx":113
  *         super(Leaf, self).__init__(cat, LEXICON)
  *         self.word = word
- *         self.pos  = pos             # <<<<<<<<<<<<<<
+ *         self.pos  = position             # <<<<<<<<<<<<<<
  * 
  *     def __str__(self):
  */
-  __pyx_v_self->pos = __pyx_v_pos;
+  __pyx_v_self->pos = __pyx_v_position;
 
-  /* "ccgbank.pyx":74
+  /* "ccgbank.pyx":110
  * cdef class Leaf(Node):
  *     # (<L N/N NNP NNP Pierre N_73/N_73>)
- *     def __init__(self, str word, Cat cat, int pos):             # <<<<<<<<<<<<<<
+ *     def __init__(self, str word, Cat cat, int position):             # <<<<<<<<<<<<<<
  *         super(Leaf, self).__init__(cat, LEXICON)
  *         self.word = word
  */
@@ -3152,12 +3813,12 @@ static int __pyx_pf_7ccgbank_4Leaf___init__(struct __pyx_obj_7ccgbank_Leaf *__py
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":79
- *         self.pos  = pos
+/* "ccgbank.pyx":115
+ *         self.pos  = position
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
- *         # pos = self.pos if self.pos is not None else "POS"
- *         cdef str pos = "POS"
+ *         cdef str pos = "POS" # dummy
+ *         cdef str word
  */
 
 /* Python wrapper */
@@ -3189,18 +3850,18 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
   PyObject *__pyx_t_9 = NULL;
   __Pyx_RefNannySetupContext("__str__", 0);
 
-  /* "ccgbank.pyx":81
+  /* "ccgbank.pyx":116
+ * 
  *     def __str__(self):
- *         # pos = self.pos if self.pos is not None else "POS"
- *         cdef str pos = "POS"             # <<<<<<<<<<<<<<
+ *         cdef str pos = "POS" # dummy             # <<<<<<<<<<<<<<
  *         cdef str word
  *         if self.word in ["{", "("]:
  */
   __Pyx_INCREF(__pyx_n_s_POS);
   __pyx_v_pos = __pyx_n_s_POS;
 
-  /* "ccgbank.pyx":83
- *         cdef str pos = "POS"
+  /* "ccgbank.pyx":118
+ *         cdef str pos = "POS" # dummy
  *         cdef str word
  *         if self.word in ["{", "("]:             # <<<<<<<<<<<<<<
  *             word = "-LRB-"
@@ -3208,14 +3869,14 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
  */
   __Pyx_INCREF(__pyx_v_self->word);
   __pyx_t_1 = __pyx_v_self->word;
-  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__3, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __pyx_t_3 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__12, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 118, __pyx_L1_error)
   __pyx_t_4 = (__pyx_t_3 != 0);
   if (!__pyx_t_4) {
   } else {
     __pyx_t_2 = __pyx_t_4;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_4 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __pyx_t_4 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__3, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 118, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_4 != 0);
   __pyx_t_2 = __pyx_t_3;
   __pyx_L4_bool_binop_done:;
@@ -3223,7 +3884,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
   __pyx_t_3 = (__pyx_t_2 != 0);
   if (__pyx_t_3) {
 
-    /* "ccgbank.pyx":84
+    /* "ccgbank.pyx":119
  *         cdef str word
  *         if self.word in ["{", "("]:
  *             word = "-LRB-"             # <<<<<<<<<<<<<<
@@ -3233,8 +3894,8 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
     __Pyx_INCREF(__pyx_kp_s_LRB);
     __pyx_v_word = __pyx_kp_s_LRB;
 
-    /* "ccgbank.pyx":83
- *         cdef str pos = "POS"
+    /* "ccgbank.pyx":118
+ *         cdef str pos = "POS" # dummy
  *         cdef str word
  *         if self.word in ["{", "("]:             # <<<<<<<<<<<<<<
  *             word = "-LRB-"
@@ -3243,7 +3904,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
     goto __pyx_L3;
   }
 
-  /* "ccgbank.pyx":85
+  /* "ccgbank.pyx":120
  *         if self.word in ["{", "("]:
  *             word = "-LRB-"
  *         elif self.word in ["}", ")"]:             # <<<<<<<<<<<<<<
@@ -3252,14 +3913,14 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
  */
   __Pyx_INCREF(__pyx_v_self->word);
   __pyx_t_1 = __pyx_v_self->word;
-  __pyx_t_2 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__5, Py_EQ)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 85, __pyx_L1_error)
+  __pyx_t_2 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__13, Py_EQ)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 120, __pyx_L1_error)
   __pyx_t_4 = (__pyx_t_2 != 0);
   if (!__pyx_t_4) {
   } else {
     __pyx_t_3 = __pyx_t_4;
     goto __pyx_L6_bool_binop_done;
   }
-  __pyx_t_4 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__6, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 85, __pyx_L1_error)
+  __pyx_t_4 = (__Pyx_PyString_Equals(__pyx_t_1, __pyx_kp_s__11, Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 120, __pyx_L1_error)
   __pyx_t_2 = (__pyx_t_4 != 0);
   __pyx_t_3 = __pyx_t_2;
   __pyx_L6_bool_binop_done:;
@@ -3267,7 +3928,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
   __pyx_t_2 = (__pyx_t_3 != 0);
   if (__pyx_t_2) {
 
-    /* "ccgbank.pyx":86
+    /* "ccgbank.pyx":121
  *             word = "-LRB-"
  *         elif self.word in ["}", ")"]:
  *             word = "-RRB-"             # <<<<<<<<<<<<<<
@@ -3277,7 +3938,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
     __Pyx_INCREF(__pyx_kp_s_RRB);
     __pyx_v_word = __pyx_kp_s_RRB;
 
-    /* "ccgbank.pyx":85
+    /* "ccgbank.pyx":120
  *         if self.word in ["{", "("]:
  *             word = "-LRB-"
  *         elif self.word in ["}", ")"]:             # <<<<<<<<<<<<<<
@@ -3287,7 +3948,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
     goto __pyx_L3;
   }
 
-  /* "ccgbank.pyx":88
+  /* "ccgbank.pyx":123
  *             word = "-RRB-"
  *         else:
  *             word = self.word             # <<<<<<<<<<<<<<
@@ -3302,7 +3963,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
   }
   __pyx_L3:;
 
-  /* "ccgbank.pyx":89
+  /* "ccgbank.pyx":124
  *         else:
  *             word = self.word
  *         return "(<L {0} {1} {1} {2} {0}>)".format(             # <<<<<<<<<<<<<<
@@ -3310,10 +3971,10 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_kp_s_L_0_1_1_2_0, __pyx_n_s_format); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_kp_s_L_0_1_1_2_0, __pyx_n_s_format); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
 
-  /* "ccgbank.pyx":90
+  /* "ccgbank.pyx":125
  *             word = self.word
  *         return "(<L {0} {1} {1} {2} {0}>)".format(
  *                 self.cat, pos, word)             # <<<<<<<<<<<<<<
@@ -3332,7 +3993,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
       __pyx_t_8 = 1;
     }
   }
-  __pyx_t_9 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_t_9 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   if (__pyx_t_7) {
     __Pyx_GIVEREF(__pyx_t_7); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_7); __pyx_t_7 = NULL;
@@ -3346,7 +4007,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
   __Pyx_INCREF(__pyx_v_word);
   __Pyx_GIVEREF(__pyx_v_word);
   PyTuple_SET_ITEM(__pyx_t_9, 2+__pyx_t_8, __pyx_v_word);
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_9, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_9, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -3354,12 +4015,12 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
   __pyx_t_5 = 0;
   goto __pyx_L0;
 
-  /* "ccgbank.pyx":79
- *         self.pos  = pos
+  /* "ccgbank.pyx":115
+ *         self.pos  = position
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
- *         # pos = self.pos if self.pos is not None else "POS"
- *         cdef str pos = "POS"
+ *         cdef str pos = "POS" # dummy
+ *         cdef str word
  */
 
   /* function exit code */
@@ -3379,7 +4040,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_2__str__(struct __pyx_obj_7ccgbank_Leaf
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":93
+/* "ccgbank.pyx":128
  * 
  *     @property
  *     def headid(self):             # <<<<<<<<<<<<<<
@@ -3406,7 +4067,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_6headid___get__(struct __pyx_obj_7ccgba
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "ccgbank.pyx":94
+  /* "ccgbank.pyx":129
  *     @property
  *     def headid(self):
  *         return self.pos             # <<<<<<<<<<<<<<
@@ -3414,13 +4075,13 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_6headid___get__(struct __pyx_obj_7ccgba
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->pos); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->pos); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "ccgbank.pyx":93
+  /* "ccgbank.pyx":128
  * 
  *     @property
  *     def headid(self):             # <<<<<<<<<<<<<<
@@ -3439,7 +4100,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_6headid___get__(struct __pyx_obj_7ccgba
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":97
+/* "ccgbank.pyx":132
  * 
  *     @property
  *     def deplen(self):             # <<<<<<<<<<<<<<
@@ -3465,19 +4126,19 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_6deplen___get__(CYTHON_UNUSED struct __
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "ccgbank.pyx":98
+  /* "ccgbank.pyx":133
  *     @property
  *     def deplen(self):
  *         return 0             # <<<<<<<<<<<<<<
  * 
- *     @staticmethod
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_int_0);
   __pyx_r = __pyx_int_0;
   goto __pyx_L0;
 
-  /* "ccgbank.pyx":97
+  /* "ccgbank.pyx":132
  * 
  *     @property
  *     def deplen(self):             # <<<<<<<<<<<<<<
@@ -3487,358 +4148,6 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_6deplen___get__(CYTHON_UNUSED struct __
 
   /* function exit code */
   __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "ccgbank.pyx":101
- * 
- *     @staticmethod
- *     def parse(reader):             # <<<<<<<<<<<<<<
- *         cdef str _, word, end
- *         cdef Cat cate
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_7ccgbank_4Leaf_5parse(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_7ccgbank_4Leaf_5parse = {"parse", (PyCFunction)__pyx_pw_7ccgbank_4Leaf_5parse, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_7ccgbank_4Leaf_5parse(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_reader = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("parse (wrapper)", 0);
-  {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_reader,0};
-    PyObject* values[1] = {0};
-    if (unlikely(__pyx_kwds)) {
-      Py_ssize_t kw_args;
-      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
-      switch (pos_args) {
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = PyDict_Size(__pyx_kwds);
-      switch (pos_args) {
-        case  0:
-        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_reader)) != 0)) kw_args--;
-        else goto __pyx_L5_argtuple_error;
-      }
-      if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "parse") < 0)) __PYX_ERR(0, 101, __pyx_L3_error)
-      }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 1) {
-      goto __pyx_L5_argtuple_error;
-    } else {
-      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-    }
-    __pyx_v_reader = values[0];
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("parse", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 101, __pyx_L3_error)
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("ccgbank.Leaf.parse", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_7ccgbank_4Leaf_4parse(__pyx_v_reader);
-
-  /* function exit code */
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_7ccgbank_4Leaf_4parse(PyObject *__pyx_v_reader) {
-  CYTHON_UNUSED PyObject *__pyx_v__ = 0;
-  PyObject *__pyx_v_word = 0;
-  CYTHON_UNUSED PyObject *__pyx_v_end = 0;
-  struct __pyx_obj_3cat_Cat *__pyx_v_cate = 0;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
-  PyObject *__pyx_t_3 = NULL;
-  __Pyx_RefNannySetupContext("parse", 0);
-
-  /* "ccgbank.pyx":104
- *         cdef str _, word, end
- *         cdef Cat cate
- *         reader.check("(")             # <<<<<<<<<<<<<<
- *         reader.check("<", 1)
- *         reader.check("L", 2)
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 104, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":105
- *         cdef Cat cate
- *         reader.check("(")
- *         reader.check("<", 1)             # <<<<<<<<<<<<<<
- *         reader.check("L", 2)
- *         _    = reader.next()
- */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_check); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":106
- *         reader.check("(")
- *         reader.check("<", 1)
- *         reader.check("L", 2)             # <<<<<<<<<<<<<<
- *         _    = reader.next()
- *         cate = cat.parse(reader.next())
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":107
- *         reader.check("<", 1)
- *         reader.check("L", 2)
- *         _    = reader.next()             # <<<<<<<<<<<<<<
- *         cate = cat.parse(reader.next())
- *         _    = reader.next() # POS tag
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_1, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 107, __pyx_L1_error)
-  __pyx_v__ = ((PyObject*)__pyx_t_2);
-  __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":108
- *         reader.check("L", 2)
- *         _    = reader.next()
- *         cate = cat.parse(reader.next())             # <<<<<<<<<<<<<<
- *         _    = reader.next() # POS tag
- *         _    = reader.next()
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_1, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 108, __pyx_L1_error)
-  __pyx_t_1 = ((PyObject *)__pyx_f_3cat_parse(((PyObject*)__pyx_t_2))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_cate = ((struct __pyx_obj_3cat_Cat *)__pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":109
- *         _    = reader.next()
- *         cate = cat.parse(reader.next())
- *         _    = reader.next() # POS tag             # <<<<<<<<<<<<<<
- *         _    = reader.next()
- *         word = reader.next()
- */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 109, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 109, __pyx_L1_error)
-  __Pyx_DECREF_SET(__pyx_v__, ((PyObject*)__pyx_t_1));
-  __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":110
- *         cate = cat.parse(reader.next())
- *         _    = reader.next() # POS tag
- *         _    = reader.next()             # <<<<<<<<<<<<<<
- *         word = reader.next()
- *         end  = reader.next()
- */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 110, __pyx_L1_error)
-  __Pyx_DECREF_SET(__pyx_v__, ((PyObject*)__pyx_t_1));
-  __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":111
- *         _    = reader.next() # POS tag
- *         _    = reader.next()
- *         word = reader.next()             # <<<<<<<<<<<<<<
- *         end  = reader.next()
- *         return Leaf(word, cate, 0)
- */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 111, __pyx_L1_error)
-  __pyx_v_word = ((PyObject*)__pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":112
- *         _    = reader.next()
- *         word = reader.next()
- *         end  = reader.next()             # <<<<<<<<<<<<<<
- *         return Leaf(word, cate, 0)
- * 
- */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_reader, __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 112, __pyx_L1_error)
-  __pyx_v_end = ((PyObject*)__pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":113
- *         word = reader.next()
- *         end  = reader.next()
- *         return Leaf(word, cate, 0)             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_v_word);
-  __Pyx_GIVEREF(__pyx_v_word);
-  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_word);
-  __Pyx_INCREF(((PyObject *)__pyx_v_cate));
-  __Pyx_GIVEREF(((PyObject *)__pyx_v_cate));
-  PyTuple_SET_ITEM(__pyx_t_1, 1, ((PyObject *)__pyx_v_cate));
-  __Pyx_INCREF(__pyx_int_0);
-  __Pyx_GIVEREF(__pyx_int_0);
-  PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_int_0);
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_7ccgbank_Leaf), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_r = __pyx_t_2;
-  __pyx_t_2 = 0;
-  goto __pyx_L0;
-
-  /* "ccgbank.pyx":101
- * 
- *     @staticmethod
- *     def parse(reader):             # <<<<<<<<<<<<<<
- *         cdef str _, word, end
- *         cdef Cat cate
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("ccgbank.Leaf.parse", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v__);
-  __Pyx_XDECREF(__pyx_v_word);
-  __Pyx_XDECREF(__pyx_v_end);
-  __Pyx_XDECREF((PyObject *)__pyx_v_cate);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -3925,7 +4234,7 @@ static PyObject *__pyx_pf_7ccgbank_4Leaf_3pos___get__(struct __pyx_obj_7ccgbank_
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":118
+/* "ccgbank.pyx":138
  * cdef class Tree(Node):
  *     # (<T N 1 2> (<L N/N JJ JJ nonexecutive N_43/N_43>) (<L N NN NN director N>) )
  *     def __init__(self, cat, left_is_head, children, rule=None):             # <<<<<<<<<<<<<<
@@ -3966,12 +4275,12 @@ static int __pyx_pw_7ccgbank_4Tree_1__init__(PyObject *__pyx_v_self, PyObject *_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_left_is_head)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 0, 3, 4, 1); __PYX_ERR(0, 118, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__init__", 0, 3, 4, 1); __PYX_ERR(0, 138, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_children)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 0, 3, 4, 2); __PYX_ERR(0, 118, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__init__", 0, 3, 4, 2); __PYX_ERR(0, 138, __pyx_L3_error)
         }
         case  3:
         if (kw_args > 0) {
@@ -3980,7 +4289,7 @@ static int __pyx_pw_7ccgbank_4Tree_1__init__(PyObject *__pyx_v_self, PyObject *_
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 118, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 138, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -3999,7 +4308,7 @@ static int __pyx_pw_7ccgbank_4Tree_1__init__(PyObject *__pyx_v_self, PyObject *_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 3, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 118, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 0, 3, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 138, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("ccgbank.Tree.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4024,7 +4333,7 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
   PyObject *__pyx_t_6 = NULL;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "ccgbank.pyx":119
+  /* "ccgbank.pyx":139
  *     # (<T N 1 2> (<L N/N JJ JJ nonexecutive N_43/N_43>) (<L N NN NN director N>) )
  *     def __init__(self, cat, left_is_head, children, rule=None):
  *         rule_type = NONE if not isinstance(rule, Combinator) \             # <<<<<<<<<<<<<<
@@ -4033,20 +4342,20 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
  */
   __pyx_t_2 = __Pyx_TypeCheck(__pyx_v_rule, __pyx_ptype_10combinator_Combinator); 
   if (((!(__pyx_t_2 != 0)) != 0)) {
-    __pyx_t_3 = __Pyx_PyInt_From_enum____pyx_t_7structs_RuleType(__pyx_e_7structs_NONE); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 119, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_From_enum____pyx_t_7structs_RuleType(__pyx_e_7structs_NONE); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_1 = __pyx_t_3;
     __pyx_t_3 = 0;
   } else {
 
-    /* "ccgbank.pyx":120
+    /* "ccgbank.pyx":140
  *     def __init__(self, cat, left_is_head, children, rule=None):
  *         rule_type = NONE if not isinstance(rule, Combinator) \
  *                                     else rule.rule_type             # <<<<<<<<<<<<<<
  *         super(Tree, self).__init__(cat, rule_type)
  *         self.children     = children
  */
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_rule, __pyx_n_s_rule_type); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 120, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_rule, __pyx_n_s_rule_type); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_1 = __pyx_t_3;
     __pyx_t_3 = 0;
@@ -4054,14 +4363,14 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
   __pyx_v_rule_type = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "ccgbank.pyx":121
+  /* "ccgbank.pyx":141
  *         rule_type = NONE if not isinstance(rule, Combinator) \
  *                                     else rule.rule_type
  *         super(Tree, self).__init__(cat, rule_type)             # <<<<<<<<<<<<<<
  *         self.children     = children
  *         self.left_is_head = left_is_head
  */
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(((PyObject *)__pyx_ptype_7ccgbank_Tree));
   __Pyx_GIVEREF(((PyObject *)__pyx_ptype_7ccgbank_Tree));
@@ -4069,10 +4378,10 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
   __Pyx_INCREF(((PyObject *)__pyx_v_self));
   __Pyx_GIVEREF(((PyObject *)__pyx_v_self));
   PyTuple_SET_ITEM(__pyx_t_3, 1, ((PyObject *)__pyx_v_self));
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_super, __pyx_t_3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_super, __pyx_t_3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_init); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_init); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_4 = NULL;
@@ -4087,7 +4396,7 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
       __pyx_t_5 = 1;
     }
   }
-  __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   if (__pyx_t_4) {
     __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -4098,20 +4407,20 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
   __Pyx_INCREF(__pyx_v_rule_type);
   __Pyx_GIVEREF(__pyx_v_rule_type);
   PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_5, __pyx_v_rule_type);
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "ccgbank.pyx":122
+  /* "ccgbank.pyx":142
  *                                     else rule.rule_type
  *         super(Tree, self).__init__(cat, rule_type)
  *         self.children     = children             # <<<<<<<<<<<<<<
  *         self.left_is_head = left_is_head
  *         self.op = rule
  */
-  if (!(likely(PyList_CheckExact(__pyx_v_children))||((__pyx_v_children) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "list", Py_TYPE(__pyx_v_children)->tp_name), 0))) __PYX_ERR(0, 122, __pyx_L1_error)
+  if (!(likely(PyList_CheckExact(__pyx_v_children))||((__pyx_v_children) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "list", Py_TYPE(__pyx_v_children)->tp_name), 0))) __PYX_ERR(0, 142, __pyx_L1_error)
   __pyx_t_1 = __pyx_v_children;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -4120,24 +4429,24 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
   __pyx_v_self->children = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "ccgbank.pyx":123
+  /* "ccgbank.pyx":143
  *         super(Tree, self).__init__(cat, rule_type)
  *         self.children     = children
  *         self.left_is_head = left_is_head             # <<<<<<<<<<<<<<
  *         self.op = rule
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v_left_is_head); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v_left_is_head); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 143, __pyx_L1_error)
   __pyx_v_self->left_is_head = __pyx_t_2;
 
-  /* "ccgbank.pyx":124
+  /* "ccgbank.pyx":144
  *         self.children     = children
  *         self.left_is_head = left_is_head
  *         self.op = rule             # <<<<<<<<<<<<<<
  * 
  *     def __str__(self):
  */
-  if (!(likely(((__pyx_v_rule) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_rule, __pyx_ptype_10combinator_Combinator))))) __PYX_ERR(0, 124, __pyx_L1_error)
+  if (!(likely(((__pyx_v_rule) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_rule, __pyx_ptype_10combinator_Combinator))))) __PYX_ERR(0, 144, __pyx_L1_error)
   __pyx_t_1 = __pyx_v_rule;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -4146,7 +4455,7 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
   __pyx_v_self->op = ((struct __pyx_obj_10combinator_Combinator *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "ccgbank.pyx":118
+  /* "ccgbank.pyx":138
  * cdef class Tree(Node):
  *     # (<T N 1 2> (<L N/N JJ JJ nonexecutive N_43/N_43>) (<L N NN NN director N>) )
  *     def __init__(self, cat, left_is_head, children, rule=None):             # <<<<<<<<<<<<<<
@@ -4170,7 +4479,7 @@ static int __pyx_pf_7ccgbank_4Tree___init__(struct __pyx_obj_7ccgbank_Tree *__py
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":126
+/* "ccgbank.pyx":146
  *         self.op = rule
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
@@ -4208,7 +4517,7 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree
   PyObject *__pyx_t_9 = NULL;
   __Pyx_RefNannySetupContext("__str__", 0);
 
-  /* "ccgbank.pyx":127
+  /* "ccgbank.pyx":147
  * 
  *     def __str__(self):
  *         cdef int left_is_head = 0 if self.left_is_head else 1             # <<<<<<<<<<<<<<
@@ -4222,46 +4531,46 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree
   }
   __pyx_v_left_is_head = __pyx_t_1;
 
-  /* "ccgbank.pyx":128
+  /* "ccgbank.pyx":148
  *     def __str__(self):
  *         cdef int left_is_head = 0 if self.left_is_head else 1
  *         cdef list children = [str(c) for c in self.children]             # <<<<<<<<<<<<<<
  *         return "(<T {0} {1} {2}> {3} )".format(
  *                 self.cat, left_is_head, len(children), " ".join(children))
  */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 128, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (unlikely(__pyx_v_self->children == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 128, __pyx_L1_error)
+    __PYX_ERR(0, 148, __pyx_L1_error)
   }
   __pyx_t_3 = __pyx_v_self->children; __Pyx_INCREF(__pyx_t_3); __pyx_t_4 = 0;
   for (;;) {
     if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_3)) break;
     #if CYTHON_COMPILING_IN_CPYTHON
-    __pyx_t_5 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_4); __Pyx_INCREF(__pyx_t_5); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 128, __pyx_L1_error)
+    __pyx_t_5 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_4); __Pyx_INCREF(__pyx_t_5); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 148, __pyx_L1_error)
     #else
-    __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 128, __pyx_L1_error)
+    __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 148, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_c, __pyx_t_5);
     __pyx_t_5 = 0;
-    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 128, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 148, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_INCREF(__pyx_v_c);
     __Pyx_GIVEREF(__pyx_v_c);
     PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_v_c);
-    __pyx_t_6 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 128, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 148, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 128, __pyx_L1_error)
+    if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 148, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_children = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "ccgbank.pyx":129
+  /* "ccgbank.pyx":149
  *         cdef int left_is_head = 0 if self.left_is_head else 1
  *         cdef list children = [str(c) for c in self.children]
  *         return "(<T {0} {1} {2}> {3} )".format(             # <<<<<<<<<<<<<<
@@ -4269,22 +4578,22 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_kp_s_T_0_1_2_3, __pyx_n_s_format); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_kp_s_T_0_1_2_3, __pyx_n_s_format); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
 
-  /* "ccgbank.pyx":130
+  /* "ccgbank.pyx":150
  *         cdef list children = [str(c) for c in self.children]
  *         return "(<T {0} {1} {2}> {3} )".format(
  *                 self.cat, left_is_head, len(children), " ".join(children))             # <<<<<<<<<<<<<<
  * 
- *     @staticmethod
+ *     def resolve_op(self, ops):
  */
-  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_left_is_head); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 130, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_left_is_head); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 150, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_4 = PyList_GET_SIZE(__pyx_v_children); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 130, __pyx_L1_error)
-  __pyx_t_5 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 130, __pyx_L1_error)
+  __pyx_t_4 = PyList_GET_SIZE(__pyx_v_children); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __pyx_t_5 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 150, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_7 = __Pyx_PyString_Join(__pyx_kp_s_, __pyx_v_children); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 130, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyString_Join(__pyx_kp_s_, __pyx_v_children); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 150, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_t_8 = NULL;
   __pyx_t_4 = 0;
@@ -4298,7 +4607,7 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree
       __pyx_t_4 = 1;
     }
   }
-  __pyx_t_9 = PyTuple_New(4+__pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __pyx_t_9 = PyTuple_New(4+__pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   if (__pyx_t_8) {
     __Pyx_GIVEREF(__pyx_t_8); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_8); __pyx_t_8 = NULL;
@@ -4315,7 +4624,7 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree
   __pyx_t_6 = 0;
   __pyx_t_5 = 0;
   __pyx_t_7 = 0;
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_9, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_9, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -4323,7 +4632,7 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "ccgbank.pyx":126
+  /* "ccgbank.pyx":146
  *         self.op = rule
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
@@ -4350,431 +4659,8 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_2__str__(struct __pyx_obj_7ccgbank_Tree
   return __pyx_r;
 }
 
-/* "ccgbank.pyx":133
- * 
- *     @staticmethod
- *     def parse(AutoLineReader reader):             # <<<<<<<<<<<<<<
- *         cdef str _, end
- *         cdef Cat cate
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_7ccgbank_4Tree_5parse(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_7ccgbank_4Tree_5parse = {"parse", (PyCFunction)__pyx_pw_7ccgbank_4Tree_5parse, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_7ccgbank_4Tree_5parse(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_reader = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("parse (wrapper)", 0);
-  {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_reader,0};
-    PyObject* values[1] = {0};
-    if (unlikely(__pyx_kwds)) {
-      Py_ssize_t kw_args;
-      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
-      switch (pos_args) {
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = PyDict_Size(__pyx_kwds);
-      switch (pos_args) {
-        case  0:
-        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_reader)) != 0)) kw_args--;
-        else goto __pyx_L5_argtuple_error;
-      }
-      if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "parse") < 0)) __PYX_ERR(0, 133, __pyx_L3_error)
-      }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 1) {
-      goto __pyx_L5_argtuple_error;
-    } else {
-      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-    }
-    __pyx_v_reader = ((struct __pyx_obj_7ccgbank_AutoLineReader *)values[0]);
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("parse", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 133, __pyx_L3_error)
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("ccgbank.Tree.parse", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_reader), __pyx_ptype_7ccgbank_AutoLineReader, 1, "reader", 0))) __PYX_ERR(0, 133, __pyx_L1_error)
-  __pyx_r = __pyx_pf_7ccgbank_4Tree_4parse(__pyx_v_reader);
-
-  /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_7ccgbank_4Tree_4parse(struct __pyx_obj_7ccgbank_AutoLineReader *__pyx_v_reader) {
-  CYTHON_UNUSED PyObject *__pyx_v__ = 0;
-  CYTHON_UNUSED PyObject *__pyx_v_end = 0;
-  struct __pyx_obj_3cat_Cat *__pyx_v_cate = 0;
-  int __pyx_v_left_is_head;
-  PyObject *__pyx_v_children = 0;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
-  PyObject *__pyx_t_3 = NULL;
-  int __pyx_t_4;
-  PyObject *__pyx_t_5 = NULL;
-  int __pyx_t_6;
-  __Pyx_RefNannySetupContext("parse", 0);
-
-  /* "ccgbank.pyx":139
- *         cdef list children
- * 
- *         reader.check("(")             # <<<<<<<<<<<<<<
- *         reader.check("<", 1)
- *         reader.check("T", 2)
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 139, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__11, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":140
- * 
- *         reader.check("(")
- *         reader.check("<", 1)             # <<<<<<<<<<<<<<
- *         reader.check("T", 2)
- *         reader.next()
- */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_check); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 140, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__12, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":141
- *         reader.check("(")
- *         reader.check("<", 1)
- *         reader.check("T", 2)             # <<<<<<<<<<<<<<
- *         reader.next()
- *         cate = cat.parse(reader.next())
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_check); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__13, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":142
- *         reader.check("<", 1)
- *         reader.check("T", 2)
- *         reader.next()             # <<<<<<<<<<<<<<
- *         cate = cat.parse(reader.next())
- *         left_is_head = reader.next() == "0"
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 142, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_1, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 142, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 142, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":143
- *         reader.check("T", 2)
- *         reader.next()
- *         cate = cat.parse(reader.next())             # <<<<<<<<<<<<<<
- *         left_is_head = reader.next() == "0"
- *         _ = reader.next()
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 143, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_1, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 143, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 143, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 143, __pyx_L1_error)
-  __pyx_t_1 = ((PyObject *)__pyx_f_3cat_parse(((PyObject*)__pyx_t_2))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 143, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_cate = ((struct __pyx_obj_3cat_Cat *)__pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "ccgbank.pyx":144
- *         reader.next()
- *         cate = cat.parse(reader.next())
- *         left_is_head = reader.next() == "0"             # <<<<<<<<<<<<<<
- *         _ = reader.next()
- *         children = []
- */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_next); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 144, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_kp_s_0, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 144, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 144, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_left_is_head = __pyx_t_4;
-
-  /* "ccgbank.pyx":145
- *         cate = cat.parse(reader.next())
- *         left_is_head = reader.next() == "0"
- *         _ = reader.next()             # <<<<<<<<<<<<<<
- *         children = []
- *         while reader.peek() != ")":
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_next); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_1, function);
-    }
-  }
-  if (__pyx_t_3) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 145, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 145, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 145, __pyx_L1_error)
-  __pyx_v__ = ((PyObject*)__pyx_t_2);
-  __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":146
- *         left_is_head = reader.next() == "0"
- *         _ = reader.next()
- *         children = []             # <<<<<<<<<<<<<<
- *         while reader.peek() != ")":
- *             children.append(reader.next_node_type.parse(reader))
- */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 146, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_v_children = ((PyObject*)__pyx_t_2);
-  __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":147
- *         _ = reader.next()
- *         children = []
- *         while reader.peek() != ")":             # <<<<<<<<<<<<<<
- *             children.append(reader.next_node_type.parse(reader))
- *         end = reader.next()
- */
-  while (1) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_peek); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 147, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = NULL;
-    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
-      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-      if (likely(__pyx_t_3)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-        __Pyx_INCREF(__pyx_t_3);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_1, function);
-      }
-    }
-    if (__pyx_t_3) {
-      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 147, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    } else {
-      __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 147, __pyx_L1_error)
-    }
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_kp_s__6, Py_NE)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 147, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (!__pyx_t_4) break;
-
-    /* "ccgbank.pyx":148
- *         children = []
- *         while reader.peek() != ")":
- *             children.append(reader.next_node_type.parse(reader))             # <<<<<<<<<<<<<<
- *         end = reader.next()
- *         return Tree(cate, left_is_head, children, combinator.UnaryRule())
- */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_next_node_type); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_parse); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 148, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = NULL;
-    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_3))) {
-      __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_3);
-      if (likely(__pyx_t_1)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
-        __Pyx_INCREF(__pyx_t_1);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_3, function);
-      }
-    }
-    if (!__pyx_t_1) {
-      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_3, ((PyObject *)__pyx_v_reader)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 148, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_2);
-    } else {
-      __pyx_t_5 = PyTuple_New(1+1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 148, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_5);
-      __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_1); __pyx_t_1 = NULL;
-      __Pyx_INCREF(((PyObject *)__pyx_v_reader));
-      __Pyx_GIVEREF(((PyObject *)__pyx_v_reader));
-      PyTuple_SET_ITEM(__pyx_t_5, 0+1, ((PyObject *)__pyx_v_reader));
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 148, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    }
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyList_Append(__pyx_v_children, __pyx_t_2); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 148, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  }
-
-  /* "ccgbank.pyx":149
- *         while reader.peek() != ")":
- *             children.append(reader.next_node_type.parse(reader))
- *         end = reader.next()             # <<<<<<<<<<<<<<
- *         return Tree(cate, left_is_head, children, combinator.UnaryRule())
- * 
- */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_reader), __pyx_n_s_next); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 149, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = NULL;
-  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_3))) {
-    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_3);
-    if (likely(__pyx_t_5)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
-      __Pyx_INCREF(__pyx_t_5);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_3, function);
-    }
-  }
-  if (__pyx_t_5) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 149, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 149, __pyx_L1_error)
-  }
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_2)->tp_name), 0))) __PYX_ERR(0, 149, __pyx_L1_error)
-  __pyx_v_end = ((PyObject*)__pyx_t_2);
-  __pyx_t_2 = 0;
-
-  /* "ccgbank.pyx":150
- *             children.append(reader.next_node_type.parse(reader))
- *         end = reader.next()
- *         return Tree(cate, left_is_head, children, combinator.UnaryRule())             # <<<<<<<<<<<<<<
- * 
- *     def resolve_op(self, ops):
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = __Pyx_PyBool_FromLong(__pyx_v_left_is_head); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 150, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_10combinator_UnaryRule), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = PyTuple_New(4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 150, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_INCREF(((PyObject *)__pyx_v_cate));
-  __Pyx_GIVEREF(((PyObject *)__pyx_v_cate));
-  PyTuple_SET_ITEM(__pyx_t_5, 0, ((PyObject *)__pyx_v_cate));
-  __Pyx_GIVEREF(__pyx_t_2);
-  PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_2);
-  __Pyx_INCREF(__pyx_v_children);
-  __Pyx_GIVEREF(__pyx_v_children);
-  PyTuple_SET_ITEM(__pyx_t_5, 2, __pyx_v_children);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_5, 3, __pyx_t_3);
-  __pyx_t_2 = 0;
-  __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_7ccgbank_Tree), __pyx_t_5, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_r = __pyx_t_3;
-  __pyx_t_3 = 0;
-  goto __pyx_L0;
-
-  /* "ccgbank.pyx":133
- * 
- *     @staticmethod
- *     def parse(AutoLineReader reader):             # <<<<<<<<<<<<<<
- *         cdef str _, end
- *         cdef Cat cate
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("ccgbank.Tree.parse", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v__);
-  __Pyx_XDECREF(__pyx_v_end);
-  __Pyx_XDECREF((PyObject *)__pyx_v_cate);
-  __Pyx_XDECREF(__pyx_v_children);
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
 /* "ccgbank.pyx":152
- *         return Tree(cate, left_is_head, children, combinator.UnaryRule())
+ *                 self.cat, left_is_head, len(children), " ".join(children))
  * 
  *     def resolve_op(self, ops):             # <<<<<<<<<<<<<<
  *         if len(self.children) == 1:
@@ -4782,19 +4668,19 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_4parse(struct __pyx_obj_7ccgbank_AutoLi
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_7ccgbank_4Tree_7resolve_op(PyObject *__pyx_v_self, PyObject *__pyx_v_ops); /*proto*/
-static PyObject *__pyx_pw_7ccgbank_4Tree_7resolve_op(PyObject *__pyx_v_self, PyObject *__pyx_v_ops) {
+static PyObject *__pyx_pw_7ccgbank_4Tree_5resolve_op(PyObject *__pyx_v_self, PyObject *__pyx_v_ops); /*proto*/
+static PyObject *__pyx_pw_7ccgbank_4Tree_5resolve_op(PyObject *__pyx_v_self, PyObject *__pyx_v_ops) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("resolve_op (wrapper)", 0);
-  __pyx_r = __pyx_pf_7ccgbank_4Tree_6resolve_op(((struct __pyx_obj_7ccgbank_Tree *)__pyx_v_self), ((PyObject *)__pyx_v_ops));
+  __pyx_r = __pyx_pf_7ccgbank_4Tree_4resolve_op(((struct __pyx_obj_7ccgbank_Tree *)__pyx_v_self), ((PyObject *)__pyx_v_ops));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_7ccgbank_4Tree_6resolve_op(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self, PyObject *__pyx_v_ops) {
+static PyObject *__pyx_pf_7ccgbank_4Tree_4resolve_op(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self, PyObject *__pyx_v_ops) {
   PyObject *__pyx_v_left = NULL;
   PyObject *__pyx_v_right = NULL;
   PyObject *__pyx_v_op = NULL;
@@ -5121,7 +5007,7 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_6resolve_op(struct __pyx_obj_7ccgbank_T
   __pyx_L3:;
 
   /* "ccgbank.pyx":152
- *         return Tree(cate, left_is_head, children, combinator.UnaryRule())
+ *                 self.cat, left_is_head, len(children), " ".join(children))
  * 
  *     def resolve_op(self, ops):             # <<<<<<<<<<<<<<
  *         if len(self.children) == 1:
@@ -5580,12 +5466,12 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_6deplen___get__(struct __pyx_obj_7ccgba
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_7ccgbank_4Tree_9show_derivation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_7ccgbank_4Tree_9show_derivation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_7ccgbank_4Tree_7show_derivation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_7ccgbank_4Tree_7show_derivation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("show_derivation (wrapper)", 0);
-  __pyx_r = __pyx_pf_7ccgbank_4Tree_8show_derivation(((struct __pyx_obj_7ccgbank_Tree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_7ccgbank_4Tree_6show_derivation(((struct __pyx_obj_7ccgbank_Tree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
@@ -6096,7 +5982,7 @@ static PyObject *__pyx_pf_7ccgbank_4Tree_15show_derivation_rec(PyObject *__pyx_s
  *         wordstr = ""
  */
 
-static PyObject *__pyx_pf_7ccgbank_4Tree_8show_derivation(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self) {
+static PyObject *__pyx_pf_7ccgbank_4Tree_6show_derivation(struct __pyx_obj_7ccgbank_Tree *__pyx_v_self) {
   struct __pyx_obj_7ccgbank___pyx_scope_struct__show_derivation *__pyx_cur_scope;
   PyObject *__pyx_v_catstr = NULL;
   PyObject *__pyx_v_wordstr = NULL;
@@ -7326,19 +7212,21 @@ static void __pyx_tp_dealloc_7ccgbank_AutoLineReader(PyObject *o) {
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static PyObject *__pyx_getprop_7ccgbank_14AutoLineReader_next_node_type(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_7ccgbank_14AutoLineReader_14next_node_type_1__get__(o);
+static PyObject *__pyx_getprop_7ccgbank_14AutoLineReader_next_node(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_7ccgbank_14AutoLineReader_9next_node_1__get__(o);
 }
 
 static PyMethodDef __pyx_methods_7ccgbank_AutoLineReader[] = {
   {"next", (PyCFunction)__pyx_pw_7ccgbank_14AutoLineReader_3next, METH_NOARGS, 0},
   {"check", (PyCFunction)__pyx_pw_7ccgbank_14AutoLineReader_5check, METH_VARARGS|METH_KEYWORDS, 0},
   {"peek", (PyCFunction)__pyx_pw_7ccgbank_14AutoLineReader_7peek, METH_NOARGS, 0},
+  {"parse_leaf", (PyCFunction)__pyx_pw_7ccgbank_14AutoLineReader_9parse_leaf, METH_NOARGS, 0},
+  {"parse_tree", (PyCFunction)__pyx_pw_7ccgbank_14AutoLineReader_11parse_tree, METH_NOARGS, 0},
   {0, 0, 0, 0}
 };
 
 static struct PyGetSetDef __pyx_getsets_7ccgbank_AutoLineReader[] = {
-  {(char *)"next_node_type", __pyx_getprop_7ccgbank_14AutoLineReader_next_node_type, 0, (char *)0, 0},
+  {(char *)"next_node", __pyx_getprop_7ccgbank_14AutoLineReader_next_node, 0, (char *)0, 0},
   {0, 0, 0, 0, 0}
 };
 
@@ -7559,7 +7447,6 @@ static PyObject *__pyx_getprop_7ccgbank_4Leaf_pos(PyObject *o, CYTHON_UNUSED voi
 }
 
 static PyMethodDef __pyx_methods_7ccgbank_Leaf[] = {
-  {"parse", (PyCFunction)__pyx_pw_7ccgbank_4Leaf_5parse, METH_VARARGS|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
 
@@ -7700,9 +7587,8 @@ static PyObject *__pyx_getprop_7ccgbank_4Tree_op(PyObject *o, CYTHON_UNUSED void
 }
 
 static PyMethodDef __pyx_methods_7ccgbank_Tree[] = {
-  {"parse", (PyCFunction)__pyx_pw_7ccgbank_4Tree_5parse, METH_VARARGS|METH_KEYWORDS, 0},
-  {"resolve_op", (PyCFunction)__pyx_pw_7ccgbank_4Tree_7resolve_op, METH_O, 0},
-  {"show_derivation", (PyCFunction)__pyx_pw_7ccgbank_4Tree_9show_derivation, METH_NOARGS, 0},
+  {"resolve_op", (PyCFunction)__pyx_pw_7ccgbank_4Tree_5resolve_op, METH_O, 0},
+  {"show_derivation", (PyCFunction)__pyx_pw_7ccgbank_4Tree_7show_derivation, METH_NOARGS, 0},
   {0, 0, 0, 0}
 };
 
@@ -8024,18 +7910,16 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_RuntimeError, __pyx_k_RuntimeError, sizeof(__pyx_k_RuntimeError), 0, 0, 1, 1},
   {&__pyx_n_s_T, __pyx_k_T, sizeof(__pyx_k_T), 0, 0, 1, 1},
   {&__pyx_kp_s_T_0_1_2_3, __pyx_k_T_0_1_2_3, sizeof(__pyx_k_T_0_1_2_3), 0, 0, 1, 0},
+  {&__pyx_kp_s__11, __pyx_k__11, sizeof(__pyx_k__11), 0, 0, 1, 0},
+  {&__pyx_kp_s__12, __pyx_k__12, sizeof(__pyx_k__12), 0, 0, 1, 0},
+  {&__pyx_kp_s__13, __pyx_k__13, sizeof(__pyx_k__13), 0, 0, 1, 0},
   {&__pyx_kp_s__16, __pyx_k__16, sizeof(__pyx_k__16), 0, 0, 1, 0},
   {&__pyx_kp_s__17, __pyx_k__17, sizeof(__pyx_k__17), 0, 0, 1, 0},
-  {&__pyx_n_s__22, __pyx_k__22, sizeof(__pyx_k__22), 0, 0, 1, 1},
   {&__pyx_kp_s__3, __pyx_k__3, sizeof(__pyx_k__3), 0, 0, 1, 0},
-  {&__pyx_kp_s__4, __pyx_k__4, sizeof(__pyx_k__4), 0, 0, 1, 0},
   {&__pyx_kp_s__5, __pyx_k__5, sizeof(__pyx_k__5), 0, 0, 1, 0},
-  {&__pyx_kp_s__6, __pyx_k__6, sizeof(__pyx_k__6), 0, 0, 1, 0},
-  {&__pyx_kp_s__8, __pyx_k__8, sizeof(__pyx_k__8), 0, 0, 1, 0},
   {&__pyx_n_s_apply, __pyx_k_apply, sizeof(__pyx_k_apply), 0, 0, 1, 1},
   {&__pyx_n_s_can_apply, __pyx_k_can_apply, sizeof(__pyx_k_can_apply), 0, 0, 1, 1},
   {&__pyx_n_s_cat, __pyx_k_cat, sizeof(__pyx_k_cat), 0, 0, 1, 1},
-  {&__pyx_n_s_cate, __pyx_k_cate, sizeof(__pyx_k_cate), 0, 0, 1, 1},
   {&__pyx_n_s_ccgbank, __pyx_k_ccgbank, sizeof(__pyx_k_ccgbank), 0, 0, 1, 1},
   {&__pyx_n_s_check, __pyx_k_check, sizeof(__pyx_k_check), 0, 0, 1, 1},
   {&__pyx_n_s_child, __pyx_k_child, sizeof(__pyx_k_child), 0, 0, 1, 1},
@@ -8049,7 +7933,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_get_leaves, __pyx_k_get_leaves, sizeof(__pyx_k_get_leaves), 0, 0, 1, 1},
   {&__pyx_n_s_get_leaves_locals_rec, __pyx_k_get_leaves_locals_rec, sizeof(__pyx_k_get_leaves_locals_rec), 0, 0, 1, 1},
   {&__pyx_n_s_headid, __pyx_k_headid, sizeof(__pyx_k_headid), 0, 0, 1, 1},
-  {&__pyx_kp_s_home_masashi_y_myccg_ccgbank_py, __pyx_k_home_masashi_y_myccg_ccgbank_py, sizeof(__pyx_k_home_masashi_y_myccg_ccgbank_py), 0, 0, 1, 0},
+  {&__pyx_kp_s_home_cl_masashi_y_aaa_myccg_ccg, __pyx_k_home_cl_masashi_y_aaa_myccg_ccg, sizeof(__pyx_k_home_cl_masashi_y_aaa_myccg_ccg), 0, 0, 1, 0},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_init, __pyx_k_init, sizeof(__pyx_k_init), 0, 0, 1, 1},
   {&__pyx_n_s_join, __pyx_k_join, sizeof(__pyx_k_join), 0, 0, 1, 1},
@@ -8058,17 +7942,17 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_lwidth, __pyx_k_lwidth, sizeof(__pyx_k_lwidth), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_next, __pyx_k_next, sizeof(__pyx_k_next), 0, 0, 1, 1},
-  {&__pyx_n_s_next_node_type, __pyx_k_next_node_type, sizeof(__pyx_k_next_node_type), 0, 0, 1, 1},
+  {&__pyx_n_s_next_node, __pyx_k_next_node, sizeof(__pyx_k_next_node), 0, 0, 1, 1},
   {&__pyx_n_s_node, __pyx_k_node, sizeof(__pyx_k_node), 0, 0, 1, 1},
   {&__pyx_n_s_offset, __pyx_k_offset, sizeof(__pyx_k_offset), 0, 0, 1, 1},
   {&__pyx_n_s_op, __pyx_k_op, sizeof(__pyx_k_op), 0, 0, 1, 1},
   {&__pyx_n_s_open, __pyx_k_open, sizeof(__pyx_k_open), 0, 0, 1, 1},
   {&__pyx_n_s_ops, __pyx_k_ops, sizeof(__pyx_k_ops), 0, 0, 1, 1},
-  {&__pyx_n_s_parse, __pyx_k_parse, sizeof(__pyx_k_parse), 0, 0, 1, 1},
+  {&__pyx_n_s_parse_leaf, __pyx_k_parse_leaf, sizeof(__pyx_k_parse_leaf), 0, 0, 1, 1},
+  {&__pyx_n_s_parse_tree, __pyx_k_parse_tree, sizeof(__pyx_k_parse_tree), 0, 0, 1, 1},
   {&__pyx_n_s_peek, __pyx_k_peek, sizeof(__pyx_k_peek), 0, 0, 1, 1},
-  {&__pyx_n_s_pos, __pyx_k_pos, sizeof(__pyx_k_pos), 0, 0, 1, 1},
+  {&__pyx_n_s_position, __pyx_k_position, sizeof(__pyx_k_position), 0, 0, 1, 1},
   {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
-  {&__pyx_n_s_reader, __pyx_k_reader, sizeof(__pyx_k_reader), 0, 0, 1, 1},
   {&__pyx_n_s_readlines, __pyx_k_readlines, sizeof(__pyx_k_readlines), 0, 0, 1, 1},
   {&__pyx_n_s_rec, __pyx_k_rec, sizeof(__pyx_k_rec), 0, 0, 1, 1},
   {&__pyx_n_s_res, __pyx_k_res, sizeof(__pyx_k_res), 0, 0, 1, 1},
@@ -8079,7 +7963,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_rule_type, __pyx_k_rule_type, sizeof(__pyx_k_rule_type), 0, 0, 1, 1},
   {&__pyx_n_s_rwidth, __pyx_k_rwidth, sizeof(__pyx_k_rwidth), 0, 0, 1, 1},
   {&__pyx_n_s_show_derivation_locals_rec, __pyx_k_show_derivation_locals_rec, sizeof(__pyx_k_show_derivation_locals_rec), 0, 0, 1, 1},
-  {&__pyx_n_s_staticmethod, __pyx_k_staticmethod, sizeof(__pyx_k_staticmethod), 0, 0, 1, 1},
   {&__pyx_n_s_str_res, __pyx_k_str_res, sizeof(__pyx_k_str_res), 0, 0, 1, 1},
   {&__pyx_n_s_strip, __pyx_k_strip, sizeof(__pyx_k_strip), 0, 0, 1, 1},
   {&__pyx_n_s_super, __pyx_k_super, sizeof(__pyx_k_super), 0, 0, 1, 1},
@@ -8092,10 +7975,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_staticmethod = __Pyx_GetBuiltinName(__pyx_n_s_staticmethod); if (!__pyx_builtin_staticmethod) __PYX_ERR(0, 100, __pyx_L1_error)
   __pyx_builtin_open = __Pyx_GetBuiltinName(__pyx_n_s_open); if (!__pyx_builtin_open) __PYX_ERR(0, 11, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 31, __pyx_L1_error)
-  __pyx_builtin_super = __Pyx_GetBuiltinName(__pyx_n_s_super); if (!__pyx_builtin_super) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_builtin_super = __Pyx_GetBuiltinName(__pyx_n_s_super); if (!__pyx_builtin_super) __PYX_ERR(0, 111, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -8105,82 +7987,82 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "ccgbank.pyx":53
+  /* "ccgbank.pyx":54
  *     def check(self, str text, int offset=0):
  *         if self.line[self.index + offset] != text:
  *             raise RuntimeError("AutoLineReader.check catches parse error")             # <<<<<<<<<<<<<<
  * 
  *     def peek(self):
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_AutoLineReader_check_catches_par); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 53, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_AutoLineReader_check_catches_par); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 54, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "ccgbank.pyx":104
+  /* "ccgbank.pyx":71
  *         cdef str _, word, end
  *         cdef Cat cate
- *         reader.check("(")             # <<<<<<<<<<<<<<
- *         reader.check("<", 1)
- *         reader.check("L", 2)
+ *         self.check("(")             # <<<<<<<<<<<<<<
+ *         self.check("<", 1)
+ *         self.check("L", 2)
  */
-  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_s__4); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_s__3); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 71, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__4);
+  __Pyx_GIVEREF(__pyx_tuple__4);
+
+  /* "ccgbank.pyx":72
+ *         cdef Cat cate
+ *         self.check("(")
+ *         self.check("<", 1)             # <<<<<<<<<<<<<<
+ *         self.check("L", 2)
+ *         _    = self.next()
+ */
+  __pyx_tuple__6 = PyTuple_Pack(2, __pyx_kp_s__5, __pyx_int_1); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 72, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__6);
+  __Pyx_GIVEREF(__pyx_tuple__6);
+
+  /* "ccgbank.pyx":73
+ *         self.check("(")
+ *         self.check("<", 1)
+ *         self.check("L", 2)             # <<<<<<<<<<<<<<
+ *         _    = self.next()
+ *         cate = cat.parse(self.next())
+ */
+  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_n_s_L, __pyx_int_2); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 73, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
 
-  /* "ccgbank.pyx":105
- *         cdef Cat cate
- *         reader.check("(")
- *         reader.check("<", 1)             # <<<<<<<<<<<<<<
- *         reader.check("L", 2)
- *         _    = reader.next()
+  /* "ccgbank.pyx":88
+ *         cdef list children
+ * 
+ *         self.check("(")             # <<<<<<<<<<<<<<
+ *         self.check("<", 1)
+ *         self.check("T", 2)
  */
-  __pyx_tuple__9 = PyTuple_Pack(2, __pyx_kp_s__8, __pyx_int_1); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_tuple__8 = PyTuple_Pack(1, __pyx_kp_s__3); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__8);
+  __Pyx_GIVEREF(__pyx_tuple__8);
+
+  /* "ccgbank.pyx":89
+ * 
+ *         self.check("(")
+ *         self.check("<", 1)             # <<<<<<<<<<<<<<
+ *         self.check("T", 2)
+ *         self.next()
+ */
+  __pyx_tuple__9 = PyTuple_Pack(2, __pyx_kp_s__5, __pyx_int_1); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "ccgbank.pyx":106
- *         reader.check("(")
- *         reader.check("<", 1)
- *         reader.check("L", 2)             # <<<<<<<<<<<<<<
- *         _    = reader.next()
- *         cate = cat.parse(reader.next())
+  /* "ccgbank.pyx":90
+ *         self.check("(")
+ *         self.check("<", 1)
+ *         self.check("T", 2)             # <<<<<<<<<<<<<<
+ *         self.next()
+ *         cate = cat.parse(self.next())
  */
-  __pyx_tuple__10 = PyTuple_Pack(2, __pyx_n_s_L, __pyx_int_2); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(2, __pyx_n_s_T, __pyx_int_2); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 90, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
-
-  /* "ccgbank.pyx":139
- *         cdef list children
- * 
- *         reader.check("(")             # <<<<<<<<<<<<<<
- *         reader.check("<", 1)
- *         reader.check("T", 2)
- */
-  __pyx_tuple__11 = PyTuple_Pack(1, __pyx_kp_s__4); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 139, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__11);
-  __Pyx_GIVEREF(__pyx_tuple__11);
-
-  /* "ccgbank.pyx":140
- * 
- *         reader.check("(")
- *         reader.check("<", 1)             # <<<<<<<<<<<<<<
- *         reader.check("T", 2)
- *         reader.next()
- */
-  __pyx_tuple__12 = PyTuple_Pack(2, __pyx_kp_s__8, __pyx_int_1); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 140, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__12);
-  __Pyx_GIVEREF(__pyx_tuple__12);
-
-  /* "ccgbank.pyx":141
- *         reader.check("(")
- *         reader.check("<", 1)
- *         reader.check("T", 2)             # <<<<<<<<<<<<<<
- *         reader.next()
- *         cate = cat.parse(reader.next())
- */
-  __pyx_tuple__13 = PyTuple_Pack(2, __pyx_n_s_T, __pyx_int_2); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 141, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__13);
-  __Pyx_GIVEREF(__pyx_tuple__13);
 
   /* "ccgbank.pyx":173
  *             return children[0].headid if self.left_is_head else children[1].headid
@@ -8214,7 +8096,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__18 = PyTuple_Pack(7, __pyx_n_s_lwidth, __pyx_n_s_node, __pyx_n_s_rwidth, __pyx_n_s_child, __pyx_n_s_op, __pyx_n_s_str_res, __pyx_n_s_respadlen); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__18);
   __Pyx_GIVEREF(__pyx_tuple__18);
-  __pyx_codeobj__19 = (PyObject*)__Pyx_PyCode_New(2, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__18, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_masashi_y_myccg_ccgbank_py, __pyx_n_s_rec, 200, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__19)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_codeobj__19 = (PyObject*)__Pyx_PyCode_New(2, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__18, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_cl_masashi_y_aaa_myccg_ccg, __pyx_n_s_rec, 200, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__19)) __PYX_ERR(0, 200, __pyx_L1_error)
 
   /* "ccgbank.pyx":231
  * def get_leaves(Tree tree):
@@ -8226,31 +8108,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__20 = PyTuple_Pack(2, __pyx_n_s_tree, __pyx_n_s_child); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(0, 231, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__20);
   __Pyx_GIVEREF(__pyx_tuple__20);
-  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_masashi_y_myccg_ccgbank_py, __pyx_n_s_rec, 231, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(0, 231, __pyx_L1_error)
-
-  /* "ccgbank.pyx":101
- * 
- *     @staticmethod
- *     def parse(reader):             # <<<<<<<<<<<<<<
- *         cdef str _, word, end
- *         cdef Cat cate
- */
-  __pyx_tuple__23 = PyTuple_Pack(5, __pyx_n_s_reader, __pyx_n_s__22, __pyx_n_s_word, __pyx_n_s_end, __pyx_n_s_cate); if (unlikely(!__pyx_tuple__23)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__23);
-  __Pyx_GIVEREF(__pyx_tuple__23);
-  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(1, 0, 5, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__23, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_masashi_y_myccg_ccgbank_py, __pyx_n_s_parse, 101, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) __PYX_ERR(0, 101, __pyx_L1_error)
-
-  /* "ccgbank.pyx":133
- * 
- *     @staticmethod
- *     def parse(AutoLineReader reader):             # <<<<<<<<<<<<<<
- *         cdef str _, end
- *         cdef Cat cate
- */
-  __pyx_tuple__25 = PyTuple_Pack(6, __pyx_n_s_reader, __pyx_n_s__22, __pyx_n_s_end, __pyx_n_s_cate, __pyx_n_s_left_is_head, __pyx_n_s_children); if (unlikely(!__pyx_tuple__25)) __PYX_ERR(0, 133, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__25);
-  __Pyx_GIVEREF(__pyx_tuple__25);
-  __pyx_codeobj__26 = (PyObject*)__Pyx_PyCode_New(1, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__25, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_masashi_y_myccg_ccgbank_py, __pyx_n_s_parse, 133, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__26)) __PYX_ERR(0, 133, __pyx_L1_error)
+  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_cl_masashi_y_aaa_myccg_ccg, __pyx_n_s_rec, 231, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(0, 231, __pyx_L1_error)
 
   /* "ccgbank.pyx":223
  * 
@@ -8259,10 +8117,10 @@ static int __Pyx_InitCachedConstants(void) {
  *     tree.resolve_op(ops)
  *     for child in tree.children:
  */
-  __pyx_tuple__27 = PyTuple_Pack(3, __pyx_n_s_tree, __pyx_n_s_ops, __pyx_n_s_child); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 223, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__27);
-  __Pyx_GIVEREF(__pyx_tuple__27);
-  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_masashi_y_myccg_ccgbank_py, __pyx_n_s_resolve_op, 223, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 223, __pyx_L1_error)
+  __pyx_tuple__22 = PyTuple_Pack(3, __pyx_n_s_tree, __pyx_n_s_ops, __pyx_n_s_child); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(0, 223, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__22);
+  __Pyx_GIVEREF(__pyx_tuple__22);
+  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__22, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_cl_masashi_y_aaa_myccg_ccg, __pyx_n_s_resolve_op, 223, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(0, 223, __pyx_L1_error)
 
   /* "ccgbank.pyx":229
  *             resolve_op(child, ops)
@@ -8271,10 +8129,10 @@ static int __Pyx_InitCachedConstants(void) {
  *     cdef list res = []
  *     def rec(Tree tree):
  */
-  __pyx_tuple__29 = PyTuple_Pack(4, __pyx_n_s_tree, __pyx_n_s_res, __pyx_n_s_rec, __pyx_n_s_rec); if (unlikely(!__pyx_tuple__29)) __PYX_ERR(0, 229, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__29);
-  __Pyx_GIVEREF(__pyx_tuple__29);
-  __pyx_codeobj__30 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__29, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_masashi_y_myccg_ccgbank_py, __pyx_n_s_get_leaves, 229, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__30)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_tuple__24 = PyTuple_Pack(4, __pyx_n_s_tree, __pyx_n_s_res, __pyx_n_s_rec, __pyx_n_s_rec); if (unlikely(!__pyx_tuple__24)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__24);
+  __Pyx_GIVEREF(__pyx_tuple__24);
+  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_cl_masashi_y_aaa_myccg_ccg, __pyx_n_s_get_leaves, 229, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -8304,7 +8162,6 @@ PyMODINIT_FUNC PyInit_ccgbank(void)
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
   PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
   __Pyx_RefNannyDeclarations
   #if CYTHON_REFNANNY
   __Pyx_RefNanny = __Pyx_RefNannyImportAPI("refnanny");
@@ -8384,23 +8241,23 @@ PyMODINIT_FUNC PyInit_ccgbank(void)
   __pyx_type_7ccgbank_AutoReader.tp_print = 0;
   if (PyObject_SetAttrString(__pyx_m, "AutoReader", (PyObject *)&__pyx_type_7ccgbank_AutoReader) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
   __pyx_ptype_7ccgbank_AutoReader = &__pyx_type_7ccgbank_AutoReader;
-  if (PyType_Ready(&__pyx_type_7ccgbank_AutoLineReader) < 0) __PYX_ERR(0, 38, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_7ccgbank_AutoLineReader) < 0) __PYX_ERR(0, 39, __pyx_L1_error)
   __pyx_type_7ccgbank_AutoLineReader.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "AutoLineReader", (PyObject *)&__pyx_type_7ccgbank_AutoLineReader) < 0) __PYX_ERR(0, 38, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "AutoLineReader", (PyObject *)&__pyx_type_7ccgbank_AutoLineReader) < 0) __PYX_ERR(0, 39, __pyx_L1_error)
   __pyx_ptype_7ccgbank_AutoLineReader = &__pyx_type_7ccgbank_AutoLineReader;
-  if (PyType_Ready(&__pyx_type_7ccgbank_Node) < 0) __PYX_ERR(0, 67, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_7ccgbank_Node) < 0) __PYX_ERR(0, 102, __pyx_L1_error)
   __pyx_type_7ccgbank_Node.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "Node", (PyObject *)&__pyx_type_7ccgbank_Node) < 0) __PYX_ERR(0, 67, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "Node", (PyObject *)&__pyx_type_7ccgbank_Node) < 0) __PYX_ERR(0, 102, __pyx_L1_error)
   __pyx_ptype_7ccgbank_Node = &__pyx_type_7ccgbank_Node;
   __pyx_type_7ccgbank_Leaf.tp_base = __pyx_ptype_7ccgbank_Node;
-  if (PyType_Ready(&__pyx_type_7ccgbank_Leaf) < 0) __PYX_ERR(0, 72, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_7ccgbank_Leaf) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
   __pyx_type_7ccgbank_Leaf.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "Leaf", (PyObject *)&__pyx_type_7ccgbank_Leaf) < 0) __PYX_ERR(0, 72, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "Leaf", (PyObject *)&__pyx_type_7ccgbank_Leaf) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
   __pyx_ptype_7ccgbank_Leaf = &__pyx_type_7ccgbank_Leaf;
   __pyx_type_7ccgbank_Tree.tp_base = __pyx_ptype_7ccgbank_Node;
-  if (PyType_Ready(&__pyx_type_7ccgbank_Tree) < 0) __PYX_ERR(0, 116, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_7ccgbank_Tree) < 0) __PYX_ERR(0, 136, __pyx_L1_error)
   __pyx_type_7ccgbank_Tree.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "Tree", (PyObject *)&__pyx_type_7ccgbank_Tree) < 0) __PYX_ERR(0, 116, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "Tree", (PyObject *)&__pyx_type_7ccgbank_Tree) < 0) __PYX_ERR(0, 136, __pyx_L1_error)
   __pyx_ptype_7ccgbank_Tree = &__pyx_type_7ccgbank_Tree;
   if (PyType_Ready(&__pyx_type_7ccgbank___pyx_scope_struct__show_derivation) < 0) __PYX_ERR(0, 186, __pyx_L1_error)
   __pyx_type_7ccgbank___pyx_scope_struct__show_derivation.tp_print = 0;
@@ -8451,122 +8308,6 @@ PyMODINIT_FUNC PyInit_ccgbank(void)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_cat, __pyx_t_3) < 0) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "ccgbank.pyx":101
- * 
- *     @staticmethod
- *     def parse(reader):             # <<<<<<<<<<<<<<
- *         cdef str _, word, end
- *         cdef Cat cate
- */
-  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_7ccgbank_4Leaf_5parse, NULL, __pyx_n_s_ccgbank); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-
-  /* "ccgbank.pyx":100
- *         return 0
- * 
- *     @staticmethod             # <<<<<<<<<<<<<<
- *     def parse(reader):
- *         cdef str _, word, end
- */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 100, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
-  __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_staticmethod, __pyx_t_4, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 100, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_7ccgbank_Leaf->tp_dict, __pyx_n_s_parse, __pyx_t_3) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  PyType_Modified(__pyx_ptype_7ccgbank_Leaf);
-
-  /* "ccgbank.pyx":101
- * 
- *     @staticmethod
- *     def parse(reader):             # <<<<<<<<<<<<<<
- *         cdef str _, word, end
- *         cdef Cat cate
- */
-  __pyx_t_3 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_7ccgbank_Leaf, __pyx_n_s_parse); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-
-  /* "ccgbank.pyx":100
- *         return 0
- * 
- *     @staticmethod             # <<<<<<<<<<<<<<
- *     def parse(reader):
- *         cdef str _, word, end
- */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 100, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
-  __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_staticmethod, __pyx_t_4, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 100, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_7ccgbank_Leaf->tp_dict, __pyx_n_s_parse, __pyx_t_3) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  PyType_Modified(__pyx_ptype_7ccgbank_Leaf);
-
-  /* "ccgbank.pyx":133
- * 
- *     @staticmethod
- *     def parse(AutoLineReader reader):             # <<<<<<<<<<<<<<
- *         cdef str _, end
- *         cdef Cat cate
- */
-  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_7ccgbank_4Tree_5parse, NULL, __pyx_n_s_ccgbank); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 133, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-
-  /* "ccgbank.pyx":132
- *                 self.cat, left_is_head, len(children), " ".join(children))
- * 
- *     @staticmethod             # <<<<<<<<<<<<<<
- *     def parse(AutoLineReader reader):
- *         cdef str _, end
- */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 132, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
-  __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_staticmethod, __pyx_t_4, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_7ccgbank_Tree->tp_dict, __pyx_n_s_parse, __pyx_t_3) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  PyType_Modified(__pyx_ptype_7ccgbank_Tree);
-
-  /* "ccgbank.pyx":133
- * 
- *     @staticmethod
- *     def parse(AutoLineReader reader):             # <<<<<<<<<<<<<<
- *         cdef str _, end
- *         cdef Cat cate
- */
-  __pyx_t_3 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_7ccgbank_Tree, __pyx_n_s_parse); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 133, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-
-  /* "ccgbank.pyx":132
- *                 self.cat, left_is_head, len(children), " ".join(children))
- * 
- *     @staticmethod             # <<<<<<<<<<<<<<
- *     def parse(AutoLineReader reader):
- *         cdef str _, end
- */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 132, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
-  __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_staticmethod, __pyx_t_4, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_7ccgbank_Tree->tp_dict, __pyx_n_s_parse, __pyx_t_3) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  PyType_Modified(__pyx_ptype_7ccgbank_Tree);
-
   /* "ccgbank.pyx":223
  * 
  * 
@@ -8608,7 +8349,6 @@ PyMODINIT_FUNC PyInit_ccgbank(void)
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
   if (__pyx_m) {
     if (__pyx_d) {
       __Pyx_AddTraceback("init ccgbank", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -10595,15 +10335,6 @@ bad:
     Py_XDECREF(empty_list);
     Py_XDECREF(empty_dict);
     return module;
-}
-
-/* GetNameInClass */
-              static PyObject *__Pyx_GetNameInClass(PyObject *nmspace, PyObject *name) {
-    PyObject *result;
-    result = __Pyx_PyObject_GetAttrStr(nmspace, name);
-    if (!result)
-        result = __Pyx_GetModuleGlobalName(name);
-    return result;
 }
 
 /* CodeObjectCache */

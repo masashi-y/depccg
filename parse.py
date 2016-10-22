@@ -1,5 +1,6 @@
 
 from astar import AStarParser
+from ccgbank import Tree, get_leaves
 import sys
 import argparse
 from tqdm import tqdm
@@ -23,12 +24,9 @@ fr = time()
 # sents = [inp.strip().split(" ") for inp in args.sents]
 # for res in a_parser.parse_doc(sents):
 #     print res
-sents = a_parser.parse_doc([sent.strip().split(" ") for sent in args.sents])
-with open("result.txt", "w") as f:
-    for i, res in enumerate([sent for sent in sents]):
-        # print res
-        continue
-print len(sents)
+for sent in a_parser.parse_doc([sent.strip().split(" ") for sent in args.sents]):
+    pass
+    # f.write(sent + "\n")
 to = time()
 
 print "time elapsed: ", to - fr

@@ -26,7 +26,7 @@ cdef class AutoReader(object):
                 key = line
             else:
                 try:
-                    tree = Tree.parse(AutoLineReader(line))
+                    tree = AutoLineReader(line).parse_tree()
                     res[key] = tree
                 except RuntimeError as e:
                     if suppress_error:
@@ -34,6 +34,7 @@ cdef class AutoReader(object):
                     else:
                         raise e
         return res.values()
+
 
 cdef class AutoLineReader(object):
     def __init__(self, line):
@@ -56,29 +57,63 @@ cdef class AutoLineReader(object):
         return self.line[self.index]
 
     @property
-    def next_node_type(self):
+    def next_node(self):
         if self.line[self.index+2] == "L":
-            return Leaf
+            return self.parse_leaf
         elif self.line[self.index+2] == "T":
-            return Tree
+            return self.parse_tree
         else:
             raise RuntimeError()
+
+    def parse_leaf(self):
+        cdef str _, word, end
+        cdef Cat cate
+        self.check("(")
+        self.check("<", 1)
+        self.check("L", 2)
+        _    = self.next()
+        cate = cat.parse(self.next())
+        _    = self.next() # POS tag
+        _    = self.next()
+        word = self.next()
+        end  = self.next()
+        return Leaf(word, cate, 0)
+
+    def parse_tree(self):
+        cdef str _, end
+        cdef Cat cate
+        cdef bint left_is_head
+        cdef list children
+
+        self.check("(")
+        self.check("<", 1)
+        self.check("T", 2)
+        self.next()
+        cate = cat.parse(self.next())
+        left_is_head = self.next() == "0"
+        _ = self.next()
+        children = []
+        while self.peek() != ")":
+            children.append(self.next_node())
+        end = self.next()
+        return Tree(cate, left_is_head, children, combinator.UnaryRule())
+
 
 cdef class Node(object):
     def __init__(self, Cat cat, int rule_type):
         self.cat = cat
         self.rule_type = rule_type
 
+
 cdef class Leaf(Node):
     # (<L N/N NNP NNP Pierre N_73/N_73>)
-    def __init__(self, str word, Cat cat, int pos):
+    def __init__(self, str word, Cat cat, int position):
         super(Leaf, self).__init__(cat, LEXICON)
         self.word = word
-        self.pos  = pos
+        self.pos  = position
 
     def __str__(self):
-        # pos = self.pos if self.pos is not None else "POS"
-        cdef str pos = "POS"
+        cdef str pos = "POS" # dummy
         cdef str word
         if self.word in ["{", "("]:
             word = "-LRB-"
@@ -97,21 +132,6 @@ cdef class Leaf(Node):
     def deplen(self):
         return 0
 
-    @staticmethod
-    def parse(reader):
-        cdef str _, word, end
-        cdef Cat cate
-        reader.check("(")
-        reader.check("<", 1)
-        reader.check("L", 2)
-        _    = reader.next()
-        cate = cat.parse(reader.next())
-        _    = reader.next() # POS tag
-        _    = reader.next()
-        word = reader.next()
-        end  = reader.next()
-        return Leaf(word, cate, 0)
-
 
 cdef class Tree(Node):
     # (<T N 1 2> (<L N/N JJ JJ nonexecutive N_43/N_43>) (<L N NN NN director N>) )
@@ -128,26 +148,6 @@ cdef class Tree(Node):
         cdef list children = [str(c) for c in self.children]
         return "(<T {0} {1} {2}> {3} )".format(
                 self.cat, left_is_head, len(children), " ".join(children))
-
-    @staticmethod
-    def parse(AutoLineReader reader):
-        cdef str _, end
-        cdef Cat cate
-        cdef bint left_is_head
-        cdef list children
-
-        reader.check("(")
-        reader.check("<", 1)
-        reader.check("T", 2)
-        reader.next()
-        cate = cat.parse(reader.next())
-        left_is_head = reader.next() == "0"
-        _ = reader.next()
-        children = []
-        while reader.peek() != ")":
-            children.append(reader.next_node_type.parse(reader))
-        end = reader.next()
-        return Tree(cate, left_is_head, children, combinator.UnaryRule())
 
     def resolve_op(self, ops):
         if len(self.children) == 1:
