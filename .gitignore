@@ -5,3 +5,6 @@ data
 build
 result
 __pycache__
+japanese_ccg.py
+model_all
+tmp

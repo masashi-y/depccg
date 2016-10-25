@@ -2,7 +2,7 @@
 import numpy as np
 
 from preshed.maps cimport PreshMap
-cimport cat
+import cat
 import re
 
 cpdef str drop_brackets(str cat):
@@ -25,7 +25,7 @@ cpdef int find_closing_bracket(str source, int start) except -1:
         if open_brackets == 0:
             return i
 
-    raise Exception("Mismatched brackets in string")
+    raise Exception("Mismatched brackets in string: " + source)
 
 
 cpdef int find_non_nested_char(str haystack, str needles):

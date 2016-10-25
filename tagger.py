@@ -4,7 +4,8 @@ import re
 import json
 from collections import defaultdict, OrderedDict
 import numpy as np
-from ccgbank import Leaf, AutoReader, get_leaves
+from ccgbank import AutoReader
+from tree import Leaf, get_leaves
 from utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
 import chainer
 import multiprocessing
@@ -341,7 +342,7 @@ def train(args):
     val = CCGBankDataset(args.model, args.val)
     val_iter = chainer.iterators.SerialIterator(
             val, args.batchsize, repeat=False, shuffle=False)
-    optimizer = chainer.optimizers.MomentumSGD(lr=0.01, momentum=0.9)
+    optimizer = chainer.optimizers.SGD(lr=0.01)
     optimizer.setup(model)
     updater = training.StandardUpdater(train_iter, optimizer)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)

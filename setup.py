@@ -15,16 +15,8 @@ ext_modules = [
                   include_dirs=[numpy.get_include()],
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
                   ),
-        Extension("cat",
-                  ["cat.pyx"],
-                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
-                  ),
-        Extension("combinator",
-                  ["combinator.pyx"],
-                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
-                  ),
-        Extension("ccgbank",
-                  ["ccgbank.pyx"],
+        Extension("tree",
+                  ["tree.pyx"],
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
                   ),
         Extension("astar",

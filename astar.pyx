@@ -9,19 +9,18 @@ from pqueue cimport PQueue, pqueue_new, pqueue_delete, \
                     pqueue_enqueue, pqueue_dequeue
 from preshed.maps cimport map_init, key_t, \
         MapStruct, map_set, map_get, map_iter
-from ccgbank cimport Tree, Leaf, Node
-from combinator cimport standard_combinators, unary_rule, Combinator
+from tree cimport Tree, Leaf, Node
+from combinator import standard_combinators, unary_rule, Combinator
 from structs cimport FC, GFC, FA, BX, GBX, BA, UNARY
 from tagger import EmbeddingTagger
-cimport cat
-from cat cimport Cat
+import cat
 import os
 cimport numpy as np
 import numpy as np
 import chainer
 import multiprocessing
 
-failure_node = Leaf("**FAILED**", cat.parse("FAILED"), 0)
+failure_node = Tree(cat.parse("NP"), True, [Leaf("FAILED", cat.parse("NP"), 0)], unary_rule)
 
 cdef inline void* to_void_ptr(object pyob):
     Py_INCREF(pyob) # reference count gets 0 when casting to void* ?
@@ -179,22 +178,22 @@ cdef class AStarParser(object):
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
-    cdef Node _parse(self, list tokens,
-            np.ndarray[FLOAT_T, ndim=2] scores, beta=0.0001):
+    cdef object _parse(self, list tokens,
+            np.ndarray[FLOAT_T, ndim=2] scores, beta=0.00001):
         cdef int s_len = len(tokens)
         cdef Pool mem = Pool()
         cdef PQueue* agenda = pqueue_new(agendaitem_compare)
         cdef int span_len, start_of_span, i, j, k, head_is_left
         cdef float prob, in_prob, out_prob, threshold
         cdef object parse, subtree, left, right
-        cdef Combinator rule
-        cdef Cat unary, out
+        cdef object rule
+        cdef object unary, out
         cdef AgendaItem *item, *new_item
         cdef ChartCell *cell, *other
         cdef key_t key
         cdef void* value
         cdef CellItem* cell_item
-        cdef Leaf leaf
+        cdef object leaf
         cdef str token
 
         # Initialization
@@ -217,7 +216,7 @@ cdef class AStarParser(object):
         # Initialize agenda
         for i, token in enumerate(tokens):
             threshold = beta * scores[i, index[i, -1]]
-            for j in xrange(self.tag_size - 1, -1, -1):
+            for j in xrange(self.tag_size - 1, self.tag_size - 50, -1):
                 k = index[i, j]
                 if scores[i, k] <= threshold:
                     break
@@ -225,6 +224,7 @@ cdef class AStarParser(object):
                 item = agendaitem_new(mem, leaf, \
                         log_probs[i, k], out_probs[i * s_len + (i + 1)], i, 1)
                 pqueue_enqueue(agenda, item)
+        print agenda.size / float(s_len)
 
         # Initialize chart
         cdef ChartCell** chart = \
@@ -298,13 +298,13 @@ cdef class AStarParser(object):
 
         if chart[s_len - 1].items.filled == 0:
             return failure_node
-        parse = <Tree>(chart[s_len - 1].best)
+        parse = <object>(chart[s_len - 1].best)
         return parse
 
-    cdef inline bint is_seen(self, Cat cat1, Cat cat2):
+    cdef inline bint is_seen(self, object cat1, object cat2):
         return hash_int_int(cat1.id, cat2.id) in self.seen_rules
 
-    cdef list get_rules(self, Cat left, Cat right):
+    cdef list get_rules(self, object left, object right):
         cdef list res
         cdef int hash_ = hash_int_int(left.id, right.id)
         if not hash_ in self.rule_cache:
@@ -314,14 +314,14 @@ cdef class AStarParser(object):
         else:
             return <list>self.rule_cache.get(hash_)
 
-    cdef bint acceptable_root_or_subtree(self, Cat out, int span_len, int s_len):
+    cdef bint acceptable_root_or_subtree(self, object out, int span_len, int s_len):
         if span_len == s_len and \
                 not out in self.possible_root_cats:
             return False
         return True
 
 
-cdef bint is_normal_form(int rule_type, Node left, Node right):
+cdef bint is_normal_form(int rule_type, object left, object right):
     if (left.rule_type == FC or \
             left.rule_type == GFC) and \
         (rule_type == FA or \
