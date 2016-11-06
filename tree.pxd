@@ -9,7 +9,7 @@ cdef class Node(object):
     cdef readonly int rule_type
 
 cdef class Leaf(Node):
-    cdef readonly unicode word
+    cdef readonly str word
     cdef readonly int pos
 
 cdef class Tree(Node):

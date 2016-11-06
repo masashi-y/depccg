@@ -9,7 +9,7 @@ cdef class Node(object):
 
 cdef class Leaf(Node):
     # (<L N/N NNP NNP Pierre N_73/N_73>)
-    def __init__(self, unicode word, object cat, int position):
+    def __init__(self, str word, object cat, int position):
         super(Leaf, self).__init__(cat, LEXICON)
         self.word = word
         self.pos  = position
