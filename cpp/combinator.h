@@ -323,6 +323,7 @@ private:
 };
 
 extern std::vector<Combinator*> binary_rules;
+extern Combinator* unary_rule;
 void test();
 
 } // namespace combinator

@@ -15,7 +15,7 @@ struct AgendaItem
     AgendaItem(NodePtr parse, float in_prob, float out_prob,
             int start_of_span, int span_length)
     : parse(parse), in_prob(in_prob), out_prob(out_prob),
-    cost(in_prob + out_prob), start_of_span(start_of_span),
+    prob(in_prob), start_of_span(start_of_span),
     span_length(span_length) {}
 
     ~AgendaItem() {}
@@ -23,14 +23,14 @@ struct AgendaItem
     NodePtr parse;
     float in_prob;
     float out_prob;
-    float cost;
+    float prob;
     int start_of_span;
     int span_length;
 
 };
 bool operator<(const AgendaItem& item1, const AgendaItem& item2) {
-    if ( fabs(item1.cost - item2.cost) > 0.0000001 )
-        return item1.cost < item2.cost;
+    if ( fabs(item1.prob - item2.prob) > 0.0000001 )
+        return item1.prob < item2.prob;
     return item1.parse->GetDependencyLength() > item2.parse->GetDependencyLength();
 }
 
@@ -40,19 +40,19 @@ class ChartCell
 public:
     ChartCell():
     items_(std::unordered_map<Cat, ChartItem>()),
-    best_cost_(std::numeric_limits<float>::max()), best_(NULL) {}
+    best_prob_(std::numeric_limits<float>::lowest()), best_(NULL) {}
 
     bool IsEmpty() const { return items_.size() == 0; }
 
     NodePtr GetBestParse() const { return best_; }
 
-    bool update(NodePtr parse, float cost) {
+    bool update(NodePtr parse, float prob) {
         const cat::Category* cat = parse->GetCategory();
-        if (items_.count(cat) > 0 && cost > best_cost_)
+        if (items_.count(cat) > 0 && prob < best_prob_)
             return false;
-        items_[cat] = std::make_pair(parse, cost);
-        if (best_cost_ > cost) {
-            best_cost_ = cost;
+        items_[cat] = std::make_pair(parse, prob);
+        if (best_prob_ < prob) {
+            best_prob_ = prob;
             best_ = parse;
         }
         return true;
@@ -60,23 +60,25 @@ public:
 
     std::unordered_map<Cat, ChartItem> items_;
 private:
-    float best_cost_;
+    float best_prob_;
     NodePtr best_;
 };
 
 
 AStarParser::AStarParser(const tagger::Tagger* tagger, const std::string& model)
  :tagger_(tagger),
-  unary_rules_(utils::load_unary(model + "/unary_rules")),
+  unary_rules_(utils::load_unary(model + "/unary_rules.txt")),
   binary_rules_(combinator::binary_rules),
-  seen_rules_(utils::load_seen_rules(model + "/seenRules")),
+  seen_rules_(utils::load_seen_rules(model + "/seen_rules.txt")),
   possible_root_cats_({cat::parse("S[dcl]"), cat::parse("S[wq]"),
     cat::parse("S[q]"), cat::parse("S[qem]"), cat::parse("NP")}) {
       rule_cache_.clear();
+      print(unary_rules_.size());
+      print(possible_root_cats_.size());
   }
 
 
-bool AStarParser::AcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {
+bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {
     if (span_len == s_len) {
         for (Cat root: possible_root_cats_)
             if (*root == *cat) return true;
@@ -134,22 +136,22 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
     return rule_cache_[key];
 }
 
-void ComputeOutsideProbs(float* probs, std::size_t sentSize, float* out) {
+void ComputeOutsideProbs(float* probs, std::size_t sent_size, float* out) {
     int j;
-    float* from_left = new float[sentSize + 1];
-    float* from_right = new float[sentSize + 1];
+    float* from_left = new float[sent_size + 1];
+    float* from_right = new float[sent_size + 1];
     from_left[0] = 0.0;
-    from_right[sentSize] = 0.0;
+    from_right[sent_size] = 0.0;
 
-    for (int i = 0; i < sentSize; i++) {
-        j = sentSize - i;
+    for (int i = 0; i < sent_size - 1; i++) {
+        j = sent_size - i;
         from_left[i + 1] = from_left[i] + probs[i];
         from_right[j - 1] = from_right[j] + probs[j - 1];
     }
 
-    for (int i = 0; i < sentSize + 1; i++) {
-        for (int j = 0; j < sentSize + 1; j++) {
-            out[i * sentSize + j] = from_left[i] + from_right[j];
+    for (int i = 0; i < sent_size + 1; i++) {
+        for (int j = i; j < sent_size + 1; j++) {
+            out[i * sent_size + j] = from_left[i] + from_right[j];
         }
     }
     delete[] from_left;
@@ -164,20 +166,21 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float beta) {
 
 const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     std::vector<std::string> tokens = utils::split(sent, ' ');
-    std::size_t length = tokens.size();
-    std::unique_ptr<float[]> best_in_probs(new float[length + 1]);
-    std::unique_ptr<float[]> out_probs(new float[(length + 1) * (length + 1)]);
+    std::size_t sent_size = tokens.size();
+    std::unique_ptr<float[]> best_in_probs(new float[sent_size]);
+    std::unique_ptr<float[]> out_probs(new float[(sent_size + 1) * (sent_size + 1)]);
     std::priority_queue<AgendaItem> agenda;
 
     std::vector<std::vector<std::pair<float, Cat>>> scored_cats;
 
+    print("initializing agenda");
     for (int i = 0; i < tokens.size(); i++) {
         scored_cats.emplace_back(std::vector<std::pair<float, Cat>>());
         float total = 0.0;
-        best_in_probs[i] = 0.0;
+        best_in_probs[i] = std::numeric_limits<float>::lowest();
         for (int j = 0; j < TagSize(); j++) {
             float score = scores[i * TagSize() + j];
-            total += score;
+            total += std::exp(score);
             if (score >= best_in_probs[i]) best_in_probs[i] = score;
             scored_cats[i].emplace_back(score, TagAt(j));
         }
@@ -186,79 +189,76 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                 return left.first > right.first;});
         float threshold = best_in_probs[i] * beta;
         // normalize and pruning
-        for (int j = 0; j < scored_cats[i].size(); j++) {
+        for (int j = 0; j < TagSize(); j++) {
             if (scored_cats[i][j].first > threshold) 
                 scored_cats[i][j].first =
-                    std::exp(scored_cats[i][j].first) / std::exp(total);
+                    std::log( std::exp(scored_cats[i][j].first) / total );
             else
                 scored_cats[i].pop_back();
         }
-        best_in_probs[i] = std::exp(best_in_probs[i]) / std::exp(total);
+        best_in_probs[i] = std::log( std::exp(best_in_probs[i]) / total );
     }
-    ComputeOutsideProbs(best_in_probs.get(), length, out_probs.get());
+    print("ComputeOutsideProbs");
+    ComputeOutsideProbs(best_in_probs.get(), sent_size, out_probs.get());
 
     for (int i = 0; i < scored_cats.size(); i++) {
+        float out_prob = out_probs[i * sent_size + (i + 1)];
+        std::cout << "out_prob: "<< i << " " << out_prob <<std::endl;
         for (int j = 0; j < scored_cats[i].size(); j++) {
             auto& prob_and_cat = scored_cats[i][j];
-            float out_prob = out_probs[i * length + (i + 1)];
+            std::cout << "in_prob: "<< i << " " << prob_and_cat.first <<std::endl;
             agenda.emplace(
                     std::make_shared<tree::Leaf>(tokens[i], prob_and_cat.second, i),
                     prob_and_cat.first, out_prob, i, 1);
         }
     }
 
-    ChartCell* chart = new ChartCell[length * length];
-    for (int i = 0; i < (length * length); i++) {
-        chart[i] = ChartCell();
-    }
+    ChartCell* chart = new ChartCell[sent_size * sent_size];
 
-    while (chart[length - 1].IsEmpty() && agenda.size() > 0) {
+    print("start");
+    int step = 0;
+    while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
         const AgendaItem& item = agenda.top();
         NodePtr parse = item.parse;
-        ChartCell& cell = chart[item.start_of_span * length + (item.span_length - 1)];
+        ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
+        if (step++ > 2000) break;
 
         if (cell.update(parse, item.in_prob)) {
-            if (item.span_length != length) {
+            if (item.span_length != sent_size) {
                 for (Cat unary: unary_rules_[parse->GetCategory()]) {
-                    NodePtr subtree = std::make_shared<const tree::Tree>(unary, true, parse, new combinator::UnaryRule());
-                    float out_prob = out_probs[item.start_of_span * length +
+                    NodePtr subtree = std::make_shared<const tree::Tree>(unary, parse);
+                    float out_prob = out_probs[item.start_of_span * sent_size +
                                     item.start_of_span + item.span_length];
-                    agenda.push(AgendaItem(subtree,
-                                        item.in_prob,
-                                        out_prob,
-                                        item.start_of_span,
-                                        item.span_length));
+                    agenda.emplace(subtree, item.in_prob, out_prob,
+                                        item.start_of_span, item.span_length);
                 }
             }
-
             for (int span_length = item.span_length + 1
-                ; span_length < 1 + length - item.start_of_span
+                ; span_length < 1 + sent_size - item.start_of_span
                 ; span_length++) {
                 ChartCell& other = chart[(item.start_of_span + item.span_length) * 
-                                length + (span_length - item.span_length - 1)];
+                                sent_size + (span_length - item.span_length - 1)];
                 for (auto&& pair: other.items_) {
                     NodePtr right = pair.second.first;
                     float prob = pair.second.second;
                     for (auto&& rule: GetRules(
                                 parse->GetCategory(), right->GetCategory())) {
                         if (IsNormalForm(rule.combinator->GetRuleType(), parse, right) &&
-                                AcceptableRootOrSubtree(rule.result, span_length, length)) {
-                            NodePtr subtree = std::make_shared<const tree::Tree>(rule.result, rule.left_is_head, parse, right, rule.combinator);
+                                IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
+                            NodePtr subtree = std::make_shared<const tree::Tree>(
+                                    rule.result, rule.left_is_head, parse, right, rule.combinator);
                             float in_prob = item.in_prob + prob;
-                            float out_prob = out_probs[item.start_of_span * length +
+                            float out_prob = out_probs[item.start_of_span * sent_size +
                                 item.start_of_span + span_length];
-                            agenda.push(AgendaItem(subtree,
-                                                in_prob,
-                                                out_prob,
-                                                item.start_of_span,
-                                                span_length));
+                            agenda.emplace(subtree, in_prob, out_prob,
+                                                item.start_of_span, span_length);
                         }
                     }
                 }
             }
             for (int start_of_span = 0; start_of_span < item.start_of_span; start_of_span++) {
                 int span_length = item.start_of_span + item.span_length - start_of_span;
-                ChartCell& other = chart[start_of_span * length +
+                ChartCell& other = chart[start_of_span * sent_size +
                                     (span_length - item.span_length - 1)];
                 for (auto&& pair: other.items_) {
                     NodePtr left = pair.second.first;
@@ -266,16 +266,14 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                     for (auto&& rule: GetRules(
                                 left->GetCategory(), parse->GetCategory())) {
                         if (IsNormalForm(rule.combinator->GetRuleType(), left, parse) &&
-                                AcceptableRootOrSubtree(rule.result, span_length, length)) {
-                            NodePtr subtree = std::make_shared<const tree::Tree>(rule.result, rule.left_is_head, left, parse, rule.combinator);
+                                IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
+                            NodePtr subtree = std::make_shared<const tree::Tree>(
+                                    rule.result, rule.left_is_head, left, parse, rule.combinator);
                             float in_prob = item.in_prob + prob;
-                            float out_prob = out_probs[start_of_span * length +
+                            float out_prob = out_probs[start_of_span * sent_size +
                                             start_of_span + span_length];
-                            agenda.push(AgendaItem(subtree,
-                                                in_prob,
-                                                out_prob,
-                                                start_of_span,
-                                                span_length));
+                            agenda.emplace(subtree, in_prob, out_prob,
+                                                start_of_span, span_length);
                         }
                     }
                 }
@@ -283,9 +281,9 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
         }
         agenda.pop();
     }
-    if (chart[length - 1].IsEmpty())
+    if (chart[sent_size - 1].IsEmpty())
         return failure_node;
-    return chart[length - 1].GetBestParse().get();
+    return chart[sent_size - 1].GetBestParse().get();
 }
 
 void AStarParser::test() {
@@ -307,6 +305,20 @@ void test() {
     tagger::ChainerTagger tagger(model);
     AStarParser parser(&tagger, model);
     parser.test();
+    auto res = parser.Parse("this is a new sentence .");
+    tree::ShowDerivation(static_cast<const tree::Tree*>(res));
+    res = parser.Parse("Ed saw briefly Tom and Taro .");
+    tree::ShowDerivation(static_cast<const tree::Tree*>(res));
+    res = parser.Parse("Darth Vador, also known as Anakin Skywalker is a fictional character .");
+    tree::ShowDerivation(static_cast<const tree::Tree*>(res));
+    std::unique_ptr<float[]> a(new float[5]{1, 2,3,4,5});
+    std::unique_ptr<float[]> out(new float[36]);
+    ComputeOutsideProbs(a.get(), 5, out.get());
+    print(out[0 * 5 + 1]);
+    print(out[1 * 5 + 2]);
+    print(out[2 * 5 + 3]);
+    print(out[3 * 5 + 4]);
+    print(out[4 * 5 + 5]);
 
 }
 

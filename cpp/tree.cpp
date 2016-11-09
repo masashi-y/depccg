@@ -69,8 +69,7 @@ void ShowDerivation(const Tree* tree, std::ostream& out) {
         (comb)->HeadIsLeft((left)->GetCategory(), (right)->GetCategory()), \
         (left), (right), (comb));
 
-#define APPLY_UNARY(unary, cat, child) new myccg::tree::Tree( \
-        (cat), true, (child), NULL, (unary))
+#define APPLY_UNARY(cat, child) new myccg::tree::Tree((cat), (child))
 
 #define APPLICABLE(comb, left, right) std::cout << #comb": " << \
     (left)->GetCategory()->ToStr() << ", " << (right)->GetCategory()->ToStr() \
@@ -124,9 +123,9 @@ void test()
         new Leaf("Taro",    cat::parse("N"),                5),
         new Leaf(".",       cat::parse("."),                6),
     };
-    const Tree* tree2_1 = APPLY_UNARY(un, cat::parse("NP"), leaves2[0]); // Ed NP
-    const Tree* tree2_2 = APPLY_UNARY(un, cat::parse("NP"), leaves2[3]); // Tom NP
-    const Tree* tree2_3 = APPLY_UNARY(un, cat::parse("NP"), leaves2[5]); // Taro NP
+    const Tree* tree2_1 = APPLY_UNARY(cat::parse("NP"), leaves2[0]); // Ed NP
+    const Tree* tree2_2 = APPLY_UNARY(cat::parse("NP"), leaves2[3]); // Tom NP
+    const Tree* tree2_3 = APPLY_UNARY(cat::parse("NP"), leaves2[5]); // Taro NP
     const Tree* tree2_4 = APPLY_BINARY(Bx, leaves2[1], leaves2[2]); // saw briefly (S[dcl]\NP)/NP
     const Tree* tree2_5 = APPLY_BINARY(conj, leaves2[4], tree2_3); // and Taro NP\NP
     const Tree* tree2_6 = APPLY_BINARY(bwd, tree2_2, tree2_5); // Tom and Taro NP

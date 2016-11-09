@@ -44,7 +44,7 @@ public:
     void test();
 private:
 
-    bool AcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const ;
+    bool IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const ;
 
     bool IsSeen(Cat left, Cat right) const;
 
@@ -55,9 +55,7 @@ private:
     std::vector<RuleCache>& GetRules(Cat left, Cat right);
 
     const tree::Node* failure_node = new tree::Tree(
-            cat::parse("XX"), true,
-            new tree::Leaf("FAILURE", cat::parse("XX"), 0),
-            new combinator::UnaryRule());
+            cat::parse("XX"), new tree::Leaf("FAILURE", cat::parse("XX"), 0));
 
 
     const tagger::Tagger* tagger_;

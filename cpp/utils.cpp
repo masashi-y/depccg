@@ -74,6 +74,8 @@ load_unary(const std::string& filename) {
     auto res = std::unordered_map
         <const cat::Category*, std::vector<const cat::Category*>>();
     std::ifstream in(filename);
+    if (!in)
+        throw std::runtime_error("failed to open: " + filename);
     std::string line, buf;
     const cat::Category *from, *to;
     std::vector<std::string> items;
@@ -103,6 +105,8 @@ std::vector<const cat::Category*>
 load_category_list(const std::string& filename) {
     auto res = std::vector<const cat::Category*>();
     std::ifstream in(filename);
+    if (!in)
+        throw std::runtime_error("failed to open: " + filename);
     std::string line, buf;
     const cat::Category *ca;
     int comment;
@@ -139,6 +143,8 @@ std::unordered_set<CatPair, hash_cat_pair>
 load_seen_rules(const std::string& filename) {
     auto res = std::unordered_set<CatPair, hash_cat_pair>();
     std::ifstream in(filename);
+    if (!in)
+        throw std::runtime_error("failed to open: " + filename);
     std::string line, buf;
     const cat::Category *ca1, *ca2;
     int comment;

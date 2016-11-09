@@ -16,6 +16,8 @@ std::vector<Combinator*> binary_rules = {
     new GeneralizedBackwardComposition(Slash::Fwd(), Slash::Bwd(), Slash::Fwd())
 };
 
+Combinator* unary_rule = new UnaryRule();
+
 void test() {
     std::cout << "----" << __FILE__ << "----" << std::endl;
 

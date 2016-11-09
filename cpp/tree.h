@@ -96,15 +96,13 @@ public:
     : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
       lchild_(lchild), rchild_(rchild), rule_(rule) {}
 
-    Tree(const cat::Category* cat, bool left_is_head,
-            const Node* lchild, const combinator::Combinator* rule)
-    : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
-      lchild_(lchild), rchild_(NULL), rule_(rule) {}
+    Tree(const cat::Category* cat, const Node* lchild)
+    : Node(cat, combinator::UNARY), left_is_head_(true),
+      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule) {}
 
-    Tree(const cat::Category* cat, bool left_is_head,
-            std::shared_ptr<const Node> lchild, const combinator::Combinator* rule)
-    : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
-      lchild_(lchild), rchild_(NULL), rule_(rule) {}
+    Tree(const cat::Category* cat, std::shared_ptr<const Node> lchild)
+    : Node(cat, combinator::UNARY), left_is_head_(true),
+      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule) {}
 
     ~Tree() {}
 
