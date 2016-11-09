@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <regex>
 #include "utils.h"
 
 namespace myccg {
@@ -132,32 +133,50 @@ std::string ReplaceAll(const std::string target,
     return result;
 }
 
-// std::unordered_set<std::pair<const cat::Category*, const cat::Category*>>
-// load_seen_rules(const std::string& filename) {
-//     auto res = std::unordered_set<
-//         std::pair<const cat::Category*, const cat::Category*>>();
-//     std::ifstream in(filename);
-//     std::string line, buf;
-//     const cat::Category *ca1, *ca2;
-//     int comment;
-//
-//     while (getline(in, line)) {
-//         comment = line.find("#");
-//         if (comment > -1)
-//             line = line.substr(0, comment);
-//        
-//         line = trim(line);
-//         if (line.size() == 0) continue;
-//         std::stringstream ss(line);
-//         ss >> buf;
-//         ca1 = cat::parse(buf);
-//         ss >> buf;
-//         ca2 = cat::parse(buf);
-//         // auto p = std::pair<const cat::Category*, const cat::Category*>(ca1, ca2);
-//         // res.insert(p);
-//     }
-//     return res;
-// }
+const std::regex feat("\\[nb\\]|\\[X\\]");
+
+std::unordered_set<CatPair, hash_cat_pair>
+load_seen_rules(const std::string& filename) {
+    auto res = std::unordered_set<CatPair, hash_cat_pair>();
+    std::ifstream in(filename);
+    std::string line, buf;
+    const cat::Category *ca1, *ca2;
+    int comment;
+
+    while (getline(in, line)) {
+        comment = line.find("#");
+        if (comment > -1)
+            line = line.substr(0, comment);
+       
+        line = trim(line);
+        if (line.size() == 0) continue;
+        std::stringstream ss(line);
+        ss >> buf;
+        buf = std::regex_replace(buf, feat, "");
+        ca1 = cat::parse(buf);
+        ss >> buf;
+        buf = std::regex_replace(buf, feat, "");
+        ca2 = cat::parse(buf);
+        auto p = CatPair(ca1, ca2);
+        res.insert(p);
+    }
+    return res;
+}
+
+void test() {
+    std::cout << "----" << __FILE__ << "----" << std::endl;
+
+    auto set = utils::load_seen_rules("seenRules");
+    print(set.size());
+    int i = 0;
+    for (auto& elem: set) {
+        std::cout << elem.first->ToStr() << ", " << elem.second->ToStr() << std::endl;
+        if (++i > 10)
+            break;
+
+    }
+}
 
 } // namespace utils
 } // namespace myccg
+

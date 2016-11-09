@@ -6,6 +6,8 @@
 #include "combinator.h"
 #include <sstream>
 #include <vector>
+#include <memory>
+
 
 namespace myccg {
 namespace tree {
@@ -33,7 +35,7 @@ public:
     friend Tree;
 
 private:
-    virtual std::size_t ShowDerivation(std::size_t lwidth) const = 0;
+    virtual std::size_t ShowDerivation(std::size_t lwidth, std::ostream& out) const = 0;
     virtual void GetLeaves(std::vector<const Leaf*>* out) const = 0;
 
 protected:
@@ -46,6 +48,8 @@ class Leaf: public Node
 public:
     Leaf(const std::string& word, const cat::Category* cat, int position)
     : Node(cat, combinator::LEXICON), word_(word), position_(position) {}
+
+    ~Leaf() {}
 
     const std::string ToStr() const {
         std::stringstream out;
@@ -68,7 +72,7 @@ public:
     int GetDependencyLength() const { return 0; }
 
 private:
-    std::size_t ShowDerivation(std::size_t lwidth) const;
+    std::size_t ShowDerivation(std::size_t lwidth, std::ostream& out) const;
 
     void GetLeaves(std::vector<const Leaf*>* out) const {
         out->push_back(this);
@@ -87,6 +91,23 @@ public:
     : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
       lchild_(lchild), rchild_(rchild), rule_(rule) {}
 
+    Tree(const cat::Category* cat, bool left_is_head, std::shared_ptr<const Node> lchild,
+            std::shared_ptr<const Node> rchild, const combinator::Combinator* rule)
+    : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
+      lchild_(lchild), rchild_(rchild), rule_(rule) {}
+
+    Tree(const cat::Category* cat, bool left_is_head,
+            const Node* lchild, const combinator::Combinator* rule)
+    : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
+      lchild_(lchild), rchild_(NULL), rule_(rule) {}
+
+    Tree(const cat::Category* cat, bool left_is_head,
+            std::shared_ptr<const Node> lchild, const combinator::Combinator* rule)
+    : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
+      lchild_(lchild), rchild_(NULL), rule_(rule) {}
+
+    ~Tree() {}
+
     const std::string ToStr() const {
         std::stringstream out;
         out << "(<T ";
@@ -100,9 +121,9 @@ public:
         return out.str();
     }
 
-    const Node* GetLChild() const { return lchild_; }
+    const Node* GetLChild() const { return lchild_.get(); }
 
-    const Node* GetRChild() const { return rchild_; }
+    const Node* GetRChild() const { return rchild_.get(); }
 
     int GetHeadId() const {
         if (NULL == rchild_)
@@ -120,7 +141,7 @@ public:
     }
 
 private:
-    std::size_t ShowDerivation(std::size_t lwidth) const;
+    std::size_t ShowDerivation(std::size_t lwidth, std::ostream& out) const;
 
     void GetLeaves(std::vector<const Leaf*>* out) const {
         lchild_->GetLeaves(out);
@@ -129,18 +150,18 @@ private:
     }
 
     friend std::vector<const Leaf*> GetLeaves(const Tree* tree);
-    friend void ShowDerivation(const Tree* tree);
+    friend void ShowDerivation(const Tree* tree, std::ostream& out);
 
 private:
     bool left_is_head_;
-    const Node* lchild_;
-    const Node* rchild_;
+    std::shared_ptr<const Node> lchild_;
+    std::shared_ptr<const Node> rchild_;
     const combinator::Combinator* rule_;
 };
 
 std::vector<const Leaf*> GetLeaves(const Tree* tree);
 
-void ShowDerivation(const Tree* tree);
+void ShowDerivation(const Tree* tree, std::ostream& out=std::cout);
 
 void test();
 

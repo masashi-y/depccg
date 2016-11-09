@@ -109,7 +109,7 @@ class RemovePunctuationLeft: public Combinator
 public:
     RemovePunctuationLeft(): Combinator(LP) {}
 
-    bool CanApply(const Category* left, const Category* right) {
+    bool CanApply(const Category* left, const Category* right) const {
         return *left == *cat::LQU || *left == *cat::LRB;
     }
 
@@ -323,6 +323,7 @@ private:
 };
 
 extern std::vector<Combinator*> binary_rules;
+void test();
 
 } // namespace combinator
 } // namespace myccg

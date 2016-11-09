@@ -10,7 +10,7 @@ namespace tagger {
 
 char PYPATH[] = "PYTHONPATH=.";
 
-std::unique_ptr<float[]> ChainerTagger::predict(const std::string& tokens) {
+std::unique_ptr<float[]> ChainerTagger::predict(const std::string& tokens) const {
     putenv(PYPATH);
     if ( !Py_IsInitialized() )
         Py_Initialize();

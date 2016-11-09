@@ -1,6 +1,6 @@
 CC=g++
 PROG=myccg
-SRCS=parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp
+SRCS=parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp
 OBJS=$(SRCS:.cpp=.o) tagger.o
 DEPS=$(SRCS:.cpp=.d)
 CFLAGS= -std=c++11 -g -fpic

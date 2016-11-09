@@ -15,31 +15,31 @@ std::vector<const Leaf*> GetLeaves(const Tree* tree) {
     return res;
 }
 
-std::size_t Leaf::ShowDerivation(std::size_t lwidth) const {
+std::size_t Leaf::ShowDerivation(std::size_t lwidth, std::ostream& out) const {
     std::size_t rwidth = lwidth;
     return std::max(std::max(
                 rwidth, 2 + lwidth + cat_->ToStr().size()),
                 2 + lwidth + word_.size());
 }
 
-std::size_t Tree::ShowDerivation(std::size_t lwidth) const {
+std::size_t Tree::ShowDerivation(std::size_t lwidth, std::ostream& out) const {
     std::size_t rwidth = lwidth;
-    rwidth = std::max(rwidth, (lchild_->ShowDerivation(rwidth)));
+    rwidth = std::max(rwidth, (lchild_->ShowDerivation(rwidth, out)));
     if (NULL != rchild_)
-        rwidth = std::max(rwidth, (rchild_->ShowDerivation(rwidth)));
+        rwidth = std::max(rwidth, (rchild_->ShowDerivation(rwidth, out)));
 
     std::string str_res = cat_->ToStr();
     int respadlen = (rwidth - lwidth - str_res.size()) / 2 + lwidth;
 
-    SPACE(std::cout, lwidth);
-    REPEAT(std::cout, (rwidth - lwidth), "-");
-    std::cout << rule_->ToStr() << std::endl;;
-    SPACE(std::cout, respadlen);
-    std::cout << str_res << std::endl;;
+    SPACE(out, lwidth);
+    REPEAT(out, (rwidth - lwidth), "-");
+    out << rule_->ToStr() << std::endl;;
+    SPACE(out, respadlen);
+    out << str_res << std::endl;;
     return rwidth;
 }
 
-void ShowDerivation(const Tree* tree) {
+void ShowDerivation(const Tree* tree, std::ostream& out) {
     std::stringstream cats;
     std::stringstream words;
     std::vector<const Leaf*> leaves = GetLeaves(tree);
@@ -59,9 +59,9 @@ void ShowDerivation(const Tree* tree) {
         SPACE(words, rwordlen);
     }
 
-    std::cout << cats.str() << std::endl;
-    std::cout << words.str() << std::endl;
-    tree->ShowDerivation(0); 
+    out << cats.str() << std::endl;
+    out << words.str() << std::endl;
+    tree->ShowDerivation(0, out); 
 }
 
 #define APPLY_BINARY(comb, left, right) new myccg::tree::Tree( \

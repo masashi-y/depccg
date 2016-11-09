@@ -10,19 +10,10 @@
 #include <limits>
 #include "cat.h"
 
-// namespace std
-// {
-//     template<>
-//     struct hash<std::pair<const myccg::cat::Category*, const myccg::cat::Category*>>
-//     {
-//         size_t operator () (std::pair<const myccg::cat::Category*, const myccg::cat::Category*> const& p)
-//         {
-//             return ((p.first->GetId() << 31) | (p.second->GetId()));
-//         }
-//     };
-// }
 namespace myccg {
 namespace utils {
+
+typedef std::pair<const myccg::cat::Category*, const myccg::cat::Category*> CatPair;
 
 const std::string drop_brackets(const std::string& in);
 
@@ -70,9 +61,17 @@ template<typename T> int ArgMin(T* from, T* to) {
 std::string ReplaceAll(const std::string target,
         const std::string from, const std::string to);
 
-// std::unordered_set<std::pair<const cat::Category*, const cat::Category*>>
-// load_seen_rules(const std::string& filename);
+struct hash_cat_pair
+{
+    inline size_t operator () (const CatPair& p) const {
+        return ((p.first->GetId() << 31) | (p.second->GetId()));
+    }
+};
 
+std::unordered_set<CatPair, hash_cat_pair>
+load_seen_rules(const std::string& filename);
+
+void test();
 
 } // namespace utils
 } // namespace myccg
