@@ -37,11 +37,12 @@ class AStarParser: public Parser
 public:
     AStarParser(const tagger::Tagger* tagger, const std::string& model);
 
-    const tree::Node* Parse(const std::string& sent);
+    const tree::Node* Parse(const std::string& sent, float beta=0.0000001);
+
+    const tree::Node* Parse(const std::string& sent, float* scores, float beta=0.0000001);
 
     void test();
 private:
-    const tree::Node* ParseWithScore(const std::string& sent, float* scores);
 
     bool AcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const ;
 
@@ -52,6 +53,11 @@ private:
     int TagSize() const { return tagger_->TargetSize(); }
 
     std::vector<RuleCache>& GetRules(Cat left, Cat right);
+
+    const tree::Node* failure_node = new tree::Tree(
+            cat::parse("XX"), true,
+            new tree::Leaf("FAILURE", cat::parse("XX"), 0),
+            new combinator::UnaryRule());
 
 
     const tagger::Tagger* tagger_;

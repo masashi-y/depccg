@@ -10,11 +10,6 @@
 namespace myccg {
 namespace parser {
 
-const tree::Node* failure_node = new tree::Tree(
-        cat::parse("XX"), true,
-        new tree::Leaf("FAILURE", cat::parse("XX"), 0),
-        NULL, new combinator::UnaryRule());
-
 struct AgendaItem
 {
     AgendaItem(NodePtr parse, float in_prob, float out_prob,
@@ -161,14 +156,13 @@ void ComputeOutsideProbs(float* probs, std::size_t sentSize, float* out) {
     delete[] from_right;
 }
 
-const tree::Node* AStarParser::Parse(const std::string& sent) {
+const tree::Node* AStarParser::Parse(const std::string& sent, float beta) {
     std::unique_ptr<float[]> scores = tagger_->predict(sent);
-    const tree::Node* res = ParseWithScore(sent, scores.get());
+    const tree::Node* res = Parse(sent, scores.get(), beta);
     return res;
 }
 
-const tree::Node* AStarParser::ParseWithScore(const std::string& sent, float* scores) {
-    float beta = 0.000001;
+const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     std::vector<std::string> tokens = utils::split(sent, ' ');
     std::size_t length = tokens.size();
     std::unique_ptr<float[]> best_in_probs(new float[length + 1]);
@@ -176,15 +170,13 @@ const tree::Node* AStarParser::ParseWithScore(const std::string& sent, float* sc
     std::priority_queue<AgendaItem> agenda;
 
     std::vector<std::vector<std::pair<float, Cat>>> scored_cats;
-    NodePtr parse;
-    float in_prob, out_prob, score, threshold;
 
     for (int i = 0; i < tokens.size(); i++) {
         scored_cats.emplace_back(std::vector<std::pair<float, Cat>>());
         float total = 0.0;
         best_in_probs[i] = 0.0;
         for (int j = 0; j < TagSize(); j++) {
-            score = scores[i * TagSize() + j];
+            float score = scores[i * TagSize() + j];
             total += score;
             if (score >= best_in_probs[i]) best_in_probs[i] = score;
             scored_cats[i].emplace_back(score, TagAt(j));
@@ -192,7 +184,7 @@ const tree::Node* AStarParser::ParseWithScore(const std::string& sent, float* sc
         std::sort(scored_cats[i].begin(), scored_cats[i].end(),
             [](std::pair<float, Cat>& left, std::pair<float, Cat>& right) {
                 return left.first > right.first;});
-        threshold = best_in_probs[i] * beta;
+        float threshold = best_in_probs[i] * beta;
         // normalize and pruning
         for (int j = 0; j < scored_cats[i].size(); j++) {
             if (scored_cats[i][j].first > threshold) 
@@ -208,7 +200,7 @@ const tree::Node* AStarParser::ParseWithScore(const std::string& sent, float* sc
     for (int i = 0; i < scored_cats.size(); i++) {
         for (int j = 0; j < scored_cats[i].size(); j++) {
             auto& prob_and_cat = scored_cats[i][j];
-            out_prob = out_probs[i * length + (i + 1)];
+            float out_prob = out_probs[i * length + (i + 1)];
             agenda.emplace(
                     std::make_shared<tree::Leaf>(tokens[i], prob_and_cat.second, i),
                     prob_and_cat.first, out_prob, i, 1);
@@ -222,14 +214,14 @@ const tree::Node* AStarParser::ParseWithScore(const std::string& sent, float* sc
 
     while (chart[length - 1].IsEmpty() && agenda.size() > 0) {
         const AgendaItem& item = agenda.top();
-        parse = item.parse;
+        NodePtr parse = item.parse;
         ChartCell& cell = chart[item.start_of_span * length + (item.span_length - 1)];
 
         if (cell.update(parse, item.in_prob)) {
             if (item.span_length != length) {
                 for (Cat unary: unary_rules_[parse->GetCategory()]) {
                     NodePtr subtree = std::make_shared<const tree::Tree>(unary, true, parse, new combinator::UnaryRule());
-                    out_prob = out_probs[item.start_of_span * length +
+                    float out_prob = out_probs[item.start_of_span * length +
                                     item.start_of_span + item.span_length];
                     agenda.push(AgendaItem(subtree,
                                         item.in_prob,
@@ -252,8 +244,8 @@ const tree::Node* AStarParser::ParseWithScore(const std::string& sent, float* sc
                         if (IsNormalForm(rule.combinator->GetRuleType(), parse, right) &&
                                 AcceptableRootOrSubtree(rule.result, span_length, length)) {
                             NodePtr subtree = std::make_shared<const tree::Tree>(rule.result, rule.left_is_head, parse, right, rule.combinator);
-                            in_prob = item.in_prob + prob;
-                            out_prob = out_probs[item.start_of_span * length +
+                            float in_prob = item.in_prob + prob;
+                            float out_prob = out_probs[item.start_of_span * length +
                                 item.start_of_span + span_length];
                             agenda.push(AgendaItem(subtree,
                                                 in_prob,
@@ -276,8 +268,8 @@ const tree::Node* AStarParser::ParseWithScore(const std::string& sent, float* sc
                         if (IsNormalForm(rule.combinator->GetRuleType(), left, parse) &&
                                 AcceptableRootOrSubtree(rule.result, span_length, length)) {
                             NodePtr subtree = std::make_shared<const tree::Tree>(rule.result, rule.left_is_head, left, parse, rule.combinator);
-                            in_prob = item.in_prob + prob;
-                            out_prob = out_probs[start_of_span * length +
+                            float in_prob = item.in_prob + prob;
+                            float out_prob = out_probs[start_of_span * length +
                                             start_of_span + span_length];
                             agenda.push(AgendaItem(subtree,
                                                 in_prob,
@@ -305,6 +297,7 @@ void AStarParser::test() {
         NodePtr(new tree::Leaf("sentence", cat::parse("N"),               4)),
         NodePtr(new tree::Leaf(".",        cat::parse("."),               5)),
     };
+    print (failure_node->ToStr());
 }
 
 void test() {
@@ -314,7 +307,6 @@ void test() {
     tagger::ChainerTagger tagger(model);
     AStarParser parser(&tagger, model);
     parser.test();
-    print (failure_node->ToStr());
 
 }
 
