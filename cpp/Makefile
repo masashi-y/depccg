@@ -4,7 +4,7 @@ PROG=myccg
 SRCS=parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp
 OBJS=$(SRCS:.cpp=.o) tagger.o
 DEPS=$(SRCS:.cpp=.d)
-CFLAGS= -std=c++11 -g -fpic
+CFLAGS= -std=c++11 -g -fpic -O2
 INCLUDES=$(shell $(PYTHON)-config --includes) \
 	-I$(shell $(PYTHON) -c 'import numpy; print numpy.get_include()')
 LIBDIR=$(shell $(PYTHON)-config --ldflags)

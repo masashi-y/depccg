@@ -21,6 +21,8 @@ public:
     Node(const cat::Category* cat, const combinator::RuleType rule_type)
     : cat_(cat), rule_type_(rule_type) {}
 
+    virtual ~Node() {}
+
     const cat::Category* GetCategory() { return cat_; }
     const cat::Category* GetCategory() const { return cat_; }
 

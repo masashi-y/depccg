@@ -6,17 +6,21 @@
 #include <utility>
 #include <limits>
 #include <memory>
+#include <iomanip>
+
+
+#define DEBUG(var) std::cout << #var": " << (var) << std::endl;
 
 namespace myccg {
 namespace parser {
 
 struct AgendaItem
 {
-    AgendaItem(NodePtr parse, float in_prob, float out_prob,
-            int start_of_span, int span_length)
-    : parse(parse), in_prob(in_prob), out_prob(out_prob),
-    prob(in_prob), start_of_span(start_of_span),
-    span_length(span_length) {}
+    AgendaItem(NodePtr parse_, float in_prob_, float out_prob_,
+            int start_of_span_, int span_length_)
+    : parse(parse_), in_prob(in_prob_), out_prob(out_prob_),
+    prob(in_prob_ + out_prob_), start_of_span(start_of_span_),
+    span_length(span_length_) {}
 
     ~AgendaItem() {}
 
@@ -42,16 +46,18 @@ public:
     items_(std::unordered_map<Cat, ChartItem>()),
     best_prob_(std::numeric_limits<float>::lowest()), best_(NULL) {}
 
+    ~ChartCell() {}
+
     bool IsEmpty() const { return items_.size() == 0; }
 
     NodePtr GetBestParse() const { return best_; }
 
     bool update(NodePtr parse, float prob) {
         const cat::Category* cat = parse->GetCategory();
-        if (items_.count(cat) > 0 && prob < best_prob_)
+        if (items_.count(cat) > 0 && prob <= best_prob_)
             return false;
         items_[cat] = std::make_pair(parse, prob);
-        if (best_prob_ < prob) {
+        if (best_prob_ <= prob) {
             best_prob_ = prob;
             best_ = parse;
         }
@@ -71,11 +77,7 @@ AStarParser::AStarParser(const tagger::Tagger* tagger, const std::string& model)
   binary_rules_(combinator::binary_rules),
   seen_rules_(utils::load_seen_rules(model + "/seen_rules.txt")),
   possible_root_cats_({cat::parse("S[dcl]"), cat::parse("S[wq]"),
-    cat::parse("S[q]"), cat::parse("S[qem]"), cat::parse("NP")}) {
-      rule_cache_.clear();
-      print(unary_rules_.size());
-      print(possible_root_cats_.size());
-  }
+    cat::parse("S[q]"), cat::parse("S[qem]"), cat::parse("NP")}) {}
 
 
 bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {
@@ -136,15 +138,14 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
     return rule_cache_[key];
 }
 
-void ComputeOutsideProbs(float* probs, std::size_t sent_size, float* out) {
-    int j;
+void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
     float* from_left = new float[sent_size + 1];
     float* from_right = new float[sent_size + 1];
     from_left[0] = 0.0;
     from_right[sent_size] = 0.0;
 
     for (int i = 0; i < sent_size - 1; i++) {
-        j = sent_size - i;
+        int j = sent_size - i;
         from_left[i + 1] = from_left[i] + probs[i];
         from_right[j - 1] = from_right[j] + probs[j - 1];
     }
@@ -165,29 +166,27 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float beta) {
 }
 
 const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, float beta) {
+    int pruning_size = 50;
     std::vector<std::string> tokens = utils::split(sent, ' ');
-    std::size_t sent_size = tokens.size();
+    int sent_size = static_cast<int>(tokens.size());
     std::unique_ptr<float[]> best_in_probs(new float[sent_size]);
     std::unique_ptr<float[]> out_probs(new float[(sent_size + 1) * (sent_size + 1)]);
     std::priority_queue<AgendaItem> agenda;
 
     std::vector<std::vector<std::pair<float, Cat>>> scored_cats;
 
-    print("initializing agenda");
-    for (int i = 0; i < tokens.size(); i++) {
+    for (int i = 0; i < sent_size; i++) {
         scored_cats.emplace_back(std::vector<std::pair<float, Cat>>());
         float total = 0.0;
-        best_in_probs[i] = std::numeric_limits<float>::lowest();
         for (int j = 0; j < TagSize(); j++) {
             float score = scores[i * TagSize() + j];
             total += std::exp(score);
-            if (score >= best_in_probs[i]) best_in_probs[i] = score;
             scored_cats[i].emplace_back(score, TagAt(j));
         }
         std::sort(scored_cats[i].begin(), scored_cats[i].end(),
             [](std::pair<float, Cat>& left, std::pair<float, Cat>& right) {
                 return left.first > right.first;});
-        float threshold = best_in_probs[i] * beta;
+        float threshold = scored_cats[i][0].first * beta;
         // normalize and pruning
         for (int j = 0; j < TagSize(); j++) {
             if (scored_cats[i][j].first > threshold) 
@@ -196,17 +195,14 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
             else
                 scored_cats[i].pop_back();
         }
-        best_in_probs[i] = std::log( std::exp(best_in_probs[i]) / total );
+        best_in_probs[i] = scored_cats[i][0].first;
     }
-    print("ComputeOutsideProbs");
     ComputeOutsideProbs(best_in_probs.get(), sent_size, out_probs.get());
 
     for (int i = 0; i < scored_cats.size(); i++) {
         float out_prob = out_probs[i * sent_size + (i + 1)];
-        std::cout << "out_prob: "<< i << " " << out_prob <<std::endl;
-        for (int j = 0; j < scored_cats[i].size(); j++) {
+        for (int j = 0; j < pruning_size; j++) {
             auto& prob_and_cat = scored_cats[i][j];
-            std::cout << "in_prob: "<< i << " " << prob_and_cat.first <<std::endl;
             agenda.emplace(
                     std::make_shared<tree::Leaf>(tokens[i], prob_and_cat.second, i),
                     prob_and_cat.first, out_prob, i, 1);
@@ -214,22 +210,21 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
     }
 
     ChartCell* chart = new ChartCell[sent_size * sent_size];
+    // std::unique_ptr<ChartCell[]> chart(new ChartCell[sent_size * sent_size]);
 
-    print("start");
     int step = 0;
     while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
-        const AgendaItem& item = agenda.top();
+        const AgendaItem item = agenda.top();
+        agenda.pop();
         NodePtr parse = item.parse;
         ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
-        if (step++ > 2000) break;
+        // if (step++ > 20000) break;
 
         if (cell.update(parse, item.in_prob)) {
             if (item.span_length != sent_size) {
                 for (Cat unary: unary_rules_[parse->GetCategory()]) {
                     NodePtr subtree = std::make_shared<const tree::Tree>(unary, parse);
-                    float out_prob = out_probs[item.start_of_span * sent_size +
-                                    item.start_of_span + item.span_length];
-                    agenda.emplace(subtree, item.in_prob, out_prob,
+                    agenda.emplace(subtree, item.in_prob, item.out_prob,
                                         item.start_of_span, item.span_length);
                 }
             }
@@ -241,6 +236,7 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                 for (auto&& pair: other.items_) {
                     NodePtr right = pair.second.first;
                     float prob = pair.second.second;
+                    if (! IsSeen(parse->GetCategory(), right->GetCategory())) continue;
                     for (auto&& rule: GetRules(
                                 parse->GetCategory(), right->GetCategory())) {
                         if (IsNormalForm(rule.combinator->GetRuleType(), parse, right) &&
@@ -248,8 +244,8 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                             NodePtr subtree = std::make_shared<const tree::Tree>(
                                     rule.result, rule.left_is_head, parse, right, rule.combinator);
                             float in_prob = item.in_prob + prob;
-                            float out_prob = out_probs[item.start_of_span * sent_size +
-                                item.start_of_span + span_length];
+                            float out_prob = out_probs[item.start_of_span *
+                                            sent_size + item.start_of_span + span_length];
                             agenda.emplace(subtree, in_prob, out_prob,
                                                 item.start_of_span, span_length);
                         }
@@ -263,6 +259,7 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                 for (auto&& pair: other.items_) {
                     NodePtr left = pair.second.first;
                     float prob = pair.second.second;
+                    if (! IsSeen(left->GetCategory(), parse->GetCategory())) continue;
                     for (auto&& rule: GetRules(
                                 left->GetCategory(), parse->GetCategory())) {
                         if (IsNormalForm(rule.combinator->GetRuleType(), left, parse) &&
@@ -279,11 +276,11 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                 }
             }
         }
-        agenda.pop();
     }
     if (chart[sent_size - 1].IsEmpty())
         return failure_node;
-    return chart[sent_size - 1].GetBestParse().get();
+    auto res = chart[sent_size - 1].GetBestParse().get();
+    return res;
 }
 
 void AStarParser::test() {
@@ -307,10 +304,13 @@ void test() {
     parser.test();
     auto res = parser.Parse("this is a new sentence .");
     tree::ShowDerivation(static_cast<const tree::Tree*>(res));
-    res = parser.Parse("Ed saw briefly Tom and Taro .");
+    res = parser.Parse("Ed saw briefly Tom and Taro .", 0.00001);
     tree::ShowDerivation(static_cast<const tree::Tree*>(res));
-    res = parser.Parse("Darth Vador, also known as Anakin Skywalker is a fictional character .");
+    res = parser.Parse("Darth Vador , also known as Anakin Skywalker is a fictional character .");
     tree::ShowDerivation(static_cast<const tree::Tree*>(res));
+    // res = parser.Parse("But Mrs. Hills , speaking at a breakfast meeting of the American Chamber of Commerce in Japan on Saturday , stressed that the objective is not to get definitive action by spring or summer , it is rather to have a blueprint for action .");
+    // tree::ShowDerivation(static_cast<const tree::Tree*>(res));
+
     std::unique_ptr<float[]> a(new float[5]{1, 2,3,4,5});
     std::unique_ptr<float[]> out(new float[36]);
     ComputeOutsideProbs(a.get(), 5, out.get());
