@@ -11,6 +11,19 @@
 namespace myccg {
 namespace cat {
 
+class Category;
+class Slash;
+typedef const Category* Cat;
+typedef std::pair<Cat, Cat> CatPair;
+
+Cat parse_uncached(const std::string& cat);
+
+Cat parse(const std::string& cat);
+
+Cat make(Cat left, const Slash* op, Cat right);
+
+Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
+
 const std::regex reg_no_punct("([A-Za-z]+)");
 
 const std::string kWILDCARD = "X";
@@ -25,10 +38,6 @@ public:
     };
 
 public:
-    static const Slash* fwd_ptr;
-    static const Slash* bwd_ptr;
-    static const Slash* either_ptr;
-
     static const Slash* Fwd() { return fwd_ptr; }
     static const Slash* Bwd() { return bwd_ptr; }
     static const Slash* Either() { return either_ptr; }
@@ -69,6 +78,10 @@ public:
 private:
     Slash(SlashE slash): slash_(slash) {}
 
+    static const Slash* fwd_ptr;
+    static const Slash* bwd_ptr;
+    static const Slash* either_ptr;
+
     SlashE slash_;
 };
 
@@ -78,9 +91,6 @@ private:
     static int num_cats;
 
 public:
-    Category(const std::string& str, const std::string& semantics)
-        : str_(semantics.empty() ? str : str + "{" + semantics + "}"), id_(num_cats++) {}
-
     bool operator==(const Category& other) { return this->id_ == other.id_; }
     bool operator==(const Category& other) const { return this->id_ == other.id_; }
 
@@ -99,8 +109,8 @@ public:
 
     virtual const std::string& GetType() const = 0;
     virtual const std::string& GetFeat() const = 0;
-    virtual const Category* GetLeft() const = 0;
-    virtual const Category* GetRight() const = 0;
+    virtual Cat GetLeft() const = 0;
+    virtual Cat GetRight() const = 0;
     virtual const Slash* GetSlash() const = 0;
 
     virtual const std::string WithBrackets() const = 0;
@@ -112,8 +122,8 @@ public:
     virtual bool IsPunct() const = 0;
     virtual bool IsNorNP() const = 0;
     virtual int NArgs() const = 0;
-    virtual const std::string GetSubstitution(const Category* other) const = 0;
-    virtual bool Matches(const Category* other) const = 0;
+    virtual const std::string GetSubstitution(Cat other) const = 0;
+    virtual bool Matches(Cat other) const = 0;
 
     // def replace_arg(self, argn, new_cat):
     //     if argn == self.n_args:
@@ -122,8 +132,8 @@ public:
     //         return Cat.make(
     //                 self.left.replace_arg(argn, new_cat), self.slash, self.right)
 
-    virtual const Category* Arg(int argn) const = 0;
-    virtual const Category* HeadCat() const = 0;
+    virtual Cat Arg(int argn) const = 0;
+    virtual Cat HeadCat() const = 0;
     virtual bool IsFunctionInto(const Category& cat) const = 0;
     virtual bool IsFunctionIntoModifier() const = 0;
 
@@ -132,7 +142,11 @@ public:
     //                      self.slash,
     //                      self.right.drop_PP_and_PR_feat())
 
-    const Category* Substitute(const std::string& sub) const;
+    Cat Substitute(const std::string& sub) const;
+
+protected:
+    Category(const std::string& str, const std::string& semantics)
+        : str_(semantics.empty() ? str : str + "{" + semantics + "}"), id_(num_cats++) {}
 
 private:
     const int id_;
@@ -143,41 +157,29 @@ private:
 class Functor: public Category
 {
 public:
-    Functor(const Category* left, const Slash* slash,
-            const Category* right, std::string& semantics)
-    : Category(left->WithBrackets() + slash->ToStr() + right->WithBrackets(),
-            semantics), left_(left), right_(right), slash_(slash) {
-    }
-
     virtual const std::string& GetType() const { throw std::logic_error("not implemented"); }
 
     virtual const std::string& GetFeat() const { throw std::logic_error("not implemented"); }
 
-    // const Category& GetLeft() { return left_;  }
-    const Category* GetLeft() const { return left_;  }
+    Cat GetLeft() const { return left_;  }
 
-    // const Category& GetRight() { return right_;  }
-    const Category* GetRight() const { return right_;  }
+    Cat GetRight() const { return right_;  }
 
-    // const Slash& GetSlash() { return slash_;  }
     const Slash* GetSlash() const { return slash_;  }
 
     const std::string WithBrackets() const { return "(" + ToStr() + ")"; }
 
     bool IsModifier() const { return this->left_ == this->right_; }
     bool IsTypeRaised() const {
-        return (right_->IsFunctor() &&
-                right_->GetLeft() == left_);
+        return (right_->IsFunctor() && right_->GetLeft() == left_);
     }
 
     bool IsForwardTypeRaised() const {
-        return (this->IsTypeRaised() &&
-                this->slash_->IsForward());
+        return (this->IsTypeRaised() && this->slash_->IsForward());
     }
 
     bool IsBackwardTypeRaised() const {
-        return (this->IsTypeRaised() &&
-                this->slash_->IsForward());
+        return (this->IsTypeRaised() && this->slash_->IsForward());
     }
 
     bool IsFunctor() const { return true; }
@@ -185,7 +187,7 @@ public:
     bool IsNorNP() const { return false; }
     int NArgs() const { return 1 + this->left_->NArgs(); }
 
-    const std::string GetSubstitution(const Category* other) const {
+    const std::string GetSubstitution(Cat other) const {
         const Functor& o = other->As<Functor>();
         const std::string res = this->right_->GetSubstitution(o.right_);
         if (res.empty())
@@ -193,7 +195,7 @@ public:
         return res;
     }
 
-    bool Matches(const Category* other) const {
+    bool Matches(Cat other) const {
         if (other->IsFunctor()) {
             return (this->left_->Matches(other->GetLeft()) &&
                     this->right_->Matches(other->GetRight()) &&
@@ -209,7 +211,7 @@ public:
     //         return Cat.make(
     //                 self.left.replace_arg(argn, new_cat), self.slash, self.right)
 
-    const Category* Arg(int argn) const {
+    Cat Arg(int argn) const {
         if (argn == this->NArgs()) {
             return this->right_;
         } else {
@@ -217,16 +219,14 @@ public:
         }
     }
 
-    const Category* HeadCat() const { return this->left_->HeadCat(); }
+    Cat HeadCat() const { return this->left_->HeadCat(); }
 
     bool IsFunctionInto(const Category& cat) const {
-        return (cat.Matches(this) ||
-                this->left_->IsFunctionInto(cat));
+        return (cat.Matches(this) || this->left_->IsFunctionInto(cat));
     }
 
     bool IsFunctionIntoModifier() const {
-        return (this->IsModifier() ||
-                this->left_->IsModifier());
+        return (this->IsModifier() || this->left_->IsModifier());
     }
 
     // def drop_PP_and_PR_feat(self):
@@ -235,28 +235,28 @@ public:
     //                      self.right.drop_PP_and_PR_feat())
 
 private:
-    const Category* left_;
-    const Category* right_;
+    Functor(Cat left, const Slash* slash, Cat right, std::string& semantics)
+    : Category(left->WithBrackets() + slash->ToStr() + right->WithBrackets(),
+            semantics), left_(left), right_(right), slash_(slash) {
+    }
+
+    friend Cat parse_uncached(const std::string& cat);
+
+    Cat left_;
+    Cat right_;
     const Slash* slash_;
 };
 
 class AtomicCategory: public Category
 {
 public:
-    AtomicCategory(const std::string& type, const std::string& feat,
-            const std::string& semantics)
-        : Category(type + (feat.empty() ? "" : "[" + feat + "]"), semantics),
-          type_(type), feat_(feat) {}
-
-    // const std::string& GetType() { return type_; }
     const std::string& GetType() const { return type_; }
 
-    // const std::string& GetFeat() { return feat_; }
     const std::string& GetFeat() const { return feat_; }
 
-    const Category* GetLeft() const { throw std::logic_error("not implemented"); }
+    Cat GetLeft() const { throw std::logic_error("not implemented"); }
 
-    const Category* GetRight() const { throw std::logic_error("not implemented"); }
+    Cat GetRight() const { throw std::logic_error("not implemented"); }
 
     const Slash* GetSlash() const { throw std::logic_error("not implemented"); }
 
@@ -278,7 +278,7 @@ public:
 
     int NArgs() const { return 0; }
 
-    const std::string GetSubstitution(const Category* other) const {
+    const std::string GetSubstitution(Cat other) const {
         const AtomicCategory& o = other->As<AtomicCategory>();
         if (this->feat_ == kWILDCARD) {
             return o.feat_;
@@ -287,7 +287,7 @@ public:
         } return "";
     }
 
-    bool Matches(const Category* other) const {
+    bool Matches(Cat other) const {
         if (!other->IsFunctor()) {
             return (this->type_ == other->GetType() &&
                     (this->feat_.empty() ||
@@ -317,29 +317,27 @@ public:
     bool IsFunctionIntoModifier() const { return false; }
 
 private:
+    AtomicCategory(const std::string& type, const std::string& feat,
+            const std::string& semantics)
+        : Category(type + (feat.empty() ? "" : "[" + feat + "]"), semantics),
+          type_(type), feat_(feat) {}
+
+    friend Cat parse_uncached(const std::string& cat);
+
     std::string type_;
     std::string feat_;
 };
 
-const Category* parse_uncached(const std::string& cat);
-
-const Category* parse(const std::string& cat);
-
-const Category* make(const Category* left, const Slash* op, const Category* right);
-
-const Category* CorrectWildcardFeatures(const Category* to_correct,
-        const Category* match1, const Category* match2);
-
-extern const Category* COMMA;
-extern const Category* SEMICOLON;
-extern const Category* CONJ;
-extern const Category* N;
-extern const Category* LQU;
-extern const Category* LRB;
-extern const Category* NP;
-extern const Category* PP;
-extern const Category* PREPOSITION;
-extern const Category* PR;
+extern Cat COMMA;
+extern Cat SEMICOLON;
+extern Cat CONJ;
+extern Cat N;
+extern Cat LQU;
+extern Cat LRB;
+extern Cat NP;
+extern Cat PP;
+extern Cat PREPOSITION;
+extern Cat PR;
 
 } // namespace cat
 } // namespace myccg

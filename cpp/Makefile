@@ -1,10 +1,10 @@
 CC=g++
 PYTHON=python2
 PROG=myccg
-SRCS=parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp
+SRCS=main.cpp parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp
 OBJS=$(SRCS:.cpp=.o) tagger.o
 DEPS=$(SRCS:.cpp=.d)
-CFLAGS= -std=c++11 -g -fpic -O2
+CFLAGS= -std=c++11 -g -fpic $(OPTIONS)
 INCLUDES=$(shell $(PYTHON)-config --includes) \
 	-I$(shell $(PYTHON) -c 'import numpy; print numpy.get_include()')
 LIBDIR=$(shell $(PYTHON)-config --ldflags)

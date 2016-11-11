@@ -12,19 +12,21 @@
 namespace myccg {
 namespace tree {
 
+using cat::Cat;
+
 class Leaf;
 class Tree;
 
 class Node
 {
 public:
-    Node(const cat::Category* cat, const combinator::RuleType rule_type)
+    Node(Cat cat, const combinator::RuleType rule_type)
     : cat_(cat), rule_type_(rule_type) {}
 
     virtual ~Node() {}
 
-    const cat::Category* GetCategory() { return cat_; }
-    const cat::Category* GetCategory() const { return cat_; }
+    Cat GetCategory() { return cat_; }
+    Cat GetCategory() const { return cat_; }
 
     const combinator::RuleType GetRuleType() { return rule_type_; }
     const combinator::RuleType GetRuleType() const { return rule_type_; }
@@ -41,14 +43,14 @@ private:
     virtual void GetLeaves(std::vector<const Leaf*>* out) const = 0;
 
 protected:
-    const cat::Category* cat_;
+    Cat cat_;
     const combinator::RuleType rule_type_;
 };
         
 class Leaf: public Node
 {
 public:
-    Leaf(const std::string& word, const cat::Category* cat, int position)
+    Leaf(const std::string& word, Cat cat, int position)
     : Node(cat, combinator::LEXICON), word_(word), position_(position) {}
 
     ~Leaf() {}
@@ -88,21 +90,21 @@ private:
 class Tree: public Node
 {
 public:
-    Tree(const cat::Category* cat, bool left_is_head, const Node* lchild,
+    Tree(Cat cat, bool left_is_head, const Node* lchild,
             const Node* rchild, const combinator::Combinator* rule)
     : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
       lchild_(lchild), rchild_(rchild), rule_(rule) {}
 
-    Tree(const cat::Category* cat, bool left_is_head, std::shared_ptr<const Node> lchild,
+    Tree(Cat cat, bool left_is_head, std::shared_ptr<const Node> lchild,
             std::shared_ptr<const Node> rchild, const combinator::Combinator* rule)
     : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
       lchild_(lchild), rchild_(rchild), rule_(rule) {}
 
-    Tree(const cat::Category* cat, const Node* lchild)
+    Tree(Cat cat, const Node* lchild)
     : Node(cat, combinator::UNARY), left_is_head_(true),
       lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule) {}
 
-    Tree(const cat::Category* cat, std::shared_ptr<const Node> lchild)
+    Tree(Cat cat, std::shared_ptr<const Node> lchild)
     : Node(cat, combinator::UNARY), left_is_head_(true),
       lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule) {}
 

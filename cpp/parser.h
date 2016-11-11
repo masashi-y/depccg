@@ -9,8 +9,8 @@
 namespace myccg {
 namespace parser {
 
-typedef const cat::Category* Cat;
-typedef std::pair<Cat, Cat> CatPair;
+using cat::Cat;
+using cat::CatPair;
 typedef std::shared_ptr<const tree::Node> NodePtr;
 
 
@@ -30,6 +30,9 @@ struct RuleCache
 
 class Parser
 {
+    virtual const tree::Tree* Parse(const std::string& sent, float beta) = 0;
+
+    virtual const tree::Tree* Parse(const std::string& sent, float* scores, float beta) = 0;
 };
 
 class AStarParser: public Parser
@@ -37,9 +40,9 @@ class AStarParser: public Parser
 public:
     AStarParser(const tagger::Tagger* tagger, const std::string& model);
 
-    const tree::Node* Parse(const std::string& sent, float beta=0.0000001);
+    const tree::Tree* Parse(const std::string& sent, float beta=0.0000001);
 
-    const tree::Node* Parse(const std::string& sent, float* scores, float beta=0.0000001);
+    const tree::Tree* Parse(const std::string& sent, float* scores, float beta=0.0000001);
 
     void test();
 private:
@@ -54,7 +57,7 @@ private:
 
     std::vector<RuleCache>& GetRules(Cat left, Cat right);
 
-    const tree::Node* failure_node = new tree::Tree(
+    const tree::Tree* failure_node = new tree::Tree(
             cat::parse("XX"), new tree::Leaf("FAILURE", cat::parse("XX"), 0));
 
 
@@ -66,6 +69,7 @@ private:
     std::unordered_map<CatPair, std::vector<RuleCache>, utils::hash_cat_pair> rule_cache_;
 };
         
+void test();
 } // namespace parser
 } // namespace myccg
 #endif

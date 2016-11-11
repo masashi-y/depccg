@@ -9,7 +9,7 @@ namespace cat {
 
 const char* slashes = "/\\|";
 
-std::unordered_map<std::string, const Category*> cache;
+std::unordered_map<std::string, Cat> cache;
 
 int Category::num_cats = 0;
 
@@ -17,8 +17,8 @@ const Slash* Slash::fwd_ptr = new Slash(FwdApp);
 const Slash* Slash::bwd_ptr = new Slash(BwdApp);
 const Slash* Slash::either_ptr = new Slash(EitherApp);
 
-const Category* parse(const std::string& cat) {
-    const Category* res;
+Cat parse(const std::string& cat) {
+    Cat res;
     if (cache.count(cat) != 0) {
         return cache[cat];
     } else {
@@ -36,7 +36,7 @@ const Category* parse(const std::string& cat) {
 }
 
 
-const Category* parse_uncached(const std::string& cat) {
+Cat parse_uncached(const std::string& cat) {
     std::string new_cat = cat;
     std::string semantics;
     if (new_cat.back() == '}') {
@@ -75,38 +75,37 @@ const Category* parse_uncached(const std::string& cat) {
         return new AtomicCategory(type, feat, semantics);
     } else {
         // functor category
-        const Category* left = parse(new_cat.substr(0, op_idx));
+        Cat left = parse(new_cat.substr(0, op_idx));
         const Slash* slash = Slash::FromStr(new_cat.substr(op_idx, 1));
-        const Category* right = parse(new_cat.substr(op_idx + 1));
+        Cat right = parse(new_cat.substr(op_idx + 1));
         return new Functor(left, slash, right, semantics);
     }
 }
 
-const Category* Category::Substitute(const std::string& sub) const {
+Cat Category::Substitute(const std::string& sub) const {
     return cat::parse(utils::ReplaceAll(str_, kWILDCARD, sub));
 }
 
-// TODO
-const Category* make(const Category* left, const Slash* op, const Category* right) {
+Cat make(Cat left, const Slash* op, Cat right) {
     return parse(left->WithBrackets() + op->ToStr() + right->WithBrackets());
 }
 
-const Category* CorrectWildcardFeatures(const Category* to_correct,
-        const Category* match1, const Category* match2) {
+Cat CorrectWildcardFeatures(Cat to_correct,
+        Cat match1, Cat match2) {
     return to_correct->Substitute(
             match1->GetSubstitution(match2));
 }
 
-const Category* COMMA       = parse(",");
-const Category* SEMICOLON   = parse(";");
-const Category* CONJ        = parse("conj");
-const Category* N           = parse("N");
-const Category* LQU         = parse("LQU");
-const Category* LRB         = parse("LRB");
-const Category* NP          = parse("NP");
-const Category* PP          = parse("PP");
-const Category* PREPOSITION = parse("PP/NP");
-const Category* PR          = parse("PR");
+Cat COMMA       = parse(",");
+Cat SEMICOLON   = parse(";");
+Cat CONJ        = parse("conj");
+Cat N           = parse("N");
+Cat LQU         = parse("LQU");
+Cat LRB         = parse("LRB");
+Cat NP          = parse("NP");
+Cat PP          = parse("PP");
+Cat PREPOSITION = parse("PP/NP");
+Cat PR          = parse("PR");
 
 
 } // namespace cat

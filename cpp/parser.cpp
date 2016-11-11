@@ -6,10 +6,9 @@
 #include <utility>
 #include <limits>
 #include <memory>
-#include <iomanip>
 
 
-#define DEBUG(var) std::cout << #var": " << (var) << std::endl;
+// #define DEBUG(var) std::cout << #var": " << (var) << std::endl;
 
 namespace myccg {
 namespace parser {
@@ -53,7 +52,7 @@ public:
     NodePtr GetBestParse() const { return best_; }
 
     bool update(NodePtr parse, float prob) {
-        const cat::Category* cat = parse->GetCategory();
+        Cat cat = parse->GetCategory();
         if (items_.count(cat) > 0 && prob <= best_prob_)
             return false;
         items_[cat] = std::make_pair(parse, prob);
@@ -159,16 +158,16 @@ void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
     delete[] from_right;
 }
 
-const tree::Node* AStarParser::Parse(const std::string& sent, float beta) {
+const tree::Tree* AStarParser::Parse(const std::string& sent, float beta) {
     std::unique_ptr<float[]> scores = tagger_->predict(sent);
-    const tree::Node* res = Parse(sent, scores.get(), beta);
+    const tree::Tree* res = Parse(sent, scores.get(), beta);
     return res;
 }
 
-const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, float beta) {
+const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     int pruning_size = 50;
     std::vector<std::string> tokens = utils::split(sent, ' ');
-    int sent_size = static_cast<int>(tokens.size());
+    int sent_size = (int)tokens.size();
     std::unique_ptr<float[]> best_in_probs(new float[sent_size]);
     std::unique_ptr<float[]> out_probs(new float[(sent_size + 1) * (sent_size + 1)]);
     std::priority_queue<AgendaItem> agenda;
@@ -237,8 +236,7 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                     NodePtr right = pair.second.first;
                     float prob = pair.second.second;
                     if (! IsSeen(parse->GetCategory(), right->GetCategory())) continue;
-                    for (auto&& rule: GetRules(
-                                parse->GetCategory(), right->GetCategory())) {
+                    for (auto&& rule: GetRules(parse->GetCategory(), right->GetCategory())) {
                         if (IsNormalForm(rule.combinator->GetRuleType(), parse, right) &&
                                 IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
                             NodePtr subtree = std::make_shared<const tree::Tree>(
@@ -260,8 +258,7 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
                     NodePtr left = pair.second.first;
                     float prob = pair.second.second;
                     if (! IsSeen(left->GetCategory(), parse->GetCategory())) continue;
-                    for (auto&& rule: GetRules(
-                                left->GetCategory(), parse->GetCategory())) {
+                    for (auto&& rule: GetRules(left->GetCategory(), parse->GetCategory())) {
                         if (IsNormalForm(rule.combinator->GetRuleType(), left, parse) &&
                                 IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
                             NodePtr subtree = std::make_shared<const tree::Tree>(
@@ -280,7 +277,7 @@ const tree::Node* AStarParser::Parse(const std::string& sent, float* scores, flo
     if (chart[sent_size - 1].IsEmpty())
         return failure_node;
     auto res = chart[sent_size - 1].GetBestParse().get();
-    return res;
+    return static_cast<const tree::Tree*>(res);
 }
 
 void AStarParser::test() {
@@ -324,13 +321,4 @@ void test() {
 
 } // namespace parser
 } // namespace myccg
-
-int main()
-{
-    // myccg::tagger::test();
-    myccg::tree::test();
-    myccg::utils::test();
-    myccg::combinator::test();
-    myccg::parser::test();
-}
 

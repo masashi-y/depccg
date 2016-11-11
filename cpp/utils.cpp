@@ -69,10 +69,9 @@ trim(const std::string& string, const char* trimCharacterList) {
 }
 
 
-std::unordered_map<const cat::Category*, std::vector<const cat::Category*>>
+std::unordered_map<Cat, std::vector<Cat>>
 load_unary(const std::string& filename) {
-    auto res = std::unordered_map
-        <const cat::Category*, std::vector<const cat::Category*>>();
+    auto res = std::unordered_map<Cat, std::vector<Cat>>();
     std::ifstream in(filename);
     if (!in)
         throw std::runtime_error("failed to open: " + filename);
@@ -95,15 +94,15 @@ load_unary(const std::string& filename) {
         ss >> buf;
         to = cat::parse(buf);
         if (res.count(from) == 0)
-            res[from] = std::vector<const cat::Category*>();
+            res[from] = std::vector<Cat>();
         res[from].push_back(to);
     }
     return res;
 }
 
-std::vector<const cat::Category*>
+std::vector<Cat>
 load_category_list(const std::string& filename) {
-    auto res = std::vector<const cat::Category*>();
+    auto res = std::vector<Cat>();
     std::ifstream in(filename);
     if (!in)
         throw std::runtime_error("failed to open: " + filename);
