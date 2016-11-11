@@ -4,10 +4,10 @@
 
 void test()
 {
-    myccg::tagger::test();
-    myccg::tree::test();
-    myccg::utils::test();
-    myccg::combinator::test();
+    // myccg::tagger::test();
+    // myccg::tree::test();
+    // myccg::utils::test();
+    // myccg::combinator::test();
     myccg::parser::test();
 }
 
@@ -17,10 +17,11 @@ int main(int argc, char const* argv[])
 {
 #ifdef TEST
     test();
-#endif
+#else
     cmdline::parser p;
     p.add<std::string>("model", 'm', "model directory");
     p.add("deriv", 'd', "output result in derivation format");
+    p.add<float>("beta", 'b', "beta for pruning", false, 0.0000001);
     p.add("help", 'h', "print help");
 
     if (!p.parse(argc, argv) || p.exist("help")) {
@@ -31,12 +32,15 @@ int main(int argc, char const* argv[])
     parser::AStarParser parser(&tagger, p.get<std::string>("model"));
     std::string input;
     while (std::getline(std::cin, input)) {
-        auto res = parser.Parse(input);
-        if (p.exist("deriv"))
+        auto res = parser.Parse(input, p.get<float>("beta"));
+        if (p.exist("deriv")) {
             tree::ShowDerivation(res);
-        else
+            std::cout << std::endl;
+        } else {
             std::cout << res->ToStr() << std::endl;
+        }
     }
+#endif
     
     return 0;
 }

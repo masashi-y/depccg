@@ -55,7 +55,7 @@ public:
         Cat cat = parse->GetCategory();
         if (items_.count(cat) > 0 && prob <= best_prob_)
             return false;
-        items_[cat] = std::make_pair(parse, prob);
+        items_.emplace(cat, std::make_pair(parse, prob));;
         if (best_prob_ <= prob) {
             best_prob_ = prob;
             best_ = parse;
@@ -164,6 +164,16 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float beta) {
     return res;
 }
 
+std::vector<const tree::Tree*>
+AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
+    std::unique_ptr<float*[]> scores = tagger_->predict(doc);
+    std::vector<const tree::Tree*> res(doc.size());
+    for (int i = 0; i < doc.size(); i++) {
+        res[i] = Parse(doc[i], scores[i], beta);
+    }
+    return res;
+}
+
 const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     int pruning_size = 50;
     std::vector<std::string> tokens = utils::split(sent, ' ');
@@ -174,10 +184,10 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
 
     std::vector<std::vector<std::pair<float, Cat>>> scored_cats;
 
-    for (int i = 0; i < sent_size; i++) {
+    for (unsigned i = 0; i < sent_size; i++) {
         scored_cats.emplace_back(std::vector<std::pair<float, Cat>>());
         float total = 0.0;
-        for (int j = 0; j < TagSize(); j++) {
+        for (unsigned j = 0; j < TagSize(); j++) {
             float score = scores[i * TagSize() + j];
             total += std::exp(score);
             scored_cats[i].emplace_back(score, TagAt(j));
@@ -187,7 +197,7 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
                 return left.first > right.first;});
         float threshold = scored_cats[i][0].first * beta;
         // normalize and pruning
-        for (int j = 0; j < TagSize(); j++) {
+        for (unsigned j = 0; j < TagSize(); j++) {
             if (scored_cats[i][j].first > threshold) 
                 scored_cats[i][j].first =
                     std::log( std::exp(scored_cats[i][j].first) / total );
@@ -198,9 +208,9 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
     }
     ComputeOutsideProbs(best_in_probs.get(), sent_size, out_probs.get());
 
-    for (int i = 0; i < scored_cats.size(); i++) {
+    for (unsigned i = 0; i < scored_cats.size(); i++) {
         float out_prob = out_probs[i * sent_size + (i + 1)];
-        for (int j = 0; j < pruning_size; j++) {
+        for (unsigned j = 0; j < pruning_size; j++) {
             auto& prob_and_cat = scored_cats[i][j];
             agenda.emplace(
                     std::make_shared<tree::Leaf>(tokens[i], prob_and_cat.second, i),
@@ -211,7 +221,7 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
     ChartCell* chart = new ChartCell[sent_size * sent_size];
     // std::unique_ptr<ChartCell[]> chart(new ChartCell[sent_size * sent_size]);
 
-    int step = 0;
+    // int step = 0;
     while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
         const AgendaItem item = agenda.top();
         agenda.pop();
@@ -299,23 +309,23 @@ void test() {
     tagger::ChainerTagger tagger(model);
     AStarParser parser(&tagger, model);
     parser.test();
-    auto res = parser.Parse("this is a new sentence .");
-    tree::ShowDerivation(static_cast<const tree::Tree*>(res));
-    res = parser.Parse("Ed saw briefly Tom and Taro .", 0.00001);
-    tree::ShowDerivation(static_cast<const tree::Tree*>(res));
-    res = parser.Parse("Darth Vador , also known as Anakin Skywalker is a fictional character .");
-    tree::ShowDerivation(static_cast<const tree::Tree*>(res));
+    const std::string sent1 = "this is a new sentence .";
+    const std::string sent2 = "Ed saw briefly Tom and Taro .";
+    const std::string sent3 = "Darth Vador , also known as Anakin Skywalker is a fictional character .";
+    auto res = parser.Parse(sent1);
+    tree::ShowDerivation(res);
+    res = parser.Parse(sent2, 0.00001);
+    tree::ShowDerivation(res);
+    res = parser.Parse(sent3);
+    tree::ShowDerivation(res);
     // res = parser.Parse("But Mrs. Hills , speaking at a breakfast meeting of the American Chamber of Commerce in Japan on Saturday , stressed that the objective is not to get definitive action by spring or summer , it is rather to have a blueprint for action .");
     // tree::ShowDerivation(static_cast<const tree::Tree*>(res));
 
-    std::unique_ptr<float[]> a(new float[5]{1, 2,3,4,5});
-    std::unique_ptr<float[]> out(new float[36]);
-    ComputeOutsideProbs(a.get(), 5, out.get());
-    print(out[0 * 5 + 1]);
-    print(out[1 * 5 + 2]);
-    print(out[2 * 5 + 3]);
-    print(out[3 * 5 + 4]);
-    print(out[4 * 5 + 5]);
+    std::vector<std::string> doc{sent1, sent2, sent3};
+    auto res_doc = parser.Parse(doc);
+    for (auto&& tree: res_doc) {
+        tree::ShowDerivation(tree);
+    }
 
 }
 

@@ -9,7 +9,8 @@ ext_modules = [
         Extension("chainer_tagger",
                   ["tagger.pyx"],
                   language="c++",
-                  include_dirs=[numpy.get_include()]
+                  include_dirs=[numpy.get_include()],
+                  extra_compile_args=["-O3"]
                   ),
         ]
 

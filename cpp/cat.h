@@ -146,7 +146,7 @@ public:
 
 protected:
     Category(const std::string& str, const std::string& semantics)
-        : str_(semantics.empty() ? str : str + "{" + semantics + "}"), id_(num_cats++) {}
+        : id_(num_cats++), str_(semantics.empty() ? str : str + "{" + semantics + "}") {}
 
 private:
     const int id_;
@@ -296,6 +296,7 @@ public:
                      kWILDCARD == other->GetFeat() ||
                      this->feat_ == "nb"));
         }
+        return false;
     }
 
     const Category& replace_arg(int argn, const Category& new_cat) const {

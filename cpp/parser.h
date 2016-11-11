@@ -42,6 +42,8 @@ public:
 
     const tree::Tree* Parse(const std::string& sent, float beta=0.0000001);
 
+    std::vector<const tree::Tree*> Parse(const std::vector<std::string>& doc, float beta=0.0000001);
+
     const tree::Tree* Parse(const std::string& sent, float* scores, float beta=0.0000001);
 
     void test();

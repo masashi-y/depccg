@@ -15,15 +15,15 @@ std::vector<const Leaf*> GetLeaves(const Tree* tree) {
     return res;
 }
 
-std::size_t Leaf::ShowDerivation(std::size_t lwidth, std::ostream& out) const {
-    std::size_t rwidth = lwidth;
+int Leaf::ShowDerivation(int lwidth, std::ostream& out) const {
+    int rwidth = lwidth;
     return std::max(std::max(
-                rwidth, 2 + lwidth + cat_->ToStr().size()),
-                2 + lwidth + word_.size());
+                rwidth, 2 + lwidth + (int)cat_->ToStr().size()),
+                2 + lwidth + (int)word_.size());
 }
 
-std::size_t Tree::ShowDerivation(std::size_t lwidth, std::ostream& out) const {
-    std::size_t rwidth = lwidth;
+int Tree::ShowDerivation(int lwidth, std::ostream& out) const {
+    int rwidth = lwidth;
     rwidth = std::max(rwidth, (lchild_->ShowDerivation(rwidth, out)));
     if (NULL != rchild_)
         rwidth = std::max(rwidth, (rchild_->ShowDerivation(rwidth, out)));
@@ -43,7 +43,7 @@ void ShowDerivation(const Tree* tree, std::ostream& out) {
     std::stringstream cats;
     std::stringstream words;
     std::vector<const Leaf*> leaves = GetLeaves(tree);
-    for (int i = 0; i < leaves.size(); i++) {
+    for (unsigned i = 0; i < leaves.size(); i++) {
         std::string str_cat = leaves[i]->GetCategory()->ToStr();
         std::string str_word = leaves[i]->GetWord();
         int nextlen = 2 + std::max(str_cat.size(), str_word.size());
@@ -87,7 +87,6 @@ void test()
     auto bwd  = new combinator::BackwardApplication();
     auto Bx   = new combinator::BackwardComposition(cat::Slash::Fwd(), cat::Slash::Bwd(), cat::Slash::Fwd());
     auto conj = new combinator::Conjunction();
-    auto un   = new combinator::UnaryRule();
     auto rp   = new combinator::RemovePunctuation(false);
 
     const Node* leaves[] = {

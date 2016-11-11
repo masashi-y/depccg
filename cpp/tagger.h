@@ -19,6 +19,7 @@
 #endif
 
 __PYX_EXTERN_C DL_IMPORT(void) tag(char const *, char const *, int, float *);
+__PYX_EXTERN_C DL_IMPORT(void) tag_doc(char const *, char const **, int *, int, float **);
 
 #endif /* !__PYX_HAVE_API__chainer_tagger */
 

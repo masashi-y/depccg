@@ -39,7 +39,7 @@ public:
     friend Tree;
 
 private:
-    virtual std::size_t ShowDerivation(std::size_t lwidth, std::ostream& out) const = 0;
+    virtual int ShowDerivation(int lwidth, std::ostream& out) const = 0;
     virtual void GetLeaves(std::vector<const Leaf*>* out) const = 0;
 
 protected:
@@ -76,7 +76,7 @@ public:
     int GetDependencyLength() const { return 0; }
 
 private:
-    std::size_t ShowDerivation(std::size_t lwidth, std::ostream& out) const;
+    int ShowDerivation(int lwidth, std::ostream& out) const;
 
     void GetLeaves(std::vector<const Leaf*>* out) const {
         out->push_back(this);
@@ -143,7 +143,7 @@ public:
     }
 
 private:
-    std::size_t ShowDerivation(std::size_t lwidth, std::ostream& out) const;
+    int ShowDerivation(int lwidth, std::ostream& out) const;
 
     void GetLeaves(std::vector<const Leaf*>* out) const {
         lchild_->GetLeaves(out);

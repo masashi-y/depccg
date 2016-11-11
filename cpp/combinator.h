@@ -267,6 +267,7 @@ class GeneralizedForwardComposition: public Combinator
             return (left->GetRight()->Matches(right->GetLeft()->GetLeft()) &&
                     left->GetSlash() == left_ &&
                     right->GetLeft()->GetSlash() == right_);
+        return false;
     }
 
     Cat Apply(Cat left, Cat right) const {

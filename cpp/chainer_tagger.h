@@ -23,7 +23,7 @@ public:
 
     virtual const cat::Category* TagAt(int idx) const  = 0;
 
-    // virtual std::vector<std::unique_ptr<float[]>> predict(const std::vector<std::string>& doc) const = 0;
+    virtual std::unique_ptr<float*[]> predict(const std::vector<std::string>& doc) const = 0;
 };
 
 class ChainerTagger: public Tagger
@@ -38,7 +38,7 @@ public:
 
     const cat::Category* TagAt(int idx) const { return targets_[idx]; }
 
-    // std::vector<std::unique_ptr<float[]>> predict(const std::vector<std::string>& doc);
+    std::unique_ptr<float*[]> predict(const std::vector<std::string>& doc) const;
 
 private:
     const std::string& model_;
@@ -46,7 +46,7 @@ private:
 
 };
 
-int test();
+void test();
         
 } // namespace tagger
 } // namespace myccg

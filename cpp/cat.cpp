@@ -28,9 +28,9 @@ Cat parse(const std::string& cat) {
         } else {
             res = parse_uncached(name);
             if (name != cat)
-                cache[name] = res;
+                cache.emplace(name, res);
         }
-        cache[cat] = res;
+        cache.emplace(cat, res);
         return res;
     }
 }
@@ -52,6 +52,7 @@ Cat parse_uncached(const std::string& cat) {
         int close_idx = utils::find_closing_bracket(new_cat, 0);
 
         for (int i = 0; i < 3; i++) {
+            // if (new_cat.find(slashes[i]) != std::string::npos) {
             if (new_cat.find(slashes[i]) > -1) {
                 new_cat = new_cat.substr(1, close_idx - 2);
                 return parse_uncached(new_cat);
