@@ -1,6 +1,7 @@
 
 #include "parser.h"
 #include "cmdline.h"
+#include <omp.h>
 
 void test()
 {
@@ -15,6 +16,10 @@ using namespace myccg;
 
 int main(int argc, char const* argv[])
 {
+#ifdef _OPENMP
+    std::cout << "OpenMP : On, threads = " << omp_get_max_threads() << std::endl;
+#endif
+
 #ifdef TEST
     test();
 #else

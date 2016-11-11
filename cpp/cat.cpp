@@ -28,8 +28,10 @@ Cat parse(const std::string& cat) {
         } else {
             res = parse_uncached(name);
             if (name != cat)
+                #pragma omp critical
                 cache.emplace(name, res);
         }
+        #pragma omp critical
         cache.emplace(cat, res);
         return res;
     }

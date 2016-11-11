@@ -6,6 +6,7 @@
 #include <utility>
 #include <limits>
 #include <memory>
+#include <omp.h>
 
 
 // #define DEBUG(var) std::cout << #var": " << (var) << std::endl;
@@ -126,14 +127,16 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
     auto key = std::make_pair(left, right);
     if (rule_cache_.count(key) > 0)
         return rule_cache_[key];
-    rule_cache_.emplace(key, std::vector<RuleCache>());
+    std::vector<RuleCache> tmp;
     for (auto rule: binary_rules_) {
         if (rule->CanApply(left, right)) {
-            rule_cache_[key].emplace_back(
+            tmp.emplace_back(
                         left, right, rule->Apply(left, right),
                         rule->HeadIsLeft(left, right), rule);
         }
     }
+    #pragma omp critical
+    rule_cache_.emplace(key, tmp);
     return rule_cache_[key];
 }
 
@@ -168,8 +171,10 @@ std::vector<const tree::Tree*>
 AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<const tree::Tree*> res(doc.size());
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < doc.size(); i++) {
         res[i] = Parse(doc[i], scores[i], beta);
+        std::cout << "done: " << i << " length: " << doc[i].size() << std::endl;
     }
     return res;
 }
@@ -184,10 +189,10 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
 
     std::vector<std::vector<std::pair<float, Cat>>> scored_cats;
 
-    for (unsigned i = 0; i < sent_size; i++) {
+    for (int i = 0; i < sent_size; i++) {
         scored_cats.emplace_back(std::vector<std::pair<float, Cat>>());
         float total = 0.0;
-        for (unsigned j = 0; j < TagSize(); j++) {
+        for (int j = 0; j < TagSize(); j++) {
             float score = scores[i * TagSize() + j];
             total += std::exp(score);
             scored_cats[i].emplace_back(score, TagAt(j));
@@ -197,7 +202,7 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
                 return left.first > right.first;});
         float threshold = scored_cats[i][0].first * beta;
         // normalize and pruning
-        for (unsigned j = 0; j < TagSize(); j++) {
+        for (int j = 0; j < TagSize(); j++) {
             if (scored_cats[i][j].first > threshold) 
                 scored_cats[i][j].first =
                     std::log( std::exp(scored_cats[i][j].first) / total );
@@ -208,9 +213,9 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
     }
     ComputeOutsideProbs(best_in_probs.get(), sent_size, out_probs.get());
 
-    for (unsigned i = 0; i < scored_cats.size(); i++) {
+    for (int i = 0; i < (int)scored_cats.size(); i++) {
         float out_prob = out_probs[i * sent_size + (i + 1)];
-        for (unsigned j = 0; j < pruning_size; j++) {
+        for (int j = 0; j < pruning_size; j++) {
             auto& prob_and_cat = scored_cats[i][j];
             agenda.emplace(
                     std::make_shared<tree::Leaf>(tokens[i], prob_and_cat.second, i),
@@ -312,17 +317,25 @@ void test() {
     const std::string sent1 = "this is a new sentence .";
     const std::string sent2 = "Ed saw briefly Tom and Taro .";
     const std::string sent3 = "Darth Vador , also known as Anakin Skywalker is a fictional character .";
-    auto res = parser.Parse(sent1);
-    tree::ShowDerivation(res);
-    res = parser.Parse(sent2, 0.00001);
-    tree::ShowDerivation(res);
-    res = parser.Parse(sent3);
-    tree::ShowDerivation(res);
+    // auto res = parser.Parse(sent1);
+    // tree::ShowDerivation(res);
+    // res = parser.Parse(sent2, 0.00001);
+    // tree::ShowDerivation(res);
+    // res = parser.Parse(sent3);
+    // tree::ShowDerivation(res);
     // res = parser.Parse("But Mrs. Hills , speaking at a breakfast meeting of the American Chamber of Commerce in Japan on Saturday , stressed that the objective is not to get definitive action by spring or summer , it is rather to have a blueprint for action .");
     // tree::ShowDerivation(static_cast<const tree::Tree*>(res));
 
-    std::vector<std::string> doc{sent1, sent2, sent3};
-    auto res_doc = parser.Parse(doc);
+    // std::vector<std::string> doc{sent1, sent2, sent3};
+    std::vector<std::string> inputs;
+    std::string in;
+    while (getline(std::cin, in)) {
+        inputs.push_back(in);
+    }
+    sort(inputs.begin(), inputs.end(),
+            [](const std::string& s1, const std::string& s2) {
+            return s1.size() < s2.size(); });
+    auto res_doc = parser.Parse(inputs, 0.0001);
     for (auto&& tree: res_doc) {
         tree::ShowDerivation(tree);
     }

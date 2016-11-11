@@ -6,6 +6,8 @@
 #include <string>
 #include <stdexcept>
 #include <regex>
+#include <omp.h>
+
 #define print(value) std::cout << (value) << std::endl;
 
 namespace myccg {
@@ -146,11 +148,14 @@ public:
 
 protected:
     Category(const std::string& str, const std::string& semantics)
-        : id_(num_cats++), str_(semantics.empty() ? str : str + "{" + semantics + "}") {}
+        : id_(-1), str_(semantics.empty() ? str : str + "{" + semantics + "}") {
+        #pragma omp critical
+        id_ = num_cats++;
+    }
 
 private:
-    const int id_;
-    const std::string str_;
+    int id_;
+    std::string str_;
 };
 
 
