@@ -15,6 +15,7 @@ namespace utils {
 
 using cat::Cat;
 using cat::CatPair;
+using cat::CatMap;
 
 const std::string drop_brackets(const std::string& in);
 
@@ -27,7 +28,7 @@ std::vector<std::string> split(const std::string& line, char delim);
 std::string
 trim(const std::string& string, const char* trimCharacterList=" \t\v\r\n");
 
-std::unordered_map<Cat, std::vector<Cat>>
+CatMap<std::vector<Cat>>
 load_unary(const std::string& filename);
 
 std::vector<Cat>

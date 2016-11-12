@@ -8,6 +8,7 @@
 #include <regex>
 #include <omp.h>
 #include <unordered_map>
+#include <unordered_set>
 
 #define print(value) std::cout << (value) << std::endl;
 
@@ -27,7 +28,7 @@ Cat make(Cat left, const Slash* op, Cat right);
 
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
-const std::regex reg_no_punct("([A-Za-z]+)");
+// const std::regex reg_no_punct("\\[A-Za-z\\]+");
 
 const std::string kWILDCARD = "X";
 
@@ -275,8 +276,8 @@ public:
     bool IsFunctor() const { return false; }
 
     bool IsPunct() const {
-        return (!std::regex_match(type_, reg_no_punct) ||
-                type_ == "LRB" || type_ == "RRB" ||
+        // return (!std::regex_match(type_, reg_no_punct) ||
+                return (type_ == "LRB" || type_ == "RRB" ||
                 type_ == "LQU" || type_ == "RQU");
     }
 
@@ -363,6 +364,8 @@ struct cat_eq {
 
 template<typename Ty>
 using CatMap = std::unordered_map<Cat, Ty, cat_hash, cat_eq>;
+
+using CatSet = std::unordered_set<Cat, cat_hash, cat_eq>;
 
 } // namespace cat
 } // namespace myccg

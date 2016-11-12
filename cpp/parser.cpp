@@ -1,7 +1,6 @@
 
 #include "parser.h"
 #include <cmath>
-#include <unordered_map>
 #include <queue>
 #include <utility>
 #include <limits>
@@ -43,7 +42,7 @@ class ChartCell
 {
 public:
     ChartCell():
-    items_(std::unordered_map<Cat, ChartItem>()),
+    items_(CatMap<ChartItem>()),
     best_prob_(std::numeric_limits<float>::lowest()), best_(NULL) {}
 
     ~ChartCell() {}
@@ -64,7 +63,7 @@ public:
         return true;
     }
 
-    std::unordered_map<Cat, ChartItem> items_;
+    CatMap<ChartItem> items_;
 private:
     float best_prob_;
     NodePtr best_;
@@ -81,11 +80,8 @@ AStarParser::AStarParser(const tagger::Tagger* tagger, const std::string& model)
 
 
 bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {
-    if (span_len == s_len) {
-        for (Cat root: possible_root_cats_)
-            if (*root == *cat) return true;
-        return false;
-    }
+    if (span_len == s_len)
+        return (possible_root_cats_.count(cat) > 0);
     return true;
 }
 
@@ -93,8 +89,7 @@ bool AStarParser::IsSeen(Cat left, Cat right) const {
     return (seen_rules_.count(std::make_pair(left, right)) > 0);
 }
 
-bool IsNormalForm(combinator::RuleType rule_type,
-        NodePtr left, NodePtr right) {
+bool IsNormalForm(combinator::RuleType rule_type, NodePtr left, NodePtr right) {
     if ( (left->GetRuleType() == combinator::FC ||
                 left->GetRuleType() == combinator::GFC) &&
             (rule_type == combinator::FA ||
@@ -131,7 +126,7 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
         }
     }
     #pragma omp critical
-    rule_cache_.emplace(key, tmp);
+    rule_cache_.emplace(key, std::move(tmp));
     return rule_cache_[key];
 }
 
@@ -185,7 +180,7 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
     std::vector<std::vector<std::pair<float, Cat>>> scored_cats;
 
     for (int i = 0; i < sent_size; i++) {
-        scored_cats.emplace_back(std::vector<std::pair<float, Cat>>());
+        scored_cats.emplace_back();
         float total = 0.0;
         for (int j = 0; j < TagSize(); j++) {
             float score = scores[i * TagSize() + j];
@@ -193,7 +188,7 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
             scored_cats[i].emplace_back(score, TagAt(j));
         }
         std::sort(scored_cats[i].begin(), scored_cats[i].end(),
-            [](std::pair<float, Cat>& left, std::pair<float, Cat>& right) {
+            [](const std::pair<float, Cat>& left, const std::pair<float, Cat>& right) {
                 return left.first > right.first;});
         float threshold = scored_cats[i][0].first * beta;
         // normalize and pruning
@@ -305,7 +300,7 @@ void AStarParser::test() {
 void test() {
     std::cout << "----" << __FILE__ << "----" << std::endl;
 
-    const std::string model = "/home/masashi-y/myccg/myccg/model";
+    const std::string model = "../model";
     tagger::ChainerTagger tagger(model);
     AStarParser parser(&tagger, model);
     parser.test();

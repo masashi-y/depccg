@@ -11,6 +11,9 @@ namespace parser {
 
 using cat::Cat;
 using cat::CatPair;
+using cat::CatMap;
+using cat::CatSet;
+
 typedef std::shared_ptr<const tree::Node> NodePtr;
 
 
@@ -64,10 +67,10 @@ private:
 
 
     const tagger::Tagger* tagger_;
-    std::unordered_map<Cat, std::vector<Cat>> unary_rules_;
+    CatMap<std::vector<Cat>> unary_rules_;
     std::vector<combinator::Combinator*> binary_rules_;
     std::unordered_set<CatPair, utils::hash_cat_pair> seen_rules_;
-    std::vector<Cat> possible_root_cats_;
+    CatSet possible_root_cats_;
     std::unordered_map<CatPair, std::vector<RuleCache>, utils::hash_cat_pair> rule_cache_;
 };
         

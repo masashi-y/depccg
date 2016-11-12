@@ -26,9 +26,10 @@ Cat parse(const std::string& cat) {
             res = cache[name];
         } else {
             res = parse_uncached(name);
-            if (name != cat)
+            if (name != cat) {
                 #pragma omp critical
                 cache.emplace(name, res);
+            }
         }
         #pragma omp critical
         cache.emplace(cat, res);
@@ -92,10 +93,8 @@ Cat make(Cat left, const Slash* op, Cat right) {
     return parse(left->WithBrackets() + op->ToStr() + right->WithBrackets());
 }
 
-Cat CorrectWildcardFeatures(Cat to_correct,
-        Cat match1, Cat match2) {
-    return to_correct->Substitute(
-            match1->GetSubstitution(match2));
+Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
+    return to_correct->Substitute(match1->GetSubstitution(match2));
 }
 
 Cat COMMA       = parse(",");

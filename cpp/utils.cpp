@@ -69,9 +69,9 @@ trim(const std::string& string, const char* trimCharacterList) {
 }
 
 
-std::unordered_map<Cat, std::vector<Cat>>
+CatMap<std::vector<Cat>>
 load_unary(const std::string& filename) {
-    auto res = std::unordered_map<Cat, std::vector<Cat>>();
+    auto res = CatMap<std::vector<Cat>>();
     std::ifstream in(filename);
     if (!in)
         throw std::runtime_error("failed to open: " + filename);
@@ -136,7 +136,8 @@ std::string ReplaceAll(const std::string target,
     return result;
 }
 
-const std::regex feat("\\[nb\\]|\\[X\\]");
+// const std::regex feat("\\[nb\\]|\\[X\\]");
+const std::string empty("");
 
 std::unordered_set<CatPair, hash_cat_pair>
 load_seen_rules(const std::string& filename) {
@@ -157,10 +158,10 @@ load_seen_rules(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        buf = std::regex_replace(buf, feat, "");
+        // buf = std::regex_replace(buf, feat, empty);
         ca1 = cat::parse(buf);
         ss >> buf;
-        buf = std::regex_replace(buf, feat, "");
+        // buf = std::regex_replace(buf, feat, empty);
         ca2 = cat::parse(buf);
         auto p = CatPair(ca1, ca2);
         res.insert(p);
