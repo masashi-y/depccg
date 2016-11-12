@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <regex>
 #include <omp.h>
+#include <unordered_map>
 
 #define print(value) std::cout << (value) << std::endl;
 
@@ -344,6 +345,24 @@ extern Cat NP;
 extern Cat PP;
 extern Cat PREPOSITION;
 extern Cat PR;
+
+struct hash_cat_pair
+{
+    inline size_t operator () (const CatPair& p) const {
+        return ((p.first->GetId() << 31) | (p.second->GetId()));
+    }
+};
+
+struct cat_hash {
+    inline size_t operator () (Cat c) const { return c->GetId(); }
+};
+
+struct cat_eq {
+    inline bool operator () (Cat c1, Cat c2) const { return c1->GetId() == c2->GetId(); }
+};
+
+template<typename Ty>
+using CatMap = std::unordered_map<Cat, Ty, cat_hash, cat_eq>;
 
 } // namespace cat
 } // namespace myccg

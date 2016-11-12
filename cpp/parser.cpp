@@ -9,7 +9,7 @@
 #include <omp.h>
 
 
-// #define DEBUG(var) std::cout << #var": " << (var) << std::endl;
+#define DEBUG(var) std::cout << #var": " << (var) << std::endl;
 
 namespace myccg {
 namespace parser {
@@ -90,12 +90,7 @@ bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) co
 }
 
 bool AStarParser::IsSeen(Cat left, Cat right) const {
-    for (auto& seen_rule: seen_rules_) {
-        if (*seen_rule.first == *left &&
-                *seen_rule.second == *right)
-            return true;
-    }
-    return false;
+    return (seen_rules_.count(std::make_pair(left, right)) > 0);
 }
 
 bool IsNormalForm(combinator::RuleType rule_type,
@@ -172,9 +167,9 @@ AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<const tree::Tree*> res(doc.size());
     #pragma omp parallel for schedule(dynamic)
-    for (int i = 0; i < doc.size(); i++) {
+    for (int i = 0; i < (int)doc.size(); i++) {
         res[i] = Parse(doc[i], scores[i], beta);
-        std::cout << "done: " << i << " length: " << doc[i].size() << std::endl;
+        std::cout << "done: " << i << " length: " << utils::split(doc[i], ' ').size() << std::endl;
     }
     return res;
 }
@@ -226,13 +221,13 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
     ChartCell* chart = new ChartCell[sent_size * sent_size];
     // std::unique_ptr<ChartCell[]> chart(new ChartCell[sent_size * sent_size]);
 
-    // int step = 0;
+    int step = 0;
     while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
         const AgendaItem item = agenda.top();
         agenda.pop();
         NodePtr parse = item.parse;
         ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
-        // if (step++ > 20000) break;
+        // if (step++ > 2000) break;
 
         if (cell.update(parse, item.in_prob)) {
             if (item.span_length != sent_size) {
@@ -317,16 +312,16 @@ void test() {
     const std::string sent1 = "this is a new sentence .";
     const std::string sent2 = "Ed saw briefly Tom and Taro .";
     const std::string sent3 = "Darth Vador , also known as Anakin Skywalker is a fictional character .";
-    // auto res = parser.Parse(sent1);
-    // tree::ShowDerivation(res);
-    // res = parser.Parse(sent2, 0.00001);
-    // tree::ShowDerivation(res);
-    // res = parser.Parse(sent3);
-    // tree::ShowDerivation(res);
+    auto res = parser.Parse(sent1);
+    tree::ShowDerivation(res);
+    res = parser.Parse(sent2, 0.00001);
+    tree::ShowDerivation(res);
+    res = parser.Parse(sent3);
+    tree::ShowDerivation(res);
     // res = parser.Parse("But Mrs. Hills , speaking at a breakfast meeting of the American Chamber of Commerce in Japan on Saturday , stressed that the objective is not to get definitive action by spring or summer , it is rather to have a blueprint for action .");
     // tree::ShowDerivation(static_cast<const tree::Tree*>(res));
 
-    // std::vector<std::string> doc{sent1, sent2, sent3};
+    std::vector<std::string> doc{sent1, sent2, sent3};
     std::vector<std::string> inputs;
     std::string in;
     while (getline(std::cin, in)) {
@@ -335,7 +330,7 @@ void test() {
     sort(inputs.begin(), inputs.end(),
             [](const std::string& s1, const std::string& s2) {
             return s1.size() < s2.size(); });
-    auto res_doc = parser.Parse(inputs, 0.0001);
+    auto res_doc = parser.Parse(inputs, 0.00001);
     for (auto&& tree: res_doc) {
         tree::ShowDerivation(tree);
     }

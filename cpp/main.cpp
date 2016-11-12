@@ -7,7 +7,7 @@ void test()
 {
     // myccg::tagger::test();
     // myccg::tree::test();
-    // myccg::utils::test();
+    myccg::utils::test();
     // myccg::combinator::test();
     myccg::parser::test();
 }
