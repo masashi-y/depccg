@@ -27,11 +27,11 @@ Cat parse(const std::string& cat) {
         } else {
             res = parse_uncached(name);
             if (name != cat) {
-                #pragma omp critical
+                #pragma omp critical(parse_name)
                 cache.emplace(name, res);
             }
         }
-        #pragma omp critical
+        #pragma omp critical(parse_cat)
         cache.emplace(cat, res);
         return res;
     }

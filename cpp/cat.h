@@ -151,7 +151,7 @@ public:
 protected:
     Category(const std::string& str, const std::string& semantics)
         : id_(-1), str_(semantics.empty() ? str : str + "{" + semantics + "}") {
-        #pragma omp critical
+        #pragma omp critical(num_cat)
         id_ = num_cats++;
     }
 

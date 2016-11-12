@@ -6,6 +6,7 @@
 #include <limits>
 #include <memory>
 #include <omp.h>
+#include <chrono>
 
 
 #define DEBUG(var) std::cout << #var": " << (var) << std::endl;
@@ -125,7 +126,7 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
                         rule->HeadIsLeft(left, right), rule);
         }
     }
-    #pragma omp critical
+    #pragma omp critical(GetRules)
     rule_cache_.emplace(key, std::move(tmp));
     return rule_cache_[key];
 }
@@ -316,6 +317,7 @@ void test() {
     // res = parser.Parse("But Mrs. Hills , speaking at a breakfast meeting of the American Chamber of Commerce in Japan on Saturday , stressed that the objective is not to get definitive action by spring or summer , it is rather to have a blueprint for action .");
     // tree::ShowDerivation(static_cast<const tree::Tree*>(res));
 
+    std::chrono::system_clock::time_point start, end;
     std::vector<std::string> doc{sent1, sent2, sent3};
     std::vector<std::string> inputs;
     std::string in;
@@ -324,11 +326,15 @@ void test() {
     }
     sort(inputs.begin(), inputs.end(),
             [](const std::string& s1, const std::string& s2) {
-            return s1.size() < s2.size(); });
-    auto res_doc = parser.Parse(inputs, 0.00001);
-    for (auto&& tree: res_doc) {
-        tree::ShowDerivation(tree);
-    }
+            return s1.size() > s2.size(); });
+    start = std::chrono::system_clock::now();
+    auto res_doc = parser.Parse(inputs, 0.0001);
+    end = std::chrono::system_clock::now();
+    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
+    std::cout << "elapsed time: " << elapsed << std::endl;
+    // for (auto&& tree: res_doc) {
+    //     tree::ShowDerivation(tree);
+    // }
 
 }
 
