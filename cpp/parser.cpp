@@ -8,6 +8,9 @@
 #include <omp.h>
 #include <chrono>
 
+#ifndef MAX_LENGTH
+#define MAX_LENGTH 100
+#endif
 
 #define DEBUG(var) std::cout << #var": " << (var) << std::endl;
 
@@ -43,14 +46,18 @@ class ChartCell
 {
 public:
     ChartCell():
-    items_(CatMap<ChartItem>()),
+    items_(std::unordered_map<Cat, ChartItem>()),
     best_prob_(std::numeric_limits<float>::lowest()), best_(NULL) {}
 
     ~ChartCell() {}
 
     bool IsEmpty() const { return items_.size() == 0; }
 
-    NodePtr GetBestParse() const { return best_; }
+    NodePtr GetBestParse() { return best_; }
+        // auto res = best_.get(); 
+        // best_.reset();
+        // return res;
+    // }
 
     bool update(NodePtr parse, float prob) {
         Cat cat = parse->GetCategory();
@@ -64,7 +71,7 @@ public:
         return true;
     }
 
-    CatMap<ChartItem> items_;
+    std::unordered_map<Cat, ChartItem> items_;
 private:
     float best_prob_;
     NodePtr best_;
@@ -73,9 +80,9 @@ private:
 
 AStarParser::AStarParser(const tagger::Tagger* tagger, const std::string& model)
  :tagger_(tagger),
-  unary_rules_(utils::load_unary(model + "/unary_rules.txt")),
+  unary_rules_(utils::LoadUnary(model + "/unary_rules.txt")),
   binary_rules_(combinator::binary_rules),
-  seen_rules_(utils::load_seen_rules(model + "/seen_rules.txt")),
+  seen_rules_(utils::LoadSeenRules(model + "/seen_rules.txt")),
   possible_root_cats_({cat::parse("S[dcl]"), cat::parse("S[wq]"),
     cat::parse("S[q]"), cat::parse("S[qem]"), cat::parse("NP")}) {}
 
@@ -87,7 +94,8 @@ bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) co
 }
 
 bool AStarParser::IsSeen(Cat left, Cat right) const {
-    return (seen_rules_.count(std::make_pair(left, right)) > 0);
+    return (seen_rules_.count(
+                std::make_pair(left->StripFeat(), right->StripFeat())) > 0);
 }
 
 bool IsNormalForm(combinator::RuleType rule_type, NodePtr left, NodePtr right) {
@@ -121,8 +129,7 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
     std::vector<RuleCache> tmp;
     for (auto rule: binary_rules_) {
         if (rule->CanApply(left, right)) {
-            tmp.emplace_back(
-                        left, right, rule->Apply(left, right),
+            tmp.emplace_back(rule->Apply(left, right),
                         rule->HeadIsLeft(left, right), rule);
         }
     }
@@ -132,8 +139,8 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
 }
 
 void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
-    float* from_left = new float[sent_size + 1];
-    float* from_right = new float[sent_size + 1];
+    float from_left[MAX_LENGTH + 1]; // = new float[sent_size + 1];
+    float from_right[MAX_LENGTH + 1]; // = new float[sent_size + 1];
     from_left[0] = 0.0;
     from_right[sent_size] = 0.0;
 
@@ -148,40 +155,41 @@ void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
             out[i * sent_size + j] = from_left[i] + from_right[j];
         }
     }
-    delete[] from_left;
-    delete[] from_right;
+    // delete[] from_left;
+    // delete[] from_right;
 }
 
-const tree::Tree* AStarParser::Parse(const std::string& sent, float beta) {
+NodePtr AStarParser::Parse(const std::string& sent, float beta) {
     std::unique_ptr<float[]> scores = tagger_->predict(sent);
-    const tree::Tree* res = Parse(sent, scores.get(), beta);
+    NodePtr res = Parse(sent, scores.get(), beta);
     return res;
 }
 
-std::vector<const tree::Tree*>
+std::vector<NodePtr>
 AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
-    std::vector<const tree::Tree*> res(doc.size());
+    std::vector<NodePtr> res(doc.size());
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)doc.size(); i++) {
         res[i] = Parse(doc[i], scores[i], beta);
-        std::cout << "done: " << i << " length: " << utils::split(doc[i], ' ').size() << std::endl;
+        std::cout << "done: " << i << " length: " << utils::Split(doc[i], ' ').size() << std::endl;
     }
     return res;
 }
 
-const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, float beta) {
+NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     int pruning_size = 50;
-    std::vector<std::string> tokens = utils::split(sent, ' ');
+    std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
-    std::unique_ptr<float[]> best_in_probs(new float[sent_size]);
-    std::unique_ptr<float[]> out_probs(new float[(sent_size + 1) * (sent_size + 1)]);
+    // std::unique_ptr<float[]> best_in_probs(new float[sent_size]);
+    // std::unique_ptr<float[]> out_probs(new float[(sent_size + 1) * (sent_size + 1)]);
+    float best_in_probs[MAX_LENGTH];
+    float out_probs[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
     std::priority_queue<AgendaItem> agenda;
 
-    std::vector<std::vector<std::pair<float, Cat>>> scored_cats;
+    std::vector<std::pair<float, Cat>> scored_cats[MAX_LENGTH];
 
     for (int i = 0; i < sent_size; i++) {
-        scored_cats.emplace_back();
         float total = 0.0;
         for (int j = 0; j < TagSize(); j++) {
             float score = scores[i * TagSize() + j];
@@ -202,9 +210,10 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
         }
         best_in_probs[i] = scored_cats[i][0].first;
     }
-    ComputeOutsideProbs(best_in_probs.get(), sent_size, out_probs.get());
+    ComputeOutsideProbs(best_in_probs, sent_size, out_probs);
+    // ComputeOutsideProbs(best_in_probs.get(), sent_size, out_probs.get());
 
-    for (int i = 0; i < (int)scored_cats.size(); i++) {
+    for (int i = 0; i < sent_size; i++) {
         float out_prob = out_probs[i * sent_size + (i + 1)];
         for (int j = 0; j < pruning_size; j++) {
             auto& prob_and_cat = scored_cats[i][j];
@@ -214,7 +223,8 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
         }
     }
 
-    ChartCell* chart = new ChartCell[sent_size * sent_size];
+    // ChartCell* chart = new ChartCell[sent_size * sent_size];
+    ChartCell chart[MAX_LENGTH * MAX_LENGTH];
     // std::unique_ptr<ChartCell[]> chart(new ChartCell[sent_size * sent_size]);
 
     int step = 0;
@@ -282,8 +292,9 @@ const tree::Tree* AStarParser::Parse(const std::string& sent, float* scores, flo
     }
     if (chart[sent_size - 1].IsEmpty())
         return failure_node;
-    auto res = chart[sent_size - 1].GetBestParse().get();
-    return static_cast<const tree::Tree*>(res);
+    auto res = chart[sent_size - 1].GetBestParse();
+    // auto res2 = static_cast<const tree::Tree*>(res);
+    return res;
 }
 
 void AStarParser::test() {
@@ -324,17 +335,18 @@ void test() {
     while (getline(std::cin, in)) {
         inputs.push_back(in);
     }
-    sort(inputs.begin(), inputs.end(),
-            [](const std::string& s1, const std::string& s2) {
-            return s1.size() > s2.size(); });
+    // sort(inputs.begin(), inputs.end(),
+    //         [](const std::string& s1, const std::string& s2) {
+    //         return s1.size() > s2.size(); });
     start = std::chrono::system_clock::now();
     auto res_doc = parser.Parse(inputs, 0.0001);
     end = std::chrono::system_clock::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-    std::cout << "elapsed time: " << elapsed << std::endl;
-    // for (auto&& tree: res_doc) {
-    //     tree::ShowDerivation(tree);
-    // }
+    double elapsed = std::chrono::duration_cast<std::chrono::seconds>(end-start).count();
+    for (auto&& tree: res_doc) {
+        std::cout << tree->ToStr() << std::endl;
+        // tree::ShowDerivation(tree);
+    }
+    std::cout << "elapsed time: " << elapsed << " seconds" << std::endl;
 
 }
 

@@ -21,7 +21,7 @@ Cat parse(const std::string& cat) {
     if (cache.count(cat) != 0) {
         return cache[cat];
     } else {
-        const std::string name = utils::drop_brackets(cat);
+        const std::string name = utils::DropBrackets(cat);
         if (cache.count(name) != 0) {
             res = cache[name];
         } else {
@@ -48,25 +48,10 @@ Cat parse_uncached(const std::string& cat) {
     } else {
         semantics = "";
     }
-
-    new_cat = utils::drop_brackets(new_cat);
-    if (new_cat.front() == '(') {
-        int close_idx = utils::find_closing_bracket(new_cat, 0);
-
-        for (int i = 0; i < 3; i++) {
-            // if (new_cat.find(slashes[i]) != std::string::npos) {
-            if (new_cat.find(slashes[i]) > -1) {
-                new_cat = new_cat.substr(1, close_idx - 2);
-                return parse_uncached(new_cat);
-            }
-        }
-    }
-
-    int end_idx = new_cat.size();
-    int op_idx = utils::find_non_nested_char(new_cat, slashes);
+    new_cat = utils::DropBrackets(new_cat);
+    int op_idx = utils::FindNonNestedChar(new_cat, slashes);
 
     if (op_idx == -1) {
-        // atomic category
         int feat_idx = new_cat.find("[");
         std::string feat;
         std::string type = feat_idx == -1 ? new_cat : new_cat.substr(0, feat_idx);
@@ -77,7 +62,6 @@ Cat parse_uncached(const std::string& cat) {
 
         return new AtomicCategory(type, feat, semantics);
     } else {
-        // functor category
         Cat left = parse(new_cat.substr(0, op_idx));
         const Slash* slash = Slash::FromStr(new_cat.substr(op_idx, 1));
         Cat right = parse(new_cat.substr(op_idx + 1));

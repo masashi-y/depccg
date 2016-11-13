@@ -30,7 +30,7 @@ class ChainerTagger: public Tagger
 {
 public:
     ChainerTagger(const std::string& model)
-    : model_(model), targets_(utils::load_category_list(model + "/target.txt")) {}
+    : model_(model), targets_(utils::LoadCategoryList(model + "/target.txt")) {}
  
     std::unique_ptr<float[]> predict(const std::string& tokens) const;
 

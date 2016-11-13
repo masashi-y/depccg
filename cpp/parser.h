@@ -11,21 +11,15 @@ namespace parser {
 
 using cat::Cat;
 using cat::CatPair;
-using cat::CatMap;
-using cat::CatSet;
 
 typedef std::shared_ptr<const tree::Node> NodePtr;
 
 
 struct RuleCache
 {
-    RuleCache(Cat lchild, Cat rchild, Cat result, bool left_is_head,
-            const combinator::Combinator* combinator)
-    : lchild(lchild), rchild(rchild), result(result),
-      left_is_head(left_is_head), combinator(combinator) {}
+    RuleCache(Cat result, bool left_is_head, const combinator::Combinator* combinator)
+    : result(result), left_is_head(left_is_head), combinator(combinator) {}
 
-    Cat lchild;
-    Cat rchild;
     Cat result;
     bool left_is_head;
     const combinator::Combinator* combinator;
@@ -33,9 +27,9 @@ struct RuleCache
 
 class Parser
 {
-    virtual const tree::Tree* Parse(const std::string& sent, float beta) = 0;
+    virtual NodePtr Parse(const std::string& sent, float beta) = 0;
 
-    virtual const tree::Tree* Parse(const std::string& sent, float* scores, float beta) = 0;
+    virtual NodePtr Parse(const std::string& sent, float* scores, float beta) = 0;
 };
 
 class AStarParser: public Parser
@@ -43,11 +37,11 @@ class AStarParser: public Parser
 public:
     AStarParser(const tagger::Tagger* tagger, const std::string& model);
 
-    const tree::Tree* Parse(const std::string& sent, float beta=0.0000001);
+    NodePtr Parse(const std::string& sent, float beta=0.0000001);
 
-    std::vector<const tree::Tree*> Parse(const std::vector<std::string>& doc, float beta=0.0000001);
+    std::vector<NodePtr> Parse(const std::vector<std::string>& doc, float beta=0.0000001);
 
-    const tree::Tree* Parse(const std::string& sent, float* scores, float beta=0.0000001);
+    NodePtr Parse(const std::string& sent, float* scores, float beta=0.0000001);
 
     void test();
 private:
@@ -62,16 +56,16 @@ private:
 
     std::vector<RuleCache>& GetRules(Cat left, Cat right);
 
-    const tree::Tree* failure_node = new tree::Tree(
+    NodePtr failure_node = std::make_shared<tree::Tree>(
             cat::parse("XX"), new tree::Leaf("FAILURE", cat::parse("XX"), 0));
 
 
     const tagger::Tagger* tagger_;
-    CatMap<std::vector<Cat>> unary_rules_;
+    std::unordered_map<Cat, std::vector<Cat>> unary_rules_;
     std::vector<combinator::Combinator*> binary_rules_;
-    std::unordered_set<CatPair, utils::hash_cat_pair> seen_rules_;
-    CatSet possible_root_cats_;
-    std::unordered_map<CatPair, std::vector<RuleCache>, utils::hash_cat_pair> rule_cache_;
+    std::unordered_set<CatPair> seen_rules_;
+    std::unordered_set<Cat> possible_root_cats_;
+    std::unordered_map<CatPair, std::vector<RuleCache>> rule_cache_;
 };
         
 void test();

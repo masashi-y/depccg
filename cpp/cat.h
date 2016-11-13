@@ -28,7 +28,7 @@ Cat make(Cat left, const Slash* op, Cat right);
 
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
-// const std::regex reg_no_punct("\\[A-Za-z\\]+");
+const std::regex reg_no_punct("[A-Za-z]+");
 
 const std::string kWILDCARD = "X";
 
@@ -107,6 +107,10 @@ public:
     std::string ToStr() { return str_; }
     std::string ToStr() const { return str_; }
 
+    virtual std::string ToStrWithoutFeat() const = 0;
+
+    Cat StripFeat() const { return parse(this->ToStrWithoutFeat()); }
+
     inline int Hashcode() { return id_; }
 
     const int GetId() const { return id_; }
@@ -138,7 +142,7 @@ public:
 
     virtual Cat Arg(int argn) const = 0;
     virtual Cat HeadCat() const = 0;
-    virtual bool IsFunctionInto(const Category& cat) const = 0;
+    virtual bool IsFunctionInto(Cat cat) const = 0;
     virtual bool IsFunctionIntoModifier() const = 0;
 
     // def drop_PP_and_PR_feat(self):
@@ -150,8 +154,8 @@ public:
 
 protected:
     Category(const std::string& str, const std::string& semantics)
-        : id_(-1), str_(semantics.empty() ? str : str + "{" + semantics + "}") {
-        #pragma omp critical(num_cat)
+        : str_(semantics.empty() ? str : str + "{" + semantics + "}") {
+        #pragma omp atomic capture
         id_ = num_cats++;
     }
 
@@ -164,6 +168,11 @@ private:
 class Functor: public Category
 {
 public:
+    std::string ToStrWithoutFeat() const {
+        return "(" + left_->ToStrWithoutFeat() +
+                slash_->ToStr() + right_->ToStrWithoutFeat() + ")";
+    }
+
     virtual const std::string& GetType() const { throw std::logic_error("not implemented"); }
 
     virtual const std::string& GetFeat() const { throw std::logic_error("not implemented"); }
@@ -228,8 +237,8 @@ public:
 
     Cat HeadCat() const { return this->left_->HeadCat(); }
 
-    bool IsFunctionInto(const Category& cat) const {
-        return (cat.Matches(this) || this->left_->IsFunctionInto(cat));
+    bool IsFunctionInto(Cat cat) const {
+        return (cat->Matches(this) || this->left_->IsFunctionInto(cat));
     }
 
     bool IsFunctionIntoModifier() const {
@@ -257,6 +266,10 @@ private:
 class AtomicCategory: public Category
 {
 public:
+    std::string ToStrWithoutFeat() const {
+        return type_; 
+    }
+
     const std::string& GetType() const { return type_; }
 
     const std::string& GetFeat() const { return feat_; }
@@ -276,8 +289,8 @@ public:
     bool IsFunctor() const { return false; }
 
     bool IsPunct() const {
-        // return (!std::regex_match(type_, reg_no_punct) ||
-                return (type_ == "LRB" || type_ == "RRB" ||
+        return (!std::regex_match(type_, reg_no_punct) ||
+                type_ == "LRB" || type_ == "RRB" ||
                 type_ == "LQU" || type_ == "RQU");
     }
 
@@ -306,7 +319,7 @@ public:
         return false;
     }
 
-    const Category& replace_arg(int argn, const Category& new_cat) const {
+    Cat replace_arg(int argn, Cat new_cat) const {
         if (argn == 0)
             return new_cat;
         throw std::runtime_error("Error replacing argument of category");
@@ -320,13 +333,12 @@ public:
 
     const AtomicCategory* HeadCat() const { return this; }
 
-    bool IsFunctionInto(const Category& cat) const { return cat.Matches(this); }
+    bool IsFunctionInto(Cat cat) const { return cat->Matches(this); }
 
     bool IsFunctionIntoModifier() const { return false; }
 
 private:
-    AtomicCategory(const std::string& type, const std::string& feat,
-            const std::string& semantics)
+    AtomicCategory(const std::string& type, const std::string& feat, const std::string& semantics)
         : Category(type + (feat.empty() ? "" : "[" + feat + "]"), semantics),
           type_(type), feat_(feat) {}
 
@@ -347,26 +359,35 @@ extern Cat PP;
 extern Cat PREPOSITION;
 extern Cat PR;
 
-struct hash_cat_pair
+} // namespace cat
+} // namespace myccg
+
+
+namespace std {
+
+template<>
+struct equal_to<myccg::cat::Cat>
 {
-    inline size_t operator () (const CatPair& p) const {
+    inline bool operator () (myccg::cat::Cat c1, myccg::cat::Cat c2) const {
+        return c1->GetId() == c2->GetId();
+    }
+};
+
+template<>
+struct hash<myccg::cat::Cat>
+{
+    inline size_t operator () (myccg::cat::Cat c) const {
+        return c->GetId();
+    }
+};
+
+template<>
+struct hash<myccg::cat::CatPair>
+{
+    inline size_t operator () (const myccg::cat::CatPair& p) const {
         return ((p.first->GetId() << 31) | (p.second->GetId()));
     }
 };
 
-struct cat_hash {
-    inline size_t operator () (Cat c) const { return c->GetId(); }
-};
-
-struct cat_eq {
-    inline bool operator () (Cat c1, Cat c2) const { return c1->GetId() == c2->GetId(); }
-};
-
-template<typename Ty>
-using CatMap = std::unordered_map<Cat, Ty, cat_hash, cat_eq>;
-
-using CatSet = std::unordered_set<Cat, cat_hash, cat_eq>;
-
-} // namespace cat
-} // namespace myccg
+} // namespace std
 #endif

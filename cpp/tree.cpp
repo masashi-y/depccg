@@ -64,6 +64,9 @@ void ShowDerivation(const Tree* tree, std::ostream& out) {
     tree->ShowDerivation(0, out); 
 }
 
+void ShowDerivation(std::shared_ptr<const Node> tree, std::ostream& out) {
+    ShowDerivation(static_cast<const Tree*>(tree.get()), out);
+}
 #define APPLY_BINARY(comb, left, right) new myccg::tree::Tree( \
         (comb)->Apply((left)->GetCategory(), (right)->GetCategory()), \
         (comb)->HeadIsLeft((left)->GetCategory(), (right)->GetCategory()), \

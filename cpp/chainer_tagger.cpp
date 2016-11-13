@@ -36,6 +36,8 @@ std::unique_ptr<float*[]> ChainerTagger::predict(const std::vector<std::string>&
         res[i] = new float[this->TargetSize() * sent.size()];
     }
     tag_doc(this->model_.c_str(), c_sents, lengths, doc.size(), res);
+    delete[] c_sents;
+    delete[] lengths;
     return std::unique_ptr<float*[]>(res);
 }
 
@@ -52,7 +54,7 @@ void test()
     tagger::ChainerTagger tagg(path);
     const std::string sent = "this is a new sentence .";
     print(sent);
-    std::vector<std::string> tokens = utils::split(sent, ' ');
+    std::vector<std::string> tokens = utils::Split(sent, ' ');
     auto res = tagg.predict(sent);
     for (unsigned i = 0; i < tokens.size(); i++) {
         std::cout << tokens[i] << " --> ";
@@ -62,7 +64,7 @@ void test()
 
     const std::string sent2 = "Ed saw briefly his friend .";
     print(sent2);
-    std::vector<std::string> tokens2 = utils::split(sent2, ' ');
+    std::vector<std::string> tokens2 = utils::Split(sent2, ' ');
     auto res2 = tagg.predict(sent2);
     for (unsigned i = 0; i < tokens2.size(); i++) {
         std::cout << tokens2[i] << " --> ";
@@ -72,7 +74,7 @@ void test()
 
     const std::string sent3 = "Darth Vador , also known as Anakin Skywalker is a fictional character .";
     print(sent3);
-    std::vector<std::string> tokens3 = utils::split(sent3, ' ');
+    std::vector<std::string> tokens3 = utils::Split(sent3, ' ');
     auto res3 = tagg.predict(sent3);
     for (unsigned i = 0; i < tokens3.size(); i++) {
         std::cout << tokens3[i] << " --> ";

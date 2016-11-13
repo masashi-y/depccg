@@ -15,24 +15,23 @@ namespace utils {
 
 using cat::Cat;
 using cat::CatPair;
-using cat::CatMap;
 
-const std::string drop_brackets(const std::string& in);
+const std::string DropBrackets(const std::string& in);
 
-int find_closing_bracket(const std::string& in, int start);
+int FindClosingBracket(const std::string& in, int start);
 
-int find_non_nested_char(const std::string haystack, const std::string needles);
+int FindNonNestedChar(const std::string& haystack, const std::string& needles);
 
-std::vector<std::string> split(const std::string& line, char delim);
+std::vector<std::string> Split(const std::string& line, char delim);
 
 std::string
 trim(const std::string& string, const char* trimCharacterList=" \t\v\r\n");
 
-CatMap<std::vector<Cat>>
-load_unary(const std::string& filename);
+std::unordered_map<Cat, std::vector<Cat>>
+LoadUnary(const std::string& filename);
 
 std::vector<Cat>
-load_category_list(const std::string& filename);
+LoadCategoryList(const std::string& filename);
 
 template<typename T> int ArgMax(T* from, T* to) {
     T max_val = std::numeric_limits<T>::lowest();
@@ -60,18 +59,12 @@ template<typename T> int ArgMin(T* from, T* to) {
     return min_idx;
 }
 
-std::string ReplaceAll(const std::string target,
-        const std::string from, const std::string to);
+std::string ReplaceAll(const std::string& target,
+        const std::string& from, const std::string& to);
 
-struct hash_cat_pair
-{
-    inline size_t operator () (const CatPair& p) const {
-        return ((p.first->GetId() << 31) | (p.second->GetId()));
-    }
-};
 
-std::unordered_set<CatPair, hash_cat_pair>
-load_seen_rules(const std::string& filename);
+std::unordered_set<CatPair>
+LoadSeenRules(const std::string& filename);
 
 void test();
 
