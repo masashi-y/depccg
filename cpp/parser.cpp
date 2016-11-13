@@ -335,9 +335,9 @@ void test() {
     while (getline(std::cin, in)) {
         inputs.push_back(in);
     }
-    // sort(inputs.begin(), inputs.end(),
-    //         [](const std::string& s1, const std::string& s2) {
-    //         return s1.size() > s2.size(); });
+    sort(inputs.begin(), inputs.end(),
+            [](const std::string& s1, const std::string& s2) {
+            return s1.size() > s2.size(); });
     start = std::chrono::system_clock::now();
     auto res_doc = parser.Parse(inputs, 0.0001);
     end = std::chrono::system_clock::now();

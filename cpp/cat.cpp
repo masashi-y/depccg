@@ -88,6 +88,7 @@ Cat N           = parse("N");
 Cat LQU         = parse("LQU");
 Cat LRB         = parse("LRB");
 Cat NP          = parse("NP");
+Cat NPbNP       = parse("NP\\NP");
 Cat PP          = parse("PP");
 Cat PREPOSITION = parse("PP/NP");
 Cat PR          = parse("PR");

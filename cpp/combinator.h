@@ -64,7 +64,7 @@ class Conjunction: public Combinator
 public:
     Conjunction(): Combinator(CONJ) {}
     bool CanApply(Cat left, Cat right) const {
-        if (cat::parse("NP\\NP")->Matches(right))
+        if (cat::NPbNP->Matches(right))
             return false;
         return (*left == *cat::CONJ ||
                 *left == *cat::COMMA ||

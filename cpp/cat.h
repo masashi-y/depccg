@@ -28,7 +28,7 @@ Cat make(Cat left, const Slash* op, Cat right);
 
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
-const std::regex reg_no_punct("[A-Za-z]+");
+// const std::regex reg_no_punct("[a-zA-Zz]+");
 
 const std::string kWILDCARD = "X";
 
@@ -289,7 +289,8 @@ public:
     bool IsFunctor() const { return false; }
 
     bool IsPunct() const {
-        return (!std::regex_match(type_, reg_no_punct) ||
+        // return (!std::regex_match(type_, reg_no_punct) ||
+        return (!( 'A' <= type_[0] && type_[0] <= 'Z' ) ||
                 type_ == "LRB" || type_ == "RRB" ||
                 type_ == "LQU" || type_ == "RQU");
     }
