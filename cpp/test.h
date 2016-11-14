@@ -8,7 +8,7 @@ namespace parser {
 void test() {
     std::cout << "----" << __FILE__ << "----" << std::endl;
 
-    const std::string model = "../model";
+    const std::string model = "../model_425";
     tagger::ChainerTagger tagger(model);
     AStarParser parser(&tagger, model);
     const std::string sent1 = "this is a new sentence .";
