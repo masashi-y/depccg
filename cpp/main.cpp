@@ -1,14 +1,13 @@
 
 #include "parser.h"
 #include "cmdline.h"
+#include "test.h"
 #include <omp.h>
 
 void test()
 {
     // myccg::tagger::test();
     // myccg::tree::test();
-    myccg::utils::test();
-    // myccg::combinator::test();
     myccg::parser::test();
 }
 

@@ -167,8 +167,6 @@ void ShowDerivation(const Tree* tree, std::ostream& out=std::cout);
 
 void ShowDerivation(std::shared_ptr<const Node> tree, std::ostream& out=std::cout);
 
-void test();
-
 } // namespace tree
 } // namespace myccg
 

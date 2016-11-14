@@ -356,6 +356,7 @@ extern Cat N;
 extern Cat LQU;
 extern Cat LRB;
 extern Cat NP;
+extern Cat NPbNP;
 extern Cat PP;
 extern Cat PREPOSITION;
 extern Cat PR;

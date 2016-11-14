@@ -156,20 +156,6 @@ LoadSeenRules(const std::string& filename) {
     return res;
 }
 
-void test() {
-    std::cout << "----" << __FILE__ << "----" << std::endl;
-
-    auto set = utils::LoadSeenRules("seenRules");
-    print(set.size());
-    int i = 0;
-    for (auto& elem: set) {
-        std::cout << elem.first->ToStr() << ", " << elem.second->ToStr() << std::endl;
-        if (++i > 10)
-            break;
-
-    }
-}
-
 } // namespace utils
 } // namespace myccg
 

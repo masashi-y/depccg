@@ -66,8 +66,6 @@ std::string ReplaceAll(const std::string& target,
 std::unordered_set<CatPair>
 LoadSeenRules(const std::string& filename);
 
-void test();
-
 } // namespace utils
 } // namespace myccg
 

@@ -1,5 +1,5 @@
 main.o: main.cpp parser.h tree.h cat.h combinator.h chainer_tagger.h \
- utils.h cmdline.h
+ utils.h cmdline.h test.h
 
 parser.h:
 
@@ -14,3 +14,5 @@ chainer_tagger.h:
 utils.h:
 
 cmdline.h:
+
+test.h:

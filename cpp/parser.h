@@ -43,7 +43,6 @@ public:
 
     NodePtr Parse(const std::string& sent, float* scores, float beta=0.0000001);
 
-    void test();
 private:
 
     bool IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const ;
@@ -68,7 +67,6 @@ private:
     std::unordered_map<CatPair, std::vector<RuleCache>> rule_cache_;
 };
         
-void test();
 } // namespace parser
 } // namespace myccg
 #endif

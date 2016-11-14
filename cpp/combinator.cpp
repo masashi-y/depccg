@@ -18,12 +18,5 @@ std::vector<Combinator*> binary_rules = {
 
 Combinator* unary_rule = new UnaryRule();
 
-void test() {
-    std::cout << "----" << __FILE__ << "----" << std::endl;
-
-    for (auto&& comb: binary_rules)
-        std::cout << comb->ToStr() << std::endl;
-}
-
 } // namespace combinator
 } // namespace myccg

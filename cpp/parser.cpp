@@ -1,18 +1,12 @@
 
-#include "parser.h"
 #include <cmath>
 #include <queue>
 #include <utility>
 #include <limits>
 #include <memory>
 #include <omp.h>
-#include <chrono>
-
-#ifndef MAX_LENGTH
-#define MAX_LENGTH 100
-#endif
-
-#define DEBUG(var) std::cout << #var": " << (var) << std::endl;
+#include "parser.h"
+#include "configure.h"
 
 namespace myccg {
 namespace parser {
@@ -54,10 +48,6 @@ public:
     bool IsEmpty() const { return items_.size() == 0; }
 
     NodePtr GetBestParse() { return best_; }
-        // auto res = best_.get(); 
-        // best_.reset();
-        // return res;
-    // }
 
     bool update(NodePtr parse, float prob) {
         Cat cat = parse->GetCategory();
@@ -139,8 +129,8 @@ std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
 }
 
 void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
-    float from_left[MAX_LENGTH + 1]; // = new float[sent_size + 1];
-    float from_right[MAX_LENGTH + 1]; // = new float[sent_size + 1];
+    float from_left[MAX_LENGTH + 1];
+    float from_right[MAX_LENGTH + 1];
     from_left[0] = 0.0;
     from_right[sent_size] = 0.0;
 
@@ -155,8 +145,6 @@ void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
             out[i * sent_size + j] = from_left[i] + from_right[j];
         }
     }
-    // delete[] from_left;
-    // delete[] from_right;
 }
 
 NodePtr AStarParser::Parse(const std::string& sent, float beta) {
@@ -169,10 +157,10 @@ std::vector<NodePtr>
 AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<NodePtr> res(doc.size());
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (int i = 0; i < (int)doc.size(); i++) {
         res[i] = Parse(doc[i], scores[i], beta);
-        std::cout << "done: " << i << " length: " << utils::Split(doc[i], ' ').size() << std::endl;
+        // std::cout << "done: " << i << " length: " << utils::Split(doc[i], ' ').size() << std::endl;
     }
     return res;
 }
@@ -181,8 +169,6 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     int pruning_size = 50;
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
-    // std::unique_ptr<float[]> best_in_probs(new float[sent_size]);
-    // std::unique_ptr<float[]> out_probs(new float[(sent_size + 1) * (sent_size + 1)]);
     float best_in_probs[MAX_LENGTH];
     float out_probs[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
     std::priority_queue<AgendaItem> agenda;
@@ -211,7 +197,6 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
         best_in_probs[i] = scored_cats[i][0].first;
     }
     ComputeOutsideProbs(best_in_probs, sent_size, out_probs);
-    // ComputeOutsideProbs(best_in_probs.get(), sent_size, out_probs.get());
 
     for (int i = 0; i < sent_size; i++) {
         float out_prob = out_probs[i * sent_size + (i + 1)];
@@ -223,17 +208,13 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
         }
     }
 
-    // ChartCell* chart = new ChartCell[sent_size * sent_size];
     ChartCell chart[MAX_LENGTH * MAX_LENGTH];
-    // std::unique_ptr<ChartCell[]> chart(new ChartCell[sent_size * sent_size]);
 
-    int step = 0;
     while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
         const AgendaItem item = agenda.top();
         agenda.pop();
         NodePtr parse = item.parse;
         ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
-        // if (step++ > 2000) break;
 
         if (cell.update(parse, item.in_prob)) {
             if (item.span_length != sent_size) {
@@ -293,61 +274,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     if (chart[sent_size - 1].IsEmpty())
         return failure_node;
     auto res = chart[sent_size - 1].GetBestParse();
-    // auto res2 = static_cast<const tree::Tree*>(res);
     return res;
-}
-
-void AStarParser::test() {
-    NodePtr leaves[] = {
-        NodePtr(new tree::Leaf("this",     cat::parse("NP"),              0)),
-        NodePtr(new tree::Leaf("is",       cat::parse("(S[dcl]\\NP)/NP"), 1)),
-        NodePtr(new tree::Leaf("a",        cat::parse("NP[nb]/N"),        2)),
-        NodePtr(new tree::Leaf("new",      cat::parse("N/N"),             3)),
-        NodePtr(new tree::Leaf("sentence", cat::parse("N"),               4)),
-        NodePtr(new tree::Leaf(".",        cat::parse("."),               5)),
-    };
-    print (failure_node->ToStr());
-}
-
-void test() {
-    std::cout << "----" << __FILE__ << "----" << std::endl;
-
-    const std::string model = "../model";
-    tagger::ChainerTagger tagger(model);
-    AStarParser parser(&tagger, model);
-    parser.test();
-    const std::string sent1 = "this is a new sentence .";
-    const std::string sent2 = "Ed saw briefly Tom and Taro .";
-    const std::string sent3 = "Darth Vador , also known as Anakin Skywalker is a fictional character .";
-    auto res = parser.Parse(sent1);
-    tree::ShowDerivation(res);
-    res = parser.Parse(sent2, 0.00001);
-    tree::ShowDerivation(res);
-    res = parser.Parse(sent3);
-    tree::ShowDerivation(res);
-    // res = parser.Parse("But Mrs. Hills , speaking at a breakfast meeting of the American Chamber of Commerce in Japan on Saturday , stressed that the objective is not to get definitive action by spring or summer , it is rather to have a blueprint for action .");
-    // tree::ShowDerivation(static_cast<const tree::Tree*>(res));
-
-    std::chrono::system_clock::time_point start, end;
-    std::vector<std::string> doc{sent1, sent2, sent3};
-    std::vector<std::string> inputs;
-    std::string in;
-    while (getline(std::cin, in)) {
-        inputs.push_back(in);
-    }
-    sort(inputs.begin(), inputs.end(),
-            [](const std::string& s1, const std::string& s2) {
-            return s1.size() > s2.size(); });
-    start = std::chrono::system_clock::now();
-    auto res_doc = parser.Parse(inputs, 0.0001);
-    end = std::chrono::system_clock::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::seconds>(end-start).count();
-    for (auto&& tree: res_doc) {
-        std::cout << tree->ToStr() << std::endl;
-        // tree::ShowDerivation(tree);
-    }
-    std::cout << "elapsed time: " << elapsed << " seconds" << std::endl;
-
 }
 
 } // namespace parser
