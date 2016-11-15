@@ -36,35 +36,33 @@ bool operator<(const AgendaItem& item1, const AgendaItem& item2) {
 }
 
 typedef std::pair<NodePtr, float> ChartItem;
-class ChartCell
+struct ChartCell
 {
-public:
     ChartCell():
-    items_(std::unordered_map<Cat, ChartItem>()),
-    best_prob_(std::numeric_limits<float>::lowest()), best_(NULL) {}
+    items(std::unordered_map<Cat, ChartItem>()),
+    best_prob(std::numeric_limits<float>::lowest()), best(NULL) {}
 
     ~ChartCell() {}
 
-    bool IsEmpty() const { return items_.size() == 0; }
+    bool IsEmpty() const { return items.size() == 0; }
 
-    NodePtr GetBestParse() { return best_; }
+    NodePtr GetBestParse() { return best; }
 
     bool update(NodePtr parse, float prob) {
         Cat cat = parse->GetCategory();
-        if (items_.count(cat) > 0 && prob <= best_prob_)
+        if (items.count(cat) > 0 && prob <= best_prob)
             return false;
-        items_.emplace(cat, std::make_pair(parse, prob));;
-        if (best_prob_ <= prob) {
-            best_prob_ = prob;
-            best_ = parse;
+        items.emplace(cat, std::make_pair(parse, prob));;
+        if (best_prob <= prob) {
+            best_prob = prob;
+            best = parse;
         }
         return true;
     }
 
-    std::unordered_map<Cat, ChartItem> items_;
-private:
-    float best_prob_;
-    NodePtr best_;
+    std::unordered_map<Cat, ChartItem> items;
+    float best_prob;
+    NodePtr best;
 };
 
 
@@ -158,7 +156,7 @@ AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<NodePtr> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
-    for (int i = 0; i < (int)doc.size(); i++) {
+    for (unsigned i = 0; i < doc.size(); i++) {
         res[i] = Parse(doc[i], scores[i], beta);
         // std::cout << "done: " << i << " length: " << utils::Split(doc[i], ' ').size() << std::endl;
     }
@@ -203,7 +201,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
         for (int j = 0; j < pruning_size; j++) {
             auto& prob_and_cat = scored_cats[i][j];
             agenda.emplace(
-                    std::make_shared<tree::Leaf>(tokens[i], prob_and_cat.second, i),
+                    std::make_shared<const tree::Leaf>(tokens[i], prob_and_cat.second, i),
                     prob_and_cat.first, out_prob, i, 1);
         }
     }
@@ -229,7 +227,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
                 ; span_length++) {
                 ChartCell& other = chart[(item.start_of_span + item.span_length) * 
                                 sent_size + (span_length - item.span_length - 1)];
-                for (auto&& pair: other.items_) {
+                for (auto&& pair: other.items) {
                     NodePtr right = pair.second.first;
                     float prob = pair.second.second;
                     if (! IsSeen(parse->GetCategory(), right->GetCategory())) continue;
@@ -251,7 +249,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
                 int span_length = item.start_of_span + item.span_length - start_of_span;
                 ChartCell& other = chart[start_of_span * sent_size +
                                     (span_length - item.span_length - 1)];
-                for (auto&& pair: other.items_) {
+                for (auto&& pair: other.items) {
                     NodePtr left = pair.second.first;
                     float prob = pair.second.second;
                     if (! IsSeen(left->GetCategory(), parse->GetCategory())) continue;
