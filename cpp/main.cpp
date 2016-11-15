@@ -6,8 +6,8 @@
 
 void test()
 {
-    // myccg::tagger::test();
-    // myccg::tree::test();
+    myccg::tagger::test();
+    myccg::tree::test();
     myccg::parser::test();
 }
 
@@ -16,13 +16,14 @@ using namespace myccg;
 int main(int argc, char const* argv[])
 {
 #ifdef _OPENMP
-    std::cout << "OpenMP : On, threads = " << omp_get_max_threads() << std::endl;
+    std::cerr << "OpenMP : On, threads = " << omp_get_max_threads() << std::endl;
 #endif
 
-#ifdef TEST
+#ifdef TEST2
     test();
 #else
     cmdline::parser p;
+    std::chrono::system_clock::time_point start, end;
     p.add<std::string>("model", 'm', "model directory");
     p.add("deriv", 'd', "output result in derivation format");
     p.add<float>("beta", 'b', "beta for pruning", false, 0.0000001);
@@ -35,15 +36,22 @@ int main(int argc, char const* argv[])
     tagger::ChainerTagger tagger(p.get<std::string>("model"));
     parser::AStarParser parser(&tagger, p.get<std::string>("model"));
     std::string input;
-    while (std::getline(std::cin, input)) {
-        auto res = parser.Parse(input, p.get<float>("beta"));
+    std::vector<std::string> inputs;
+    while (std::getline(std::cin, input))
+        inputs.push_back(input);
+    start = std::chrono::system_clock::now();
+    auto res = parser.Parse(inputs, p.get<float>("beta"));
+    end = std::chrono::system_clock::now();
+    double elapsed = std::chrono::duration_cast<std::chrono::seconds>(end-start).count();
+    for (auto&& tree: res) {
         if (p.exist("deriv")) {
-            tree::ShowDerivation(res);
+            tree::ShowDerivation(tree);
             std::cout << std::endl;
         } else {
-            std::cout << res->ToStr() << std::endl;
+            std::cout << tree->ToStr() << std::endl;
         }
     }
+    std::cerr << "elapsed time: " << elapsed << " seconds" << std::endl;
 #endif
     
     return 0;

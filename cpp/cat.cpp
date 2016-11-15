@@ -60,7 +60,7 @@ Cat parse_uncached(const std::string& cat) {
         else
             feat = "";
 
-        return new AtomicCategory(type, feat, semantics);
+        return new AtomicCategory(type, new FeatureValue(feat), semantics);
     } else {
         Cat left = parse(new_cat.substr(0, op_idx));
         const Slash* slash = Slash::FromStr(new_cat.substr(op_idx, 1));
@@ -69,8 +69,8 @@ Cat parse_uncached(const std::string& cat) {
     }
 }
 
-Cat Category::Substitute(const std::string& sub) const {
-    return cat::parse(utils::ReplaceAll(str_, kWILDCARD, sub));
+Cat Category::Substitute(Feat feat) const {
+    return cat::parse(utils::ReplaceAll(str_, kWILDCARD->ToStr(), feat->ToStr()));
 }
 
 Cat make(Cat left, const Slash* op, Cat right) {
