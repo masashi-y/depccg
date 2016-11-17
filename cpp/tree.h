@@ -115,7 +115,8 @@ public:
         out << "(<T ";
         out << this->cat_->ToStr() << " ";
         out << (left_is_head_ ? "0 " : "1 ");
-        out << (NULL == rchild_ ? "1 " : "2 ");
+        out << (NULL == rchild_ ? "1" : "2");
+        out << "> ";
         out << lchild_->ToStr();
         if (NULL !=  rchild_)
             out << " " << rchild_->ToStr();

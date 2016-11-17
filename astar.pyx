@@ -233,7 +233,10 @@ cdef class AStarParser(object):
             chart[i] = chartcell_new(mem)
 
         # Start chart parsing
+        step = 0
         while chart[s_len - 1].items.filled == 0 and agenda.size > 0:
+            step += 1
+            print step
 
             item = <AgendaItem *>pqueue_dequeue(agenda)
             parse = <object>item.parse

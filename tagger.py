@@ -15,8 +15,8 @@ from chainer import training, Variable
 from chainer.training import extensions
 
 
-lpad = "LPAD", "PAD", "0"
-rpad = "RPAD", "PAD", "0"
+lpad = "LPAD", "PAD", "PAD"
+rpad = "RPAD", "PAD", "PAD"
 
 re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
             "test": re.compile(r"wsj_23..\.auto"),
@@ -232,12 +232,12 @@ class EmbeddingTagger(chainer.Chain):
 def feature_extract(word_str):
     isupper = "1" if word_str.isupper() else "0"
     normalizd = word_str.lower()
-    normalizd = num.sub("#", normalizd)
     if normalizd == "-lrb-":
         normalizd = "("
     elif normalizd == "-rrb-":
         normalizd = ")"
     suffix = normalizd.ljust(2, "_")[-2:]
+    normalizd = num.sub("#", normalizd)
     return normalizd, suffix, str(isupper)
 
 
