@@ -174,9 +174,9 @@ public:
 
     const std::string WithBrackets() const { return "(" + ToStr() + ")"; }
 
-    bool IsModifier() const { return this->left_ == this->right_; }
+    bool IsModifier() const { return *this->left_ == *this->right_; }
     bool IsTypeRaised() const {
-        return (right_->IsFunctor() && right_->GetLeft() == left_);
+        return (right_->IsFunctor() && *right_->GetLeft() == *left_);
     }
 
     bool IsForwardTypeRaised() const {
@@ -242,7 +242,7 @@ private:
 class AtomicCategory: public Category
 {
 public:
-    std::string ToStrWithoutFeat() const { return type_; }
+    std::string ToStrWithoutFeat() const; // { return type_; }
 
     const std::string& GetType() const { return type_; }
 
@@ -263,8 +263,8 @@ public:
     bool IsFunctor() const { return false; }
 
     bool IsPunct() const {
-        // return (!std::regex_match(type_, reg_no_punct) ||
-        return (!( 'A' <= type_[0] && type_[0] <= 'Z' ) ||
+        return (!( ('A' <= type_[0] && type_[0] <= 'Z') ||
+                    ('a' <= type_[0] && type_[0] <= 'z')) ||
                 type_ == "LRB" || type_ == "RRB" ||
                 type_ == "LQU" || type_ == "RQU");
     }

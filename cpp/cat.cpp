@@ -16,6 +16,10 @@ const Slash* Slash::fwd_ptr = new Slash(FwdApp);
 const Slash* Slash::bwd_ptr = new Slash(BwdApp);
 const Slash* Slash::either_ptr = new Slash(EitherApp);
 
+std::string AtomicCategory::ToStrWithoutFeat() const {
+    return utils::ReplaceAll(utils::ReplaceAll(ToStr(), "[X]", ""), "[nb]", "");
+}
+
 Cat parse(const std::string& cat) {
     Cat res;
     if (cache.count(cat) != 0) {

@@ -23,7 +23,7 @@ re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
             "val": re.compile(r"wsj_00..\.auto"),
             "all": re.compile(r"wsj_....\.auto") }
 
-num = re.compile(r"[0-9]+")
+num = re.compile(r"[0-9]")
 
 
 class CCGBankDataset(chainer.dataset.DatasetMixin):
@@ -79,7 +79,7 @@ class EmbeddingTagger(chainer.Chain):
         self.caps = read_model_defs(os.path.join(model_path, "caps.txt"))
         self.targets = read_model_defs(os.path.join(model_path, "target.txt"))
 
-        self.unk_word = self.words["*UNKNOWN*"]
+        # self.unk_word = self.words["*UNKNOWN*"]
         self.unk_suffix = self.suffixes["UNK"]
 
         in_dim = 7 * (self.word_dim + self.caps_dim + self.suffix_dim)
@@ -109,6 +109,18 @@ class EmbeddingTagger(chainer.Chain):
             json.dump({"word_dim": self.word_dim,
                        "suffix_dim": self.suffix_dim,
                        "caps_dim": self.caps_dim}, out)
+
+    def get_word(self, word):
+        normalized = num.sub("#", word).lower()
+        if self.words.has_key(normalized):
+            return self.words[normalized]
+        else:
+            if word[0].isupper():
+                return self.words["*UNKNOWN_UPPER*"]
+            elif word[0].islower():
+                return self.words["*UNKNOWN_LOWER*"]
+            else:
+                return self.words["*UNKNOWN_SPECIAL*"]
 
     def __call__(self, xs, ts):
         """
@@ -154,8 +166,7 @@ class EmbeddingTagger(chainer.Chain):
         caps = np.zeros((len(tokens), 7), 'i')
         for i, context in enumerate(contexts):
             w, s, c = zip(*context)
-            words[i] = map(lambda x:
-                    self.words.get(x, self.unk_word), w)
+            words[i] = map(self.get_word, w)
             suffixes[i] = map(lambda x:
                     self.suffixes.get(x, self.unk_suffix), s)
             caps[i] = map(lambda x:
@@ -164,7 +175,7 @@ class EmbeddingTagger(chainer.Chain):
         h_w = self.emb_word(np.asarray(words, "i"))
         h_c = self.emb_caps(np.asarray(caps, "i"))
         h_s = self.emb_suffix(np.asarray(suffixes, "i"))
-        h = F.concat([h_w, h_c, h_s], 2)
+        h = F.concat([h_w, h_s, h_c], 2)
         batchsize, ntokens, hidden = h.data.shape
         h = F.reshape(h, (batchsize, ntokens * hidden))
         ys = self.linear(h)
@@ -230,15 +241,16 @@ class EmbeddingTagger(chainer.Chain):
 
 
 def feature_extract(word_str):
-    isupper = "1" if word_str.isupper() else "0"
-    normalizd = word_str.lower()
-    if normalizd == "-lrb-":
-        normalizd = "("
-    elif normalizd == "-rrb-":
-        normalizd = ")"
-    suffix = normalizd.ljust(2, "_")[-2:]
-    normalizd = num.sub("#", normalizd)
-    return normalizd, suffix, str(isupper)
+    isupper = "1" if word_str[0].isupper() else "0"
+    if word_str == "-LRB-":
+        normalized = "("
+    elif word_str == "-RRB-":
+        normalized = ")"
+    else:
+        normalized = word_str
+    suffix = (normalized[-2:] if len(normalized) > 1 else "_" + normalized[-1:]).lower() # normalizd.ljust(2, "_")[-2:]
+    # normalizd = num.sub("#", normalizd)
+    return normalized, suffix, str(isupper)
 
 
 def compress_traindata(args):
