@@ -35,7 +35,7 @@ LoadCategoryList(const std::string& filename);
 
 template<typename T> int ArgMax(T* from, T* to) {
     T max_val = std::numeric_limits<T>::lowest();
-    int max_idx, i = 0;
+    int max_idx = -1, i = 0;
     while (from != to) {
         if (max_val <= *from) {
             max_idx = i;
@@ -48,7 +48,7 @@ template<typename T> int ArgMax(T* from, T* to) {
 
 template<typename T> int ArgMin(T* from, T* to) {
     T min_val = std::numeric_limits<T>::max();
-    int min_idx, i = 0;
+    int min_idx = -1, i = 0;
     while (from != to) {
         if (min_val >= *from) {
             min_idx = i;
