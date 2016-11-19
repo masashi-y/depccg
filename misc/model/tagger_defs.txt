@@ -1,0 +1,1 @@
+{"word_dim": 50, "caps_dim": 20, "suffix_dim": 30}

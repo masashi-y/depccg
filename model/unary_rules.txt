@@ -16,11 +16,8 @@ S[dcl]/NP       NP\NP
 S[pss]\NP      S/S
 S[ng]\NP       S/S
 S[to]\NP       S/S
-S[ng]\NP       S\S
-
-S[ng]\NP       NP
 
 # Type raising
 NP      S[X]/(S[X]\NP)
 NP      (S[X]\NP)\((S[X]\NP)/NP)
-PP (S[X]\NP)\((S[X]\NP)/PP)
+PP      (S[X]\NP)\((S[X]\NP)/PP)

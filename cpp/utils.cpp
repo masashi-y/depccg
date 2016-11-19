@@ -22,7 +22,7 @@ const std::string DropBrackets(const std::string& in) {
 
 int FindClosingBracket(const std::string& in, int start) {
     int open_brackets = 0;
-    for (int i = 0; i < in.size(); i++) {
+    for (unsigned i = 0; i < in.size(); i++) {
         if (in[i] == '(')
             open_brackets++;
         else if (in[i] == ')')
@@ -35,13 +35,13 @@ int FindClosingBracket(const std::string& in, int start) {
 
 int FindNonNestedChar(const std::string& haystack, const std::string& needles) {
     int open_brackets = 0;
-    for (int i = 0; i < haystack.size(); i++) {
+    for (unsigned i = 0; i < haystack.size(); i++) {
         if (haystack[i] == '(')
             open_brackets++;
         else if (haystack[i] == ')')
             open_brackets--;
         else if (open_brackets == 0)
-            for (int j = 0; j < needles.size(); j++) {
+            for (unsigned j = 0; j < needles.size(); j++) {
                 if (needles[j] == haystack[i])
                     return i;
             }

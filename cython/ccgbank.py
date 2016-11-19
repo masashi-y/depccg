@@ -3,6 +3,7 @@
 import cat
 from tree import Tree, Leaf
 from combinator import Combinator
+import combinator
 
 
 class AutoReader(object):
@@ -14,6 +15,7 @@ class AutoReader(object):
         # suppress_error (bool): Some CCGbank annotations are not supported and
         #     can raise RuntimeError in Tree.parse. Setting this option True
         #     suppresss the error and ignores the sentence with that annotation.
+        res = []
         for line in self.lines:
             line = line.strip()
             if len(line) == 0: continue

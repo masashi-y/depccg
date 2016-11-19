@@ -8,12 +8,13 @@
 #include "parser.h"
 #include "configure.h"
 
+#define DEBUG(x) std::cerr << #x": " << (x) << std::endl;
 namespace myccg {
 namespace parser {
 
 struct AgendaItem
 {
-    AgendaItem(NodePtr parse_, float in_prob_, float out_prob_,
+    AgendaItem(int id, NodePtr parse_, float in_prob_, float out_prob_,
             int start_of_span_, int span_length_)
     : parse(parse_), in_prob(in_prob_), out_prob(out_prob_),
     prob(in_prob_ + out_prob_), start_of_span(start_of_span_),
@@ -21,6 +22,7 @@ struct AgendaItem
 
     ~AgendaItem() {}
 
+    int id;
     NodePtr parse;
     float in_prob;
     float out_prob;
@@ -28,12 +30,14 @@ struct AgendaItem
     int start_of_span;
     int span_length;
 
+    bool operator<(const AgendaItem& other) const {
+        if ( fabs(this->prob - other.prob) > 0.00001 )
+            return this->prob < other.prob;
+        if (this->parse->GetDependencyLength() != other.parse->GetDependencyLength())
+            return this->parse->GetDependencyLength() > other.parse->GetDependencyLength();
+        return this->id > other.id;
+    }
 };
-bool operator<(const AgendaItem& item1, const AgendaItem& item2) {
-    if ( fabs(item1.prob - item2.prob) > 0.0000001 )
-        return item1.prob < item2.prob;
-    return item1.parse->GetDependencyLength() > item2.parse->GetDependencyLength();
-}
 
 typedef std::pair<NodePtr, float> ChartItem;
 struct ChartCell
@@ -53,7 +57,7 @@ struct ChartCell
         if (items.count(cat) > 0 && prob <= best_prob)
             return false;
         items.emplace(cat, std::make_pair(parse, prob));;
-        if (best_prob <= prob) {
+        if (best_prob < prob) {
             best_prob = prob;
             best = parse;
         }
@@ -170,6 +174,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     float best_in_probs[MAX_LENGTH];
     float out_probs[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
     std::priority_queue<AgendaItem> agenda;
+    int agenda_id = 0;
 
     std::vector<std::pair<float, Cat>> scored_cats[MAX_LENGTH];
 
@@ -186,11 +191,14 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
         float threshold = scored_cats[i][0].first * beta;
         // normalize and pruning
         for (int j = 0; j < TagSize(); j++) {
-            if (scored_cats[i][j].first > threshold) 
+            if (scored_cats[i][j].first > threshold) {
                 scored_cats[i][j].first =
                     std::log( std::exp(scored_cats[i][j].first) / total );
-            else
-                scored_cats[i].pop_back();
+            } else {
+                scored_cats[i].erase(
+                        scored_cats[i].begin() + j - 1, scored_cats[i].end());
+                break;
+            }
         }
         best_in_probs[i] = scored_cats[i][0].first;
     }
@@ -198,9 +206,9 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
 
     for (int i = 0; i < sent_size; i++) {
         float out_prob = out_probs[i * sent_size + (i + 1)];
-        for (int j = 0; j < pruning_size; j++) {
+        for (int j = 0; j < std::min(pruning_size, (int)scored_cats[i].size()); j++) {
             auto& prob_and_cat = scored_cats[i][j];
-            agenda.emplace(
+            agenda.emplace(agenda_id++,
                     std::make_shared<const tree::Leaf>(tokens[i], prob_and_cat.second, i),
                     prob_and_cat.first, out_prob, i, 1);
         }
@@ -209,6 +217,20 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     ChartCell chart[MAX_LENGTH * MAX_LENGTH];
 
     while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
+
+    //     std::cout << "\n\n" << step++;
+    // for (int i = 0; i < sent_size - 1; i++) {
+    //     for (int j = 0; j < sent_size - 1; j++) {
+    //         ChartCell& cell = chart[i * sent_size + j];
+    //         if (NULL != cell.best) {
+    //             std::cout << cell.best->GetCategory()->ToStr() << ",\t";
+    //         } else {
+    //             std::cout << "XXX,\t";
+    //         }
+    //     }
+    //     std::cout << std::endl;
+    // }
+
         const AgendaItem item = agenda.top();
         agenda.pop();
         NodePtr parse = item.parse;
@@ -218,7 +240,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
             if (item.span_length != sent_size) {
                 for (Cat unary: unary_rules_[parse->GetCategory()]) {
                     NodePtr subtree = std::make_shared<const tree::Tree>(unary, parse);
-                    agenda.emplace(subtree, item.in_prob, item.out_prob,
+                    agenda.emplace(agenda_id++, subtree, item.in_prob, item.out_prob,
                                         item.start_of_span, item.span_length);
                 }
             }
@@ -239,7 +261,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
                             float in_prob = item.in_prob + prob;
                             float out_prob = out_probs[item.start_of_span *
                                             sent_size + item.start_of_span + span_length];
-                            agenda.emplace(subtree, in_prob, out_prob,
+                            agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 item.start_of_span, span_length);
                         }
                     }
@@ -261,7 +283,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
                             float in_prob = item.in_prob + prob;
                             float out_prob = out_probs[start_of_span * sent_size +
                                             start_of_span + span_length];
-                            agenda.emplace(subtree, in_prob, out_prob,
+                            agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 start_of_span, span_length);
                         }
                     }

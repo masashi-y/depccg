@@ -34,6 +34,7 @@ public:
     virtual const std::string ToStr() const = 0;
     virtual int GetHeadId() const = 0;
     virtual int GetDependencyLength() const = 0;
+    virtual bool IsUnary() const = 0;
 
     // to call ShowDerivation
     friend Tree;
@@ -75,6 +76,7 @@ public:
 
     int GetDependencyLength() const { return 0; }
 
+    bool IsUnary() const { return false; }
 private:
     int ShowDerivation(int lwidth, std::ostream& out) const;
 
@@ -143,6 +145,7 @@ public:
                     rchild_->GetDependencyLength() + lchild_->GetDependencyLength());
     }
 
+    bool IsUnary() const { return NULL == rchild_; }
 private:
     int ShowDerivation(int lwidth, std::ostream& out) const;
 

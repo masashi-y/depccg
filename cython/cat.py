@@ -314,13 +314,13 @@ def parse_uncached(cat):
         semantics = None
 
     new_cat = drop_brackets(new_cat)
-    if new_cat.startswith("("):
-        close_idx = find_closing_bracket(new_cat, 0)
-
-        if not any(slash in new_cat for slash in "/\\|"):
-            new_cat = new_cat[1:close_idx]
-            res = parse_uncached(new_cat)
-            return res
+    # if new_cat.startswith("("):
+    #     close_idx = find_closing_bracket(new_cat, 0)
+    #
+    #     if not any(slash in new_cat for slash in "/\\|"):
+    #         new_cat = new_cat[1:close_idx]
+    #         res = parse_uncached(new_cat)
+    #         return res
 
     end_idx = len(new_cat)
     op_idx = find_non_nested_char(new_cat, "/\\|")
