@@ -15,10 +15,6 @@ ext_modules = [
                   include_dirs=[numpy.get_include()],
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
                   ),
-        Extension("tree",
-                  ["tree.pyx"],
-                  extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
-                  ),
         Extension("astar",
                   ["astar.pyx", "c/pqueue.c"],
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"]

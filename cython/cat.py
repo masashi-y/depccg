@@ -96,6 +96,11 @@ class Functor(Cat):
         self.semantics = semantics
 
     @property
+    def without_feat(self):
+        return self.left.without_feat + \
+                str(self.slash) + self.right.without_feat
+
+    @property
     def with_brackets(self):
         return "({})".format(self.string)
 
@@ -202,6 +207,10 @@ class Atomic(Cat):
         self.type = base
         self.feat = feat
         self.semantics = semantics
+
+    @property
+    def without_feat(self):
+        return self.type
 
     @property
     def with_brackets(self):

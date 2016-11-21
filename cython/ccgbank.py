@@ -37,6 +37,7 @@ class AutoLineReader(object):
     def __init__(self, line):
         self.line = line.encode("utf-8")
         self.index = 0
+        self.word_id = -1
 
     def next(self):
         end = self.line.find(" ", self.index)
@@ -65,6 +66,7 @@ class AutoLineReader(object):
             raise RuntimeError()
 
     def parse_leaf(self):
+        self.word_id += 1
         self.check("(")
         self.check("<", 1)
         self.check("L", 2)
@@ -74,7 +76,7 @@ class AutoLineReader(object):
         _    = self.next()
         word = self.next()
         end  = self.next()
-        return Leaf(word, cate, 0)
+        return Leaf(word, cate, self.word_id)
 
     def parse_tree(self):
         self.check("(")

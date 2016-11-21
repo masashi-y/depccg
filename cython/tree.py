@@ -1,22 +1,22 @@
+# -*- coding: utf-8 -*-
+from combinator import Combinator, RuleType
+from xml.etree.ElementTree import Element, SubElement, ElementTree, tostring
 
-from combinator import Combinator
-
-cdef class Node(object):
-    def __init__(self, object cat, int rule_type):
+class Node(object):
+    def __init__(self, cat, rule_type):
         self.cat = cat
         self.rule_type = rule_type
 
 
-cdef class Leaf(Node):
+class Leaf(Node):
     # (<L N/N NNP NNP Pierre N_73/N_73>)
-    def __init__(self, str word, object cat, int position):
-        super(Leaf, self).__init__(cat, LEXICON)
+    def __init__(self, word, cat, position):
+        super(Leaf, self).__init__(cat, RuleType.LEXICON)
         self.word = word
         self.pos  = position
 
     def __str__(self):
-        cdef str pos = "POS" # dummy
-        cdef str word
+        pos = "POS" # dummy
         if self.word in ["{", "("]:
             word = "-LRB-"
         elif self.word in ["}", ")"]:
@@ -25,6 +25,18 @@ cdef class Leaf(Node):
             word = self.word.encode("utf-8")
         return "(<L {0} {1} {1} {2} {0}>)".format(
                 self.cat, pos, word)
+
+    def to_xml(self, parent):
+        word = self.word #.encode("utf-8")
+        SubElement(parent, "lf",
+                {"word": word
+                ,"cat": str(self.cat.without_feat)
+                ,"start": str(self.pos)
+                ,"span": "1"
+                ,"lemma": word
+                ,"pos": "POS"
+                ,"chunk": "CHUNK"
+                ,"entity": "O"})
 
     @property
     def headid(self):
@@ -35,10 +47,10 @@ cdef class Leaf(Node):
         return 0
 
 
-cdef class Tree(Node):
+class Tree(Node):
     # (<T N 1 2> (<L N/N JJ JJ nonexecutive N_43/N_43>) (<L N NN NN director N>) )
     def __init__(self, cat, left_is_head, children, rule=None):
-        rule_type = NONE if not isinstance(rule, Combinator) \
+        rule_type = RuleType.NONE if not isinstance(rule, Combinator) \
                                     else rule.rule_type
         super(Tree, self).__init__(cat, rule_type)
         self.children     = children
@@ -46,14 +58,28 @@ cdef class Tree(Node):
         self.op = rule
 
     def __str__(self):
-        cdef int left_is_head = 0 if self.left_is_head else 1
-        cdef list children = [str(c) for c in self.children]
+        left_is_head = 0 if self.left_is_head else 1
+        children = [str(c) for c in self.children]
         return "(<T {0} {1} {2}> {3} )".format(
                 self.cat, left_is_head, len(children), " ".join(children))
 
+    def to_xml(self, parent=None):
+        if parent is None:
+            ccg = Element("ccg")
+            for child in self.children:
+                child.to_xml(ccg)
+            return ccg
+        else:
+            rule = SubElement(parent, "rule",
+                    {"type": str(self.op)
+                    ,"cat": str(self.cat.without_feat)})
+            for child in self.children:
+                child.to_xml(rule)
+
+
     def resolve_op(self, ops):
         if len(self.children) == 1:
-            self.rule_type = UNARY
+            self.rule_type = RuleType.UNARY
         else:
             left, right = self.children
             for op in ops:
@@ -66,7 +92,7 @@ cdef class Tree(Node):
 
     @property
     def headid(self):
-        cdef list children = self.children
+        children = self.children
         if len(children) == 1:
             return children[0].headid
         elif len(children) == 2:
@@ -76,7 +102,7 @@ cdef class Tree(Node):
 
     @property
     def deplen(self):
-        cdef list children = self.children
+        children = self.children
         if len(children) == 1:
             return children[0].deplen
         elif len(children) == 2:
@@ -121,6 +147,13 @@ cdef class Tree(Node):
         print(wordstr.rstrip())
         rec(0, self)
 
+def to_xml(trees, out):
+    candc = Element("candc")
+    for tree in trees:
+        candc.append(tree.to_xml())
+    with open(out, "w") as f:
+        ElementTree(candc).write(f)
+
 
 def resolve_op(tree, ops):
     tree.resolve_op(ops)
@@ -129,10 +162,8 @@ def resolve_op(tree, ops):
             resolve_op(child, ops)
 
 def get_leaves(tree):
-    cdef list res = []
-    def rec(Tree tree):
-        cdef Node child
-
+    res = []
+    def rec(tree):
         for child in tree.children:
             if isinstance(child, Tree):
                 rec(child)
@@ -140,6 +171,7 @@ def get_leaves(tree):
                 res.append(child)
             else:
                 raise RuntimeError()
+
     if isinstance(tree, Tree):
         rec(tree)
     else:

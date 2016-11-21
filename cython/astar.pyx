@@ -9,7 +9,7 @@ from pqueue cimport PQueue, pqueue_new, pqueue_delete, \
                     pqueue_enqueue, pqueue_dequeue
 from preshed.maps cimport map_init, key_t, \
         MapStruct, map_set, map_get, map_iter
-from tree cimport Tree, Leaf, Node
+from tree import Tree, Leaf, Node
 from combinator import standard_combinators, unary_rule, Combinator
 from structs cimport FC, GFC, FA, BX, GBX, BA, UNARY
 from tagger import EmbeddingTagger
