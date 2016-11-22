@@ -29,6 +29,8 @@ Cat parse(const std::string& cat);
 
 Cat make(Cat left, const Slash* op, Cat right);
 
+
+
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
 // const std::regex reg_no_punct("[a-zA-Zz]+");
@@ -120,6 +122,16 @@ public:
     virtual Feat GetFeat() const = 0;
     virtual Cat GetLeft() const = 0;
     virtual Cat GetRight() const = 0;
+    // get i'th left (or right) child category of functor
+    // when i== 0, return `this`.
+    // performing GetLeft (GetRight) with exceeding `i` will
+    // result in undefined behavior. e.g.GetLeft<10>(cat::parse("(((A/B)/C)/D)"))
+    template<int i> Cat GetLeft() const;
+    template<int i> Cat GetRight() const;
+    // test if i'th left (or right) child category is functor.
+    // when i == 0, check if the category itself is functor.
+    template<int i> bool HasFunctorAtLeft() const;
+    template<int i> bool HasFunctorAtRight() const;
     virtual const Slash* GetSlash() const = 0;
 
     virtual const std::string WithBrackets() const = 0;
@@ -152,6 +164,60 @@ private:
     int id_;
     std::string str_;
 };
+
+// perform composition where `Order` is size of `tail` - 1.
+//   e.g.  A/B B/C/D/E -> A/C/D/E
+//
+// Cat ex = cat::parse("(((B/C)/D)/E)");
+// compose<3>(cat::parse("A"), Slash::Fwd(), ex);
+//   --> (((A/C)/D)/E)
+
+template<int Order, int Step=0>
+struct Compose
+{
+    static Cat func(Cat head, const Slash* op, Cat tail) {
+        Cat target = tail->GetLeft<Order>();
+        target = target->GetRight();
+        return Compose<Order-1, Step+1>::func(
+                make(head, op, target), tail->GetSlash(), tail);
+    }
+};
+
+template<int Step>
+struct Compose<0, Step>
+{
+    static Cat func(Cat head, const Slash* op, Cat tail) {
+        return make(head, op, tail->GetRight());
+    }
+};
+
+template<int Order, int Step=0>
+Cat compose(Cat head, const Slash* op, Cat tail) {
+    return Compose<Order, Step>::func(head, op, tail);
+}
+
+template<int i> bool Category::HasFunctorAtLeft() const {
+    return this->IsFunctor() ? GetLeft()->HasFunctorAtLeft<i-1>() : false;
+}
+
+
+template<int i> bool Category::HasFunctorAtRight() const {
+    return this->IsFunctor() ? GetRight()->HasFunctorAtRight<i-1>() : false;
+}
+
+template<> bool Category::HasFunctorAtLeft<0>() const;
+template<> bool Category::HasFunctorAtRight<0>() const;
+
+template<int i> Cat Category::GetLeft() const {
+    return GetLeft()->GetLeft<i-1>();
+}
+
+template<int i> Cat Category::GetRight() const {
+    return GetRight()->GetRight<i-1>();
+}
+
+template<> Cat Category::GetLeft<0>() const;
+template<> Cat Category::GetRight<0>() const;
 
 
 class Functor: public Category

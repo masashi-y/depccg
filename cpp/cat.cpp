@@ -8,6 +8,18 @@ namespace cat {
 
 const char* slashes = "/\\|";
 
+template<> bool Category::HasFunctorAtLeft<0>() const {
+    return this->IsFunctor();
+}
+
+template<> bool Category::HasFunctorAtRight<0>() const {
+    return this->IsFunctor();
+}
+
+template<> Cat Category::GetLeft<0>() const { return this; }
+
+template<> Cat Category::GetRight<0>() const { return this; }
+
 std::unordered_map<std::string, Cat> cache;
 
 int Category::num_cats = 0;
@@ -81,6 +93,7 @@ Cat make(Cat left, const Slash* op, Cat right) {
     return parse(left->WithBrackets() + op->ToStr() + right->WithBrackets());
 }
 
+
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
     return to_correct->Substitute(match1->GetSubstitution(match2));
 }
@@ -100,4 +113,3 @@ Cat PR          = parse("PR");
 
 } // namespace cat
 } // namespace myccg
-

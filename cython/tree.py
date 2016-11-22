@@ -26,7 +26,7 @@ class Leaf(Node):
         return "(<L {0} {1} {1} {2} {0}>)".format(
                 self.cat, pos, word)
 
-    def to_xml(self, parent):
+    def _to_xml(self, parent):
         word = self.word #.encode("utf-8")
         SubElement(parent, "lf",
                 {"word": word
@@ -63,18 +63,15 @@ class Tree(Node):
         return "(<T {0} {1} {2}> {3} )".format(
                 self.cat, left_is_head, len(children), " ".join(children))
 
-    def to_xml(self, parent=None):
+    def _to_xml(self, parent=None):
         if parent is None:
-            ccg = Element("ccg")
-            for child in self.children:
-                child.to_xml(ccg)
-            return ccg
-        else:
-            rule = SubElement(parent, "rule",
-                    {"type": str(self.op)
-                    ,"cat": str(self.cat.without_feat)})
-            for child in self.children:
-                child.to_xml(rule)
+            parent = Element("ccg")
+        rule = SubElement(parent, "rule",
+                {"type": str(self.op)
+                ,"cat": str(self.cat.without_feat)})
+        for child in self.children:
+            child._to_xml(rule)
+        return parent
 
 
     def resolve_op(self, ops):
@@ -150,7 +147,8 @@ class Tree(Node):
 def to_xml(trees, out):
     candc = Element("candc")
     for tree in trees:
-        candc.append(tree.to_xml())
+        if isinstance(tree, Tree):
+            candc.append(tree._to_xml())
     with open(out, "w") as f:
         ElementTree(candc).write(f)
 
