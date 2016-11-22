@@ -257,17 +257,19 @@ private:
     const Slash* result_;
 };
 
+template<int Order>
 class GeneralizedForwardComposition: public Combinator
 {
     public:
     GeneralizedForwardComposition(const Slash* left, const Slash* right, const Slash* result)
         : Combinator(GFC), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
-        if (left->IsFunctor() && right->IsFunctor() && right->GetLeft()->IsFunctor())
-            return (left->GetRight()->Matches(right->GetLeft()->GetLeft()) &&
-                    left->GetSlash() == left_ &&
-                    right->GetLeft()->GetSlash() == right_);
-        return false;
+        return (left->IsFunctor() &&
+                // right->IsFunctor() &&
+                right->HasFunctorAtLeft<Order+1>() &&
+                left->GetRight()->Matches(right->GetLeft<Order+1>()) &&
+                left->GetSlash() == left_ &&
+                right->GetLeft<Order>()->GetSlash() == right_);
     }
 
     Cat Apply(Cat left, Cat right) const {
@@ -291,6 +293,7 @@ private:
     const Slash* result_;
 };
 
+template<int Order>
 class GeneralizedBackwardComposition: public Combinator
 {
     public:
