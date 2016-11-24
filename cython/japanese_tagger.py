@@ -1,18 +1,22 @@
 
 import sys
 import numpy as np
-import os
 import json
 import chainer
+import chainer.links as L
+import chainer.functions as F
+from chainer import training, Variable
+from chainer.training import extensions
 from utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
 from collections import defaultdict
 from japanese_ccg import JaCCGReader
 from tree import Leaf, Tree, get_leaves
 
-filepath = "/home/masashi-y/japanese-ccgbank/ccgbank-20150216/test10.ccgbank"
-# filepath = "/home/masashi-y/japanese-ccgbank/ccgbank-20150216/train.ccgbank"
-
 WINDOW_SIZE = 7
+CONTEXT = (WINDOW_SIZE - 1) / 2
+IGNORE = -1
+UNK = "*UNKNOWN*"
+LPAD, RPAD, PAD = "LPAD", "RPAD", "PAD"
 
 class JaCCGInspector(object):
     """
@@ -29,16 +33,19 @@ class JaCCGInspector(object):
         self.chars = defaultdict(int)
         self.samples = {}
 
-        self.words["*UNKNOWN*"] = 10000
-        self.chars["*UNKNOWN*"] = 10000
+        self.words[UNK] = 10000
+        self.words[LPAD] = 10000
+        self.words[RPAD] = 10000
+        self.chars[UNK] = 10000
+        self.chars[PAD] = 10000
 
     def _traverse(self, tree):
         self.cats[tree.cat.without_semantics] += 1
         if isinstance(tree, Leaf):
-            w = tree.word.encode("utf-8")
+            w = tree.word#.encode("utf-8")
             self.words[w] += 1
-            for c in w.decode("utf-8"):
-                self.chars[c.encode("utf-8")] += 1
+            for c in tree.word:
+                self.chars[c] += 1#.encode("utf-8")] += 1
         else:
             children = tree.children
             if len(children) == 1:
@@ -55,8 +62,9 @@ class JaCCGInspector(object):
 
     @staticmethod
     def _write(dct, out, comment_out_value=False):
+        print >> sys.stderr, "writing to", out.name
         for key, value in dct.items():
-            out.write(str(key) + " ")
+            out.write(key.encode("utf-8") + " ")
             if comment_out_value:
                 out.write("# ")
             out.write(str(value) + "\n")
@@ -72,12 +80,15 @@ class JaCCGInspector(object):
             tokens = get_leaves(tree)
             words = [token.word for token in tokens]
             cats = [token.cat.without_semantics for token in tokens]
-            samples = get_context_by_window(words, 3, lpad="LPAD", rpad="RPAD")
+            samples = get_context_by_window(
+                    words, CONTEXT, lpad=LPAD, rpad=RPAD)
             assert len(samples) == len(cats)
             for cat, sample in zip(cats, samples):
                 if self.cats[cat] >= self.freq_cut:
                     self.samples[" ".join(sample)] = cat
 
+        self.cats = {k: v for (k, v) in self.cats.items() \
+                        if v >= self.freq_cut}
         with open(outdir + "/unary_rules.txt", "w") as f:
             self._write(self.unary_rules, f, comment_out_value=True)
         with open(outdir + "/seen_rules.txt", "w") as f:
@@ -88,7 +99,7 @@ class JaCCGInspector(object):
             self._write(self.words, f, comment_out_value=False)
         with open(outdir + "/chars.txt", "w") as f:
             self._write(self.chars, f, comment_out_value=False)
-        with open(outdir + "traindata.json", "w") as f:
+        with open(outdir + "/traindata.json", "w") as f:
             json.dump(self.samples, f)
 
     def create_testdata(self, outdir):
@@ -97,25 +108,42 @@ class JaCCGInspector(object):
             tokens = get_leaves(tree)
             words = [token.word for token in tokens]
             cats = [token.cat.without_semantics for token in tokens]
-            samples = get_context_by_window(words, 3, lpad="LPAD", rpad="RPAD")
+            samples = get_context_by_window(
+                    words, CONTEXT, lpad=LPAD, rpad=RPAD)
             assert len(samples) == len(cats)
             for cat, sample in zip(cats, samples):
                 self.samples[" ".join(sample)] = cat
-        with open(outdir + "testdata.json", "w") as f:
+        with open(outdir + "/testdata.json", "w") as f:
             json.dump(self.samples, f)
 
+
+class FeatureExtractor(object):
+    def __init__(self, model_path):
+        self.words = read_model_defs(model_path + "/words.txt")
+        self.chars = read_model_defs(model_path + "/chars.txt")
+        self.unk_word = self.words[UNK]
+        self.unk_char = self.chars[UNK]
+        self.max_char_len = max(len(w) for w in self.words if w != UNK)
+
+    def __call__(self, unicode_str):
+        items = unicode_str.strip().split(" ")
+        x = -np.ones((WINDOW_SIZE, self.max_char_len + 1), 'i')
+        l = np.zeros((WINDOW_SIZE,), 'f')
+        for i, word in enumerate(items):
+            x[i, 0] = self.words.get(word, self.unk_word)
+            l[i] = len(word)
+            for j, char in enumerate(word, 1):
+                x[i, j] = self.chars.get(char, self.unk_char)
+        return x, l
 
 class JaCCGTaggerDataset(chainer.dataset.DatasetMixin):
     def __init__(self, model_path, samples_path):
         self.model_path = model_path
-        self.words = read_model_defs(os.path.join(model_path, "words.txt"))
-        self.chars = read_model_defs(os.path.join(model_path, "chars.txt"))
-        self.targets = read_model_defs(os.path.join(model_path, "targets.txt"))
+        self.targets = read_model_defs(model_path + "/targets.txt")
+        self.extractor = FeatureExtractor(model_path)
         with open(samples_path) as f:
             self.samples = json.load(f).items()
-        self.unk_word = self.words["*UNKNOWN*"]
-        self.unk_char = self.chars["*UNKNOWN*"]
-        self.max_char_len = max(len(w) for w in self.words if w != "*UNKNOWN*")
+        assert isinstance(self.samples[0][0], unicode)
 
     def __len__(self):
         return len(self.samples)
@@ -129,40 +157,38 @@ class JaCCGTaggerDataset(chainer.dataset.DatasetMixin):
             second till the last columns are filled with character id.
         """
         line, target = self.samples[i]
-        items = line.strip().split(" ")
-        x = -np.ones((WINDOW_SIZE, self.max_char_len + 1), 'i')
-        l = np.zeros((WINDOW_SIZE,), 'f')
-        for i, word in enumerate(items):
-            x[i, 0] = self.words.get(word, self.unk_word)
-            l[i] = len(word)
-            for j, char in enumerate(word, 1):
-                x[i, j] = self.chars.get(char, self.unk_char)
-        t = np.asarray(self.targets[target], 'i')
+        x, l = self.extractor(line)
+        t = np.asarray(self.targets.get(target, IGNORE), 'i')
         return x, l, t
 
 
 class JaCCGEmbeddingTagger(chainer.Chain):
     def __init__(self, model_path, word_dim=None, char_dim=None):
         self.model_path = model_path
+        defs_file = model_path + "/tagger_defs.txt"
         if word_dim is None:
             # use as supertagger
-            with open(os.path.join(model_path, "tagger_defs.txt")) as defs_file:
-                defs = json.load(defs_file)
+            with open(defs_file) as f:
+                defs = json.load(f)
             self.word_dim = defs["word_dim"]
             self.char_dim = defs["char_dim"]
         else:
             # training
             self.word_dim = word_dim
             self.char_dim = char_dim
+            with open(defs_file, "w") as f:
+                json.dump({"model": self.__class__.__name__,
+                           "word_dim": self.word_dim,
+                           "char_dim": self.char_dim}, f)
 
-        self.words = read_model_defs(os.path.join(model_path, "words.txt"))
-        self.chars = read_model_defs(os.path.join(model_path, "chars.txt"))
-        self.targets = read_model_defs(os.path.join(model_path, "target.txt"))
+        self.extractor = FeatureExtractor(model_path)
+        self.targets = read_model_defs(model_path + "/targets.txt")
 
         in_dim = WINDOW_SIZE * (self.word_dim + self.char_dim)
         super(JaCCGEmbeddingTagger, self).__init__(
-                emb_word=L.EmbedID(len(self.words), self.word_dim),
-                emb_caps=L.EmbedID(len(self.caps), self.caps_dim),
+                emb_word=L.EmbedID(len(self.extractor.words), self.word_dim),
+                emb_char=L.EmbedID(len(self.extractor.chars),
+                            self.char_dim, ignore_label=IGNORE),
                 linear=L.Linear(in_dim, len(self.targets)),
                 )
 
@@ -174,17 +200,18 @@ class JaCCGEmbeddingTagger(chainer.Chain):
         """
         words, chars = xs[:, :, 0], xs[:, :, 1:]
         h_w = self.emb_word(words) #_(batchsize, windowsize, word_dim)
-        h_c = self.emb_chars(chars) # (batchsize, windowsize, max_char_len, char_dim)
+        h_c = self.emb_char(chars) # (batchsize, windowsize, max_char_len, char_dim)
         batchsize, windowsize, _, _ = h_c.shape
         # (batchsize, windowsize, char_dim)
-        h_c = F.sum(h_c, 2) / ls.reshape((batchsize, windowsize, 1))
+        h_c = F.sum(h_c, 2)
+        h_c, ls = F.broadcast(h_c, F.reshape(ls, (batchsize, windowsize, 1)))
+        h_c = h_c / ls
         h = F.concat([h_w, h_c], 2)
         h = F.reshape(h, (batchsize, -1))
         ys = self.linear(h)
 
         loss = F.softmax_cross_entropy(ys, ts)
         acc = F.accuracy(ys, ts)
-
         chainer.report({
             "loss": loss,
             "accuracy": acc
@@ -234,7 +261,58 @@ def train(args):
     trainer.extend(extensions.ProgressBar(update_interval=10))
 
     trainer.run()
-def main():
-    outdir = "ja_model/"
-    JaCCGInspector(filepath).create_traindata(outdir)
-main()
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(
+                "Japanese CCG parser's supertag tagger")
+    subparsers = parser.add_subparsers()
+
+    # Creating training data
+    parser_c = subparsers.add_parser(
+            "create", help="create tagger input data")
+    parser_c.add_argument("path",
+            help="path to ccgbank data file")
+    parser_c.add_argument("out",
+            help="output directory path")
+    parser_c.add_argument("--freq-cut",
+            type=int, default=10,
+            help="only allow categories which appear >= freq-cut")
+    parser_c.add_argument("--windowsize",
+            type=int, default=3,
+            help="window size to extract features")
+    parser_c.add_argument("--subset",
+            choices=["train", "test"],
+            default="train")
+
+    parser_c.set_defaults(func=
+            (lambda args:
+                (lambda x=JaCCGInspector(args.path, args.freq_cut) :
+                    x.create_traindata(args.out)
+                        if args.subset == "train"
+                    else  x.create_testdata(args.out))()
+                ))
+
+    # Do training using training data created through `create`
+    parser_t = subparsers.add_parser(
+            "train", help="train supertagger model")
+    parser_t.add_argument("model",
+            help="path to model directory")
+    # parser_t.add_argument("embed",
+            # help="path to embedding file")
+    # parser_t.add_argument("vocab",
+            # help="path to embedding vocab file")
+    parser_t.add_argument("train",
+            help="training data file path")
+    parser_t.add_argument("val",
+            help="validation data file path")
+    parser_t.add_argument("--batchsize",
+            type=int, default=1000, help="batch size")
+    parser_t.add_argument("--epoch",
+            type=int, default=20, help="epoch")
+    parser_t.add_argument("--initmodel",
+            help="initialize model with `initmodel`")
+    parser_t.set_defaults(func=train)
+
+    args = parser.parse_args()
+    args.func(args)
