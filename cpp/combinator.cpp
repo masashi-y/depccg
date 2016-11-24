@@ -38,6 +38,7 @@ using namespace myccg;
 
 int main() {
     cat::Cat ex = myccg::cat::parse("(((A/B)\\C)/D)");
+    cat::Cat ex1 = myccg::cat::parse("((A/B)\\C)");
     std::cout << ex->ToStr() << std::endl;
     std::cout << ex->GetLeft<0>()->ToStr() << std::endl;
     std::cout << ex->GetLeft<1>()->ToStr() << std::endl;
@@ -62,10 +63,17 @@ int main() {
     test(ex->HasFunctorAtRight<3>());
     test(ex->HasFunctorAtRight<4>());
     test(ex->HasFunctorAtRight<5>());
+    auto bx = new combinator::GeneralizedForwardComposition<0>(
+            cat::Slash::Fwd(), cat::Slash::Fwd(), cat::Slash::Fwd());
+    auto bx1 = new combinator::GeneralizedForwardComposition<1>(
+            cat::Slash::Fwd(), cat::Slash::Fwd(), cat::Slash::Fwd());
 
-
+    std::cout << ex->GetLeft<2>()->ToStr() << std::endl;
     cat::Cat ex3 = myccg::cat::parse("(S/A)");
-    cat::Cat res = cat::compose<2>(ex3->GetLeft(), cat::Slash::Bwd(), ex);
-    std::cout << res->ToStr() << std::endl;
+    test(bx->CanApply(ex3, ex1));
+    test(bx1->CanApply(ex3, ex));
+    std::cout << bx->Apply(ex3, ex1)->ToStr() << std::endl;
+    std::cout << bx1->Apply(ex3, ex)->ToStr() << std::endl;
+
     return 0;
 }
