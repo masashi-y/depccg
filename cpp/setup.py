@@ -12,8 +12,8 @@ ext_modules = [
                   include_dirs=[numpy.get_include()],
                   extra_compile_args=["-O3"]
                   ),
-        Extension("utils",
-                  ["utils.pyx"],
+        Extension("py_utils",
+                  ["py_utils.pyx"],
                   include_dirs=[numpy.get_include()],
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"]
                   ),

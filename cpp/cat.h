@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include <regex>
 #include <omp.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,23 +16,22 @@ namespace myccg {
 namespace cat {
 
 class Category;
-class Slash;
+class Slashes;
 class FeatureValue;
 
 typedef const Category* Cat;
+typedef const Slashes* Slash;
 typedef std::pair<Cat, Cat> CatPair;
 
-Cat parse_uncached(const std::string& cat);
+Cat Parse_uncached(const std::string& cat);
 
-Cat parse(const std::string& cat);
+Cat Parse(const std::string& cat);
 
-Cat make(Cat left, const Slash* op, Cat right);
+Cat Make(Cat left, Slash op, Cat right);
 
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
-// const std::regex reg_no_punct("[a-zA-Zz]+");
-
-class Slash
+class Slashes
 {
 public:
     enum SlashE {
@@ -43,9 +41,9 @@ public:
     };
 
 public:
-    static const Slash* Fwd() { return fwd_ptr; }
-    static const Slash* Bwd() { return bwd_ptr; }
-    static const Slash* Either() { return either_ptr; }
+    static Slash Fwd() { return fwd_ptr; }
+    static Slash Bwd() { return bwd_ptr; }
+    static Slash Either() { return either_ptr; }
 
     const std::string ToStr() const {
         switch (slash_) {
@@ -60,7 +58,7 @@ public:
         }
     }
 
-    static const Slash* FromStr(const std::string& string) {
+    static Slash FromStr(const std::string& string) {
         if (string ==  "/")
                 return fwd_ptr;
         else if (string == "\\")
@@ -70,22 +68,22 @@ public:
         throw std::runtime_error("Slash must be initialized with slash string.");
     }
 
-    bool Matches(const Slash* other) const {
+    bool Matches(Slash other) const {
         return (this->slash_ == EitherApp ||
                 other->slash_ == EitherApp ||
                 other->slash_ == this->slash_); }
 
-    bool operator==(const Slash* other) const { return this->slash_ == other->slash_; }
+    bool operator==(Slash other) const { return this->slash_ == other->slash_; }
 
     bool IsForward() const { return slash_ == FwdApp; } 
     bool IsBackward() const { return slash_ == BwdApp; } 
 
 private:
-    Slash(SlashE slash): slash_(slash) {}
+    Slashes(SlashE slash): slash_(slash) {}
 
-    static const Slash* fwd_ptr;
-    static const Slash* bwd_ptr;
-    static const Slash* either_ptr;
+    static Slash fwd_ptr;
+    static Slash bwd_ptr;
+    static Slash either_ptr;
 
     SlashE slash_;
 };
@@ -110,7 +108,7 @@ public:
 
     virtual std::string ToStrWithoutFeat() const = 0;
 
-    Cat StripFeat() const { return parse(this->ToStrWithoutFeat()); }
+    Cat StripFeat() const { return Parse(this->ToStrWithoutFeat()); }
 
     inline int Hashcode() { return id_; }
 
@@ -124,7 +122,7 @@ public:
     // get i'th left (or right) child category of functor
     // when i== 0, return `this`.
     // performing GetLeft (GetRight) with exceeding `i` will
-    // result in undefined behavior. e.g.GetLeft<10>(cat::parse("(((A/B)/C)/D)"))
+    // result in undefined behavior. e.g.GetLeft<10>(cat::Parse("(((A/B)/C)/D)"))
     template<int i> Cat GetLeft() const;
     template<int i> Cat GetRight() const;
 
@@ -132,7 +130,7 @@ public:
     // when i == 0, check if the category itself is functor.
     template<int i> bool HasFunctorAtLeft() const;
     template<int i> bool HasFunctorAtRight() const;
-    virtual const Slash* GetSlash() const = 0;
+    virtual Slash GetSlash() const = 0;
 
     virtual const std::string WithBrackets() const = 0;
     virtual bool IsModifier() const = 0;
@@ -168,53 +166,35 @@ private:
 // perform composition where `Order` is size of `tail` - 1.
 //   e.g.  A/B B/C/D/E -> A/C/D/E
 //
-// Cat ex = cat::parse("(((B/C)/D)/E)");
-// compose<3>(cat::parse("A"), Slash::Fwd(), ex);
+// Cat ex = cat::Parse("(((B/C)/D)/E)");
+// compose<3>(cat::Parse("A"), Slash::Fwd(), ex);
 //   --> (((A/C)/D)/E)
 
-template<int Order, int Step=0>
-struct Compose
-{
-    static Cat func(Cat head, const Slash* op, Cat tail) {
-        Cat target = tail->GetLeft<Order>();
-        target = target->GetRight();
-        return Compose<Order-1, Step+1>::func(
-                make(head, op, target), tail->GetLeft<Order-1>()->GetSlash(), tail);
-    }
-};
-
-template<int Step>
-struct Compose<0, Step>
-{
-    static Cat func(Cat head, const Slash* op, Cat tail) {
-        return make(head, op, tail->GetRight());
-    }
-};
-
-template<int Order, int Step=0>
-Cat compose(Cat head, const Slash* op, Cat tail) {
-    return Compose<Order, Step>::func(head, op, tail);
+template<int Order>
+Cat Compose(Cat head, Slash op, Cat tail) {
+    Cat target = tail->GetLeft<Order>();
+    target = target->GetRight();
+    return Compose<Order-1>(Make(head, op, target),
+            tail->GetLeft<Order-1>()->GetSlash(), tail);
 }
+
+template<> Cat Compose<0>(Cat head, Slash op, Cat tail);
+
 
 template<int i> bool Category::HasFunctorAtLeft() const {
-    return this->IsFunctor() ? GetLeft()->HasFunctorAtLeft<i-1>() : false;
-}
-
+    return this->IsFunctor() ? GetLeft()->HasFunctorAtLeft<i-1>() : false; }
 
 template<int i> bool Category::HasFunctorAtRight() const {
-    return this->IsFunctor() ? GetRight()->HasFunctorAtRight<i-1>() : false;
-}
+    return this->IsFunctor() ? GetRight()->HasFunctorAtRight<i-1>() : false; }
 
 template<> bool Category::HasFunctorAtLeft<0>() const;
 template<> bool Category::HasFunctorAtRight<0>() const;
 
 template<int i> Cat Category::GetLeft() const {
-    return GetLeft()->GetLeft<i-1>();
-}
+    return GetLeft()->GetLeft<i-1>(); }
 
 template<int i> Cat Category::GetRight() const {
-    return GetRight()->GetRight<i-1>();
-}
+    return GetRight()->GetRight<i-1>(); }
 
 template<> Cat Category::GetLeft<0>() const;
 template<> Cat Category::GetRight<0>() const;
@@ -236,7 +216,7 @@ public:
 
     Cat GetRight() const { return right_;  }
 
-    const Slash* GetSlash() const { return slash_;  }
+    Slash GetSlash() const { return slash_;  }
 
     const std::string WithBrackets() const { return "(" + ToStr() + ")"; }
 
@@ -293,16 +273,16 @@ public:
     }
 
 private:
-    Functor(Cat left, const Slash* slash, Cat right, std::string& semantics)
+    Functor(Cat left, Slash slash, Cat right, std::string& semantics)
     : Category(left->WithBrackets() + slash->ToStr() + right->WithBrackets(),
             semantics), left_(left), right_(right), slash_(slash) {
     }
 
-    friend Cat parse_uncached(const std::string& cat);
+    friend Cat Parse_uncached(const std::string& cat);
 
     Cat left_;
     Cat right_;
-    const Slash* slash_;
+    Slash slash_;
 };
 
 class AtomicCategory: public Category
@@ -318,7 +298,7 @@ public:
 
     Cat GetRight() const { throw std::logic_error("not implemented"); }
 
-    const Slash* GetSlash() const { throw std::logic_error("not implemented"); }
+    Slash GetSlash() const { throw std::logic_error("not implemented"); }
 
     const std::string WithBrackets() const { return ToStr(); }
 
@@ -377,7 +357,7 @@ private:
         : Category(type + feat->ToStr(), semantics),
           type_(type), feat_(feat) {}
 
-    friend Cat parse_uncached(const std::string& cat);
+    friend Cat Parse_uncached(const std::string& cat);
 
     std::string type_;
     Feat feat_;

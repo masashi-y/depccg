@@ -6,7 +6,7 @@ from collections import defaultdict, OrderedDict
 import numpy as np
 from ccgbank import AutoReader
 from tree import Leaf, get_leaves
-from utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
+from py_utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
 import chainer
 import multiprocessing
 import chainer.functions as F
