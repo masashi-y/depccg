@@ -265,18 +265,19 @@ class GeneralizedForwardComposition: public Combinator
         : Combinator(GFC), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (left->IsFunctor() &&
-                // right->IsFunctor() &&
                 right->HasFunctorAtLeft<Order+1>() &&
-                left->GetRight()->Matches(right->GetLeft<Order+1>()) &&
+                left->GetRight()->Matches(right->GetLeft<Order+2>()) &&
                 left->GetSlash() == left_ &&
-                right->GetLeft<Order>()->GetSlash() == right_);
+                right->GetLeft<Order+1>()->GetSlash() == right_);
     }
 
     Cat Apply(Cat left, Cat right) const {
         if (left->IsModifier()) return right;
-        Cat res = cat::make(
-                cat::make(left->GetLeft(), result_, right->GetLeft()->GetRight()),
-                    right->GetSlash(), right->GetRight());
+        // Cat res = cat::make(
+        //         cat::make(left->GetLeft(), result_, right->GetLeft()->GetRight()),
+        //             right->GetSlash(), right->GetRight());
+        Cat res = cat::compose<Order+1>(left->GetLeft(), result_, right);
+        return res;
         return cat::CorrectWildcardFeatures(res,
                 right->GetLeft()->GetLeft(), left->GetRight());
     }

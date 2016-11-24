@@ -29,8 +29,6 @@ Cat parse(const std::string& cat);
 
 Cat make(Cat left, const Slash* op, Cat right);
 
-
-
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
 // const std::regex reg_no_punct("[a-zA-Zz]+");
@@ -122,12 +120,14 @@ public:
     virtual Feat GetFeat() const = 0;
     virtual Cat GetLeft() const = 0;
     virtual Cat GetRight() const = 0;
+
     // get i'th left (or right) child category of functor
     // when i== 0, return `this`.
     // performing GetLeft (GetRight) with exceeding `i` will
     // result in undefined behavior. e.g.GetLeft<10>(cat::parse("(((A/B)/C)/D)"))
     template<int i> Cat GetLeft() const;
     template<int i> Cat GetRight() const;
+
     // test if i'th left (or right) child category is functor.
     // when i == 0, check if the category itself is functor.
     template<int i> bool HasFunctorAtLeft() const;
@@ -179,7 +179,7 @@ struct Compose
         Cat target = tail->GetLeft<Order>();
         target = target->GetRight();
         return Compose<Order-1, Step+1>::func(
-                make(head, op, target), tail->GetSlash(), tail);
+                make(head, op, target), tail->GetLeft<Order-1>()->GetSlash(), tail);
     }
 };
 
