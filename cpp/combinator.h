@@ -10,6 +10,7 @@ namespace myccg {
 namespace combinator {
 
 using cat::Slash;
+using cat::Slashes;
 using cat::Cat;
 
 enum RuleType {
@@ -76,7 +77,7 @@ public:
     }
 
     Cat Apply(Cat left, Cat right) const {
-        return make(right, Slash::Bwd(), right);
+        return cat::Make(right, Slashes::Bwd(), right);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
@@ -124,6 +125,7 @@ class SpecialCombinator: public Combinator
     public:
     SpecialCombinator(Cat left, Cat right, Cat result, bool head_is_left)
     : Combinator(NOISE), left_(left), right_(right), result_(result), head_is_left_(head_is_left) {}
+
     bool CanApply(Cat left, Cat right) const {
         return left_->Matches(left) && right_->Matches(right);
     }
@@ -143,10 +145,9 @@ class ForwardApplication: public Combinator
     public:
     ForwardApplication(): Combinator(FA) {}
     bool CanApply(Cat left, Cat right) const {
-        if (left->IsFunctor())
-            return (left->GetSlash() == Slash::Fwd() &&
-                    left->GetRight()->Matches(right));
-        return false;
+        return (left->IsFunctor() &&
+                left->GetSlash() == Slashes::Fwd() &&
+                left->GetRight()->Matches(right));
     }
     Cat Apply(Cat left, Cat right) const {
         if (left->IsModifier()) return right;
@@ -165,18 +166,13 @@ class BackwardApplication: public Combinator
     public:
     BackwardApplication(): Combinator(BA) {}
     bool CanApply(Cat left, Cat right) const {
-        if (right->IsFunctor())
-            return (right->GetSlash() == Slash::Bwd() &&
-                    right->GetRight()->Matches(left));
-        return false;
+        return (right->IsFunctor() &&
+                right->GetSlash() == Slashes::Bwd() &&
+                right->GetRight()->Matches(left));
     }
 
     Cat Apply(Cat left, Cat right) const {
-        Cat res;
-        if (right->IsModifier())
-            res = left;
-        else
-            res = right->GetLeft();
+        Cat res = right->IsModifier() ? left : right->GetLeft();
         return cat::CorrectWildcardFeatures(res, right->GetRight(), left);
     }
 
@@ -187,145 +183,69 @@ class BackwardApplication: public Combinator
     const std::string ToStr() const { return "<"; }
 };
 
-class ForwardComposition: public Combinator
-{
-    public:
-    ForwardComposition(const Slash* left, const Slash* right, const Slash* result)
-        : Combinator(FC), left_(left), right_(right), result_(result) {}
-
-    bool CanApply(Cat left, Cat right) const {
-        if (left->IsFunctor() && right->IsFunctor())
-            return (left->GetRight()->Matches(right->GetLeft()) &&
-                    left->GetSlash() == left_ &&
-                    right->GetSlash() == right_);
-        return false;
-    }
-
-    Cat Apply(Cat left, Cat right) const {
-        Cat res;
-        if (left->IsModifier())
-            res = right;
-        else
-            res = cat::make(left->GetLeft(), result_, right->GetRight());
-        return cat::CorrectWildcardFeatures(res, right->GetLeft(), left->GetRight());
-    }
-
-    bool HeadIsLeft(Cat left, Cat right) const {
-        return ! (left->IsModifier() || left->IsTypeRaised());
-    }
-
-    const std::string ToStr() const { return ">B"; }
-
-private:
-    const Slash* left_;
-    const Slash* right_;
-    const Slash* result_;
-};
-
-class BackwardComposition: public Combinator
-{
-    public:
-    BackwardComposition(const Slash* left, const Slash* right, const Slash* result)
-        : Combinator(BX), left_(left), right_(right), result_(result) {}
-
-    bool CanApply(Cat left, Cat right) const {
-        if (left->IsFunctor() && right->IsFunctor())
-            return (right->GetRight()->Matches(left->GetLeft()) &&
-                    left->GetSlash() == left_ && right->GetSlash() == right_ &&
-                    ! left->GetLeft()->IsNorNP());
-        return false;
-    }
-
-    Cat Apply(Cat left, Cat right) const {
-        Cat res;
-        if (right->IsModifier())
-            res = left;
-        else
-            res = cat::make(right->GetLeft(), result_, left->GetRight());
-        return cat::CorrectWildcardFeatures(res, left->GetLeft(), right->GetRight());
-    }
-
-    bool HeadIsLeft(Cat left, Cat right) const {
-        return right->IsModifier() || right->IsTypeRaised();
-    }
-
-    const std::string ToStr() const { return "<B"; }
-
-private:
-    const Slash* left_;
-    const Slash* right_;
-    const Slash* result_;
-};
-
 template<int Order>
 class GeneralizedForwardComposition: public Combinator
 {
     public:
-    GeneralizedForwardComposition(const Slash* left, const Slash* right, const Slash* result)
-        : Combinator(GFC), left_(left), right_(right), result_(result) {}
+    GeneralizedForwardComposition(Slash left, Slash right, Slash result)
+        : Combinator(Order == 0 ? FC : GFC), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (left->IsFunctor() &&
-                right->HasFunctorAtLeft<Order+1>() &&
-                left->GetRight()->Matches(right->GetLeft<Order+2>()) &&
+                right->HasFunctorAtLeft<Order>() &&
+                left->GetRight()->Matches(right->GetLeft<Order+1>()) &&
                 left->GetSlash() == left_ &&
-                right->GetLeft<Order+1>()->GetSlash() == right_);
+                right->GetLeft<Order>()->GetSlash() == right_);
     }
 
     Cat Apply(Cat left, Cat right) const {
-        if (left->IsModifier()) return right;
-        // Cat res = cat::make(
-        //         cat::make(left->GetLeft(), result_, right->GetLeft()->GetRight()),
-        //             right->GetSlash(), right->GetRight());
-        Cat res = cat::compose<Order+1>(left->GetLeft(), result_, right);
-        return res;
+        Cat res = left->IsModifier() ? right :
+            cat::Compose<Order>(left->GetLeft(), result_, right);
         return cat::CorrectWildcardFeatures(res,
-                right->GetLeft()->GetLeft(), left->GetRight());
+                right->GetLeft<Order+1>(), left->GetRight());
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
         return ! (left->IsModifier() || left->IsTypeRaised());
     }
 
-    const std::string ToStr() const { return ">Bx"; }
+    const std::string ToStr() const { return ">B" + std::to_string(Order); }
 
 private:
-    const Slash* left_;
-    const Slash* right_;
-    const Slash* result_;
+    Slash left_;
+    Slash right_;
+    Slash result_;
 };
 
 template<int Order>
 class GeneralizedBackwardComposition: public Combinator
 {
     public:
-    GeneralizedBackwardComposition(const Slash* left, const Slash* right, const Slash* result)
-        : Combinator(GBX), left_(left), right_(right), result_(result) {}
+    GeneralizedBackwardComposition(Slash left, Slash right, Slash result)
+        : Combinator(Order == 0 ? BX : GBX), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
-        if (left->IsFunctor() && right->IsFunctor() && left->GetLeft()->IsFunctor())
-            return (right->GetRight()->Matches(left->GetLeft()->GetLeft()) &&
-                    left->GetLeft()->GetSlash() == left_ &&
-                    right->GetSlash() == right_ &&
-                    ! left->GetLeft()->IsNorNP());
-        return false;
+        return (right->IsFunctor() &&
+                left->HasFunctorAtLeft<Order>() &&
+                right->GetRight()->Matches(left->GetLeft<Order+1>()) &&
+                left->GetLeft<Order>()->GetSlash() == left_ &&
+                right->GetSlash() == right_ &&
+                ! left->GetLeft<Order+1>()->IsNorNP());
     }
 
     Cat Apply(Cat left, Cat right) const {
-        if (right->IsModifier()) return left;
-        Cat res = cat::make(cat::make(
-                    right->GetLeft(), result_, left->GetLeft()->GetRight()),
-                left->GetSlash(), left->GetRight());
+        Cat res = right->IsModifier() ? left :
+            cat::Compose<Order>(right->GetLeft(), result_, left);
         return cat::CorrectWildcardFeatures(
-                res, left->GetLeft()->GetLeft(), right->GetRight());
+                res, left->GetLeft<Order+1>(), right->GetRight());
     }
     bool HeadIsLeft(Cat left, Cat right) const {
         return right->IsModifier() || right->IsTypeRaised();
     }
-    const std::string ToStr() const { return "<Bx"; }
+    const std::string ToStr() const { return "<B" + std::to_string(Order); }
 
 private:
-    const Slash* left_;
-    const Slash* right_;
-    const Slash* result_;
+    Slash left_;
+    Slash right_;
+    Slash result_;
 };
 
 extern std::vector<Combinator*> binary_rules;

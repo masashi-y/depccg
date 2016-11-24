@@ -68,17 +68,17 @@ void test()
 
     auto fwd  = new combinator::ForwardApplication();
     auto bwd  = new combinator::BackwardApplication();
-    auto Bx   = new combinator::BackwardComposition(cat::Slash::Fwd(), cat::Slash::Bwd(), cat::Slash::Fwd());
+    auto Bx   = new combinator::GeneralizedBackwardComposition<0>(cat::Slashes::Fwd(), cat::Slashes::Bwd(), cat::Slashes::Fwd());
     auto conj = new combinator::Conjunction();
     auto rp   = new combinator::RemovePunctuation(false);
 
     const Node* leaves[] = {
-        new Leaf("this",     cat::parse("NP"),              0),
-        new Leaf("is",       cat::parse("(S[dcl]\\NP)/NP"), 1),
-        new Leaf("a",        cat::parse("NP[nb]/N"),        2),
-        new Leaf("new",      cat::parse("N/N"),             3),
-        new Leaf("sentence", cat::parse("N"),               4),
-        new Leaf(".",        cat::parse("."),               5),
+        new Leaf("this",     cat::Parse("NP"),              0),
+        new Leaf("is",       cat::Parse("(S[dcl]\\NP)/NP"), 1),
+        new Leaf("a",        cat::Parse("NP[nb]/N"),        2),
+        new Leaf("new",      cat::Parse("N/N"),             3),
+        new Leaf("sentence", cat::Parse("N"),               4),
+        new Leaf(".",        cat::Parse("."),               5),
     };
 
     const Tree* tree1 = APPLY_BINARY(fwd, leaves[3], leaves[4]);
@@ -97,17 +97,17 @@ void test()
     ShowDerivation(tree5);
 
     const Node* leaves2[] = {
-        new Leaf("Ed",      cat::parse("N"),                0),
-        new Leaf("saw",     cat::parse("(S[dcl]\\NP)/NP"),  1),
-        new Leaf("briefly", cat::parse("(S\\NP)\\(S\\NP)"), 2),
-        new Leaf("Tom",     cat::parse("N"),                3),
-        new Leaf("and",     cat::parse("conj"),             4),
-        new Leaf("Taro",    cat::parse("N"),                5),
-        new Leaf(".",       cat::parse("."),                6),
+        new Leaf("Ed",      cat::Parse("N"),                0),
+        new Leaf("saw",     cat::Parse("(S[dcl]\\NP)/NP"),  1),
+        new Leaf("briefly", cat::Parse("(S\\NP)\\(S\\NP)"), 2),
+        new Leaf("Tom",     cat::Parse("N"),                3),
+        new Leaf("and",     cat::Parse("conj"),             4),
+        new Leaf("Taro",    cat::Parse("N"),                5),
+        new Leaf(".",       cat::Parse("."),                6),
     };
-    const Tree* tree2_1 = APPLY_UNARY(cat::parse("NP"), leaves2[0]); // Ed NP
-    const Tree* tree2_2 = APPLY_UNARY(cat::parse("NP"), leaves2[3]); // Tom NP
-    const Tree* tree2_3 = APPLY_UNARY(cat::parse("NP"), leaves2[5]); // Taro NP
+    const Tree* tree2_1 = APPLY_UNARY(cat::Parse("NP"), leaves2[0]); // Ed NP
+    const Tree* tree2_2 = APPLY_UNARY(cat::Parse("NP"), leaves2[3]); // Tom NP
+    const Tree* tree2_3 = APPLY_UNARY(cat::Parse("NP"), leaves2[5]); // Taro NP
     const Tree* tree2_4 = APPLY_BINARY(Bx, leaves2[1], leaves2[2]); // saw briefly (S[dcl]\NP)/NP
     const Tree* tree2_5 = APPLY_BINARY(conj, leaves2[4], tree2_3); // and Taro NP\NP
     const Tree* tree2_6 = APPLY_BINARY(bwd, tree2_2, tree2_5); // Tom and Taro NP

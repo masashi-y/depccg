@@ -75,8 +75,8 @@ AStarParser::AStarParser(const tagger::Tagger* tagger, const std::string& model)
   unary_rules_(utils::LoadUnary(model + "/unary_rules.txt")),
   binary_rules_(combinator::binary_rules),
   seen_rules_(utils::LoadSeenRules(model + "/seen_rules.txt")),
-  possible_root_cats_({cat::parse("S[dcl]"), cat::parse("S[wq]"),
-    cat::parse("S[q]"), cat::parse("S[qem]"), cat::parse("NP")}) {}
+  possible_root_cats_({cat::Parse("S[dcl]"), cat::Parse("S[wq]"),
+    cat::Parse("S[q]"), cat::Parse("S[qem]"), cat::Parse("NP")}) {}
 
 
 bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {

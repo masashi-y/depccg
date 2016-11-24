@@ -56,7 +56,7 @@ private:
     std::vector<RuleCache>& GetRules(Cat left, Cat right);
 
     NodePtr failure_node = std::make_shared<tree::Tree>(
-            cat::parse("XX"), new tree::Leaf("FAILURE", cat::parse("XX"), 0));
+            cat::Parse("XX"), new tree::Leaf("FAILURE", cat::Parse("XX"), 0));
 
 
     const tagger::Tagger* tagger_;

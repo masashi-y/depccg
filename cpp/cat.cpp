@@ -8,6 +8,10 @@ namespace cat {
 
 const char* slashes = "/\\|";
 
+template<> Cat Compose<0>(Cat head, Slash op, Cat tail) {
+    return Make(head, op, tail->GetRight());
+}
+
 template<> bool Category::HasFunctorAtLeft<0>() const {
     return this->IsFunctor();
 }
@@ -24,15 +28,15 @@ std::unordered_map<std::string, Cat> cache;
 
 int Category::num_cats = 0;
 
-const Slash* Slash::fwd_ptr = new Slash(FwdApp);
-const Slash* Slash::bwd_ptr = new Slash(BwdApp);
-const Slash* Slash::either_ptr = new Slash(EitherApp);
+Slash Slashes::fwd_ptr = new Slashes(FwdApp);
+Slash Slashes::bwd_ptr = new Slashes(BwdApp);
+Slash Slashes::either_ptr = new Slashes(EitherApp);
 
 std::string AtomicCategory::ToStrWithoutFeat() const {
     return utils::ReplaceAll(utils::ReplaceAll(ToStr(), "[X]", ""), "[nb]", "");
 }
 
-Cat parse(const std::string& cat) {
+Cat Parse(const std::string& cat) {
     Cat res;
     if (cache.count(cat) != 0) {
         return cache[cat];
@@ -41,7 +45,7 @@ Cat parse(const std::string& cat) {
         if (cache.count(name) != 0) {
             res = cache[name];
         } else {
-            res = parse_uncached(name);
+            res = Parse_uncached(name);
             if (name != cat) {
                 #pragma omp critical(parse_name)
                 cache.emplace(name, res);
@@ -54,7 +58,7 @@ Cat parse(const std::string& cat) {
 }
 
 
-Cat parse_uncached(const std::string& cat) {
+Cat Parse_uncached(const std::string& cat) {
     std::string new_cat = cat;
     std::string semantics;
     if (new_cat.back() == '}') {
@@ -78,19 +82,21 @@ Cat parse_uncached(const std::string& cat) {
 
         return new AtomicCategory(type, new FeatureValue(feat), semantics);
     } else {
-        Cat left = parse(new_cat.substr(0, op_idx));
-        const Slash* slash = Slash::FromStr(new_cat.substr(op_idx, 1));
-        Cat right = parse(new_cat.substr(op_idx + 1));
+        Cat left = Parse(new_cat.substr(0, op_idx));
+        Slash slash = Slashes::FromStr(new_cat.substr(op_idx, 1));
+        Cat right = Parse(new_cat.substr(op_idx + 1));
         return new Functor(left, slash, right, semantics);
     }
 }
 
 Cat Category::Substitute(Feat feat) const {
-    return cat::parse(utils::ReplaceAll(str_, kWILDCARD->ToStr(), feat->ToStr()));
+    if (feat->IsEmpty())
+        return this;
+    return cat::Parse(utils::ReplaceAll(str_, kWILDCARD->ToStr(), feat->ToStr()));
 }
 
-Cat make(Cat left, const Slash* op, Cat right) {
-    return parse(left->WithBrackets() + op->ToStr() + right->WithBrackets());
+Cat Make(Cat left, Slash op, Cat right) {
+    return Parse(left->WithBrackets() + op->ToStr() + right->WithBrackets());
 }
 
 
@@ -98,17 +104,17 @@ Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
     return to_correct->Substitute(match1->GetSubstitution(match2));
 }
 
-Cat COMMA       = parse(",");
-Cat SEMICOLON   = parse(";");
-Cat CONJ        = parse("conj");
-Cat N           = parse("N");
-Cat LQU         = parse("LQU");
-Cat LRB         = parse("LRB");
-Cat NP          = parse("NP");
-Cat NPbNP       = parse("NP\\NP");
-Cat PP          = parse("PP");
-Cat PREPOSITION = parse("PP/NP");
-Cat PR          = parse("PR");
+Cat COMMA       = Parse(",");
+Cat SEMICOLON   = Parse(";");
+Cat CONJ        = Parse("conj");
+Cat N           = Parse("N");
+Cat LQU         = Parse("LQU");
+Cat LRB         = Parse("LRB");
+Cat NP          = Parse("NP");
+Cat NPbNP       = Parse("NP\\NP");
+Cat PP          = Parse("PP");
+Cat PREPOSITION = Parse("PP/NP");
+Cat PR          = Parse("PR");
 
 
 } // namespace cat
