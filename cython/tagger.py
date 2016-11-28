@@ -53,8 +53,73 @@ class CCGBankDataset(chainer.dataset.DatasetMixin):
             x[14 + i] = self.caps[cap]
         return x, t
 
+class MultiProcessTaggerMixin(object):
+    def __init__(self):
+        pass
 
-class EmbeddingTagger(chainer.Chain):
+    # these methods are expected to be implemented.
+    def feature_extract(self, tokens):
+        pass
+
+    # these methods are expected to be implemented.
+    def predict(self, feats):
+        pass
+
+    def predict_doc(self, doc, batchsize=100):
+        """
+        doc list(tuple(id, sent))
+        """
+        def feature_extractor(in_queue, out_queue):
+            while True:
+                task = in_queue.get()
+                if task is None:
+                    in_queue.task_done()
+                    break
+                i, tokens = task
+                feature = self.discrete_feature_extractor(tokens)
+                in_queue.task_done()
+                out_queue.put((i, feature))
+            return
+
+        data_queue = multiprocessing.JoinableQueue()
+        res_queue = multiprocessing.Queue()
+        n_process = multiprocessing.cpu_count()
+        for i in range(n_process):
+            p = multiprocessing.Process(
+                    target=feature_extractor, args=(data_queue, res_queue))
+            p.start()
+
+        for i, sent in enumerate(doc):
+            data_queue.put((i, sent))
+
+        for _ in range(n_process):
+            data_queue.put(None)
+
+        data_queue.join()
+        batch_feats = []
+        batch_lens = []
+        batch_ids = []
+        res = []
+        for _ in xrange(0, len(doc), batchsize):
+            for i in range(batchsize):
+                if res_queue.empty(): break
+                idx, feat = res_queue.get()
+                batch_feats.extend(feat)
+                batch_lens.append(len(feat))
+                batch_ids.append(idx)
+            ys = self.predict(batch_feats)
+            prev = 0
+            for idx, length in zip(batch_ids, batch_lens):
+                res.append((idx, doc[idx], ys[prev:prev+length]))
+                prev += length
+            assert prev == ys.shape[0]
+            batch_feats = []
+            batch_lens = []
+            batch_ids = []
+        return res
+
+
+class EmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
     """
     model proposed in:
     A* CCG Parsing with a Supertag-factored Model, Lewis and Steedman, EMNLP 2014
@@ -156,8 +221,7 @@ class EmbeddingTagger(chainer.Chain):
             list[Leaf]
         """
         if isinstance(tokens[0], str):
-            contexts = get_context_by_window(
-                map(feature_extract, tokens), 3, lpad=lpad, rpad=rpad)
+            contexts = self.feature_extract(tokens)
         else:
             contexts = tokens
 
@@ -181,59 +245,9 @@ class EmbeddingTagger(chainer.Chain):
         ys = self.linear(h)
         return ys.data
 
-    def predict_doc(self, doc, batchsize=100):
-        """
-        doc list(tuple(id, sent))
-        """
-        def feature_extractor(in_queue, out_queue):
-            while True:
-                task = in_queue.get()
-                if task is None:
-                    in_queue.task_done()
-                    break
-                i, tokens = task
-                feature = get_context_by_window(
-                        map(feature_extract, tokens), 3, lpad=lpad, rpad=rpad)
-                in_queue.task_done()
-                out_queue.put((i, feature))
-            return
-
-        data_queue = multiprocessing.JoinableQueue()
-        res_queue = multiprocessing.Queue()
-        n_process = multiprocessing.cpu_count()
-        for i in range(n_process):
-            p = multiprocessing.Process(
-                    target=feature_extractor, args=(data_queue, res_queue))
-            p.start()
-
-        for i, sent in enumerate(doc):
-            data_queue.put((i, sent))
-
-        for _ in range(n_process):
-            data_queue.put(None)
-
-        data_queue.join()
-        batch_feats = []
-        batch_lens = []
-        batch_ids = []
-        res = []
-        for _ in xrange(0, len(doc), batchsize):
-            for i in range(batchsize):
-                if res_queue.empty(): break
-                idx, feat = res_queue.get()
-                batch_feats.extend(feat)
-                batch_lens.append(len(feat))
-                batch_ids.append(idx)
-            ys = self.predict(batch_feats)
-            prev = 0
-            for idx, length in zip(batch_ids, batch_lens):
-                res.append((idx, doc[idx], ys[prev:prev+length]))
-                prev += length
-            assert prev == ys.shape[0]
-            batch_feats = []
-            batch_lens = []
-            batch_ids = []
-        return res
+    def feature_extract(self, tokens):
+        return get_context_by_window(
+                map(feature_extract, tokens), 3, lpad=lpad, rpad=rpad)
 
     @property
     def cats(self):

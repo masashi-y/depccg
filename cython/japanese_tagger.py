@@ -7,7 +7,10 @@ import chainer.links as L
 import chainer.functions as F
 from chainer import training, Variable
 from chainer.training import extensions
+from chainer.dataset import convert
+from chainer.optimizer import WeightDecay
 from utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
+from tagger import MultiProcessTaggerMixin
 from collections import defaultdict
 from japanese_ccg import JaCCGReader
 from tree import Leaf, Tree, get_leaves
@@ -22,10 +25,11 @@ class JaCCGInspector(object):
     """
     create train & validation data
     """
-    def __init__(self, filepath, freq_cut=10):
+    def __init__(self, filepath, word_freq_cut, cat_freq_cut):
         self.filepath = filepath
          # those categories whose frequency < freq_cut are discarded.
-        self.freq_cut = freq_cut
+        self.word_freq_cut = word_freq_cut
+        self.cat_freq_cut = cat_freq_cut
         self.seen_rules = defaultdict(int) # seen binary rules
         self.unary_rules = defaultdict(int) # seen unary rules
         self.cats = defaultdict(int) # all cats
@@ -84,11 +88,13 @@ class JaCCGInspector(object):
                     words, CONTEXT, lpad=LPAD, rpad=RPAD)
             assert len(samples) == len(cats)
             for cat, sample in zip(cats, samples):
-                if self.cats[cat] >= self.freq_cut:
+                if self.cats[cat] >= self.cat_freq_cut:
                     self.samples[" ".join(sample)] = cat
 
         self.cats = {k: v for (k, v) in self.cats.items() \
-                        if v >= self.freq_cut}
+                        if v >= self.cat_freq_cut}
+        self.words = {k: v for (k, v) in self.words.items() \
+                        if v >= self.word_freq_cut}
         with open(outdir + "/unary_rules.txt", "w") as f:
             self._write(self.unary_rules, f, comment_out_value=True)
         with open(outdir + "/seen_rules.txt", "w") as f:
@@ -125,16 +131,21 @@ class FeatureExtractor(object):
         self.unk_char = self.chars[UNK]
         self.max_char_len = max(len(w) for w in self.words if w != UNK)
 
-    def __call__(self, unicode_str):
-        items = unicode_str.strip().split(" ")
-        x = -np.ones((WINDOW_SIZE, self.max_char_len + 1), 'i')
+    def __call__(self, tokens, max_len=None):
+        if max_len is None:
+            max_len = max(len(w) for w in tokens)
+        w = np.zeros((WINDOW_SIZE,), 'i')
+        c = -np.ones((WINDOW_SIZE, max_len + 1), 'i')
         l = np.zeros((WINDOW_SIZE,), 'f')
-        for i, word in enumerate(items):
-            x[i, 0] = self.words.get(word, self.unk_word)
+        for i, word in enumerate(tokens):
+            w[i] = self.words.get(word, self.unk_word)
             l[i] = len(word)
-            for j, char in enumerate(word, 1):
-                x[i, j] = self.chars.get(char, self.unk_char)
-        return x, l
+            if word == LPAD or word == RPAD:
+                c[i, 0] = self.chars[PAD]
+            else:
+                for j, char in enumerate(word):
+                    c[i, j] = self.chars.get(char, self.unk_char)
+        return w, c, l
 
 class JaCCGTaggerDataset(chainer.dataset.DatasetMixin):
     def __init__(self, model_path, samples_path):
@@ -157,12 +168,13 @@ class JaCCGTaggerDataset(chainer.dataset.DatasetMixin):
             second till the last columns are filled with character id.
         """
         line, target = self.samples[i]
-        x, l = self.extractor(line)
+        items = line.strip().split(" ")
+        x, c, l = self.extractor(items)
         t = np.asarray(self.targets.get(target, IGNORE), 'i')
-        return x, l, t
+        return x, c, l, t
 
 
-class JaCCGEmbeddingTagger(chainer.Chain):
+class JaCCGEmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
     def __init__(self, model_path, word_dim=None, char_dim=None):
         self.model_path = model_path
         defs_file = model_path + "/tagger_defs.txt"
@@ -183,32 +195,32 @@ class JaCCGEmbeddingTagger(chainer.Chain):
 
         self.extractor = FeatureExtractor(model_path)
         self.targets = read_model_defs(model_path + "/targets.txt")
+        self.train = True
 
+        hidden_dim = 1000
         in_dim = WINDOW_SIZE * (self.word_dim + self.char_dim)
         super(JaCCGEmbeddingTagger, self).__init__(
                 emb_word=L.EmbedID(len(self.extractor.words), self.word_dim),
                 emb_char=L.EmbedID(len(self.extractor.chars),
                             self.char_dim, ignore_label=IGNORE),
-                linear=L.Linear(in_dim, len(self.targets)),
+                linear1=L.Linear(in_dim, hidden_dim),
+                linear2=L.Linear(hidden_dim, len(self.targets)),
                 )
 
-    def __call__(self, xs, ls, ts):
-        """
-        xs: Variable of shape(batchsize, windowsize, 1 + max_char_len)
-        ls: lengths of each word
-        ts:
-        """
-        words, chars = xs[:, :, 0], xs[:, :, 1:]
-        h_w = self.emb_word(words) #_(batchsize, windowsize, word_dim)
-        h_c = self.emb_char(chars) # (batchsize, windowsize, max_char_len, char_dim)
-        batchsize, windowsize, _, _ = h_c.shape
+    def __call__(self, ws, cs, ls, ts):
+        h_w = self.emb_word(ws) #_(batchsize, windowsize, word_dim)
+        h_c = self.emb_char(cs) # (batchsize, windowsize, max_char_len, char_dim)
+        batchsize, windowsize, _, _ = h_c.data.shape
         # (batchsize, windowsize, char_dim)
         h_c = F.sum(h_c, 2)
         h_c, ls = F.broadcast(h_c, F.reshape(ls, (batchsize, windowsize, 1)))
         h_c = h_c / ls
         h = F.concat([h_w, h_c], 2)
         h = F.reshape(h, (batchsize, -1))
-        ys = self.linear(h)
+        # ys = self.linear1(h)
+        h = F.relu(self.linear1(h))
+        h = F.dropout(h, ratio=.5, train=self.train)
+        ys = self.linear2(h)
 
         loss = F.softmax_cross_entropy(ys, ts)
         acc = F.accuracy(ys, ts)
@@ -218,18 +230,40 @@ class JaCCGEmbeddingTagger(chainer.Chain):
             }, self)
         return loss
 
-    def predict(self, tokens):
-        pass
+    def feature_extract(self, tokens):
+        max_len = max(len(w) for w in tokens)
+        contexts = get_context_by_window(
+                    tokens, CONTEXT, lpad=LPAD, rpad=RPAD)
+        return [self.extractor(c, max_len) for c in contexts]
 
-    def predict_doc(self, doc, batchsize=100):
-        pass
+    def predict(self, tokens):
+        contexts = self.feature_extract(tokens) \
+                if isinstance(tokens[0], unicode) else tokens
+
+        # contexts [(w, c, l), (w, c, l)]
+        ws, cs, ls = zip(*contexts)
+        ws = np.asarray(ws, 'i')
+        cs = np.asarray(cs, 'i')
+        ls = np.asarray(ls, 'f')
+        h_w = self.emb_word(ws) #_(batchsize, windowsize, word_dim)
+        h_c = self.emb_char(cs) # (batchsize, windowsize, max_char_len, char_dim)
+        batchsize, windowsize, _, _ = h_c.data.shape
+        # (batchsize, windowsize, char_dim)
+        h_c = F.sum(h_c, 2)
+        h_c, ls = F.broadcast(h_c, F.reshape(ls, (batchsize, windowsize, 1)))
+        h_c = h_c / ls
+        h = F.concat([h_w, h_c], 2)
+        h = F.reshape(h, (batchsize, -1))
+        ys = self.linear(h)
+        return ys.data
 
     @property
     def cats(self):
         return zip(*sorted(self.targets.items(), key=lambda x: x[1]))[0]
 
 def train(args):
-    model = JaCCGEmbeddingTagger(args.model, 50, 50)
+    model = JaCCGEmbeddingTagger(args.model,
+                args.word_emb_size, args.char_emb_size)
     if args.initmodel:
         print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)
@@ -239,16 +273,21 @@ def train(args):
     val = JaCCGTaggerDataset(args.model, args.val)
     val_iter = chainer.iterators.SerialIterator(
             val, args.batchsize, repeat=False, shuffle=False)
-    optimizer = chainer.optimizers.SGD(lr=0.01)
+    optimizer = chainer.optimizers.AdaGrad()
     optimizer.setup(model)
-    updater = training.StandardUpdater(train_iter, optimizer)
+    # optimizer.add_hook(WeightDecay(1e-8))
+    my_converter = lambda x, dev: convert.concat_examples(x, dev, (None,-1,None,None))
+    updater = training.StandardUpdater(train_iter, optimizer, converter=my_converter)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)
 
     val_interval = 5000, 'iteration'
     log_interval = 200, 'iteration'
-    val_model = model.copy()
 
-    trainer.extend(extensions.Evaluator(val_iter, val_model), trigger=val_interval)
+    eval_model = model.copy()
+    eval_model.train = False
+
+    trainer.extend(extensions.Evaluator(
+        val_iter, eval_model, my_converter), trigger=val_interval)
     trainer.extend(extensions.dump_graph('main/loss'))
     trainer.extend(extensions.snapshot(), trigger=val_interval)
     trainer.extend(extensions.snapshot_object(
@@ -275,9 +314,12 @@ if __name__ == "__main__":
             help="path to ccgbank data file")
     parser_c.add_argument("out",
             help="output directory path")
-    parser_c.add_argument("--freq-cut",
+    parser_c.add_argument("--cat-freq-cut",
             type=int, default=10,
             help="only allow categories which appear >= freq-cut")
+    parser_c.add_argument("--word-freq-cut",
+            type=int, default=5,
+            help="only allow words which appear >= freq-cut")
     parser_c.add_argument("--windowsize",
             type=int, default=3,
             help="window size to extract features")
@@ -287,7 +329,8 @@ if __name__ == "__main__":
 
     parser_c.set_defaults(func=
             (lambda args:
-                (lambda x=JaCCGInspector(args.path, args.freq_cut) :
+                (lambda x=JaCCGInspector(args.path,
+                    args.word_freq_cut, args.cat_freq_cut) :
                     x.create_traindata(args.out)
                         if args.subset == "train"
                     else  x.create_testdata(args.out))()
@@ -310,6 +353,12 @@ if __name__ == "__main__":
             type=int, default=1000, help="batch size")
     parser_t.add_argument("--epoch",
             type=int, default=20, help="epoch")
+    parser_t.add_argument("--word-emb-size",
+            type=int, default=50,
+            help="word embedding size")
+    parser_t.add_argument("--char-emb-size",
+            type=int, default=50,
+            help="character embedding size")
     parser_t.add_argument("--initmodel",
             help="initialize model with `initmodel`")
     parser_t.set_defaults(func=train)
