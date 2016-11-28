@@ -101,7 +101,8 @@ cpdef dict read_model_defs(str filepath):
     """
     cdef dict res = {}
     cdef int i
-    cdef str line, word, _
+    cdef str line
+    cdef unicode word, _
 
     for i, line in enumerate(open(filepath)):
         word, _ = line.strip().split(" ")
