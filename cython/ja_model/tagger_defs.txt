@@ -1,1 +1,0 @@
-{"model": "JaCCGEmbeddingTagger", "word_dim": 50, "char_dim": 50}

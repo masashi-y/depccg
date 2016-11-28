@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
-
-from tagger import EmbeddingTagger
-from astar import AStarParser
 import chainer
+import numpy as np
+from japanese_tagger import JaCCGEmbeddingTagger
+tagger = JaCCGEmbeddingTagger("ja_model2")
+chainer.serializers.load_npz("ja_model2/model_iter_15000", tagger)
 
-# print "loading tagger"
-# tagger = EmbeddingTagger("data/train")
-#
-# print "loading tagger model"
-# chainer.serializers.load_npz("data/train/model_iter_80000", tagger)
 
-print "loading parser"
-parser = AStarParser("model")
-
-print "parsing"
-input_text = "this is a new sentence ."
-res = parser.parse(input_text)
-print res
-
+sent = u"これ は テスト です ．".split(" ")
+res = np.argmax(tagger.predict(sent), 1)
+cats = tagger.cats
+for w, c in zip(sent, [cats[i] for i in list(res)]):
+    print "{}\t-->\t{}".format(w.encode("utf-8"), c)
