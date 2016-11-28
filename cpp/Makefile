@@ -26,7 +26,7 @@ chainer_tagger.o: chainer_tagger.cpp
 
 .PHONY: clean
 clean:
-	rm -rf chainer_tagger.so $(PROG) $(OBJS) $(DEPS) tagger.cpp chainer_tagger.so build
+	rm -rf chainer_tagger.so $(PROG) $(OBJS) $(DEPS) tagger.cpp chainer_tagger.so build *.pyc py_utils.so
 
 -include $(DEPS)
 
