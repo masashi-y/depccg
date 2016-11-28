@@ -2,7 +2,6 @@
 from astar import AStarParser
 import sys
 import re
-import multiprocessing
 import os
 import argparse
 from pathlib import Path
