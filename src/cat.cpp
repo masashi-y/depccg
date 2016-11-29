@@ -24,9 +24,19 @@ template<> Cat Category::GetLeft<0>() const { return this; }
 
 template<> Cat Category::GetRight<0>() const { return this; }
 
-std::unordered_map<std::string, Cat> cache;
+std::unordered_map<std::string, const Cacheable*> cache;
 
-int Category::num_cats = 0;
+int Cacheable::ids = 0;
+
+Cacheable::Cacheable() {
+    #pragma omp atomic capture
+    id_ = ids++;
+}
+
+void Cacheable::RegisterCache(const std::string& key) const {
+    #pragma omp critical(RegisterCache)
+    cache.emplace(key, this);
+}
 
 Slash Slashes::fwd_ptr = new Slashes(FwdApp);
 Slash Slashes::bwd_ptr = new Slashes(BwdApp);
@@ -36,23 +46,29 @@ std::string AtomicCategory::ToStrWithoutFeat() const {
     return utils::ReplaceAll(utils::ReplaceAll(ToStr(), "[X]", ""), "[nb]", "");
 }
 
+inline Feat FeatFromStr(const std::string& string) {
+    Feat res = new FeatureValue(string);
+    res->RegisterCache(string);
+    return res;
+}
+
+Cat Parse_uncached(const std::string& cat);
+
 Cat Parse(const std::string& cat) {
     Cat res;
-    if (cache.count(cat) != 0) {
-        return cache[cat];
+    if (cache.count(cat) > 0) {
+        return static_cast<Cat>(cache[cat]);
     } else {
         const std::string name = utils::DropBrackets(cat);
-        if (cache.count(name) != 0) {
-            res = cache[name];
+        if (cache.count(name) > 0) {
+            res = static_cast<Cat>(cache[name]);
         } else {
             res = Parse_uncached(name);
             if (name != cat) {
-                #pragma omp critical(parse_name)
-                cache.emplace(name, res);
+                res->RegisterCache(name);
             }
         }
-        #pragma omp critical(parse_cat)
-        cache.emplace(cat, res);
+        res->RegisterCache(cat);
         return res;
     }
 }
@@ -73,14 +89,21 @@ Cat Parse_uncached(const std::string& cat) {
 
     if (op_idx == -1) {
         int feat_idx = new_cat.find("[");
-        std::string feat;
+        std::string feat_str;
         std::string type = feat_idx == -1 ? new_cat : new_cat.substr(0, feat_idx);
         if (feat_idx > -1)
-            feat = new_cat.substr(feat_idx + 1, new_cat.find("]", feat_idx) - feat_idx - 1);
+            feat_str = new_cat.substr(
+                    feat_idx + 1, new_cat.find("]", feat_idx) - feat_idx - 1);
         else
-            feat = "";
+            feat_str = "";
 
-        return new AtomicCategory(type, new FeatureValue(feat), semantics);
+        Feat feat;
+        if (cache.count(feat_str) > 0) {
+            feat = static_cast<Feat>(cache[feat_str]);
+        } else {
+            feat = FeatFromStr(feat_str);
+        }
+        return new AtomicCategory(type, feat, semantics);
     } else {
         Cat left = Parse(new_cat.substr(0, op_idx));
         Slash slash = Slashes::FromStr(new_cat.substr(op_idx, 1));
@@ -115,6 +138,9 @@ Cat NPbNP       = Parse("NP\\NP");
 Cat PP          = Parse("PP");
 Cat PREPOSITION = Parse("PP/NP");
 Cat PR          = Parse("PR");
+Feat kWILDCARD  = FeatFromStr("X");
+Feat kNONE      = FeatFromStr("");
+Feat kNB        = FeatFromStr("nb");
 
 
 } // namespace cat

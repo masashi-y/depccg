@@ -4,8 +4,12 @@
 #include <utility>
 #include <limits>
 #include <memory>
-#include <omp.h>
 #include <algorithm>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "parser.h"
 #include "configure.h"
 
@@ -69,15 +73,6 @@ struct ChartCell
     float best_prob;
     NodePtr best;
 };
-
-
-AStarParser::AStarParser(const tagger::Tagger* tagger, const std::string& model)
- :tagger_(tagger),
-  unary_rules_(utils::LoadUnary(model + "/unary_rules.txt")),
-  binary_rules_(combinator::binary_rules),
-  seen_rules_(utils::LoadSeenRules(model + "/seen_rules.txt")),
-  possible_root_cats_({cat::Parse("S[dcl]"), cat::Parse("S[wq]"),
-    cat::Parse("S[q]"), cat::Parse("S[qem]"), cat::Parse("NP")}) {}
 
 
 bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {
@@ -161,12 +156,19 @@ AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<NodePtr> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
-    for (unsigned i = 0; i < doc.size(); i++) {
+    for (unsigned i = 0; i < doc.size(); i++)
         res[i] = Parse(doc[i], scores[i], beta);
-        // std::cout << "done: " << i << " length: " << utils::Split(doc[i], ' ').size() << std::endl;
-    }
     return res;
 }
+
+struct CompareFloatCat {
+    bool operator()
+    (const std::pair<float, Cat>& left, const std::pair<float, Cat>& right) const {
+        return left.first < right.first;
+    }
+};
+
+#define NORMALIZED_PROB(x, y) std::log( std::exp((x)) / (y) )
 
 NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     int pruning_size = 50;
@@ -177,60 +179,42 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     std::priority_queue<AgendaItem> agenda;
     int agenda_id = 0;
 
-    std::vector<std::pair<float, Cat>> scored_cats[MAX_LENGTH];
+    float totals[MAX_LENGTH];
+
+    std::priority_queue<std::pair<float, Cat>,
+                        std::vector<std::pair<float, Cat>>,
+                        CompareFloatCat> scored_cats[MAX_LENGTH];
 
     for (int i = 0; i < sent_size; i++) {
-        float total = 0.0;
+        totals[i] = 0.0;
         for (int j = 0; j < TagSize(); j++) {
             float score = scores[i * TagSize() + j];
-            total += std::exp(score);
-            scored_cats[i].emplace_back(score, TagAt(j));
+            totals[i] += std::exp(score);
+            scored_cats[i].emplace(score, TagAt(j));
         }
-        std::sort(scored_cats[i].begin(), scored_cats[i].end(),
-            [](const std::pair<float, Cat>& left, const std::pair<float, Cat>& right) {
-                return left.first > right.first;});
-        float threshold = scored_cats[i][0].first * beta;
-        // normalize and pruning
-        for (int j = 0; j < TagSize(); j++) {
-            if (scored_cats[i][j].first > threshold) {
-                scored_cats[i][j].first =
-                    std::log( std::exp(scored_cats[i][j].first) / total );
-            } else {
-                scored_cats[i].erase(
-                        scored_cats[i].begin() + j - 1, scored_cats[i].end());
-                break;
-            }
-        }
-        best_in_probs[i] = scored_cats[i][0].first;
+        best_in_probs[i] = NORMALIZED_PROB( scored_cats[i].top().first, totals[i] );
     }
     ComputeOutsideProbs(best_in_probs, sent_size, out_probs);
 
     for (int i = 0; i < sent_size; i++) {
+        float threshold = scored_cats[i].top().first * beta;
         float out_prob = out_probs[i * sent_size + (i + 1)];
-        for (int j = 0; j < std::min(pruning_size, (int)scored_cats[i].size()); j++) {
-            auto& prob_and_cat = scored_cats[i][j];
-            agenda.emplace(agenda_id++,
-                    std::make_shared<const tree::Leaf>(tokens[i], prob_and_cat.second, i),
-                    prob_and_cat.first, out_prob, i, 1);
+
+        for (int j = 0; j < pruning_size; j++) {
+            auto prob_and_cat = scored_cats[i].top();
+            scored_cats[i].pop();
+            if (prob_and_cat.first > threshold) {
+                float in_prob = NORMALIZED_PROB( prob_and_cat.first, totals[i] );
+                agenda.emplace(agenda_id++, std::make_shared<const tree::Leaf>(
+                            tokens[i], prob_and_cat.second, i), in_prob, out_prob, i, 1);
+            } else
+                break;
         }
     }
 
     ChartCell chart[MAX_LENGTH * MAX_LENGTH];
 
     while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
-
-    //     std::cout << "\n\n" << step++;
-    // for (int i = 0; i < sent_size - 1; i++) {
-    //     for (int j = 0; j < sent_size - 1; j++) {
-    //         ChartCell& cell = chart[i * sent_size + j];
-    //         if (NULL != cell.best) {
-    //             std::cout << cell.best->GetCategory()->ToStr() << ",\t";
-    //         } else {
-    //             std::cout << "XXX,\t";
-    //         }
-    //     }
-    //     std::cout << std::endl;
-    // }
 
         const AgendaItem item = agenda.top();
         agenda.pop();

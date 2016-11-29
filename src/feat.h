@@ -7,8 +7,6 @@ namespace cat {
 
 class FeatureValue
 {
-// private:
-    // static int num_feats;
 
 public:
     FeatureValue(const std::string& value): value_(value) {}
@@ -22,6 +20,10 @@ public:
     bool IsEmpty() const { return value_.empty(); }
 
     bool Matches(const FeatureValue* other) const { return value_ == other->value_; }
+
+    bool ContainsWildcard() const {
+        return value_ == "X";
+    }
 
 private:
     std::string value_;

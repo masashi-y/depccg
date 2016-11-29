@@ -1,5 +1,6 @@
 
 #include "parser.h"
+#include "grammar.h"
 #include <chrono>
 
 namespace myccg {
@@ -10,7 +11,13 @@ void test() {
 
     const std::string model = "../model_425";
     tagger::ChainerTagger tagger(model);
-    AStarParser parser(&tagger, model);
+    parser::AStarParser parser(&tagger,
+          utils::LoadUnary(model + "/unary_rules.txt"),
+          grammar::en::binary_rules,
+          utils::LoadSeenRules(model + "/seen_rules.txt"),
+          {cat::Parse("S[dcl]"), cat::Parse("S[wq]"),
+            cat::Parse("S[q]"), cat::Parse("S[qem]"), cat::Parse("NP")});
+          
     const std::string sent1 = "this is a new sentence .";
     const std::string sent2 = "Ed saw briefly Tom and Taro .";
     const std::string sent3 = "Darth Vador , also known as Anakin Skywalker is a fictional character .";

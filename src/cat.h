@@ -8,7 +8,7 @@
 #include <omp.h>
 #include <unordered_map>
 #include <unordered_set>
-#include "feat.h"
+// #include "feat.h"
 
 #define print(value) std::cout << (value) << std::endl;
 
@@ -19,21 +19,18 @@ class Category;
 class Slashes;
 class FeatureValue;
 
+typedef const FeatureValue* Feat;
 typedef const Category* Cat;
 typedef const Slashes* Slash;
 typedef std::pair<Cat, Cat> CatPair;
 
-Cat Parse_uncached(const std::string& cat);
-
 Cat Parse(const std::string& cat);
-
 Cat Make(Cat left, Slash op, Cat right);
-
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
 class Slashes
 {
-public:
+private:
     enum SlashE {
         FwdApp = 0,
         BwdApp = 1,
@@ -88,14 +85,43 @@ private:
     SlashE slash_;
 };
 
-class Category
+class Cacheable
 {
-private:
-    static int num_cats;
-
 public:
-    bool operator==(const Category& other) { return this->id_ == other.id_; }
-    bool operator==(const Category& other) const { return this->id_ == other.id_; }
+    Cacheable();
+    bool operator==(const Cacheable& other) { return this->id_ == other.id_; }
+    bool operator==(const Cacheable& other) const { return this->id_ == other.id_; }
+    inline int GetId() const { return id_; }
+    void RegisterCache(const std::string& key) const;
+
+private:
+    static int ids;
+    int id_;
+};
+
+class FeatureValue: public Cacheable
+{
+public:
+    FeatureValue(const std::string& value): value_(value) {}
+    ~FeatureValue() {}
+
+    std::string ToStr() const { return IsEmpty() ? "" : "[" + value_ + "]"; }
+    bool IsEmpty() const { return value_.empty(); }
+    bool Matches(const FeatureValue* other) const { return GetId() == other->GetId(); }
+    bool ContainsWildcard() const {
+        return value_ == "X";
+    }
+
+private:
+    std::string value_;
+};
+extern Feat kWILDCARD;
+extern Feat kNONE;
+extern Feat kNB;
+
+class Category: public Cacheable
+{
+public:
 
     template<typename T>
     const T& As() const { return dynamic_cast<const T&>(*this); }
@@ -109,10 +135,6 @@ public:
     virtual std::string ToStrWithoutFeat() const = 0;
 
     Cat StripFeat() const { return Parse(this->ToStrWithoutFeat()); }
-
-    inline int Hashcode() { return id_; }
-
-    const int GetId() const { return id_; }
 
     virtual const std::string& GetType() const = 0;
     virtual Feat GetFeat() const = 0;
@@ -154,8 +176,6 @@ public:
 protected:
     Category(const std::string& str, const std::string& semantics)
         : str_(semantics.empty() ? str : str + "{" + semantics + "}") {
-        #pragma omp atomic capture
-        id_ = num_cats++;
     }
 
 private:
@@ -246,12 +266,10 @@ public:
     }
 
     bool Matches(Cat other) const {
-        if (other->IsFunctor()) {
-            return (this->left_->Matches(other->GetLeft()) &&
-                    this->right_->Matches(other->GetRight()) &&
-                    this->slash_->Matches(other->GetSlash()));
-        }
-        return false;
+        return (other->IsFunctor() &&
+                left_->Matches(other->GetLeft()) &&
+                right_->Matches(other->GetRight()) &&
+                slash_->Matches(other->GetSlash()));
     }
 
     Cat Arg(int argn) const {
@@ -320,24 +338,22 @@ public:
     int NArgs() const { return 0; }
 
     Feat GetSubstitution(Cat other) const {
-        if (this->feat_->Matches(kWILDCARD)) {
+        if (this->feat_->ContainsWildcard()) {
             return other->GetFeat();
-        } else if (other->GetFeat()->Matches(kWILDCARD)) {
+        } else if (other->GetFeat()->ContainsWildcard()) {
             return this->GetFeat();
         }
         return kNONE;
     }
 
     bool Matches(Cat other) const {
-        if (!other->IsFunctor()) {
-            return (this->type_ == other->GetType() &&
-                    (this->feat_->IsEmpty() ||
-                     this->feat_->Matches(other->GetFeat()) ||
-                     kWILDCARD->Matches(this->feat_) ||
-                     kWILDCARD->Matches(other->GetFeat()) ||
-                     this->feat_->Matches(kNB)));
-        }
-        return false;
+        return (!other->IsFunctor() &&
+                this->type_ == other->GetType() &&
+                (this->feat_->IsEmpty() ||
+                 this->feat_->Matches(other->GetFeat()) ||
+                 this->feat_->ContainsWildcard() ||
+                 other->GetFeat()->ContainsWildcard() ||
+                 this->feat_->Matches(kNB)));
     }
 
     const AtomicCategory* Arg(int argn) const {
