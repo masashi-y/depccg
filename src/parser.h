@@ -35,7 +35,17 @@ class Parser
 class AStarParser: public Parser
 {
 public:
-    AStarParser(const tagger::Tagger* tagger, const std::string& model);
+    AStarParser(
+            const tagger::Tagger* tagger,
+            const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
+            const std::vector<combinator::Combinator*>& binary_rules,
+            const std::unordered_set<CatPair>& seen_rules,
+            const std::unordered_set<Cat>& possible_root_cats)
+     :tagger_(tagger),
+      unary_rules_(unary_rules),
+      binary_rules_(binary_rules),
+      seen_rules_(seen_rules),
+      possible_root_cats_(possible_root_cats) {}
 
     NodePtr Parse(const std::string& sent, float beta=0.0000001);
 

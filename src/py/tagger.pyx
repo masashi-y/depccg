@@ -25,7 +25,6 @@ cdef public void tag_doc(const char* model_path, const char** c_strs, int* lengt
     cdef str model = os.path.join(model_path, "tagger_model")
     chainer.serializers.load_npz(model, tagger)
 
-    print "test"
     cdef int i
     cdef object _
     cdef np.ndarray[np.float32_t, ndim=2] scores

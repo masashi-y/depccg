@@ -1,8 +1,12 @@
 
 #include "parser.h"
 #include "cmdline.h"
+#include "grammar.h"
 #include "test.h"
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 void test()
 {
@@ -34,7 +38,13 @@ int main(int argc, char const* argv[])
         return 0;
     }
     tagger::ChainerTagger tagger(p.get<std::string>("model"));
-    parser::AStarParser parser(&tagger, p.get<std::string>("model"));
+    const std::string& model = p.get<std::string>("model");
+    parser::AStarParser parser(&tagger,
+          utils::LoadUnary(model + "/unary_rules.txt"),
+          grammar::en::binary_rules,
+          utils::LoadSeenRules(model + "/seen_rules.txt"),
+          grammar::en::possible_root_cats);
+          
     std::string input;
     std::vector<std::string> inputs;
     while (std::getline(std::cin, input))
