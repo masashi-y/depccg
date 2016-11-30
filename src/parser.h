@@ -5,6 +5,7 @@
 #include "tree.h"
 #include "chainer_tagger.h"
 #include "combinator.h"
+#include "cat.h"
 
 namespace myccg {
 namespace parser {
@@ -66,7 +67,7 @@ private:
     std::vector<RuleCache>& GetRules(Cat left, Cat right);
 
     NodePtr failure_node = std::make_shared<tree::Tree>(
-            cat::Parse("XX"), new tree::Leaf("FAILURE", cat::Parse("XX"), 0));
+            cat::Category::Parse("XX"), new tree::Leaf("FAILURE", cat::Category::Parse("XX"), 0));
 
 
     const tagger::Tagger* tagger_;

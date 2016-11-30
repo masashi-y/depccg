@@ -10,7 +10,6 @@ namespace myccg {
 namespace combinator {
 
 using cat::Slash;
-using cat::Slashes;
 using cat::Cat;
 
 enum RuleType {
@@ -77,7 +76,7 @@ public:
     }
 
     Cat Apply(Cat left, Cat right) const {
-        return cat::Make(right, Slashes::Bwd(), right);
+        return cat::Make(right, Slash::Bwd(), right);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
@@ -146,7 +145,7 @@ class ForwardApplication: public Combinator
     ForwardApplication(): Combinator(FA) {}
     bool CanApply(Cat left, Cat right) const {
         return (left->IsFunctor() &&
-                left->GetSlash() == Slashes::Fwd() &&
+                left->GetSlash().IsForward() &&
                 left->GetRight()->Matches(right));
     }
     Cat Apply(Cat left, Cat right) const {
@@ -167,7 +166,7 @@ class BackwardApplication: public Combinator
     BackwardApplication(): Combinator(BA) {}
     bool CanApply(Cat left, Cat right) const {
         return (right->IsFunctor() &&
-                right->GetSlash() == Slashes::Bwd() &&
+                right->GetSlash().IsBackward() &&
                 right->GetRight()->Matches(left));
     }
 
@@ -187,7 +186,7 @@ template<int Order>
 class GeneralizedForwardComposition: public Combinator
 {
     public:
-    GeneralizedForwardComposition(Slash left, Slash right, Slash result)
+    GeneralizedForwardComposition(const Slash& left, const Slash& right, const Slash& result)
         : Combinator(Order == 0 ? FC : GFC), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (left->IsFunctor() &&
@@ -220,7 +219,7 @@ template<int Order>
 class GeneralizedBackwardComposition: public Combinator
 {
     public:
-    GeneralizedBackwardComposition(Slash left, Slash right, Slash result)
+    GeneralizedBackwardComposition(const Slash& left, const Slash& right, const Slash& result)
         : Combinator(Order == 0 ? BX : GBX), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (right->IsFunctor() &&
