@@ -15,8 +15,8 @@ void test() {
           utils::LoadUnary(model + "/unary_rules.txt"),
           grammar::en::binary_rules,
           utils::LoadSeenRules(model + "/seen_rules.txt"),
-          {cat::Parse("S[dcl]"), cat::Parse("S[wq]"),
-            cat::Parse("S[q]"), cat::Parse("S[qem]"), cat::Parse("NP")});
+          {cat::Category::Parse("S[dcl]"), cat::Category::Parse("S[wq]"),
+            cat::Category::Parse("S[q]"), cat::Category::Parse("S[qem]"), cat::Category::Parse("NP")});
           
     const std::string sent1 = "this is a new sentence .";
     const std::string sent2 = "Ed saw briefly Tom and Taro .";
@@ -75,17 +75,17 @@ void test()
 
     auto fwd  = new combinator::ForwardApplication();
     auto bwd  = new combinator::BackwardApplication();
-    auto Bx   = new combinator::GeneralizedBackwardComposition<0>(cat::Slashes::Fwd(), cat::Slashes::Bwd(), cat::Slashes::Fwd());
+    auto Bx   = new combinator::GeneralizedBackwardComposition<0>(cat::Slash::Fwd(), cat::Slash::Bwd(), cat::Slash::Fwd());
     auto conj = new combinator::Conjunction();
     auto rp   = new combinator::RemovePunctuation(false);
 
     const Node* leaves[] = {
-        new Leaf("this",     cat::Parse("NP"),              0),
-        new Leaf("is",       cat::Parse("(S[dcl]\\NP)/NP"), 1),
-        new Leaf("a",        cat::Parse("NP[nb]/N"),        2),
-        new Leaf("new",      cat::Parse("N/N"),             3),
-        new Leaf("sentence", cat::Parse("N"),               4),
-        new Leaf(".",        cat::Parse("."),               5),
+        new Leaf("this",     cat::Category::Parse("NP"),              0),
+        new Leaf("is",       cat::Category::Parse("(S[dcl]\\NP)/NP"), 1),
+        new Leaf("a",        cat::Category::Parse("NP[nb]/N"),        2),
+        new Leaf("new",      cat::Category::Parse("N/N"),             3),
+        new Leaf("sentence", cat::Category::Parse("N"),               4),
+        new Leaf(".",        cat::Category::Parse("."),               5),
     };
 
     const Tree* tree1 = APPLY_BINARY(fwd, leaves[3], leaves[4]);
@@ -104,17 +104,17 @@ void test()
     ShowDerivation(tree5);
 
     const Node* leaves2[] = {
-        new Leaf("Ed",      cat::Parse("N"),                0),
-        new Leaf("saw",     cat::Parse("(S[dcl]\\NP)/NP"),  1),
-        new Leaf("briefly", cat::Parse("(S\\NP)\\(S\\NP)"), 2),
-        new Leaf("Tom",     cat::Parse("N"),                3),
-        new Leaf("and",     cat::Parse("conj"),             4),
-        new Leaf("Taro",    cat::Parse("N"),                5),
-        new Leaf(".",       cat::Parse("."),                6),
+        new Leaf("Ed",      cat::Category::Parse("N"),                0),
+        new Leaf("saw",     cat::Category::Parse("(S[dcl]\\NP)/NP"),  1),
+        new Leaf("briefly", cat::Category::Parse("(S\\NP)\\(S\\NP)"), 2),
+        new Leaf("Tom",     cat::Category::Parse("N"),                3),
+        new Leaf("and",     cat::Category::Parse("conj"),             4),
+        new Leaf("Taro",    cat::Category::Parse("N"),                5),
+        new Leaf(".",       cat::Category::Parse("."),                6),
     };
-    const Tree* tree2_1 = APPLY_UNARY(cat::Parse("NP"), leaves2[0]); // Ed NP
-    const Tree* tree2_2 = APPLY_UNARY(cat::Parse("NP"), leaves2[3]); // Tom NP
-    const Tree* tree2_3 = APPLY_UNARY(cat::Parse("NP"), leaves2[5]); // Taro NP
+    const Tree* tree2_1 = APPLY_UNARY(cat::Category::Parse("NP"), leaves2[0]); // Ed NP
+    const Tree* tree2_2 = APPLY_UNARY(cat::Category::Parse("NP"), leaves2[3]); // Tom NP
+    const Tree* tree2_3 = APPLY_UNARY(cat::Category::Parse("NP"), leaves2[5]); // Taro NP
     const Tree* tree2_4 = APPLY_BINARY(Bx, leaves2[1], leaves2[2]); // saw briefly (S[dcl]\NP)/NP
     const Tree* tree2_5 = APPLY_BINARY(conj, leaves2[4], tree2_3); // and Taro NP\NP
     const Tree* tree2_6 = APPLY_BINARY(bwd, tree2_2, tree2_5); // Tom and Taro NP

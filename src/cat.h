@@ -8,7 +8,6 @@
 #include <omp.h>
 #include <unordered_map>
 #include <unordered_set>
-// #include "feat.h"
 
 #define print(value) std::cout << (value) << std::endl;
 
@@ -16,73 +15,41 @@ namespace myccg {
 namespace cat {
 
 class Category;
-class Slashes;
-class FeatureValue;
+class Slash;
+class Feature;
 
-typedef const FeatureValue* Feat;
+typedef const Feature* Feat;
 typedef const Category* Cat;
-typedef const Slashes* Slash;
 typedef std::pair<Cat, Cat> CatPair;
 
-Cat Parse(const std::string& cat);
-Cat Make(Cat left, Slash op, Cat right);
+Cat Make(Cat left, const Slash& op, Cat right);
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
-class Slashes
+class Slash
 {
-private:
-    enum SlashE {
-        FwdApp = 0,
-        BwdApp = 1,
-        EitherApp = 2,
-    };
-
 public:
-    static Slash Fwd() { return fwd_ptr; }
-    static Slash Bwd() { return bwd_ptr; }
-    static Slash Either() { return either_ptr; }
+    static Slash Fwd() { return Slash('/'); }
+    static Slash Bwd() { return Slash('\\'); }
+    static Slash Either() { return Slash('|'); }
 
-    const std::string ToStr() const {
-        switch (slash_) {
-            case 0:
-                return "/";
-            case 1:
-                return "\\";
-            case 2:
-                return "|";
-            default:
-                throw;
-        }
+    Slash(char slash): slash_(slash) {}
+    const std::string ToStr() const { return std::string(1, slash_); }
+
+    bool Matches(const Slash& other) const {
+        return  (other.slash_ == this->slash_ ||
+                this->slash_ == '|' ||
+                other.slash_ == '|');
     }
 
-    static Slash FromStr(const std::string& string) {
-        if (string ==  "/")
-                return fwd_ptr;
-        else if (string == "\\")
-                return bwd_ptr;
-        else if (string == "|")
-                return either_ptr;
-        throw std::runtime_error("Slash must be initialized with slash string.");
+    bool operator==(const Slash& other) const {
+        return this->slash_ == other.slash_;
     }
 
-    bool Matches(Slash other) const {
-        return (this->slash_ == EitherApp ||
-                other->slash_ == EitherApp ||
-                other->slash_ == this->slash_); }
-
-    bool operator==(Slash other) const { return this->slash_ == other->slash_; }
-
-    bool IsForward() const { return slash_ == FwdApp; } 
-    bool IsBackward() const { return slash_ == BwdApp; } 
+    bool IsForward() const { return slash_ == '/'; } 
+    bool IsBackward() const { return slash_ == '\\'; } 
 
 private:
-    Slashes(SlashE slash): slash_(slash) {}
-
-    static Slash fwd_ptr;
-    static Slash bwd_ptr;
-    static Slash either_ptr;
-
-    SlashE slash_;
+    char slash_;
 };
 
 class Cacheable
@@ -99,22 +66,50 @@ private:
     int id_;
 };
 
-class FeatureValue: public Cacheable
+#ifdef JAPANESE
+class Feature: public Cacheable
 {
 public:
-    FeatureValue(const std::string& value): value_(value) {}
-    ~FeatureValue() {}
+    static Feat Parse(const std::string& string);
+
+    ~Feature() {}
+
+    std::string ToStr() const;
+    bool IsEmpty() const { return values_.empty(); }
+    bool Matches(const Feature* other) const;
+    bool ContainsWildcard() const { return contains_wildcard_; }
+
+private:
+    Feature(const std::string& value);
+private:
+    std::map<std::string, std::string> values_;
+    bool contains_wildcard_;
+};
+
+#else
+class Feature: public Cacheable
+{
+public:
+    static Feat Parse(const std::string& string);
+
+    ~Feature() {}
 
     std::string ToStr() const { return IsEmpty() ? "" : "[" + value_ + "]"; }
     bool IsEmpty() const { return value_.empty(); }
-    bool Matches(const FeatureValue* other) const { return GetId() == other->GetId(); }
-    bool ContainsWildcard() const {
-        return value_ == "X";
+    bool Matches(const Feature* other) const {
+        return (GetId() == other->GetId() ||
+                this->ContainsWildcard() ||
+                other->ContainsWildcard());
     }
+    bool ContainsWildcard() const { return value_ == "X"; }
 
+    std::string SubstituteWildcard(const std::string& string) const;
+private:
+    Feature(const std::string& value): value_(value) {}
 private:
     std::string value_;
 };
+#endif
 extern Feat kWILDCARD;
 extern Feat kNONE;
 extern Feat kNB;
@@ -122,6 +117,8 @@ extern Feat kNB;
 class Category: public Cacheable
 {
 public:
+    static Cat Parse(const std::string& cat);
+    static Cat ParseUncached(const std::string& cat);
 
     template<typename T>
     const T& As() const { return dynamic_cast<const T&>(*this); }
@@ -134,7 +131,7 @@ public:
 
     virtual std::string ToStrWithoutFeat() const = 0;
 
-    Cat StripFeat() const { return Parse(this->ToStrWithoutFeat()); }
+    Cat StripFeat() const { return Category::Parse(this->ToStrWithoutFeat()); }
 
     virtual const std::string& GetType() const = 0;
     virtual Feat GetFeat() const = 0;
@@ -191,14 +188,14 @@ private:
 //   --> (((A/C)/D)/E)
 
 template<int Order>
-Cat Compose(Cat head, Slash op, Cat tail) {
+Cat Compose(Cat head, const Slash& op, Cat tail) {
     Cat target = tail->GetLeft<Order>();
     target = target->GetRight();
     return Compose<Order-1>(Make(head, op, target),
             tail->GetLeft<Order-1>()->GetSlash(), tail);
 }
 
-template<> Cat Compose<0>(Cat head, Slash op, Cat tail);
+template<> Cat Compose<0>(Cat head, const Slash& op, Cat tail);
 
 
 template<int i> bool Category::HasFunctorAtLeft() const {
@@ -225,7 +222,7 @@ class Functor: public Category
 public:
     std::string ToStrWithoutFeat() const {
         return "(" + left_->ToStrWithoutFeat() +
-                slash_->ToStr() + right_->ToStrWithoutFeat() + ")";
+                slash_.ToStr() + right_->ToStrWithoutFeat() + ")";
     }
 
     virtual const std::string& GetType() const { throw std::logic_error("not implemented"); }
@@ -246,11 +243,11 @@ public:
     }
 
     bool IsForwardTypeRaised() const {
-        return (this->IsTypeRaised() && this->slash_->IsForward());
+        return (this->IsTypeRaised() && this->slash_.IsForward());
     }
 
     bool IsBackwardTypeRaised() const {
-        return (this->IsTypeRaised() && this->slash_->IsForward());
+        return (this->IsTypeRaised() && this->slash_.IsForward());
     }
 
     bool IsFunctor() const { return true; }
@@ -269,7 +266,7 @@ public:
         return (other->IsFunctor() &&
                 left_->Matches(other->GetLeft()) &&
                 right_->Matches(other->GetRight()) &&
-                slash_->Matches(other->GetSlash()));
+                slash_.Matches(other->GetSlash()));
     }
 
     Cat Arg(int argn) const {
@@ -290,14 +287,11 @@ public:
         return (this->IsModifier() || this->left_->IsModifier());
     }
 
+    Functor(Cat left, const Slash& slash, Cat right, std::string& semantics)
+    : Category(left->WithBrackets() + slash.ToStr() + right->WithBrackets(),
+            semantics), left_(left), right_(right), slash_(slash) {}
+
 private:
-    Functor(Cat left, Slash slash, Cat right, std::string& semantics)
-    : Category(left->WithBrackets() + slash->ToStr() + right->WithBrackets(),
-            semantics), left_(left), right_(right), slash_(slash) {
-    }
-
-    friend Cat Parse_uncached(const std::string& cat);
-
     Cat left_;
     Cat right_;
     Slash slash_;
@@ -351,8 +345,6 @@ public:
                 this->type_ == other->GetType() &&
                 (this->feat_->IsEmpty() ||
                  this->feat_->Matches(other->GetFeat()) ||
-                 this->feat_->ContainsWildcard() ||
-                 other->GetFeat()->ContainsWildcard() ||
                  this->feat_->Matches(kNB)));
     }
 
@@ -368,13 +360,10 @@ public:
 
     bool IsFunctionIntoModifier() const { return false; }
 
-private:
     AtomicCategory(const std::string& type, Feat feat, const std::string& semantics)
-        : Category(type + feat->ToStr(), semantics),
-          type_(type), feat_(feat) {}
+        : Category(type + feat->ToStr(), semantics), type_(type), feat_(feat) {}
 
-    friend Cat Parse_uncached(const std::string& cat);
-
+private:
     std::string type_;
     Feat feat_;
 };

@@ -86,9 +86,9 @@ LoadUnary(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat from = cat::Parse(buf);
+        Cat from = cat::Category::Parse(buf);
         ss >> buf;
-        Cat to = cat::Parse(buf);
+        Cat to = cat::Category::Parse(buf);
         if (res.count(from) == 0)
             res[from] = std::vector<Cat>();
         res[from].push_back(to);
@@ -113,7 +113,7 @@ LoadCategoryList(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat ca = cat::Parse(buf);
+        Cat ca = cat::Category::Parse(buf);
         res.push_back(ca);
     }
     return res;
@@ -147,9 +147,9 @@ LoadSeenRules(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat ca1 = cat::Parse(buf)->StripFeat();
+        Cat ca1 = cat::Category::Parse(buf)->StripFeat();
         ss >> buf;
-        Cat ca2 = cat::Parse(buf)->StripFeat();
+        Cat ca2 = cat::Category::Parse(buf)->StripFeat();
         auto p = CatPair(ca1, ca2);
         res.insert(p);
     }
