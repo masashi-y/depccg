@@ -40,12 +40,20 @@ int main(int argc, char const* argv[])
     }
     tagger::ChainerTagger tagger(p.get<std::string>("model"));
     const std::string& model = p.get<std::string>("model");
+
+#ifdef JAPANESE
+    parser::AStarParser parser(&tagger,
+          utils::LoadUnary(model + "/unary_rules.txt"),
+          grammar::ja::binary_rules,
+          utils::LoadSeenRules(model + "/seen_rules.txt"),
+          grammar::ja::possible_root_cats);
+#else
     parser::AStarParser parser(&tagger,
           utils::LoadUnary(model + "/unary_rules.txt"),
           grammar::en::binary_rules,
           utils::LoadSeenRules(model + "/seen_rules.txt"),
           grammar::en::possible_root_cats);
-          
+#endif
     std::string input;
     std::vector<std::string> inputs;
     while (std::getline(std::cin, input))

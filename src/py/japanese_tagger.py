@@ -9,7 +9,7 @@ from chainer import training, Variable
 from chainer.training import extensions
 from chainer.dataset import convert
 from chainer.optimizer import WeightDecay
-from utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
+from py_utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
 from tagger import MultiProcessTaggerMixin
 from collections import defaultdict
 from japanese_ccg import JaCCGReader
@@ -99,7 +99,7 @@ class JaCCGInspector(object):
             self._write(self.unary_rules, f, comment_out_value=True)
         with open(outdir + "/seen_rules.txt", "w") as f:
             self._write(self.seen_rules, f, comment_out_value=True)
-        with open(outdir + "/targets.txt", "w") as f:
+        with open(outdir + "/target.txt", "w") as f:
             self._write(self.cats, f, comment_out_value=False)
         with open(outdir + "/words.txt", "w") as f:
             self._write(self.words, f, comment_out_value=False)
@@ -150,7 +150,7 @@ class FeatureExtractor(object):
 class JaCCGTaggerDataset(chainer.dataset.DatasetMixin):
     def __init__(self, model_path, samples_path):
         self.model_path = model_path
-        self.targets = read_model_defs(model_path + "/targets.txt")
+        self.targets = read_model_defs(model_path + "/target.txt")
         self.extractor = FeatureExtractor(model_path)
         with open(samples_path) as f:
             self.samples = json.load(f).items()
@@ -194,7 +194,7 @@ class JaCCGEmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
                            "char_dim": self.char_dim}, f)
 
         self.extractor = FeatureExtractor(model_path)
-        self.targets = read_model_defs(model_path + "/targets.txt")
+        self.targets = read_model_defs(model_path + "/target.txt")
         self.train = True
 
         hidden_dim = 1000
@@ -237,6 +237,7 @@ class JaCCGEmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
         return [self.extractor(c, max_len) for c in contexts]
 
     def predict(self, tokens):
+        self.train = False
         contexts = self.feature_extract(tokens) \
                 if isinstance(tokens[0], unicode) else tokens
 
@@ -254,7 +255,10 @@ class JaCCGEmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
         h_c = h_c / ls
         h = F.concat([h_w, h_c], 2)
         h = F.reshape(h, (batchsize, -1))
-        ys = self.linear(h)
+        # ys = self.linear(h)
+        h = F.relu(self.linear1(h))
+        h = F.dropout(h, ratio=.5, train=self.train)
+        ys = self.linear2(h)
         return ys.data
 
     @property

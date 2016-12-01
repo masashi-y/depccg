@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <stdexcept>
 #include <omp.h>
 #include <unordered_map>
@@ -78,11 +79,12 @@ public:
     bool IsEmpty() const { return values_.empty(); }
     bool Matches(const Feature* other) const;
     bool ContainsWildcard() const { return contains_wildcard_; }
+    std::string SubstituteWildcard(const std::string& string) const;
 
 private:
     Feature(const std::string& value);
 private:
-    std::map<std::string, std::string> values_;
+    std::vector<std::pair<std::string, std::string>> values_;
     bool contains_wildcard_;
 };
 

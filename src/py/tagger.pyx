@@ -21,7 +21,9 @@ cdef public void tag(const char* model_path, const char* c_str, int length, floa
 
 cdef public void tag_doc(const char* model_path, const char** c_strs, int* lengths, int doc_size, float** outs):
     from py.tagger import EmbeddingTagger
-    cdef object tagger = EmbeddingTagger(model_path)
+    from py.japanese_tagger import JaCCGEmbeddingTagger
+    # cdef object tagger = EmbeddingTagger(model_path)
+    cdef object tagger = JaCCGEmbeddingTagger(model_path)
     cdef str model = os.path.join(model_path, "tagger_model")
     chainer.serializers.load_npz(model, tagger)
 
@@ -38,5 +40,6 @@ cdef public void tag_doc(const char* model_path, const char** c_strs, int* lengt
     res = tagger.predict_doc(inputs)
     for i, _, scores in res:
         flat_scores = scores.flatten()
+        print flat_scores.shape[0]
         memcpy(outs[i], flat_scores.data, flat_scores.shape[0] * sizeof(float))
 

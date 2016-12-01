@@ -52,15 +52,16 @@ Feature::Feature(const std::string& string) : contains_wildcard_(false) {
 }
 
 std::string Feature::ToStr() const {
+    if (IsEmpty()) return "";
     std::stringstream res;
     res << "[";
     for (unsigned i = 0; i < values_.size(); i++) {
-        if (i > 0) res << ","
+        if (i > 0) res << ",";
         auto& pair = values_[i];
         res << pair.first << "=" << pair.second;
     }
     res << "]";
-    return res.to_str();
+    return res.str();
 }
 
 bool Feature::Matches(const Feature* other) const {
@@ -82,14 +83,19 @@ bool Feature::Matches(const Feature* other) const {
     return true;
 }
 
-std::string SubstituteWildcard(const std::string& string) const {
-    return NULL;
+std::string Feature::SubstituteWildcard(const std::string& string) const {
+    std::string res(string);
+    for (unsigned i = 0; i < values_.size(); i++)
+        utils::ReplaceAll(&res, "X" + std::to_string(i+1), values_[i].second);
+    return res;
 }
 
 #else
 // S[X] --> S[feat] ; for English grammar
 std::string Feature::SubstituteWildcard(const std::string& string) const {
-    return utils::ReplaceAll(string, "X", this->ToStr());
+    std::string res(string);
+    utils::ReplaceAll(&res, "X", this->ToStr());
+    return res;
 }
 #endif
 
@@ -97,12 +103,16 @@ std::string AtomicCategory::ToStrWithoutFeat() const {
 #ifdef JAPANESE
     return type_;
 #else
-    return utils::ReplaceAll(utils::ReplaceAll(ToStr(), "[X]", ""), "[nb]", "");
+    std::string res(ToStr());
+    utils::ReplaceAll(&res, "[X]", "");
+    utils::ReplaceAll(&res, "[nb]", "");
+    return res;
 #endif
 }
 
 Feat Feature::Parse(const std::string& string) {
     if (cache.count(string) > 0) {
+        std::cout << "Feature::Parse cache hit" << std::endl;
         return static_cast<Feat>(cache[string]);
     } else {
         Feat res = new Feature(string);
@@ -132,7 +142,7 @@ Cat Category::Parse(const std::string& cat) {
 
 
 Cat Category::ParseUncached(const std::string& cat) {
-    std::string new_cat = cat;
+    std::string new_cat(cat);
     std::string semantics;
     if (new_cat.back() == '}') {
         int open_idx = new_cat.rfind("{");
@@ -146,16 +156,14 @@ Cat Category::ParseUncached(const std::string& cat) {
 
     if (op_idx == -1) {
         int feat_idx = new_cat.find("[");
-        std::string feat_str;
-        std::string type = feat_idx == -1 ? new_cat : new_cat.substr(0, feat_idx);
-        if (feat_idx > -1)
-            feat_str = new_cat.substr(
+        if (feat_idx > -1) {
+            std::string type = new_cat.substr(0, feat_idx);
+            std::string feat_str = new_cat.substr(
                     feat_idx + 1, new_cat.find("]", feat_idx) - feat_idx - 1);
-        else
-            feat_str = "";
-
-        Feat feat = Feature::Parse(feat_str);
-        return new AtomicCategory(type, feat, semantics);
+            Feat feat = Feature::Parse(feat_str);
+            return new AtomicCategory(type, feat, semantics);
+        }
+        return new AtomicCategory(new_cat, kNONE, semantics);
     } else {
         Cat left = Category::Parse(new_cat.substr(0, op_idx));
         Slash slash = Slash(new_cat[op_idx]);
@@ -166,7 +174,7 @@ Cat Category::ParseUncached(const std::string& cat) {
 
 Cat Category::Substitute(Feat feat) const {
     if (feat->IsEmpty()) return this;
-    return Category::Parse(feat->SubstituteWildcard(str_));
+    return Category::Parse(std::move(feat->SubstituteWildcard(str_)));
 }
 
 Cat Make(Cat left, const Slash& op, Cat right) {
@@ -177,6 +185,9 @@ Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
     return to_correct->Substitute(match1->GetSubstitution(match2));
 }
 
+Feat kWILDCARD  = Feature::Parse("X");
+Feat kNONE      = Feature::Parse("");
+Feat kNB        = Feature::Parse("nb");
 Cat COMMA       = Category::Parse(",");
 Cat SEMICOLON   = Category::Parse(";");
 Cat CONJ        = Category::Parse("conj");
@@ -188,9 +199,6 @@ Cat NPbNP       = Category::Parse("NP\\NP");
 Cat PP          = Category::Parse("PP");
 Cat PREPOSITION = Category::Parse("PP/NP");
 Cat PR          = Category::Parse("PR");
-Feat kWILDCARD  = Feature::Parse("X");
-Feat kNONE      = Feature::Parse("");
-Feat kNB        = Feature::Parse("nb");
 
 
 
