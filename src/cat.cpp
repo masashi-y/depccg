@@ -58,7 +58,8 @@ std::string Feature::ToStr() const {
     for (unsigned i = 0; i < values_.size(); i++) {
         if (i > 0) res << ",";
         auto& pair = values_[i];
-        res << pair.first << "=" << pair.second;
+        // res << pair.first << "=" << pair.second;
+        res << pair.second;
     }
     res << "]";
     return res.str();
@@ -66,8 +67,8 @@ std::string Feature::ToStr() const {
 
 bool Feature::Matches(const Feature* other) const {
     if (GetId() == other->GetId()) return true;
-    if (!this->ContainsWildcard() || 
-            !other->ContainsWildcard() ||
+    if ((!this->ContainsWildcard() && 
+            !other->ContainsWildcard()) ||
             this->values_.size() != other->values_.size())
         return false;
 
@@ -75,9 +76,9 @@ bool Feature::Matches(const Feature* other) const {
         auto& t_v = this->values_[i];
         auto& o_v = other->values_[i];
         if (t_v.first != o_v.first ||
-                t_v.second != o_v.second ||
-                t_v.second[0] != 'X' ||
-                o_v.second[0] != 'X')
+                (t_v.second != o_v.second &&
+                 t_v.second[0] != 'X' &&
+                 o_v.second[0] != 'X'))
             return false;
     }
     return true;
@@ -112,7 +113,6 @@ std::string AtomicCategory::ToStrWithoutFeat() const {
 
 Feat Feature::Parse(const std::string& string) {
     if (cache.count(string) > 0) {
-        std::cout << "Feature::Parse cache hit" << std::endl;
         return static_cast<Feat>(cache[string]);
     } else {
         Feat res = new Feature(string);

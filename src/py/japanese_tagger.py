@@ -36,6 +36,7 @@ class JaCCGInspector(object):
         self.words = defaultdict(int)
         self.chars = defaultdict(int)
         self.samples = {}
+        self.sents = []
 
         self.words[UNK] = 10000
         self.words[LPAD] = 10000
@@ -83,6 +84,7 @@ class JaCCGInspector(object):
         for tree in trees:
             tokens = get_leaves(tree)
             words = [token.word for token in tokens]
+            self.sents.append(" ".join(words))
             cats = [token.cat.without_semantics for token in tokens]
             samples = get_context_by_window(
                     words, CONTEXT, lpad=LPAD, rpad=RPAD)
@@ -107,12 +109,16 @@ class JaCCGInspector(object):
             self._write(self.chars, f, comment_out_value=False)
         with open(outdir + "/traindata.json", "w") as f:
             json.dump(self.samples, f)
+        with open(outdir + "/trainsents.txt", "w") as f:
+            for sent in self.sents:
+                f.write(sent.encode("utf-8") + "\n")
 
     def create_testdata(self, outdir):
         trees = JaCCGReader(self.filepath).readall()
         for tree in trees:
             tokens = get_leaves(tree)
             words = [token.word for token in tokens]
+            self.sents.append(" ".join(words))
             cats = [token.cat.without_semantics for token in tokens]
             samples = get_context_by_window(
                     words, CONTEXT, lpad=LPAD, rpad=RPAD)
@@ -121,6 +127,9 @@ class JaCCGInspector(object):
                 self.samples[" ".join(sample)] = cat
         with open(outdir + "/testdata.json", "w") as f:
             json.dump(self.samples, f)
+        with open(outdir + "/testsents.txt", "w") as f:
+            for sent in self.sents:
+                f.write(sent.encode("utf-8") + "\n")
 
 
 class FeatureExtractor(object):
@@ -243,8 +252,14 @@ class JaCCGEmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
 
         # contexts [(w, c, l), (w, c, l)]
         ws, cs, ls = zip(*contexts)
+        max_cs_size = max(c.shape[1] for c in cs)
+        new_cs = []
+        for c in cs:
+            c = np.pad(c, ((0, 0), (0, max_cs_size - c.shape[1])),
+                    mode='constant', constant_values=-1)
+            new_cs.append(c)
         ws = np.asarray(ws, 'i')
-        cs = np.asarray(cs, 'i')
+        cs = np.asarray(new_cs, 'i')
         ls = np.asarray(ls, 'f')
         h_w = self.emb_word(ws) #_(batchsize, windowsize, word_dim)
         h_c = self.emb_char(cs) # (batchsize, windowsize, max_char_len, char_dim)

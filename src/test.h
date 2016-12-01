@@ -132,6 +132,26 @@ void test()
     print(tree2_9->ToStr());
     ShowDerivation(tree2_9);
 
+    const Node* leaves3[] = {
+        new Leaf("これ", cat::Category::Parse("NP[case=nc,mod=nm,fin=f]"),                                                  0),
+        new Leaf("は", cat::Category::Parse("(S[mod=X1,form=X2,fin=f]/S[mod=X1,form=X2,fin=f])\\NP[case=nc,mod=nm,fin=f]"), 1),
+        new Leaf("テスト", cat::Category::Parse("NP[case=nc,mod=nm,fin=f]"),                                                2),
+        new Leaf("です", cat::Category::Parse("S[mod=nm,form=base,fin=f]\\NP[case=nc,mod=nm,fin=f]"),                       3),
+        new Leaf("。", cat::Category::Parse("S[mod=nm,form=base,fin=t]\\S[mod=nm,form=base,fin=f]"),                        4)
+    };
+
+    const Tree* tree3_0 = APPLY_BINARY(bwd, leaves3[0], leaves3[1]);
+    const Tree* tree3_1 = APPLY_BINARY(bwd, leaves3[2], leaves3[3]);
+    const Tree* tree3_2 = APPLY_BINARY(fwd, tree3_0, tree3_1);
+    const Tree* tree3_3 = APPLY_BINARY(bwd, tree3_2, leaves3[4]);
+    APPLICABLE(bwd, leaves3[0], leaves3[1]);
+    APPLICABLE(bwd, leaves3[2], leaves3[3]);
+    APPLICABLE(fwd, tree3_0, tree3_1);
+    APPLICABLE(bwd, tree3_2, leaves3[4]);
+    ShowDerivation(tree3_3);
+
+
+
 
 }
 } // namespace tree

@@ -35,12 +35,15 @@ int FindClosingBracket(const std::string& in, int start) {
 
 int FindNonNestedChar(const std::string& haystack, const std::string& needles) {
     int open_brackets = 0;
-    for (unsigned i = 0; i < haystack.size(); i++) {
-        if (haystack[i] == '(')
+    // for (unsigned i = 0; i < haystack.size(); i++) {
+    for (unsigned i = haystack.size()-1; 0 < i; i--) {
+        // std::cout << haystack <<  i << std::endl;
+        // std::cout << i << std::endl;
+        if (haystack[i] == ')')
             open_brackets++;
-        else if (haystack[i] == ')')
+        else if (haystack[i] == '(')
             open_brackets--;
-        else if (open_brackets == 0)
+        if (open_brackets == 0)
             for (unsigned j = 0; j < needles.size(); j++) {
                 if (needles[j] == haystack[i])
                     return i;
