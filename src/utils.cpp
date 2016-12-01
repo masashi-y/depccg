@@ -119,15 +119,13 @@ LoadCategoryList(const std::string& filename) {
     return res;
 }
 
-std::string ReplaceAll(const std::string& target,
+void ReplaceAll(std::string* target,
         const std::string& from, const std::string& to) {
-    std::string result = target;
     std::string::size_type pos = 0;
-    while(pos = result.find(from, pos), pos != std::string::npos) {
-        result.replace(pos, from.length(), to);
+    while(pos = target->find(from, pos), pos != std::string::npos) {
+        target->replace(pos, from.length(), to);
         pos += to.length();
     }
-    return result;
 }
 
 std::unordered_set<CatPair>

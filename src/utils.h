@@ -59,7 +59,7 @@ template<typename T> int ArgMin(T* from, T* to) {
     return min_idx;
 }
 
-std::string ReplaceAll(const std::string& target,
+void ReplaceAll(std::string* target,
         const std::string& from, const std::string& to);
 
 

@@ -219,6 +219,7 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
         const AgendaItem item = agenda.top();
         agenda.pop();
         NodePtr parse = item.parse;
+        tree::ShowDerivation(parse);
         ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
 
         if (cell.update(parse, item.in_prob)) {
