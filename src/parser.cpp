@@ -155,7 +155,7 @@ std::vector<NodePtr>
 AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<NodePtr> res(doc.size());
-    #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
+    // #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++)
         res[i] = Parse(doc[i], scores[i], beta);
     return res;
@@ -219,7 +219,6 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
         const AgendaItem item = agenda.top();
         agenda.pop();
         NodePtr parse = item.parse;
-        tree::ShowDerivation(parse);
         ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
 
         if (cell.update(parse, item.in_prob)) {

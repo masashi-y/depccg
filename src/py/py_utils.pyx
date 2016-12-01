@@ -31,7 +31,9 @@ cpdef int find_closing_bracket(str source, int start) except -1:
 cpdef int find_non_nested_char(str haystack, str needles):
     cdef int open_brackets = 0
 
-    for i, c in enumerate(haystack):
+    # for i, c in enumerate(haystack):
+    for i in range(len(haystack) -1, -1, -1):
+        c = haystack[i]
         if c == '(':
             open_brackets += 1
         elif c == ')':

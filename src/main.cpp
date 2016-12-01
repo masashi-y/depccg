@@ -11,9 +11,9 @@
 
 void test()
 {
-    myccg::tagger::test();
+    // myccg::tagger::test();
     myccg::tree::test();
-    myccg::parser::test();
+    // myccg::parser::test();
 }
 
 using namespace myccg;

@@ -40,6 +40,5 @@ cdef public void tag_doc(const char* model_path, const char** c_strs, int* lengt
     res = tagger.predict_doc(inputs)
     for i, _, scores in res:
         flat_scores = scores.flatten()
-        print flat_scores.shape[0]
         memcpy(outs[i], flat_scores.data, flat_scores.shape[0] * sizeof(float))
 
