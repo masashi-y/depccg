@@ -87,6 +87,7 @@ bool AStarParser::IsSeen(Cat left, Cat right) const {
 }
 
 bool IsNormalForm(combinator::RuleType rule_type, NodePtr left, NodePtr right) {
+    return true;
     if ( (left->GetRuleType() == combinator::FC ||
                 left->GetRuleType() == combinator::GFC) &&
             (rule_type == combinator::FA ||
@@ -184,6 +185,14 @@ NodePtr AStarParser::Parse(const std::string& sent, float* scores, float beta) {
     std::priority_queue<std::pair<float, Cat>,
                         std::vector<std::pair<float, Cat>>,
                         CompareFloatCat> scored_cats[MAX_LENGTH];
+
+#ifdef JAPANESE
+    for (unsigned i = 0; i < tokens.size(); i++) {
+        std::cerr << tokens[i] << " --> ";
+        std::cerr << tagger_->TagAt( utils::ArgMax(scores + (i * TagSize()),
+                    scores + (i * TagSize() + TagSize() - 1)))->ToStr() << std::endl;
+    }
+#endif
 
     for (int i = 0; i < sent_size; i++) {
         totals[i] = 0.0;

@@ -25,7 +25,8 @@ enum RuleType {
     NOISE   = 9,
     UNARY   = 10,
     LEXICON = 11,
-    NONE    = 12
+    NONE    = 12,
+    SSEQ    = 13
 };
 
 class Combinator
@@ -57,6 +58,20 @@ public:
     }
 
     const std::string ToStr() const { return "<un>"; };
+};
+
+class Conjoin: public Combinator
+{
+public:
+    Conjoin(): Combinator(SSEQ) {}
+    bool CanApply(Cat left, Cat right) const {
+        return (*left == *right &&
+                !left->IsFunctor() &&
+                left->GetType() == "S");
+    }
+    Cat Apply(Cat left, Cat right) const { return left; }
+    bool HeadIsLeft(Cat left, Cat right) const { return false; }
+    const std::string ToStr() const { return "SSEQ"; };
 };
 
 class Conjunction: public Combinator
@@ -226,8 +241,8 @@ class GeneralizedBackwardComposition: public Combinator
                 left->HasFunctorAtLeft<Order>() &&
                 right->GetRight()->Matches(left->GetLeft<Order+1>()) &&
                 left->GetLeft<Order>()->GetSlash() == left_ &&
-                right->GetSlash() == right_ &&
-                ! left->GetLeft<Order+1>()->IsNorNP());
+                right->GetSlash() == right_);
+                // ! left->GetLeft<Order+1>()->IsNorNP());
     }
 
     Cat Apply(Cat left, Cat right) const {

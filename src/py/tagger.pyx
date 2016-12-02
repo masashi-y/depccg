@@ -5,10 +5,12 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 import chainer
 import os
+import json
 
 
 cdef public void tag(const char* model_path, const char* c_str, int length, float* out):
     from py.tagger import EmbeddingTagger
+    from py.japanese_tagger import JaCCGEmbeddingTagger
     cdef list py_str = c_str[:length].decode("utf-8").split(" ")
     cdef object tagger = EmbeddingTagger(model_path)
     cdef str model = os.path.join(model_path, "tagger_model")
@@ -22,9 +24,11 @@ cdef public void tag(const char* model_path, const char* c_str, int length, floa
 cdef public void tag_doc(const char* model_path, const char** c_strs, int* lengths, int doc_size, float** outs):
     from py.tagger import EmbeddingTagger
     from py.japanese_tagger import JaCCGEmbeddingTagger
-    # cdef object tagger = EmbeddingTagger(model_path)
-    cdef object tagger = JaCCGEmbeddingTagger(model_path)
+    cdef object tagger
     cdef str model = os.path.join(model_path, "tagger_model")
+
+    with open(os.path.join(model_path, "tagger_defs.txt")) as f:
+        tagger = eval(json.load(f)["model"])(model_path)
     chainer.serializers.load_npz(model, tagger)
 
     cdef int i

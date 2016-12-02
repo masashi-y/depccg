@@ -32,6 +32,7 @@ public:
     const combinator::RuleType GetRuleType() const { return rule_type_; }
 
     virtual const std::string ToStr() const = 0;
+    virtual void ToXML(std::ostream& out) const = 0;
     virtual int GetHeadId() const = 0;
     virtual int GetDependencyLength() const = 0;
     virtual bool IsUnary() const = 0;
@@ -67,6 +68,8 @@ public:
         out << cat_->ToStr() << ">)";
         return out.str();
     }
+
+    void ToXML(std::ostream& out) const;
 
     std::string GetWord() const { return word_; }
 
@@ -126,6 +129,8 @@ public:
         return out.str();
     }
 
+    void ToXML(std::ostream& out) const;
+
     const Node* GetLChild() const { return lchild_.get(); }
 
     const Node* GetRChild() const { return rchild_.get(); }
@@ -166,6 +171,11 @@ private:
 };
 
 std::vector<const Leaf*> GetLeaves(const Tree* tree);
+
+void ToXML(std::vector<std::shared_ptr<const Node>>&
+        trees, std::ostream& out=std::cout);
+
+void ToXML(std::vector<const Tree*>& trees, std::ostream& out=std::cout);
 
 void ShowDerivation(const Tree* tree, std::ostream& out=std::cout);
 

@@ -48,6 +48,7 @@ const std::unordered_set<Cat> ja::possible_root_cats = {
 };
 
 const std::vector<Combinator*> ja::binary_rules = {
+    new Conjoin(),
     new ForwardApplication(),
     new BackwardApplication(),
     new GeneralizedForwardComposition<0>(F, F, F), // >B
