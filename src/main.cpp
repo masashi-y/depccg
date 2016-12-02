@@ -31,6 +31,8 @@ int main(int argc, char const* argv[])
     std::chrono::system_clock::time_point start, end;
     p.add<std::string>("model", 'm', "model directory");
     p.add("deriv", 'd', "output result in derivation format");
+    p.add<std::string>("format", 'f', "output format", false, "auto",
+            cmdline::oneof<std::string>("auto", "deriv", "xml"));
     p.add<float>("beta", 'b', "beta for pruning", false, 0.0000001);
     p.add("help", 'h', "print help");
 
@@ -62,11 +64,15 @@ int main(int argc, char const* argv[])
     auto res = parser.Parse(inputs, p.get<float>("beta"));
     end = std::chrono::system_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::seconds>(end-start).count();
-    for (auto&& tree: res) {
-        if (p.exist("deriv")) {
+    if (p.get<std::string>("format") == "xml") {
+        tree::ToXML(res);
+    } else if (p.get<std::string>("format") == "deriv") {
+        for (auto&& tree: res) {
             tree::ShowDerivation(tree);
             std::cout << std::endl;
-        } else {
+        }
+    } else if (p.get<std::string>("format") == "auto") {
+        for (auto&& tree: res) {
             std::cout << tree->ToStr() << std::endl;
         }
     }

@@ -100,7 +100,8 @@ class MultiProcessTaggerMixin(object):
         batch_lens = []
         batch_ids = []
         res = []
-        for _ in xrange(0, len(doc), batchsize):
+        # for _ in xrange(0, len(doc), batchsize):
+        while not res_queue.empty():
             for i in range(batchsize):
                 if res_queue.empty(): break
                 idx, feat = res_queue.get()
@@ -171,7 +172,8 @@ class EmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
             new_emb_w[i] = emb_w[i]
         self.emb_word.W.data = new_emb_w
         with open(os.path.join(self.model_path, "tagger_defs.txt"), "w") as out:
-            json.dump({"word_dim": self.word_dim,
+            json.dump({"model": self.__class__.__name__,
+                       "word_dim": self.word_dim,
                        "suffix_dim": self.suffix_dim,
                        "caps_dim": self.caps_dim}, out)
 

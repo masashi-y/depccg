@@ -29,7 +29,7 @@ std::unique_ptr<float*[]> ChainerTagger::predict(const std::vector<std::string>&
     float** res = new float*[doc.size()];
     const char** c_sents = new const char*[doc.size()];
     int* lengths = new int[doc.size()];
-    for (int i = 0; i < doc.size(); i++) {
+    for (unsigned i = 0; i < doc.size(); i++) {
         auto& sent = doc[i];
         c_sents[i] = sent.c_str();
         lengths[i] = (int)sent.size();
