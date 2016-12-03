@@ -38,6 +38,12 @@ struct AgendaItem
     bool operator<(const AgendaItem& other) const {
         if ( fabs(this->prob - other.prob) > 0.00001 )
             return this->prob < other.prob;
+        // if (!(this->parse->HeadIsLeft() && other.parse->HeadIsLeft())) {
+        //     if (other.parse->HeadIsLeft())
+        //         return true;
+        //     if (this->parse->HeadIsLeft())
+        //         return false;
+        // }
         if (this->parse->GetDependencyLength() != other.parse->GetDependencyLength())
             return this->parse->GetDependencyLength() > other.parse->GetDependencyLength();
         return this->id > other.id;
@@ -59,7 +65,7 @@ struct ChartCell
 
     bool update(NodePtr parse, float prob) {
         Cat cat = parse->GetCategory();
-        if (items.count(cat) > 0 && prob <= best_prob)
+        if (items.count(cat) > 0)
             return false;
         items.emplace(cat, std::make_pair(parse, prob));;
         if (best_prob < prob) {
@@ -87,7 +93,6 @@ bool AStarParser::IsSeen(Cat left, Cat right) const {
 }
 
 bool IsNormalForm(combinator::RuleType rule_type, NodePtr left, NodePtr right) {
-    return true;
     if ( (left->GetRuleType() == combinator::FC ||
                 left->GetRuleType() == combinator::GFC) &&
             (rule_type == combinator::FA ||
@@ -95,10 +100,10 @@ bool IsNormalForm(combinator::RuleType rule_type, NodePtr left, NodePtr right) {
              rule_type == combinator::GFC) )
         return false;
     if ( (right->GetRuleType() == combinator::BX ||
-                left->GetRuleType() == combinator::GBX) &&
+                right->GetRuleType() == combinator::GBX) &&
             (rule_type == combinator::BA ||
              rule_type == combinator::BX ||
-             left->GetRuleType() == combinator::GBX) )
+             rule_type == combinator::GBX) )
         return false;
     if ( left->GetRuleType() == combinator::UNARY &&
             rule_type == combinator::FA &&
@@ -156,7 +161,7 @@ std::vector<NodePtr>
 AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<NodePtr> res(doc.size());
-    // #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
+    #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++)
         res[i] = Parse(doc[i], scores[i], beta);
     return res;

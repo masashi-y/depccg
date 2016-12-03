@@ -1,10 +1,26 @@
 # -*- coding: utf-8 -*-
 
+import re
+import os
 import cat
 from tree import Tree, Leaf
 from combinator import Combinator
 import combinator
 
+re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
+            "test": re.compile(r"wsj_23..\.auto"),
+            "dev": re.compile(r"wsj_00..\.auto"),
+            "all": re.compile(r"wsj_....\.auto") }
+
+def walk_autodir(path, subset="train"):
+    matcher = re_subset[subset]
+    res = []
+    for root, dirs, files in os.walk(path):
+        for autofile in files:
+            if matcher.match(autofile):
+                res.extend(AutoReader(
+                    os.path.join(root, autofile)).readall())
+    return res
 
 class AutoReader(object):
     def __init__(self, filename):
