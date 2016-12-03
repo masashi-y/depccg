@@ -241,8 +241,8 @@ class GeneralizedBackwardComposition: public Combinator
                 left->HasFunctorAtLeft<Order>() &&
                 right->GetRight()->Matches(left->GetLeft<Order+1>()) &&
                 left->GetLeft<Order>()->GetSlash() == left_ &&
-                right->GetSlash() == right_);
-                // ! left->GetLeft<Order+1>()->IsNorNP());
+                right->GetSlash() == right_ && //);
+                ! left->GetLeft<Order+1>()->IsNorNP());
     }
 
     Cat Apply(Cat left, Cat right) const {

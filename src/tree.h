@@ -35,6 +35,7 @@ public:
     virtual void ToXML(std::ostream& out) const = 0;
     virtual int GetHeadId() const = 0;
     virtual int GetDependencyLength() const = 0;
+    virtual bool HeadIsLeft() const = 0;
     virtual bool IsUnary() const = 0;
 
     // to call ShowDerivation
@@ -79,6 +80,7 @@ public:
 
     int GetDependencyLength() const { return 0; }
 
+    bool HeadIsLeft() const { return false; }
     bool IsUnary() const { return false; }
 private:
     int ShowDerivation(int lwidth, std::ostream& out) const;
@@ -150,6 +152,7 @@ public:
                     rchild_->GetDependencyLength() + lchild_->GetDependencyLength());
     }
 
+    bool HeadIsLeft() const { return left_is_head_; }
     bool IsUnary() const { return NULL == rchild_; }
 private:
     int ShowDerivation(int lwidth, std::ostream& out) const;

@@ -38,8 +38,8 @@ void Cacheable::RegisterCache(const std::string& key) const {
 }
 
 #ifdef JAPANESE
-// "mod=nm,form=base,fin=f"
-Feature::Feature(const std::string& string) : contains_wildcard_(false) {
+// parse "mod=nm,form=base,fin=f"
+Feature::Feature(const std::string& string): contains_wildcard_(false) {
     std::istringstream s(string);
     std::string pair;
     while (std::getline(s, pair, ',')) {
@@ -152,6 +152,7 @@ Cat Category::ParseUncached(const std::string& cat) {
         semantics = "";
     }
     new_cat = utils::DropBrackets(new_cat);
+    // utils::FindNonNestedChar enforces left associativity
     int op_idx = utils::FindNonNestedChar(new_cat, slashes);
 
     if (op_idx == -1) {
