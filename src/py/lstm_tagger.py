@@ -1,11 +1,11 @@
 
 import sys
 import numpy as np
-import cuda
 import json
 import chainer
 import chainer.links as L
 import chainer.functions as F
+from chainer import cuda
 from chainer import training, Variable
 from chainer.training import extensions
 from chainer.optimizer import WeightDecay
@@ -64,7 +64,7 @@ class TrainingDataCreator(object):
         self.prefixes[UNK] = 10000
 
     def _traverse(self, tree):
-        self.cats[tree.cat.without_semantics] += 1
+        self.cats[str(tree.cat)] += 1
         if isinstance(tree, Leaf):
             w = normalize(tree.word)
             self.words[w] += 1
@@ -73,13 +73,13 @@ class TrainingDataCreator(object):
         else:
             children = tree.children
             if len(children) == 1:
-                rule = tree.cat.without_semantics + \
-                        " " + children[0].cat.without_semantics
+                rule = str(tree.cat) + \
+                        " " + str(children[0].cat)
                 self.unary_rules[rule] += 1
                 self._traverse(children[0])
             else:
-                rule = children[0].cat.without_semantics + \
-                        " " + children[1].cat.without_semantics
+                rule = str(children[0].cat) + \
+                        " " + str(children[1].cat)
                 self.seen_rules[rule] += 1
                 self._traverse(children[0])
                 self._traverse(children[1])
@@ -112,13 +112,13 @@ class TrainingDataCreator(object):
         self._create_samples(trees)
 
         self.cats = {k: v for (k, v) in self.cats.items() \
-                        if v >= self.cat_freq_cut}
+                        if v > self.cat_freq_cut}
         self.words = {k: v for (k, v) in self.words.items() \
-                        if v >= self.word_freq_cut}
+                        if v > self.word_freq_cut}
         self.suffixes = {k: v for (k, v) in self.suffixes.items() \
-                        if v >= self.afix_freq_cut}
+                        if v > self.afix_freq_cut}
         self.prefixes = {k: v for (k, v) in self.prefixes.items() \
-                        if v >= self.afix_freq_cut}
+                        if v > self.afix_freq_cut}
         with open(outdir + "/unary_rules.txt", "w") as f:
             self._write(self.unary_rules, f, comment_out_value=True)
         with open(outdir + "/seen_rules.txt", "w") as f:
@@ -139,7 +139,7 @@ class TrainingDataCreator(object):
 
     def create_testdata(self, outdir, subset):
         trees = walk_autodir(self.filepath, subset)
-        self._create_samples(trees, cat_freq_cut=False)
+        self._create_samples(trees)
         with open(outdir + "/testdata.json", "w") as f:
             json.dump(self.samples, f)
         with open(outdir + "/testsents.txt", "w") as f:
@@ -177,7 +177,7 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
 
 
 class LSTMTagger(chainer.Chain):
-    def __init__(self, model_path, word_dim, afix_dim, nlayers=1,
+    def __init__(self, model_path, word_dim, afix_dim, nlayers,
             hidden_dim, relu_dim, dropout_ratio=0.5):
         self.model_path = model_path
         defs_file = model_path + "/tagger_defs.txt"
@@ -319,10 +319,13 @@ if __name__ == "__main__":
             help="output directory path")
     parser_c.add_argument("--cat-freq-cut",
             type=int, default=10,
-            help="only allow categories which appear >= freq-cut")
+            help="only allow categories which appear > freq-cut")
     parser_c.add_argument("--word-freq-cut",
             type=int, default=5,
-            help="only allow words which appear >= freq-cut")
+            help="only allow words which appear > freq-cut")
+    parser_c.add_argument("--afix-freq-cut",
+            type=int, default=5,
+            help="only allow afixes which appear > freq-cut")
     parser_c.add_argument("--subset",
             choices=["train", "test", "dev", "all"],
             default="train")
@@ -333,14 +336,12 @@ if __name__ == "__main__":
     parser_c.set_defaults(func=
             (lambda args:
                 (lambda x=TrainingDataCreator(args.path,
-                    args.word_freq_cut, args.cat_freq_cut) :
+                    args.word_freq_cut, args.cat_freq_cut, args.afix_freq_cut) :
                     x.create_traindata(args.out, args.subset)
                         if args.mode == "train"
                     else  x.create_testdata(args.out, args.subset))()
                 ))
 
-    model = LSTMTagger(args.model, args.word_emb_size, args.afix_emb_size,
-            args.nlayers, args.hidden_dim, args.dropout_ratio)
     # Do training using training data created through `create`
     parser_t = subparsers.add_parser(
             "train", help="train supertagger model")
