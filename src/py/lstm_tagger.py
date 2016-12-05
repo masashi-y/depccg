@@ -22,10 +22,12 @@ IGNORE = -1
 MISS = -2
 
 def get_suffix(word):
+    if word == START or word == END: return word
     return (word[-2:] if len(word) > 1 else "_" + word[-1]).lower()
 
 
 def get_prefix(word):
+    if word == START or word == END: return word
     return (word[:2] if len(word) > 1 else "_" + word[0]).lower()
 
 
@@ -57,15 +59,19 @@ class TrainingDataCreator(object):
         self.samples = {}
         self.sents = []
 
-        self.words[UNK]    = 10000
-        self.words[START]  = 10000
-        self.words[END]    = 10000
-        self.suffixes[UNK] = 10000
-        self.prefixes[UNK] = 10000
+        self.words[UNK]      = 10000
+        self.words[START]    = 10000
+        self.words[END]      = 10000
+        self.suffixes[UNK]   = 10000
+        self.suffixes[START] = 10000
+        self.suffixes[END]   = 10000
+        self.prefixes[UNK]   = 10000
+        self.prefixes[START] = 10000
+        self.prefixes[END]   = 10000
 
     def _traverse(self, tree):
-        self.cats[str(tree.cat)] += 1
         if isinstance(tree, Leaf):
+            self.cats[str(tree.cat)] += 1
             w = normalize(tree.word)
             self.words[w] += 1
             self.suffixes[get_suffix(w)] += 1
@@ -104,11 +110,8 @@ class TrainingDataCreator(object):
 
     def create_traindata(self, outdir, subset):
         trees = walk_autodir(self.filepath, subset)
-        # first construct dictionaries only
         for tree in trees:
             self._traverse(tree)
-        # construct training samples with
-        # categories whose frequency >= freq_cut.
         self._create_samples(trees)
 
         self.cats = {k: v for (k, v) in self.cats.items() \
@@ -166,13 +169,13 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
 
     def get_example(self, i):
         words, y = self.samples[i]
-        words = words.split(" ")
+        words = [START] + words.split(" ") + [END]
         y = y.split(" ")
         w = np.array([self.words.get(x, self.unk_word) for x in words], 'i')
         s = np.array([self.suffixes.get(get_suffix(x), self.unk_suf) for x in words], 'i')
         p = np.array([self.prefixes.get(get_prefix(x), self.unk_prf) for x in words], 'i')
-        y = np.array([self.targets.get(
-            x, (IGNORE if self.train else MISS)) for x in y], 'i')
+        y = np.array([IGNORE] + [self.targets.get(
+            x, (IGNORE if self.train else MISS)) for x in y] + [IGNORE], 'i')
         return w, s, p, y
 
 
@@ -217,6 +220,9 @@ class LSTMTagger(chainer.Chain):
                 linear2=L.Linear(self.relu_dim, len(self.targets)),
                 )
 
+    def load_pretrained_embeddings(self, path):
+        self.emb_word.W.data = read_pretrained_embeddings(path)
+
     def __call__(self, xs):
         """
         xs [(w,s,p,y), ..., ]
@@ -225,22 +231,23 @@ class LSTMTagger(chainer.Chain):
         batchsize = len(xs)
         ws, ss, ps, ts = zip(*xs)
         ws = map(self.emb_word, ws)
-        ss = map(self.emb_suf, ws)
-        ps = map(self.emb_prf, ws)
+        ss = map(self.emb_suf, ss)
+        ps = map(self.emb_prf, ps)
         # [(sentence length, (word_dim + suf_dim + prf_dim))]
         xs_f = [F.concat([w, s, p]) for w, s, p in zip(ws, ss, ps)]
-        xs_b = reversed(xs_f)
-        cx_f, hx_f, cx_b, hx_b = _init_state(batchsize)
+        xs_b = list(reversed(xs_f))
+        cx_f, hx_f, cx_b, hx_b = self._init_state(batchsize)
         _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
-        _, _, hs_b = reversed(self.lstm_b(hx_b, cx_b, xs_b, train=self.train))
+        _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
+        hs_b = list(reversed(hs_b))
         # ys: [(sentence length, number of category)]
-        ys = [self.linear(F.relu(
+        ys = [self.linear2(F.relu(
                 self.linear1(F.concat([h_f, h_b]))))
                     for h_f, h_b in zip(hs_f, hs_b)]
-        loss = F.sum(F.concat(
-            [F.softmax_cross_entropy(y, t) for y, t in zip(ys, ts)]))
-        acc = F.sum(F.concat(
-            [F.accuracy(y, t, ignore_label=IGNORE) for y, t in zip(ys, ts)]))
+        loss = reduce(lambda x, y: x + y,
+            [F.softmax_cross_entropy(y, t) for y, t in zip(ys, ts)])
+        acc = reduce(lambda x, y: x + y,
+            [F.accuracy(y, t, ignore_label=IGNORE) for y, t in zip(ys, ts)])
 
         acc /= batchsize
         chainer.report({
@@ -251,7 +258,7 @@ class LSTMTagger(chainer.Chain):
 
     def _init_state(self, batchsize):
         res = [Variable(np.zeros(( # forward cx, hx, backward cx, hx
-            self.nlayers, self.batchsize, self.hidden_dim), 'f')) for _ in range(4)]
+            self.nlayers, batchsize, self.hidden_dim), 'f')) for _ in range(4)]
         return res
 
 
@@ -266,10 +273,14 @@ def converter(x, device):
 
 def train(args):
     model = LSTMTagger(args.model, args.word_emb_size, args.afix_emb_size,
-            args.nlayers, args.hidden_dim, args.dropout_ratio)
+            args.nlayers, args.hidden_dim, args.relu_dim, args.dropout_ratio)
     if args.initmodel:
         print 'Load model from', args.initmodel
         chainer.serializers.load_npz(args.initmodel, model)
+
+    if args.pretrained:
+        print 'Load pretrained word embeddings from', args.pretrained
+        model.load_pretrained_embeddings(args.pretrained)
 
     train = LSTMTaggerDataset(args.model, args.train)
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
@@ -289,7 +300,7 @@ def train(args):
     eval_model.train = False
 
     trainer.extend(extensions.Evaluator(
-        val_iter, eval_model, my_converter), trigger=val_interval)
+        val_iter, eval_model, converter), trigger=val_interval)
     trainer.extend(extensions.dump_graph('main/loss'))
     trainer.extend(extensions.snapshot(), trigger=val_interval)
     trainer.extend(extensions.snapshot_object(
@@ -342,15 +353,12 @@ if __name__ == "__main__":
                     else  x.create_testdata(args.out, args.subset))()
                 ))
 
+            #TODO updater
     # Do training using training data created through `create`
     parser_t = subparsers.add_parser(
             "train", help="train supertagger model")
     parser_t.add_argument("model",
             help="path to model directory")
-    # parser_t.add_argument("embed",
-            # help="path to embedding file")
-    # parser_t.add_argument("vocab",
-            # help="path to embedding vocab file")
     parser_t.add_argument("train",
             help="training data file path")
     parser_t.add_argument("val",
@@ -379,6 +387,8 @@ if __name__ == "__main__":
             help="dropout ratio")
     parser_t.add_argument("--initmodel",
             help="initialize model with `initmodel`")
+    parser_t.add_argument("--pretrained",
+            help="pretrained word embeddings")
     parser_t.set_defaults(func=train)
 
     args = parser.parse_args()
