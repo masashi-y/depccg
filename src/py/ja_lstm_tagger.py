@@ -25,73 +25,49 @@ def log(args, out):
     for k, v in vars(args).items():
         out.write("{}: {}\n".format(k, v))
 
-def get_suffix(word):
-    if word == START or word == END: return word
-    return (word[-2:] if len(word) > 1 else "_" + word[-1]).lower()
-
-
-def get_prefix(word):
-    if word == START or word == END: return word
-    return (word[:2] if len(word) > 1 else "_" + word[0]).lower()
-
-
-def normalize(word):
-    if word == "-LRB-":
-        return "("
-    elif word == "-RRB-":
-        return ")"
-    else:
-        return word
-
-
 class TrainingDataCreator(object):
     """
     create train & validation data
     """
-    def __init__(self, filepath, word_freq_cut, cat_freq_cut, afix_freq_cut):
+    def __init__(self, filepath, word_freq_cut, cat_freq_cut):
         self.filepath = filepath
          # those categories whose frequency < freq_cut are discarded.
         self.word_freq_cut = word_freq_cut
         self.cat_freq_cut  = cat_freq_cut
-        self.afix_freq_cut = afix_freq_cut
         self.seen_rules = defaultdict(int) # seen binary rules
         self.unary_rules = defaultdict(int) # seen unary rules
         self.cats = defaultdict(int) # all cats
         self.words = defaultdict(int)
-        self.prefixes = defaultdict(int)
-        self.suffixes = defaultdict(int)
+        self.chars = defaultdict(int)
         self.samples = {}
         self.sents = []
 
         self.words[UNK]      = 10000
         self.words[START]    = 10000
         self.words[END]      = 10000
-        self.suffixes[UNK]   = 10000
-        self.suffixes[START] = 10000
-        self.suffixes[END]   = 10000
-        self.prefixes[UNK]   = 10000
-        self.prefixes[START] = 10000
-        self.prefixes[END]   = 10000
+        self.chars[UNK]      = 10000
+        self.chars[START]    = 10000
+        self.chars[END]      = 10000
         self.cats[START]     = 10000
         self.cats[END]       = 10000
 
     def _traverse(self, tree):
         if isinstance(tree, Leaf):
-            self.cats[str(tree.cat)] += 1
-            w = normalize(tree.word)
+            self.cats[tree.cat.without_semantics] += 1
+            w = tree.word
             self.words[w] += 1
-            self.suffixes[get_suffix(w)] += 1
-            self.prefixes[get_prefix(w)] += 1
+            for c in w:
+                self.chars[c] += 1
         else:
             children = tree.children
             if len(children) == 1:
-                rule = str(tree.cat) + \
-                        " " + str(children[0].cat)
+                rule = tree.cat.without_semantics + \
+                        " " + children[0].cat.without_semantics
                 self.unary_rules[rule] += 1
                 self._traverse(children[0])
             else:
-                rule = str(children[0].cat) + \
-                        " " + str(children[1].cat)
+                rule = children[0].cat.without_semantics + \
+                        " " + children[1].cat.without_semantics
                 self.seen_rules[rule] += 1
                 self._traverse(children[0])
                 self._traverse(children[1])
@@ -108,7 +84,7 @@ class TrainingDataCreator(object):
     def _create_samples(self, trees):
         for tree in trees:
             tokens = get_leaves(tree)
-            words = [normalize(token.word) for token in tokens]
+            words = [token.word for token in tokens]
             cats = [token.cat.without_semantics for token in tokens]
             sent = " ".join(words)
             self.sents.append(sent)
@@ -117,11 +93,11 @@ class TrainingDataCreator(object):
     @staticmethod
     def create_traindata(args):
         self = TrainingDataCreator(args.path,
-                args.word_freq_cut, args.cat_freq_cut, args.afix_freq_cut)
+                args.word_freq_cut, args.cat_freq_cut)
         with open(args.out + "/log_create_traindata", "w") as f:
             log(args, f)
 
-        trees = walk_autodir(self.filepath, args.subset)
+        trees = JaCCGReader(self.filepath).readall()
         for tree in trees:
             self._traverse(tree)
         self._create_samples(trees)
@@ -130,10 +106,6 @@ class TrainingDataCreator(object):
                         if v >= self.cat_freq_cut}
         self.words = {k: v for (k, v) in self.words.items() \
                         if v >= self.word_freq_cut}
-        self.suffixes = {k: v for (k, v) in self.suffixes.items() \
-                        if v >= self.afix_freq_cut}
-        self.prefixes = {k: v for (k, v) in self.prefixes.items() \
-                        if v >= self.afix_freq_cut}
         with open(args.out + "/unary_rules.txt", "w") as f:
             self._write(self.unary_rules, f, comment_out_value=True)
         with open(args.out + "/seen_rules.txt", "w") as f:
@@ -142,10 +114,8 @@ class TrainingDataCreator(object):
             self._write(self.cats, f, comment_out_value=False)
         with open(args.out + "/words.txt", "w") as f:
             self._write(self.words, f, comment_out_value=False)
-        with open(args.out + "/suffixes.txt", "w") as f:
-            self._write(self.suffixes, f, comment_out_value=False)
-        with open(args.out + "/prefixes.txt", "w") as f:
-            self._write(self.prefixes, f, comment_out_value=False)
+        with open(args.out + "/chars.txt", "w") as f:
+            self._write(self.chars, f, comment_out_value=False)
         with open(args.out + "/traindata.json", "w") as f:
             json.dump(self.samples, f)
         with open(args.out + "/trainsents.txt", "w") as f:
@@ -155,10 +125,10 @@ class TrainingDataCreator(object):
     @staticmethod
     def create_testdata(args):
         self = TrainingDataCreator(args.path,
-                args.word_freq_cut, args.cat_freq_cut, args.afix_freq_cut)
+                args.word_freq_cut, args.cat_freq_cut)
         with open(args.out + "/log_create_testdata", "w") as f:
             log(args, f)
-        trees = walk_autodir(self.filepath, args.subset)
+        trees = JaCCGReader(self.filepath).readall()
         self._create_samples(trees)
         with open(args.out + "/testdata.json", "w") as f:
             json.dump(self.samples, f)
@@ -171,12 +141,14 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
     def __init__(self, model_path, samples_path):
         self.model_path = model_path
         self.words = read_model_defs(model_path + "/words.txt")
-        self.suffixes = read_model_defs(model_path + "/suffixes.txt")
-        self.prefixes = read_model_defs(model_path + "/prefixes.txt")
+        self.chars = read_model_defs(model_path + "/chars.txt")
         self.targets = read_model_defs(model_path + "/target.txt")
         self.unk_word = self.words[UNK]
-        self.unk_suf = self.suffixes[UNK]
-        self.unk_prf = self.prefixes[UNK]
+        self.start_word = self.words[START]
+        self.end_word = self.words[END]
+        self.unk_char = self.chars[UNK]
+        self.start_char = self.chars[START]
+        self.end_char = self.chars[END]
         with open(samples_path) as f:
             self.samples = json.load(f).items()
 
@@ -185,18 +157,24 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
 
     def get_example(self, i):
         words, y = self.samples[i]
-        words = [START] + words.split(" ") + [END]
+        words = words.split(" ")
         y = [START] + y.split(" ") + [END]
-        w = np.array([self.words.get(x,
-            self.words.get(x.lower(), self.unk_word)) for x in words], 'i')
-        s = np.array([self.suffixes.get(get_suffix(x), self.unk_suf) for x in words], 'i')
-        p = np.array([self.prefixes.get(get_prefix(x), self.unk_prf) for x in words], 'i')
+        w = np.array([self.start_word] + [self.words.get(
+            x, self.unk_word) for x in words] + [self.end_word], 'i')
+        l = np.array([1] + [len(x) for x in words] + [1], 'f')
+        max_wordlen = int(l.max())
+        c = -np.ones((len(words) + 2, max_wordlen), 'i')
+        c[0, 0] = self.start_char
+        c[-1, 0] = self.end_char
+        for i, word in enumerate(words, 1):
+            for j in range(len(word)):
+                c[i, j] = self.chars.get(word[j], self.unk_char)
         y = np.array([self.targets.get(x, IGNORE) for x in y], 'i')
-        return w, s, p, y
+        return w, c, l, y
 
 
 class LSTMTagger(chainer.Chain):
-    def __init__(self, model_path, word_dim, afix_dim, nlayers,
+    def __init__(self, model_path, word_dim, char_dim, nlayers,
             hidden_dim, relu_dim, dropout_ratio=0.5):
         self.model_path = model_path
         defs_file = model_path + "/tagger_defs.txt"
@@ -205,21 +183,20 @@ class LSTMTagger(chainer.Chain):
             with open(defs_file) as f:
                 defs = json.load(f)
             self.word_dim = defs["word_dim"]
-            self.afix_dim = defs["afix_dim"]
+            self.char_dim = defs["char_dim"]
         else:
             # training
             self.word_dim = word_dim
-            self.afix_dim = afix_dim
+            self.char_dim = char_dim
             with open(defs_file, "w") as f:
                 json.dump({"model": self.__class__.__name__,
                            "word_dim": self.word_dim,
-                           "afix_dim": self.afix_dim}, f)
+                           "char_dim": self.char_dim}, f)
 
         self.targets = read_model_defs(model_path + "/target.txt")
         self.words = read_model_defs(model_path + "/words.txt")
-        self.suffixes = read_model_defs(model_path + "/suffixes.txt")
-        self.prefixes = read_model_defs(model_path + "/prefixes.txt")
-        self.in_dim = self.word_dim + 2 * self.afix_dim
+        self.chars = read_model_defs(model_path + "/chars.txt")
+        self.in_dim = self.word_dim + self.char_dim
         self.hidden_dim = hidden_dim
         self.relu_dim = relu_dim
         self.nlayers = nlayers
@@ -227,8 +204,7 @@ class LSTMTagger(chainer.Chain):
         self.train = True
         super(LSTMTagger, self).__init__(
                 emb_word=L.EmbedID(len(self.words), self.word_dim),
-                emb_suf=L.EmbedID(len(self.suffixes), self.afix_dim),
-                emb_prf=L.EmbedID(len(self.prefixes), self.afix_dim),
+                emb_char=L.EmbedID(len(self.chars), self.char_dim),
                 lstm_f=L.NStepLSTM(nlayers, self.in_dim,
                     self.hidden_dim, dropout_ratio),
                 lstm_b=L.NStepLSTM(nlayers, self.in_dim,
@@ -243,16 +219,18 @@ class LSTMTagger(chainer.Chain):
     def __call__(self, xs):
         """
         xs [(w,s,p,y), ..., ]
-        w: word, s: suffix, p: prefix, y: label
+        w: word, c: char, l: length, y: label
         """
         batchsize = len(xs)
-        ws, ss, ps, ts = zip(*xs)
+        ws, cs, ls, ts = zip(*xs)
+        # cs: [(sentence length, max word length)]
         ws = map(self.emb_word, ws)
-        ss = map(self.emb_suf, ss)
-        ps = map(self.emb_prf, ps)
-        # [(sentence length, (word_dim + suf_dim + prf_dim))]
-        xs_f = [F.dropout(F.concat([w, s, p]),
-            self.dropout_ratio, train=self.train) for w, s, p in zip(ws, ss, ps)]
+        # ls: [(sentence length, char dim)]
+        ls = [np.expand_dims(l, 1).repeat(self.char_dim, 1) for l in ls]
+        cs = map(lambda (c, l): F.sum(self.emb_char(c), 1) / l, zip(cs, ls))
+        # [(sentence length, (word_dim + char_dim))]
+        xs_f = [F.dropout(F.concat([w, c]),
+            self.dropout_ratio, train=self.train) for w, c in zip(ws, cs)]
         xs_b = list(reversed(xs_f))
         cx_f, hx_f, cx_b, hx_b = self._init_state(batchsize)
         _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
@@ -290,7 +268,7 @@ def converter(x, device):
 
 
 def train(args):
-    model = LSTMTagger(args.model, args.word_emb_size, args.afix_emb_size,
+    model = LSTMTagger(args.model, args.word_emb_size, args.char_emb_size,
             args.nlayers, args.hidden_dim, args.relu_dim, args.dropout_ratio)
     with open(args.model + "/params", "w") as f:
             log(args, f)
@@ -353,12 +331,6 @@ if __name__ == "__main__":
     parser_c.add_argument("--word-freq-cut",
             type=int, default=5,
             help="only allow words which appear >= freq-cut")
-    parser_c.add_argument("--afix-freq-cut",
-            type=int, default=5,
-            help="only allow afixes which appear >= freq-cut")
-    parser_c.add_argument("--subset",
-            choices=["train", "test", "dev", "all"],
-            default="train")
     parser_c.add_argument("--mode",
             choices=["train", "test"],
             default="train")
@@ -386,7 +358,7 @@ if __name__ == "__main__":
     parser_t.add_argument("--word-emb-size",
             type=int, default=50,
             help="word embedding size")
-    parser_t.add_argument("--afix-emb-size",
+    parser_t.add_argument("--char-emb-size",
             type=int, default=32,
             help="character embedding size")
     parser_t.add_argument("--nlayers",
