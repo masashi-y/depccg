@@ -230,9 +230,9 @@ class LSTMTagger(chainer.Chain):
                 emb_suf=L.EmbedID(len(self.suffixes), self.afix_dim),
                 emb_prf=L.EmbedID(len(self.prefixes), self.afix_dim),
                 lstm_f=L.NStepLSTM(nlayers, self.in_dim,
-                    self.hidden_dim, dropout_ratio),
+                    self.hidden_dim, 0.),
                 lstm_b=L.NStepLSTM(nlayers, self.in_dim,
-                    self.hidden_dim, dropout_ratio),
+                    self.hidden_dim, 0.),
                 linear1=L.Linear(2 * self.hidden_dim, self.relu_dim),
                 linear2=L.Linear(self.relu_dim, len(self.targets)),
                 )

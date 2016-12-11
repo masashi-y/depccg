@@ -9,7 +9,6 @@ from chainer import cuda
 from chainer import training, Variable
 from chainer.training import extensions
 from chainer.optimizer import WeightDecay, GradientClipping
-from ccgbank import walk_autodir
 from japanese_ccg import JaCCGReader
 from collections import defaultdict
 from py_utils import read_pretrained_embeddings, read_model_defs
@@ -19,7 +18,6 @@ UNK = "*UNKNOWN*"
 START = "*START*"
 END = "*END*"
 IGNORE = -1
-MISS = -2
 
 def log(args, out):
     for k, v in vars(args).items():
@@ -29,10 +27,11 @@ class TrainingDataCreator(object):
     """
     create train & validation data
     """
-    def __init__(self, filepath, word_freq_cut, cat_freq_cut):
+    def __init__(self, filepath, word_freq_cut, char_freq_cut, cat_freq_cut):
         self.filepath = filepath
          # those categories whose frequency < freq_cut are discarded.
         self.word_freq_cut = word_freq_cut
+        self.char_freq_cut = char_freq_cut
         self.cat_freq_cut  = cat_freq_cut
         self.seen_rules = defaultdict(int) # seen binary rules
         self.unary_rules = defaultdict(int) # seen unary rules
@@ -93,7 +92,7 @@ class TrainingDataCreator(object):
     @staticmethod
     def create_traindata(args):
         self = TrainingDataCreator(args.path,
-                args.word_freq_cut, args.cat_freq_cut)
+                args.word_freq_cut, args.char_freq_cut, args.cat_freq_cut)
         with open(args.out + "/log_create_traindata", "w") as f:
             log(args, f)
 
@@ -106,6 +105,8 @@ class TrainingDataCreator(object):
                         if v >= self.cat_freq_cut}
         self.words = {k: v for (k, v) in self.words.items() \
                         if v >= self.word_freq_cut}
+        self.chars = {k: v for (k, v) in self.chars.items() \
+                        if v >= self.char_freq_cut}
         with open(args.out + "/unary_rules.txt", "w") as f:
             self._write(self.unary_rules, f, comment_out_value=True)
         with open(args.out + "/seen_rules.txt", "w") as f:
@@ -125,7 +126,7 @@ class TrainingDataCreator(object):
     @staticmethod
     def create_testdata(args):
         self = TrainingDataCreator(args.path,
-                args.word_freq_cut, args.cat_freq_cut)
+                args.word_freq_cut, args.char_freq_cut, args.cat_freq_cut)
         with open(args.out + "/log_create_testdata", "w") as f:
             log(args, f)
         trees = JaCCGReader(self.filepath).readall()
@@ -161,9 +162,8 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
         y = [START] + y.split(" ") + [END]
         w = np.array([self.start_word] + [self.words.get(
             x, self.unk_word) for x in words] + [self.end_word], 'i')
-        l = np.array([1] + [len(x) for x in words] + [1], 'f')
-        max_wordlen = int(l.max())
-        c = -np.ones((len(words) + 2, max_wordlen), 'i')
+        l = max(len(x) for x in words)
+        c = -np.ones((len(words) + 2, l), 'i')
         c[0, 0] = self.start_char
         c[-1, 0] = self.end_char
         for i, word in enumerate(words, 1):
@@ -204,11 +204,15 @@ class LSTMTagger(chainer.Chain):
         self.train = True
         super(LSTMTagger, self).__init__(
                 emb_word=L.EmbedID(len(self.words), self.word_dim),
-                emb_char=L.EmbedID(len(self.chars), self.char_dim),
+                emb_char=L.EmbedID(len(self.chars), 50, ignore_label=IGNORE),
+                conv_char=L.Convolution2D(1, self.char_dim,
+                    (3, 50), stride=1, pad=(1, 0)),
                 lstm_f=L.NStepLSTM(nlayers, self.in_dim,
-                    self.hidden_dim, dropout_ratio),
+                    self.hidden_dim, 0.),
                 lstm_b=L.NStepLSTM(nlayers, self.in_dim,
-                    self.hidden_dim, dropout_ratio),
+                    self.hidden_dim, 0.),
+                conv1=L.Convolution2D(1, 2 * self.hidden_dim,
+                    (7, 2 * self.hidden_dim), stride=1, pad=(3, 0)),
                 linear1=L.Linear(2 * self.hidden_dim, self.relu_dim),
                 linear2=L.Linear(self.relu_dim, len(self.targets)),
                 )
@@ -226,20 +230,40 @@ class LSTMTagger(chainer.Chain):
         # cs: [(sentence length, max word length)]
         ws = map(self.emb_word, ws)
         # ls: [(sentence length, char dim)]
-        ls = [np.expand_dims(l, 1).repeat(self.char_dim, 1) for l in ls]
-        cs = map(lambda (c, l): F.sum(self.emb_char(c), 1) / l, zip(cs, ls))
+        # cs = map(lambda (c, l): F.sum(self.emb_char(c), 1) / l, zip(cs, ls))
+        # cs = [F.reshape(F.average_pooling_2d(
+        #         F.expand_dims(self.emb_char(c), 0), (l, 1)), (-1, self.char_dim))
+        #             for c, l in zip(cs, ls)]
+        # before conv: (sent len, 1, max word len, char_size)
+        # after conv: (sent len, char_size, max word len, 1)
+        # after max_pool: (sent len, char_size, 1, 1)
+        cs = [F.squeeze(
+            F.max_pooling_2d(
+                self.conv_char(
+                    F.expand_dims(
+                        self.emb_char(c), 1)), (l, 1)))
+                    for c, l in zip(cs, ls)]
         # [(sentence length, (word_dim + char_dim))]
         xs_f = [F.dropout(F.concat([w, c]),
             self.dropout_ratio, train=self.train) for w, c in zip(ws, cs)]
-        xs_b = list(reversed(xs_f))
+        xs_b = [x[::-1] for x in xs_f]
         cx_f, hx_f, cx_b, hx_b = self._init_state(batchsize)
         _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
         _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
-        hs_b = list(reversed(hs_b))
+        hs_b = [x[::-1] for x in hs_b]
         # ys: [(sentence length, number of category)]
-        ys = [self.linear2(F.relu(
-                self.linear1(F.concat([h_f, h_b]))))
+        ys = [self.linear2(F.relu(self.linear1(F.concat([h_f, h_b]))))
                     for h_f, h_b in zip(hs_f, hs_b)]
+        # ys = [self.linear2(F.relu(
+        #         self.linear1(
+        #             F.squeeze(
+        #                 F.transpose(
+        #                     F.relu(self.conv1(
+        #                         F.reshape(
+        #                             F.concat([h_f, h_b]),
+        #                             (1, 1, -1, 2 * self.hidden_dim))), (0, 3, 2, 1))
+        #                 )))))
+        #             for h_f, h_b in zip(hs_f, hs_b)]
         loss = reduce(lambda x, y: x + y,
             [F.softmax_cross_entropy(y, t) for y, t in zip(ys, ts)])
         acc = reduce(lambda x, y: x + y,
@@ -288,11 +312,11 @@ def train(args):
     optimizer = chainer.optimizers.MomentumSGD(momentum=0.7)
     optimizer.setup(model)
     optimizer.add_hook(WeightDecay(1e-6))
-    optimizer.add_hook(GradientClipping(5.))
+    # optimizer.add_hook(GradientClipping(5.))
     updater = training.StandardUpdater(train_iter, optimizer, converter=converter)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)
 
-    val_interval = 2000, 'iteration'
+    val_interval = 1000, 'iteration'
     log_interval = 200, 'iteration'
 
     eval_model = model.copy()
@@ -305,7 +329,7 @@ def train(args):
     trainer.extend(extensions.LogReport(trigger=log_interval))
     trainer.extend(extensions.PrintReport([
         'epoch', 'iteration', 'main/loss', 'validation/main/loss',
-        'main/accuracy', 'validation/main/accuracy', 'validation/main/ignore_unseen',
+        'main/accuracy', 'validation/main/accuracy',
     ]), trigger=log_interval)
     trainer.extend(extensions.ProgressBar(update_interval=10))
 
@@ -331,6 +355,9 @@ if __name__ == "__main__":
     parser_c.add_argument("--word-freq-cut",
             type=int, default=5,
             help="only allow words which appear >= freq-cut")
+    parser_c.add_argument("--char-freq-cut",
+            type=int, default=5,
+            help="only allow characters which appear >= freq-cut")
     parser_c.add_argument("--mode",
             choices=["train", "test"],
             default="train")
@@ -380,5 +407,4 @@ if __name__ == "__main__":
     parser_t.set_defaults(func=train)
 
     args = parser.parse_args()
-
     args.func(args)
