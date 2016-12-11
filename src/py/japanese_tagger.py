@@ -45,12 +45,12 @@ class JaCCGInspector(object):
         self.chars[PAD] = 10000
 
     def _traverse(self, tree):
-        self.cats[tree.cat.without_semantics] += 1
         if isinstance(tree, Leaf):
-            w = tree.word#.encode("utf-8")
+            self.cats[tree.cat.without_semantics] += 1
+            w = tree.word
             self.words[w] += 1
             for c in tree.word:
-                self.chars[c] += 1#.encode("utf-8")] += 1
+                self.chars[c] += 1
         else:
             children = tree.children
             if len(children) == 1:
@@ -216,6 +216,9 @@ class JaCCGEmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
                 linear2=L.Linear(hidden_dim, len(self.targets)),
                 )
 
+    def load_pretrained_embeddings(self, path):
+        self.emb_word.W.data = read_pretrained_embeddings(path)
+
     def __call__(self, ws, cs, ls, ts):
         h_w = self.emb_word(ws) #_(batchsize, windowsize, word_dim)
         h_c = self.emb_char(cs) # (batchsize, windowsize, max_char_len, char_dim)
@@ -287,6 +290,10 @@ def train(args):
         print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)
 
+    if args.pretrained:
+        print 'Load pretrained word embeddings from', args.pretrained
+        model.load_pretrained_embeddings(args.pretrained)
+
     train = JaCCGTaggerDataset(args.model, args.train)
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
     val = JaCCGTaggerDataset(args.model, args.val)
@@ -299,7 +306,7 @@ def train(args):
     updater = training.StandardUpdater(train_iter, optimizer, converter=my_converter)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)
 
-    val_interval = 5000, 'iteration'
+    val_interval = 1000, 'iteration'
     log_interval = 200, 'iteration'
 
     eval_model = model.copy()
@@ -380,6 +387,8 @@ if __name__ == "__main__":
             help="character embedding size")
     parser_t.add_argument("--initmodel",
             help="initialize model with `initmodel`")
+    parser_t.add_argument("--pretrained",
+            help="pretrained word embeddings")
     parser_t.set_defaults(func=train)
 
     args = parser.parse_args()

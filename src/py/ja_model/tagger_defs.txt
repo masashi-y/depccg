@@ -1,1 +1,1 @@
-{"model": "JaCCGEmbeddingTagger", "word_dim": 50, "char_dim": 50}
+{"model": "LSTMTagger", "word_dim": 200, "char_dim": 200}
