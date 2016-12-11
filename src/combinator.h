@@ -5,6 +5,7 @@
 #include "cat.h"
 #include <vector>
 #include <stdexcept>
+#include <unordered_set>
 
 namespace myccg {
 namespace combinator {
@@ -77,13 +78,15 @@ public:
 class Conjunction: public Combinator
 {
 public:
-    Conjunction(): Combinator(CONJ) {}
+    Conjunction(): Combinator(CONJ)
+    : puncts_({cat::Category::Parse(","),
+               cat::Category::Parse(";"),
+               cat::Category::Parse("conj")}) {}
+
     bool CanApply(Cat left, Cat right) const {
-        if (cat::NPbNP->Matches(right))
+        if (cat::Category::Parse("NP\\NP")->Matches(right))
             return false;
-        return (*left == *cat::CONJ ||
-                *left == *cat::COMMA ||
-                *left == *cat::SEMICOLON) &&
+        return (puncts_.count(left) > 0 &&
                 !right->IsPunct() &&
                 !right->IsTypeRaised() &&
                 ! (!right->IsFunctor() &&
@@ -96,6 +99,9 @@ public:
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     const std::string ToStr() const { return "<Φ>"; }
+
+private:
+    std::unordered_set<Cat> puncts_;
 };
 
 class RemovePunctuation: public Combinator
@@ -106,7 +112,7 @@ public:
 
     bool CanApply(Cat left, Cat right) const {
         return punct_is_left_ ? left->IsPunct() :
-            (right->IsPunct() && !cat::N->Matches(left));
+            (right->IsPunct() && left->GetType() != "N");
     }
     Cat Apply(Cat left, Cat right) const {
         return punct_is_left_ ? right : left;
@@ -123,15 +129,20 @@ private:
 class RemovePunctuationLeft: public Combinator
 {
 public:
-    RemovePunctuationLeft(): Combinator(LP) {}
+    RemovePunctuationLeft(): Combinator(LP)
+    : puncts_({cat::Category::Parse("LQU"),
+               cat::Category::Parse("LRB"),}) {}
 
     bool CanApply(Cat left, Cat right) const {
-        return *left == *cat::LQU || *left == *cat::LRB;
+        return puncts_.count(left) > 0;
     }
 
     Cat Apply(Cat left, Cat right) const { return right; }
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     const std::string ToStr() const { return "<rp>"; };
+
+private:
+    std::unordered_set<Cat> puncts_;
 };
 
 class SpecialCombinator: public Combinator

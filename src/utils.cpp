@@ -9,7 +9,6 @@
 namespace myccg {
 namespace utils {
 
-
 const std::string DropBrackets(const std::string& in) {
     int length = in.size();
     if (in[0] == '(' && in[length-1] == ')' &&

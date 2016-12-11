@@ -4,11 +4,9 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <stdexcept>
-#include <omp.h>
-#include <unordered_map>
-#include <unordered_set>
+#include "cacheable.h"
+#include "feat.h"
 
 #define print(value) std::cout << (value) << std::endl;
 
@@ -17,14 +15,15 @@ namespace cat {
 
 class Category;
 class Slash;
-class Feature;
 
-typedef const Feature* Feat;
 typedef const Category* Cat;
 typedef std::pair<Cat, Cat> CatPair;
 
 Cat Make(Cat left, const Slash& op, Cat right);
 Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
+
+extern Feat kNONE;
+extern Feat kNB;
 
 class Slash
 {
@@ -52,69 +51,6 @@ public:
 private:
     char slash_;
 };
-
-class Cacheable
-{
-public:
-    Cacheable();
-    bool operator==(const Cacheable& other) { return this->id_ == other.id_; }
-    bool operator==(const Cacheable& other) const { return this->id_ == other.id_; }
-    inline int GetId() const { return id_; }
-    void RegisterCache(const std::string& key) const;
-
-private:
-    static int ids;
-    int id_;
-};
-
-#ifdef JAPANESE
-class Feature: public Cacheable
-{
-public:
-    static Feat Parse(const std::string& string);
-
-    ~Feature() {}
-
-    std::string ToStr() const;
-    bool IsEmpty() const { return values_.empty(); }
-    bool Matches(const Feature* other) const;
-    bool ContainsWildcard() const { return contains_wildcard_; }
-    std::string SubstituteWildcard(const std::string& string) const;
-
-private:
-    Feature(const std::string& value);
-private:
-    std::vector<std::pair<std::string, std::string>> values_;
-    bool contains_wildcard_;
-};
-
-#else
-class Feature: public Cacheable
-{
-public:
-    static Feat Parse(const std::string& string);
-
-    ~Feature() {}
-
-    std::string ToStr() const { return IsEmpty() ? "" : "[" + value_ + "]"; }
-    bool IsEmpty() const { return value_.empty(); }
-    bool Matches(const Feature* other) const {
-        return (GetId() == other->GetId() ||
-                this->ContainsWildcard() ||
-                other->ContainsWildcard());
-    }
-    bool ContainsWildcard() const { return value_ == "X"; }
-
-    std::string SubstituteWildcard(const std::string& string) const;
-private:
-    Feature(const std::string& value): value_(value) {}
-private:
-    std::string value_;
-};
-#endif
-extern Feat kWILDCARD;
-extern Feat kNONE;
-extern Feat kNB;
 
 class Category: public Cacheable
 {
@@ -369,18 +305,6 @@ private:
     std::string type_;
     Feat feat_;
 };
-
-extern Cat COMMA;
-extern Cat SEMICOLON;
-extern Cat CONJ;
-extern Cat N;
-extern Cat LQU;
-extern Cat LRB;
-extern Cat NP;
-extern Cat NPbNP;
-extern Cat PP;
-extern Cat PREPOSITION;
-extern Cat PR;
 
 } // namespace cat
 } // namespace myccg
