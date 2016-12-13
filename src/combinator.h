@@ -78,8 +78,8 @@ public:
 class Conjunction: public Combinator
 {
 public:
-    Conjunction(): Combinator(CONJ)
-    : puncts_({cat::Category::Parse(","),
+    Conjunction(): Combinator(CONJ),
+      puncts_({cat::Category::Parse(","),
                cat::Category::Parse(";"),
                cat::Category::Parse("conj")}) {}
 
@@ -90,7 +90,7 @@ public:
                 !right->IsPunct() &&
                 !right->IsTypeRaised() &&
                 ! (!right->IsFunctor() &&
-                        right->GetType() == "N");
+                        right->GetType() == "N"));
     }
 
     Cat Apply(Cat left, Cat right) const {
@@ -112,7 +112,9 @@ public:
 
     bool CanApply(Cat left, Cat right) const {
         return punct_is_left_ ? left->IsPunct() :
-            (right->IsPunct() && left->GetType() != "N");
+            (right->IsPunct() &&
+            !left->IsFunctor() &&
+            left->GetType() != "N");
     }
     Cat Apply(Cat left, Cat right) const {
         return punct_is_left_ ? right : left;
@@ -129,8 +131,8 @@ private:
 class RemovePunctuationLeft: public Combinator
 {
 public:
-    RemovePunctuationLeft(): Combinator(LP)
-    : puncts_({cat::Category::Parse("LQU"),
+    RemovePunctuationLeft(): Combinator(LP),
+      puncts_({cat::Category::Parse("LQU"),
                cat::Category::Parse("LRB"),}) {}
 
     bool CanApply(Cat left, Cat right) const {

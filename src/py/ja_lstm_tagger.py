@@ -173,36 +173,41 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
         return w, c, l, y
 
 
-class LSTMTagger(chainer.Chain):
-    def __init__(self, model_path, word_dim, char_dim, nlayers,
-            hidden_dim, relu_dim, dropout_ratio=0.5):
+class JaLSTMTagger(chainer.Chain):
+    def __init__(self, model_path, word_dim=None, char_dim=None,
+            nlayers=2, hidden_dim=128, relu_dim=64, dropout_ratio=0.5):
         self.model_path = model_path
         defs_file = model_path + "/tagger_defs.txt"
         if word_dim is None:
             # use as supertagger
             with open(defs_file) as f:
                 defs = json.load(f)
-            self.word_dim = defs["word_dim"]
-            self.char_dim = defs["char_dim"]
+            self.word_dim   = defs["word_dim"]
+            self.char_dim   = defs["char_dim"]
+            self.hidden_dim = defs["hidden_dim"]
+            self.relu_dim   = defs["relu_dim"]
+            self.nlayers    = defs["nlayers"]
+            self.train = False
         else:
             # training
             self.word_dim = word_dim
             self.char_dim = char_dim
+            self.hidden_dim = hidden_dim
+            self.relu_dim = relu_dim
+            self.nlayers = nlayers
+            self.train = True
             with open(defs_file, "w") as f:
                 json.dump({"model": self.__class__.__name__,
-                           "word_dim": self.word_dim,
-                           "char_dim": self.char_dim}, f)
+                           "word_dim": self.word_dim, "char_dim": self.char_dim,
+                           "hidden_dim": hidden_dim, "relu_dim": relu_dim,
+                           "nlayers": nlayers}, f)
 
         self.targets = read_model_defs(model_path + "/target.txt")
         self.words = read_model_defs(model_path + "/words.txt")
         self.chars = read_model_defs(model_path + "/chars.txt")
         self.in_dim = self.word_dim + self.char_dim
-        self.hidden_dim = hidden_dim
-        self.relu_dim = relu_dim
-        self.nlayers = nlayers
         self.dropout_ratio = dropout_ratio
-        self.train = True
-        super(LSTMTagger, self).__init__(
+        super(JaLSTMTagger, self).__init__(
                 emb_word=L.EmbedID(len(self.words), self.word_dim),
                 emb_char=L.EmbedID(len(self.chars), 50, ignore_label=IGNORE),
                 conv_char=L.Convolution2D(1, self.char_dim,
@@ -275,6 +280,40 @@ class LSTMTagger(chainer.Chain):
             "accuracy": acc
             }, self)
         return loss
+
+    def predict(self, batch):
+        """
+        batch: list of splitted sentences
+        """
+        batchsize = len(xs)
+        ws, cs, ls, ts = zip(*xs)
+        ws = map(self.emb_word, ws)
+        cs = [F.squeeze(
+            F.max_pooling_2d(
+                self.conv_char(
+                    F.expand_dims(
+                        self.emb_char(c), 1)), (l, 1)))
+                    for c, l in zip(cs, ls)]
+        xs_f = [F.dropout(F.concat([w, c]),
+            self.dropout_ratio, train=self.train) for w, c in zip(ws, cs)]
+        xs_b = [x[::-1] for x in xs_f]
+        cx_f, hx_f, cx_b, hx_b = self._init_state(batchsize)
+        _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
+        _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
+        hs_b = [x[::-1] for x in hs_b]
+        ys = [self.linear2(F.relu(self.linear1(F.concat([h_f, h_b]))))
+                    for h_f, h_b in zip(hs_f, hs_b)]
+        return [y.data[1:-1] for y in ys]
+
+    def predict_doc(self, doc, batchsize=16):
+        """
+        doc list of splitted sentences
+        """
+        res = []
+        for i in xrange(0, len(doc), batchsize):
+            res.extend([(i + j, 0, y)
+                for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
+        return res
 
     def _init_state(self, batchsize):
         res = [Variable(np.zeros(( # forward cx, hx, backward cx, hx
