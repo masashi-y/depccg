@@ -163,9 +163,11 @@ public:
                 slash_.ToStr() + right_->ToStrWithoutFeat() + ")";
     }
 
-    virtual const std::string& GetType() const { throw std::logic_error("not implemented"); }
+    const std::string& GetType() const {
+        throw std::logic_error("GetType: not implemented");
+    }
 
-    virtual Feat GetFeat() const { throw std::logic_error("not implemented"); }
+    Feat GetFeat() const { throw std::logic_error("GetFeat: not implemented"); }
 
     Cat GetLeft() const { return left_;  }
 
