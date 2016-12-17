@@ -84,6 +84,15 @@ class Cat(object):
             return self
         return Cat.parse(self.string.replace(WILDCARD, sub))
 
+    def has_functor_at_left(self, order):
+        return self.left.has_functor_at_left(order-1) \
+                if self.is_functor else False
+
+    def get_left(self, order):
+        if order == 0: return self
+        return self.left.get_left(order-1)
+
+
 class Functor(Cat):
     def __init__(self, left, slash, right, semantics):
         base = left.with_brackets + str(slash) + right.with_brackets
@@ -114,12 +123,21 @@ class Functor(Cat):
         return self.left == self.right
 
     @property
+    def is_modifier_without_feat(self):
+        return self.left.without_feat == self.right.without_feat
+
+    @property
     def is_type_raised(self):
         """
         X|(X|Y)
         """
         return self.right.is_functor and \
                 self.right.left == self.left
+
+    @property
+    def is_type_raised_without_feat(self):
+        return self.right.is_functor and \
+                self.right.left.without_feat == self.left.without_feat
 
     @property
     def is_forward_type_raised(self):
@@ -230,7 +248,15 @@ class Atomic(Cat):
         return False
 
     @property
+    def is_modifier_without_feat(self):
+        return False
+
+    @property
     def is_type_raised(self):
+        return False
+
+    @property
+    def is_type_raised_without_feat(self):
         return False
 
     @property
@@ -367,6 +393,13 @@ def parse_uncached(cat):
 
 def make(left, op, right):
     return parse(left.with_brackets + str(op) + right.with_brackets)
+
+def compose(order, head, slash, tail):
+    if order == 0:
+        return make(head, op, tail.right)
+    target = tail.get_left(order).right
+    return compose(order-1, make(head, op, target),
+            tail.get_left(order-1).slash, tail)
 
 
 COMMA       = parse(",")

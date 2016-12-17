@@ -1,12 +1,35 @@
 
 from ccgbank import Tree, Leaf
 import cat
-import combinator
+from combinator import *
 from tree import get_leaves
 
 combinators = ["<", ">", "ADNext", "ADNint", "ADV0",
                "ADV1", "ADV2", ">B", "<B1", "<B2", "<B3",
                "<B4", ">Bx1", ">Bx2", ">Bx3", "SSEQ"]
+
+F = cat.Slash.Fwd()
+B = cat.Slash.Bwd()
+
+combinators = {
+        "<": BackwardApplication(),
+        ">": ForwardApplication(),
+        "ADNext": unary_rule,
+        "ADNint": unary_rule,
+        "ADV0": unary_rule,
+        "ADV1": unary_rule,
+        "ADV2": unary_rule,
+        ">B": GeneralizedForwardComposition(0, RuleType.FC, F, F, F),
+        "<B1": GeneralizedBackwardComposition(0, RuleType.BC, B, B, B),
+        "<B2": GeneralizedBackwardComposition(1, RuleType.BC, B, B, B),
+        "<B3": GeneralizedBackwardComposition(2, RuleType.BC, B, B, B),
+        "<B4": GeneralizedBackwardComposition(3, RuleType.BC, B, B, B),
+        ">Bx1": GeneralizedForwardComposition(0, RuleType.FX, F, B, B),
+        ">Bx2": GeneralizedForwardComposition(1, RuleType.FX, F, B, B),
+        ">Bx3": GeneralizedForwardComposition(2, RuleType.FX, F, B, B),
+        "SSEQ": SSEQ()
+        }
+
 
 
 class JaCCGReader(object):
@@ -64,9 +87,8 @@ class JaCCGLineReader(object):
     def parse_tree(self):
         self.check("{")
         op = self.next(" ")
-        op = op[1:]
+        op = combinators[op[1:]]
         cate = cat.parse(self.next(" ").encode("utf-8"))
-        left_is_head = True # TODO
         self.check("{")
         children = []
         while self.peek() != "}":
@@ -74,6 +96,8 @@ class JaCCGLineReader(object):
             if self.peek() == " ":
                 self.next(" ")
         self.next("}")
+        left_is_head = True if len(children) == 1 else \
+                op.head_is_left(children[0].cat, children[1].cat)
         return Tree(cate, left_is_head, children, op)
 
 def test():

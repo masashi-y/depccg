@@ -167,9 +167,8 @@ class TrainingDataCreator(object):
                 f.write(sent.encode("utf-8") + "\n")
 
 
-class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
-    def __init__(self, model_path, samples_path):
-        self.model_path = model_path
+class FeatureExtractor(object):
+    def __init__(self, model_path):
         self.words = read_model_defs(model_path + "/words.txt")
         self.suffixes = read_model_defs(model_path + "/suffixes.txt")
         self.prefixes = read_model_defs(model_path + "/prefixes.txt")
@@ -177,6 +176,23 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
         self.unk_word = self.words[UNK]
         self.unk_suf = self.suffixes[UNK]
         self.unk_prf = self.prefixes[UNK]
+
+    def process(self, words):
+        """
+        words: list of unicode tokens
+        """
+        words = [START] + words + [END]
+        w = np.array([self.words.get(x,
+            self.words.get(x.lower(), self.unk_word)) for x in words], 'i')
+        s = np.array([self.suffixes.get(get_suffix(x), self.unk_suf) for x in words], 'i')
+        p = np.array([self.prefixes.get(get_prefix(x), self.unk_prf) for x in words], 'i')
+        return w, s, p
+
+
+class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
+    def __init__(self, model_path, samples_path):
+        self.model_path = model_path
+        self.extractor = FeatureExtractor(model_path)
         with open(samples_path) as f:
             self.samples = json.load(f).items()
 
@@ -185,19 +201,15 @@ class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
 
     def get_example(self, i):
         words, y = self.samples[i]
-        words = [START] + words.split(" ") + [END]
+        w, s, p = self.extractor(words.split(" "))
         y = [START] + y.split(" ") + [END]
-        w = np.array([self.words.get(x,
-            self.words.get(x.lower(), self.unk_word)) for x in words], 'i')
-        s = np.array([self.suffixes.get(get_suffix(x), self.unk_suf) for x in words], 'i')
-        p = np.array([self.prefixes.get(get_prefix(x), self.unk_prf) for x in words], 'i')
         y = np.array([self.targets.get(x, IGNORE) for x in y], 'i')
         return w, s, p, y
 
 
 class LSTMTagger(chainer.Chain):
-    def __init__(self, model_path, word_dim, afix_dim, nlayers,
-            hidden_dim, relu_dim, dropout_ratio=0.5):
+    def __init__(self, model_path, word_dim=None, afix_dim=None,
+            nlayers=2, hidden_dim=128, relu_dim=64, dropout_ratio=0.5):
         self.model_path = model_path
         defs_file = model_path + "/tagger_defs.txt"
         if word_dim is None:
@@ -206,25 +218,31 @@ class LSTMTagger(chainer.Chain):
                 defs = json.load(f)
             self.word_dim = defs["word_dim"]
             self.afix_dim = defs["afix_dim"]
+            self.hidden_dim = defs["hidden_dim"]
+            self.relu_dim   = defs["relu_dim"]
+            self.nlayers    = defs["nlayers"]
+            self.train = False
+            self.extractor = FeatureExtractor(model_path)
         else:
             # training
             self.word_dim = word_dim
             self.afix_dim = afix_dim
+            self.hidden_dim = hidden_dim
+            self.relu_dim = relu_dim
+            self.nlayers = nlayers
+            self.train = True
             with open(defs_file, "w") as f:
                 json.dump({"model": self.__class__.__name__,
-                           "word_dim": self.word_dim,
-                           "afix_dim": self.afix_dim}, f)
+                           "word_dim": self.word_dim, "afix_dim": self.afix_dim,
+                           "hidden_dim": hidden_dim, "relu_dim": relu_dim,
+                           "nlayers": nlayers}, f)
 
         self.targets = read_model_defs(model_path + "/target.txt")
         self.words = read_model_defs(model_path + "/words.txt")
         self.suffixes = read_model_defs(model_path + "/suffixes.txt")
         self.prefixes = read_model_defs(model_path + "/prefixes.txt")
         self.in_dim = self.word_dim + 2 * self.afix_dim
-        self.hidden_dim = hidden_dim
-        self.relu_dim = relu_dim
-        self.nlayers = nlayers
         self.dropout_ratio = dropout_ratio
-        self.train = True
         super(LSTMTagger, self).__init__(
                 emb_word=L.EmbedID(len(self.words), self.word_dim),
                 emb_suf=L.EmbedID(len(self.suffixes), self.afix_dim),
@@ -253,11 +271,11 @@ class LSTMTagger(chainer.Chain):
         # [(sentence length, (word_dim + suf_dim + prf_dim))]
         xs_f = [F.dropout(F.concat([w, s, p]),
             self.dropout_ratio, train=self.train) for w, s, p in zip(ws, ss, ps)]
-        xs_b = list(reversed(xs_f))
+        xs_b = [x[::-1] for x in xs_f]
         cx_f, hx_f, cx_b, hx_b = self._init_state(batchsize)
         _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
         _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
-        hs_b = list(reversed(hs_b))
+        hs_b = [x[::-1] for x in hs_b]
         # ys: [(sentence length, number of category)]
         ys = [self.linear2(F.relu(
                 self.linear1(F.concat([h_f, h_b]))))
@@ -278,6 +296,44 @@ class LSTMTagger(chainer.Chain):
         res = [Variable(np.zeros(( # forward cx, hx, backward cx, hx
                 self.nlayers, batchsize, self.hidden_dim), 'f')) for _ in range(4)]
         return res
+
+    def predict(self, xs):
+        """
+        batch: list of splitted sentences
+        """
+        xs = [self.extractor.process(x) for x in xs]
+        batchsize = len(xs)
+        ws, ss, ps = zip(*xs)
+        ws = map(self.emb_word, ws)
+        ss = map(self.emb_suf, ss)
+        ps = map(self.emb_prf, ps)
+        xs_f = [F.dropout(F.concat([w, s, p]),
+            self.dropout_ratio, train=self.train) for w, s, p in zip(ws, ss, ps)]
+        xs_b = [x[::-1] for x in xs_f]
+        cx_f, hx_f, cx_b, hx_b = self._init_state(batchsize)
+        _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
+        _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
+        hs_b = [x[::-1] for x in hs_b]
+        ys = [self.linear2(F.relu(
+                self.linear1(F.concat([h_f, h_b]))))
+                    for h_f, h_b in zip(hs_f, hs_b)]
+        return [y.data[1:-1] for y in ys]
+
+    def predict_doc(self, doc, batchsize=16):
+        """
+        doc list of splitted sentences
+        """
+        res = []
+        print >> sys.stderr, "start", len(doc) / batchsize
+        for i in xrange(0, len(doc), batchsize):
+            print >> sys.stderr, i
+            res.extend([(i + j, 0, y)
+                for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
+        return res
+
+    @property
+    def cats(self):
+        return zip(*sorted(self.targets.items(), key=lambda x: x[1]))[0]
 
 
 def converter(x, device):
