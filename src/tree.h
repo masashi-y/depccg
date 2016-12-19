@@ -13,9 +13,20 @@ namespace myccg {
 namespace tree {
 
 using cat::Cat;
+using combinator::Op;
 
+class Node;
 class Leaf;
 class Tree;
+typedef std::shared_ptr<const Node> NodeType;
+typedef std::shared_ptr<const Tree> TreeType;
+typedef std::shared_ptr<const Leaf> LeafType;
+
+class FormatVisitor {
+public:
+    virtual int Visit(const Leaf* leaf) = 0;
+    virtual int Visit(const Tree* leaf) = 0;
+};
 
 class Node
 {
@@ -27,23 +38,24 @@ public:
 
     Cat GetCategory() { return cat_; }
     Cat GetCategory() const { return cat_; }
-
     const combinator::RuleType GetRuleType() { return rule_type_; }
     const combinator::RuleType GetRuleType() const { return rule_type_; }
-
-    virtual const std::string ToStr() const = 0;
-    virtual void ToXML(std::ostream& out) const = 0;
+    const std::string ToStr() const;
     virtual int GetHeadId() const = 0;
     virtual int GetDependencyLength() const = 0;
     virtual bool HeadIsLeft() const = 0;
     virtual bool IsUnary() const = 0;
+    virtual int NumDescendants() const = 0;
+    virtual int RightNumDescendants() const = 0;
+    virtual int LeftNumDescendants() const = 0;
+    virtual int Accept(FormatVisitor& visitor) const = 0;
+    virtual const Node* GetLeftMostChild() const = 0;
 
-    // to call ShowDerivation
-    friend Tree;
 
-private:
-    virtual int ShowDerivation(int lwidth, std::ostream& out) const = 0;
-    virtual void GetLeaves(std::vector<const Leaf*>* out) const = 0;
+    friend std::ostream& operator<<(std::ostream& ost, const Node* node) {
+        ost << node->ToStr();
+        return ost;
+    }
 
 protected:
     Cat cat_;
@@ -57,37 +69,17 @@ public:
     : Node(cat, combinator::LEXICON), word_(word), position_(position) {}
 
     ~Leaf() {}
-
-    const std::string ToStr() const {
-        std::stringstream out;
-        std::string pos = "POS";
-        out << "(<L ";
-        out << cat_->ToStr() << " ";
-        out << pos << " ";
-        out << pos << " ";
-        out << word_ << " ";
-        out << cat_->ToStr() << ">)";
-        return out.str();
-    }
-
-    void ToXML(std::ostream& out) const;
-
     std::string GetWord() const { return word_; }
-
     int GetPosition() const { return position_; }
-
     int GetHeadId() const { return position_; }
-
     int GetDependencyLength() const { return 0; }
-
     bool HeadIsLeft() const { return false; }
     bool IsUnary() const { return false; }
-private:
-    int ShowDerivation(int lwidth, std::ostream& out) const;
-
-    void GetLeaves(std::vector<const Leaf*>* out) const {
-        out->push_back(this);
-    }
+    int NumDescendants() const { return 0; }
+    int RightNumDescendants() const { return 0; }
+    int LeftNumDescendants() const { return 0; }
+    int Accept(FormatVisitor& visitor) const { return visitor.Visit(this); }
+    const Node* GetLeftMostChild() const { return this; }
 
 private:
     const std::string word_;
@@ -97,45 +89,33 @@ private:
 class Tree: public Node
 {
 public:
-    Tree(Cat cat, bool left_is_head, const Node* lchild,
-            const Node* rchild, const combinator::Combinator* rule)
-    : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
-      lchild_(lchild), rchild_(rchild), rule_(rule) {}
+    typedef std::shared_ptr<const Node> ChildType;
 
-    Tree(Cat cat, bool left_is_head, std::shared_ptr<const Node> lchild,
-            std::shared_ptr<const Node> rchild, const combinator::Combinator* rule)
+    Tree(Cat cat, bool left_is_head, const Node* lchild,
+            const Node* rchild, Op rule)
     : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
-      lchild_(lchild), rchild_(rchild), rule_(rule) {}
+      lchild_(lchild), rchild_(rchild), rule_(rule),
+      dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
+            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()) {}
+
+    Tree(Cat cat, bool left_is_head, ChildType lchild,
+            ChildType rchild, Op rule)
+    : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
+      lchild_(lchild), rchild_(rchild), rule_(rule),
+      dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
+            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()) {}
 
     Tree(Cat cat, const Node* lchild)
     : Node(cat, combinator::UNARY), left_is_head_(true),
-      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule) {}
+      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule),
+      dependency_length_(lchild_->GetDependencyLength()) {}
 
-    Tree(Cat cat, std::shared_ptr<const Node> lchild)
+    Tree(Cat cat, ChildType lchild)
     : Node(cat, combinator::UNARY), left_is_head_(true),
-      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule) {}
+      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule),
+      dependency_length_(lchild_->GetDependencyLength()) {}
 
     ~Tree() {}
-
-    const std::string ToStr() const {
-        std::stringstream out;
-        out << "(<T ";
-        out << this->cat_->ToStr() << " ";
-        out << (left_is_head_ ? "0 " : "1 ");
-        out << (NULL == rchild_ ? "1" : "2");
-        out << "> ";
-        out << lchild_->ToStr();
-        if (NULL !=  rchild_)
-            out << " " << rchild_->ToStr();
-        out << " )";
-        return out.str();
-    }
-
-    void ToXML(std::ostream& out) const;
-
-    const Node* GetLChild() const { return lchild_.get(); }
-
-    const Node* GetRChild() const { return rchild_.get(); }
 
     int GetHeadId() const {
         if (NULL == rchild_)
@@ -144,45 +124,137 @@ public:
             return left_is_head_ ? lchild_->GetHeadId() : rchild_->GetHeadId();
     }
 
-    int GetDependencyLength() const {
-        if (NULL == rchild_)
-            return lchild_->GetDependencyLength();
-        else
-            return (rchild_->GetHeadId() - lchild_->GetHeadId() +
-                    rchild_->GetDependencyLength() + lchild_->GetDependencyLength());
-    }
-
+    int GetDependencyLength() const { return dependency_length_; }
     bool HeadIsLeft() const { return left_is_head_; }
     bool IsUnary() const { return NULL == rchild_; }
-private:
-    int ShowDerivation(int lwidth, std::ostream& out) const;
-
-    void GetLeaves(std::vector<const Leaf*>* out) const {
-        lchild_->GetLeaves(out);
-        if (NULL != rchild_)
-            rchild_->GetLeaves(out);
+    int NumDescendants() const {
+        return ( rchild_ == NULL ? 0 : RightNumDescendants() ) + LeftNumDescendants();
     }
 
-    friend std::vector<const Leaf*> GetLeaves(const Tree* tree);
-    friend void ShowDerivation(const Tree* tree, std::ostream& out);
+    int LeftNumDescendants() const { return lchild_->NumDescendants() + 1; }
+    int RightNumDescendants() const { return rchild_->NumDescendants() + 1; }
+    ChildType GetLeftChild() const { return lchild_; }
+    ChildType GetRightChild() const { return rchild_; }
+    Op GetRule() const { return rule_; }
+    int Accept(FormatVisitor& visitor) const { return visitor.Visit(this); }
+    const Node* GetLeftMostChild() const { return lchild_->GetLeftMostChild(); }
 
 private:
     bool left_is_head_;
-    std::shared_ptr<const Node> lchild_;
-    std::shared_ptr<const Node> rchild_;
-    const combinator::Combinator* rule_;
+    ChildType lchild_;
+    ChildType rchild_;
+    Op rule_;
+    int dependency_length_;
 };
-
-std::vector<const Leaf*> GetLeaves(const Tree* tree);
 
 void ToXML(std::vector<std::shared_ptr<const Node>>&
         trees, std::ostream& out=std::cout);
 
-void ToXML(std::vector<const Tree*>& trees, std::ostream& out=std::cout);
+void ToXML(std::vector<const Node*>& trees, std::ostream& out=std::cout);
 
-void ShowDerivation(const Tree* tree, std::ostream& out=std::cout);
 
-void ShowDerivation(std::shared_ptr<const Node> tree, std::ostream& out=std::cout);
+class GetLeaves: public FormatVisitor {
+    typedef std::vector<const Leaf*> result_type;
+
+public:
+    GetLeaves() {}
+    result_type operator()(const Node* node) {
+        node->Accept(*this);
+        return leaves_;
+    }
+
+    int Visit(const Tree* tree) {
+        tree->GetLeftChild()->Accept(*this);
+        if (! tree->IsUnary())
+            tree->GetRightChild()->Accept(*this);
+        return 0;
+    }
+
+    int Visit(const Leaf* leaf) {
+        leaves_.push_back(leaf);
+        return 0;
+    }
+
+result_type leaves_;
+};
+
+class Derivation: public FormatVisitor {
+
+public:
+    Derivation(const Node* tree): tree_(tree), lwidth_(0) { Process(); }
+    Derivation(NodeType tree): tree_(tree.get()), lwidth_(0) { Process(); }
+
+    void Process();
+    std::string Get() const { return out_.str(); }
+    friend std::ostream& operator<<(std::ostream& ost, const Derivation& deriv) {
+        ost << deriv.out_.str();
+        return ost;
+    }
+    int Visit(const Tree* tree);
+    int Visit(const Leaf* leaf);
+
+private:
+    const Node* tree_;
+    std::stringstream out_;
+    int lwidth_;
+};
+
+class AUTO: public FormatVisitor {
+public:
+    AUTO(const Node* tree): tree_(tree) { Process(); }
+    AUTO(NodeType tree): tree_(tree.get()) { Process(); }
+
+    void Process() { tree_->Accept(*this); }
+    std::string Get() const { return out_.str(); }
+
+    int Visit(const Tree* tree) {
+        out_ << "(<T "
+             << tree->GetCategory() << " "
+             << (tree->HeadIsLeft() ? "0 " : "1 ")
+             << (tree->IsUnary() ? "1" : "2")
+             << "> ";
+        tree->GetLeftChild()->Accept(*this);
+        if (! tree->IsUnary())
+            tree->GetRightChild()->Accept(*this);
+        out_ << " )";
+        return 0;
+    }
+
+    int Visit(const Leaf* leaf) {
+        std::string pos = "POS";
+        out_ << "(<L "
+             << leaf->GetCategory() << " "
+             << pos << " "
+             << pos << " "
+             << leaf->GetWord() << " "
+             << leaf->GetCategory() << ">)";
+        return 0;
+    }
+
+private:
+    const Node* tree_;
+    std::stringstream out_;
+};
+
+class XML: public FormatVisitor {
+
+public:
+    XML(const Node* tree): tree_(tree) { Process(); }
+    XML(NodeType tree): tree_(tree.get()) { Process(); }
+
+    void Process() { tree_->Accept(*this); }
+    std::string Get() const { return out_.str(); }
+    friend std::ostream& operator<<(std::ostream& ost, const XML& xml) {
+        return ost << xml.out_.str();
+    }
+
+    int Visit(const Tree* tree);
+    int Visit(const Leaf* leaf);
+
+private:
+    const Node* tree_;
+    std::stringstream out_;
+};
 
 } // namespace tree
 } // namespace myccg

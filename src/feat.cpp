@@ -1,5 +1,6 @@
 
 
+#include <sstream>
 #include "feat.h"
 #include "utils.h"
 
@@ -27,8 +28,7 @@ std::string Feature::ToStr() const {
     for (unsigned i = 0; i < values_.size(); i++) {
         if (i > 0) res << ",";
         auto& pair = values_[i];
-        // res << pair.first << "=" << pair.second;
-        res << pair.second;
+        res << pair.first << "=" << pair.second;
     }
     res << "]";
     return res.str();
@@ -64,7 +64,7 @@ std::string Feature::SubstituteWildcard(const std::string& string) const {
 // S[X] --> S[feat] ; for English grammar
 std::string Feature::SubstituteWildcard(const std::string& string) const {
     std::string res(string);
-    utils::ReplaceAll(&res, "X", this->ToStr());
+    utils::ReplaceAll(&res, "[X]", this->ToStr());
     return res;
 }
 #endif

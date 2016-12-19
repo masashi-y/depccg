@@ -1,11 +1,11 @@
 
 
 #include <omp.h>
+#include <iostream>
 #include "cacheable.h"
 
 namespace myccg {
 
-// std::unordered_map<std::string, const Cacheable*> Cacheable::cache;
 int Cacheable::ids = 0;
 
 Cacheable::Cacheable() {

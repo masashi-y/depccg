@@ -101,7 +101,7 @@ void test()
     APPLICABLE(rp, tree4, leaves[5]);
 
     print(tree5->ToStr());
-    ShowDerivation(tree5);
+    // ShowDerivation(tree5);
 
     const Node* leaves2[] = {
         new Leaf("Ed",      cat::Category::Parse("N"),                0),
@@ -130,7 +130,7 @@ void test()
     APPLICABLE(rp, tree2_8, leaves2[6]);
 
     print(tree2_9->ToStr());
-    ShowDerivation(tree2_9);
+    // ShowDerivation(tree2_9);
 
     const Node* leaves3[] = {
         new Leaf("これ", cat::Category::Parse("NP[case=nc,mod=nm,fin=f]"),                                                  0),
@@ -148,7 +148,7 @@ void test()
     APPLICABLE(bwd, leaves3[2], leaves3[3]);
     APPLICABLE(fwd, tree3_0, tree3_1);
     APPLICABLE(bwd, tree3_2, leaves3[4]);
-    ShowDerivation(tree3_3);
+    // ShowDerivation(tree3_3);
 
 
 

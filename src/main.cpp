@@ -40,16 +40,17 @@ int main(int argc, char const* argv[])
         std::cout << p.error_full() << p.usage();
         return 0;
     }
-    tagger::ChainerTagger tagger(p.get<std::string>("model"));
     const std::string& model = p.get<std::string>("model");
 
 #ifdef JAPANESE
-    parser::AStarParser parser(&tagger,
+    tagger::ChainerDependencyTagger tagger(p.get<std::string>("model"));
+    parser::DepAStarParser parser(&tagger,
           utils::LoadUnary(model + "/unary_rules.txt"),
           grammar::ja::binary_rules,
           utils::LoadSeenRules(model + "/seen_rules.txt"),
           grammar::ja::possible_root_cats);
 #else
+    tagger::ChainerTagger tagger(p.get<std::string>("model"));
     parser::AStarParser parser(&tagger,
           utils::LoadUnary(model + "/unary_rules.txt"),
           grammar::en::binary_rules,
@@ -68,12 +69,11 @@ int main(int argc, char const* argv[])
         tree::ToXML(res);
     } else if (p.get<std::string>("format") == "deriv") {
         for (auto&& tree: res) {
-            tree::ShowDerivation(tree);
-            std::cout << std::endl;
+            std::cout << tree::Derivation(tree) << std::endl;
         }
     } else if (p.get<std::string>("format") == "auto") {
         for (auto&& tree: res) {
-            std::cout << tree->ToStr() << std::endl;
+            std::cout << tree.get() << std::endl;
         }
     }
     std::cerr << "elapsed time: " << elapsed << " seconds" << std::endl;

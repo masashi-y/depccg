@@ -2,7 +2,6 @@
 #include <cmath>
 #include <queue>
 #include <utility>
-#include <limits>
 #include <memory>
 #include <algorithm>
 
@@ -19,46 +18,31 @@ namespace myccg {
 namespace parser {
 
 
-bool LongerDependencyComparator(const AgendaItem& left, const AgendaItem& right) {
+bool JapaneseComparator(const AgendaItem& left, const AgendaItem& right) {
     if ( fabs(left.prob - right.prob) > 0.00001 )
         return left.prob < right.prob;
 #ifdef JAPANESE
-    if ((IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())) &&
-            !(IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())))
-        return false;
-    if ((IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())) &&
-            !(IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())))
-        return true;
-    if (IsPeriod(right.parse->GetCategory()))
-        return false;
-    if (IsPeriod(left.parse->GetCategory()))
-        return true;
+    // if ((IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())) &&
+    //         !(IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())))
+    //     return false;
+    // if ((IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())) &&
+    //         !(IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())))
+    //     return true;
+    // if (IsPeriod(right.parse->GetCategory()))
+    //     return false;
+    // if (IsPeriod(left.parse->GetCategory()))
+    //     return true;
     // if (left.parse->LeftNumDescendants() != right.parse->LeftNumDescendants())
         // return left.parse->LeftNumDescendants() <= right.parse->LeftNumDescendants();
-#else
+// #else
     if (left.parse->GetDependencyLength() != right.parse->GetDependencyLength())
-        return left.parse->GetDependencyLength() > right.parse->GetDependencyLength();
+        return left.parse->GetDependencyLength() < right.parse->GetDependencyLength();
 #endif
     return left.id > right.id;
 }
 
 
-bool AStarParser::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {
-    if (span_len == s_len)
-        return (possible_root_cats_.count(cat) > 0);
-    return true;
-}
-
-bool AStarParser::IsSeen(Cat left, Cat right) const {
-#ifdef JAPANESE
-    return true;
-#endif
-    return (seen_rules_.count(
-                std::make_pair(left->StripFeat(), right->StripFeat())) > 0);
-}
-
-bool IsNormalForm(combinator::RuleType rule_type, NodeType left, NodeType right) {
-#ifdef JAPANESE
+bool IsValid(combinator::RuleType rule_type, NodeType left, NodeType right) {
     if (right->IsUnary())
         return false;
     if (left->IsUnary())
@@ -87,129 +71,81 @@ bool IsNormalForm(combinator::RuleType rule_type, NodeType left, NodeType right)
                 IsAdverb(left->GetCategory()));
     }
     return true;
-#endif
-    if ( (left->GetRuleType() == combinator::FC ||
-                left->GetRuleType() == combinator::GFC) &&
-            (rule_type == combinator::FA ||
-             rule_type == combinator::FC ||
-             rule_type == combinator::GFC) )
-        return false;
-    if ( (right->GetRuleType() == combinator::BC ||
-                right->GetRuleType() == combinator::GBC) &&
-            (rule_type == combinator::BA ||
-             rule_type == combinator::BC ||
-             rule_type == combinator::GBC) )
-        return false;
-    if ( left->GetRuleType() == combinator::UNARY &&
-            rule_type == combinator::FA &&
-            left->GetCategory()->IsForwardTypeRaised() )
-        return false;
-    if ( right->GetRuleType() == combinator::UNARY &&
-            rule_type == combinator::BA &&
-            right->GetCategory()->IsBackwardTypeRaised() )
-        return false;
-    return true;
 }
 
-std::vector<RuleCache>& AStarParser::GetRules(Cat left, Cat right) {
-    auto key = std::make_pair(left, right);
-    if (rule_cache_.count(key) > 0)
-        return rule_cache_[key];
-    std::vector<RuleCache> tmp;
-    for (auto rule: binary_rules_) {
-        if (rule->CanApply(left, right)) {
-            tmp.emplace_back(rule->Apply(left, right),
-                        rule->HeadIsLeft(left, right), rule);
-        }
-    }
-    #pragma omp critical(GetRules)
-    rule_cache_.emplace(key, std::move(tmp));
-    return rule_cache_[key];
-}
-
-void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
-    float from_left[MAX_LENGTH + 1];
-    float from_right[MAX_LENGTH + 1];
-    from_left[0] = 0.0;
-    from_right[sent_size] = 0.0;
-
-    for (int i = 0; i < sent_size - 1; i++) {
-        int j = sent_size - i;
-        from_left[i + 1] = from_left[i] + probs[i];
-        from_right[j - 1] = from_right[j] + probs[j - 1];
-    }
-
-    for (int i = 0; i < sent_size + 1; i++) {
-        for (int j = i; j < sent_size + 1; j++) {
-            out[i * sent_size + j] = from_left[i] + from_right[j];
-        }
-    }
-}
-
-NodeType AStarParser::Parse(const std::string& sent, float beta) {
-    std::unique_ptr<float[]> scores = tagger_->predict(sent);
-    NodeType res = Parse(sent, scores.get(), beta);
-    return res;
-}
+NodeType DepAStarParser::Parse(const std::string& sent, float beta) NO_IMPLEMENTATION
 
 std::vector<NodeType>
-AStarParser::Parse(const std::vector<std::string>& doc, float beta) {
-    std::unique_ptr<float*[]> scores = tagger_->predict(doc);
+DepAStarParser::Parse(const std::vector<std::string>& doc, float beta) {
+    std::unique_ptr<float*[]> cat_scores, dep_scores;
+    std::tie(cat_scores, dep_scores) = dep_tagger_->predict(doc);
     std::vector<NodeType> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++) {
-        res[i] = Parse(doc[i], scores[i], beta);
+        res[i] = Parse(doc[i], cat_scores[i], dep_scores[i], beta);
     }
     return res;
 }
 
 #define NORMALIZED_PROB(x, y) std::log( std::exp((x)) / (y) )
 
-NodeType AStarParser::Parse(const std::string& sent, float* scores, float beta) {
+NodeType DepAStarParser::Parse(
+        const std::string& sent,
+        float* tag_scores,
+        float* dep_scores,
+        float beta) {
     int pruning_size = 50;
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
     float best_in_probs[MAX_LENGTH];
     float out_probs[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
-    AgendaType agenda(LongerDependencyComparator);
+    AgendaType agenda(JapaneseComparator);
     int agenda_id = 0;
 
-    float totals[MAX_LENGTH];
+    float tag_totals[MAX_LENGTH], dep_totals[MAX_LENGTH];
 
     std::priority_queue<std::pair<float, Cat>,
                         std::vector<std::pair<float, Cat>>,
                         CompareFloatCat> scored_cats[MAX_LENGTH];
 
 #ifdef DEBUGGING
-
-    for (unsigned i = 0; i < tokens.size(); i++) {
+    for (int i = 0; i < sent_size; i++) {
         std::cerr << tokens[i] << " --> ";
-        std::cerr << tagger_->TagAt( utils::ArgMax(scores + (i * TagSize()),
-                    scores + (i * TagSize() + TagSize() - 1)))->ToStr() << std::endl;
+        std::cerr << dep_tagger_->TagAt( utils::ArgMax(tag_scores + (i * TagSize()),
+                    tag_scores + (i * TagSize() + TagSize() - 1))) << std::endl;
+    }
+    std::cerr << std::endl;
+
+    for (int i = 0; i < sent_size; i++) {
+        std::cerr << i + 1 << " " << tokens[i] << " --> ";
+        std::cerr << utils::ArgMax(dep_scores + (i * (sent_size + 1)),
+                    dep_scores + (i * (sent_size + 1) + (sent_size + 1) - 1)) << std::endl;
     }
     std::cerr << std::endl;
 #endif
 
     for (int i = 0; i < sent_size; i++) {
-        totals[i] = 0.0;
+        tag_totals[i] = 0.0;
+        dep_totals[i] = 0.0;
         for (int j = 0; j < TagSize(); j++) {
-            float score = scores[i * TagSize() + j];
-            totals[i] += std::exp(score);
+            float score = tag_scores[i * TagSize() + j];
+            tag_totals[i] += std::exp(score);
             scored_cats[i].emplace(score, TagAt(j));
         }
-        best_in_probs[i] = NORMALIZED_PROB( scored_cats[i].top().first, totals[i] );
+        best_in_probs[i] = NORMALIZED_PROB( scored_cats[i].top().first, tag_totals[i] );
     }
     ComputeOutsideProbs(best_in_probs, sent_size, out_probs);
 
     for (int i = 0; i < sent_size; i++) {
         float threshold = scored_cats[i].top().first * beta;
         float out_prob = out_probs[i * sent_size + (i + 1)];
+        float dep_score = std::log(0.000000000001); //dep_scores[i * sent_size + i + 1];
 
         for (int j = 0; j < pruning_size; j++) {
             auto prob_and_cat = scored_cats[i].top();
             scored_cats[i].pop();
             if (prob_and_cat.first > threshold) {
-                float in_prob = NORMALIZED_PROB( prob_and_cat.first, totals[i] );
+                float in_prob = dep_score + NORMALIZED_PROB( prob_and_cat.first, tag_totals[i] );
                 agenda.emplace(agenda_id++, std::make_shared<const tree::Leaf>(
                             tokens[i], prob_and_cat.second, i), in_prob, out_prob, i, 1);
             } else
@@ -266,7 +202,7 @@ NodeType AStarParser::Parse(const std::string& sent, float* scores, float beta) 
                     float prob = pair.second.second;
                     if (! IsSeen(parse->GetCategory(), right->GetCategory())) continue;
                     for (auto&& rule: GetRules(parse->GetCategory(), right->GetCategory())) {
-                        if (IsNormalForm(rule.combinator->GetRuleType(), parse, right) &&
+                        if (IsValid(rule.combinator->GetRuleType(), parse, right) &&
                                 IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
                             NodeType subtree = std::make_shared<const tree::Tree>(
                                     rule.result, rule.left_is_head, parse, right, rule.combinator);
@@ -275,7 +211,12 @@ NodeType AStarParser::Parse(const std::string& sent, float* scores, float beta) 
         std::cerr << tree::Derivation(subtree);
         BORDER;
 #endif
-                            float in_prob = item.in_prob + prob;
+                            int head = rule.left_is_head ? parse->GetHeadId() : right->GetHeadId();
+                            int dep  = rule.left_is_head ? right->GetHeadId() : parse->GetHeadId();
+                            float dep_score = dep_scores[dep * (sent_size + 1) + head + 1];
+                            std::cerr << dep << ", " << head << ", " << sent_size << std::endl;
+                            std::cerr << tokens[dep] << " --> " << tokens[head] << ": " << dep_score << std::endl;
+                            float in_prob = item.in_prob + prob + dep_score;
                             float out_prob = out_probs[item.start_of_span *
                                             sent_size + item.start_of_span + span_length];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
@@ -300,7 +241,7 @@ NodeType AStarParser::Parse(const std::string& sent, float* scores, float beta) 
 #endif
                     if (! IsSeen(left->GetCategory(), parse->GetCategory())) continue;
                     for (auto&& rule: GetRules(left->GetCategory(), parse->GetCategory())) {
-                        if (IsNormalForm(rule.combinator->GetRuleType(), left, parse) &&
+                        if (IsValid(rule.combinator->GetRuleType(), left, parse) &&
                                 IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
                             NodeType subtree = std::make_shared<const tree::Tree>(
                                     rule.result, rule.left_is_head, left, parse, rule.combinator);
@@ -309,7 +250,12 @@ NodeType AStarParser::Parse(const std::string& sent, float* scores, float beta) 
         std::cerr << tree::Derivation(subtree);
         BORDER;
 #endif
-                            float in_prob = item.in_prob + prob;
+                            int head  = rule.left_is_head ? left->GetHeadId() : parse->GetHeadId();
+                            int dep = rule.left_is_head ? parse->GetHeadId() : left->GetHeadId();
+                            float dep_score = dep_scores[dep * (sent_size + 1) + head + 1];
+                            std::cerr << dep << ", " << head << ", " << sent_size << std::endl;
+                            std::cerr << tokens[dep] << " --> " << tokens[head] << ": " << dep_score << std::endl;
+                            float in_prob = item.in_prob + prob + dep_score;
                             float out_prob = out_probs[start_of_span * sent_size +
                                             start_of_span + span_length];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
