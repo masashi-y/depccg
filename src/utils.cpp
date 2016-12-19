@@ -71,8 +71,7 @@ trim(const std::string& string, const char* trimCharacterList) {
 }
 
 
-std::unordered_map<Cat, std::vector<Cat>>
-LoadUnary(const std::string& filename) {
+std::unordered_map<Cat, std::vector<Cat>> LoadUnary(const std::string& filename) {
     auto res = std::unordered_map<Cat, std::vector<Cat>>();
     std::ifstream in(filename);
     if (!in)
@@ -98,8 +97,7 @@ LoadUnary(const std::string& filename) {
     return res;
 }
 
-std::vector<Cat>
-LoadCategoryList(const std::string& filename) {
+std::vector<Cat> LoadCategoryList(const std::string& filename) {
     auto res = std::vector<Cat>();
     std::ifstream in(filename);
     if (!in)
@@ -121,8 +119,7 @@ LoadCategoryList(const std::string& filename) {
     return res;
 }
 
-void ReplaceAll(std::string* target,
-        const std::string& from, const std::string& to) {
+void ReplaceAll(std::string* target, const std::string& from, const std::string& to) {
     std::string::size_type pos = 0;
     while(pos = target->find(from, pos), pos != std::string::npos) {
         target->replace(pos, from.length(), to);
@@ -130,8 +127,7 @@ void ReplaceAll(std::string* target,
     }
 }
 
-std::unordered_set<CatPair>
-LoadSeenRules(const std::string& filename) {
+std::unordered_set<CatPair> LoadSeenRules(const std::string& filename) {
     auto res = std::unordered_set<CatPair>();
     std::ifstream in(filename);
     if (!in)

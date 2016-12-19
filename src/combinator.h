@@ -17,17 +17,19 @@ enum RuleType {
     FA      = 0,
     BA      = 1,
     FC      = 2,
-    BX      = 3,
+    BC      = 3,
     GFC     = 4,
-    GBX     = 5,
-    CONJ    = 6,
-    RP      = 7,
-    LP      = 8,
-    NOISE   = 9,
-    UNARY   = 10,
-    LEXICON = 11,
-    NONE    = 12,
-    SSEQ    = 13
+    GBC     = 5,
+    FX      = 6,
+    BX      = 7,
+    CONJ    = 8,
+    RP      = 9,
+    LP      = 10,
+    NOISE   = 11,
+    UNARY   = 12,
+    LEXICON = 13,
+    NONE    = 14,
+    SSEQ    = 15
 };
 
 class Combinator
@@ -41,9 +43,17 @@ public:
 
     RuleType GetRuleType() const { return ruletype_; }
 
+    friend std::ostream& operator<<(std::ostream& ost, const Combinator* comb) {
+        ost << comb->ToStr();
+        return ost;
+    }
+
 private:
     RuleType ruletype_;
 };
+
+
+using Op = const Combinator*;
 
 class UnaryRule: public Combinator
 {
@@ -183,7 +193,7 @@ class ForwardApplication: public Combinator
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
-        return !(left->IsModifier() || left->IsTypeRaised());}
+        return !(left->IsModifierWithoutFeat() || left->IsTypeRaisedWithoutFeat());}
 
     const std::string ToStr() const { return ">"; };
 };
@@ -204,18 +214,18 @@ class BackwardApplication: public Combinator
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
-        return right->IsModifier() || right->IsTypeRaised();
+        return right->IsModifierWithoutFeat() || right->IsTypeRaisedWithoutFeat();
     }
 
     const std::string ToStr() const { return "<"; }
 };
 
-template<int Order>
+template<int Order, RuleType Rule=FC>
 class GeneralizedForwardComposition: public Combinator
 {
     public:
     GeneralizedForwardComposition(const Slash& left, const Slash& right, const Slash& result)
-        : Combinator(Order == 0 ? FC : GFC), left_(left), right_(right), result_(result) {}
+        : Combinator(Rule), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (left->IsFunctor() &&
                 right->HasFunctorAtLeft<Order>() &&
@@ -232,10 +242,10 @@ class GeneralizedForwardComposition: public Combinator
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
-        return ! (left->IsModifier() || left->IsTypeRaised());
+        return ! (left->IsModifierWithoutFeat() || left->IsTypeRaisedWithoutFeat());
     }
 
-    const std::string ToStr() const { return ">B" + std::to_string(Order); }
+    const std::string ToStr() const { return ">B" + std::to_string(Order + 1); }
 
 private:
     Slash left_;
@@ -243,12 +253,12 @@ private:
     Slash result_;
 };
 
-template<int Order>
+template<int Order, RuleType Rule=BC>
 class GeneralizedBackwardComposition: public Combinator
 {
     public:
     GeneralizedBackwardComposition(const Slash& left, const Slash& right, const Slash& result)
-        : Combinator(Order == 0 ? BX : GBX), left_(left), right_(right), result_(result) {}
+        : Combinator(Rule), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (right->IsFunctor() &&
                 left->HasFunctorAtLeft<Order>() &&
@@ -265,9 +275,9 @@ class GeneralizedBackwardComposition: public Combinator
                 res, left->GetLeft<Order+1>(), right->GetRight());
     }
     bool HeadIsLeft(Cat left, Cat right) const {
-        return right->IsModifier() || right->IsTypeRaised();
+        return right->IsModifierWithoutFeat() || right->IsTypeRaisedWithoutFeat();
     }
-    const std::string ToStr() const { return "<B" + std::to_string(Order); }
+    const std::string ToStr() const { return "<B" + std::to_string(Order + 1); }
 
 private:
     Slash left_;

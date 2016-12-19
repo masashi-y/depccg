@@ -19,10 +19,10 @@ const std::unordered_set<Cat> en::possible_root_cats = {
 const std::vector<Combinator*> en::binary_rules = {
     new ForwardApplication(),
     new BackwardApplication(),
-    new GeneralizedForwardComposition<0>(F, F, F),
-    new GeneralizedBackwardComposition<0>(F, B, F),
-    new GeneralizedForwardComposition<1>(F, F, F),
-    new GeneralizedBackwardComposition<1>(F, B, F),
+    new GeneralizedForwardComposition<0, combinator::FC>(F, F, F),
+    new GeneralizedBackwardComposition<0, combinator::BC>(F, B, F),
+    new GeneralizedForwardComposition<1, combinator::GFC>(F, F, F),
+    new GeneralizedBackwardComposition<1, combinator::GBC>(F, B, F),
     new Conjunction(),
     new RemovePunctuation(false),
     new RemovePunctuationLeft()
@@ -51,14 +51,14 @@ const std::vector<Combinator*> ja::binary_rules = {
     new Conjoin(),
     new ForwardApplication(),
     new BackwardApplication(),
-    new GeneralizedForwardComposition<0>(F, F, F), // >B
-    new GeneralizedBackwardComposition<0>(B, B, B), // <B1
-    new GeneralizedBackwardComposition<1>(B, B, B), // <B2
-    new GeneralizedBackwardComposition<2>(B, B, B), // <B3
-    new GeneralizedBackwardComposition<3>(B, B, B), // <B4
-    new GeneralizedForwardComposition<0>(F, B, B), // >Bx1
-    new GeneralizedForwardComposition<1>(F, B, B), // >Bx2
-    new GeneralizedForwardComposition<2>(F, B, B), // >Bx3
+    new GeneralizedForwardComposition<0, combinator::FC>(F, F, F), // >B
+    new GeneralizedBackwardComposition<0, combinator::BC>(B, B, B), // <B1
+    new GeneralizedBackwardComposition<1, combinator::BC>(B, B, B), // <B2
+    new GeneralizedBackwardComposition<2, combinator::BC>(B, B, B), // <B3
+    new GeneralizedBackwardComposition<3, combinator::BC>(B, B, B), // <B4
+    new GeneralizedForwardComposition<0, combinator::FX>(F, B, B), // >Bx1
+    new GeneralizedForwardComposition<1, combinator::FX>(F, B, B), // >Bx2
+    new GeneralizedForwardComposition<2, combinator::FX>(F, B, B), // >Bx3
 };
 
 }

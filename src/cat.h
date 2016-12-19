@@ -7,8 +7,7 @@
 #include <stdexcept>
 #include "cacheable.h"
 #include "feat.h"
-
-#define print(value) std::cout << (value) << std::endl;
+#include "debug.h"
 
 namespace myccg {
 namespace cat {
@@ -31,22 +30,20 @@ public:
     static Slash Fwd() { return Slash('/'); }
     static Slash Bwd() { return Slash('\\'); }
     static Slash Either() { return Slash('|'); }
+    bool IsForward() const { return slash_ == '/'; } 
+    bool IsBackward() const { return slash_ == '\\'; } 
 
     Slash(char slash): slash_(slash) {}
     const std::string ToStr() const { return std::string(1, slash_); }
 
     bool Matches(const Slash& other) const {
         return  (other.slash_ == this->slash_ ||
-                this->slash_ == '|' ||
-                other.slash_ == '|');
+                this->slash_ == '|' || other.slash_ == '|');
     }
 
     bool operator==(const Slash& other) const {
         return this->slash_ == other.slash_;
     }
-
-    bool IsForward() const { return slash_ == '/'; } 
-    bool IsBackward() const { return slash_ == '\\'; } 
 
 private:
     char slash_;
@@ -66,6 +63,11 @@ public:
 
     std::string ToStr() { return str_; }
     std::string ToStr() const { return str_; }
+
+    friend std::ostream& operator<<(std::ostream& ost, Cat cat) {
+        ost << cat->ToStr();
+        return ost;
+    }
 
     virtual std::string ToStrWithoutFeat() const = 0;
 
@@ -91,7 +93,9 @@ public:
 
     virtual const std::string WithBrackets() const = 0;
     virtual bool IsModifier() const = 0;
+    virtual bool IsModifierWithoutFeat() const = 0;
     virtual bool IsTypeRaised() const = 0;
+    virtual bool IsTypeRaisedWithoutFeat() const = 0;
     virtual bool IsForwardTypeRaised() const = 0;
     virtual bool IsBackwardTypeRaised() const = 0;
     virtual bool IsFunctor() const = 0;
@@ -102,10 +106,7 @@ public:
     virtual bool Matches(Cat other) const = 0;
 
     virtual Cat Arg(int argn) const = 0;
-    virtual Cat HeadCat() const = 0;
-    virtual bool IsFunctionInto(Cat cat) const = 0;
-    virtual bool IsFunctionIntoModifier() const = 0;
-
+    virtual Cat LeftMostArg() const = 0;
     Cat Substitute(Feat feat) const;
 
 protected:
@@ -163,11 +164,9 @@ public:
                 slash_.ToStr() + right_->ToStrWithoutFeat() + ")";
     }
 
-    const std::string& GetType() const {
-        throw std::logic_error("GetType: not implemented");
-    }
+    const std::string& GetType() const NO_IMPLEMENTATION
 
-    Feat GetFeat() const { throw std::logic_error("GetFeat: not implemented"); }
+    Feat GetFeat() const NO_IMPLEMENTATION
 
     Cat GetLeft() const { return left_;  }
 
@@ -177,9 +176,23 @@ public:
 
     const std::string WithBrackets() const { return "(" + ToStr() + ")"; }
 
+    // bool IsModifier() const {
+    //     return (!left_->IsFunctor() &&
+    //             !right_->IsFunctor() &&
+    //             left_->GetType() == right_->GetType());
+    // }
     bool IsModifier() const { return *this->left_ == *this->right_; }
+
+    bool IsModifierWithoutFeat() const { return *left_->StripFeat() == *right_->StripFeat(); }
+
     bool IsTypeRaised() const {
-        return (right_->IsFunctor() && *right_->GetLeft() == *left_);
+        return (right_->IsFunctor() &&
+                *right_->GetLeft() == *left_);
+    }
+
+    bool IsTypeRaisedWithoutFeat() const {
+        return (right_->IsFunctor() &&
+                *right_->GetLeft()->StripFeat() == *left_->StripFeat());
     }
 
     bool IsForwardTypeRaised() const {
@@ -209,22 +222,19 @@ public:
                 slash_.Matches(other->GetSlash()));
     }
 
+    Cat LeftMostArg() const {
+        if (left_->IsFunctor()) 
+            return left_->LeftMostArg();
+        else
+            return left_;
+    }
+
     Cat Arg(int argn) const {
         if (argn == this->NArgs()) {
             return this->right_;
         } else {
             return this->left_->Arg(argn);
         }
-    }
-
-    Cat HeadCat() const { return this->left_->HeadCat(); }
-
-    bool IsFunctionInto(Cat cat) const {
-        return (cat->Matches(this) || this->left_->IsFunctionInto(cat));
-    }
-
-    bool IsFunctionIntoModifier() const {
-        return (this->IsModifier() || this->left_->IsModifier());
     }
 
     Functor(Cat left, const Slash& slash, Cat right, std::string& semantics)
@@ -246,15 +256,15 @@ public:
 
     Feat GetFeat() const { return feat_; }
 
-    Cat GetLeft() const { throw std::logic_error("not implemented"); }
-
-    Cat GetRight() const { throw std::logic_error("not implemented"); }
-
-    Slash GetSlash() const { throw std::logic_error("not implemented"); }
+    Cat GetLeft() const NO_IMPLEMENTATION
+    Cat GetRight() const NO_IMPLEMENTATION
+    Slash GetSlash() const NO_IMPLEMENTATION
 
     const std::string WithBrackets() const { return ToStr(); }
 
     bool IsModifier() const { return false; }
+    bool IsModifierWithoutFeat() const { return false; }
+    bool IsTypeRaisedWithoutFeat() const { return false; }
     bool IsTypeRaised() const { return false; }
     bool IsForwardTypeRaised() const { return false; }
     bool IsBackwardTypeRaised() const { return false; }
@@ -288,17 +298,13 @@ public:
                  this->feat_->Matches(kNB)));
     }
 
-    const AtomicCategory* Arg(int argn) const {
+    Cat LeftMostArg() const NO_IMPLEMENTATION
+
+    Cat Arg(int argn) const {
         if (argn == 0)
             return this;
         throw std::runtime_error("Error getting argument of category");
     }
-
-    const AtomicCategory* HeadCat() const { return this; }
-
-    bool IsFunctionInto(Cat cat) const { return cat->Matches(this); }
-
-    bool IsFunctionIntoModifier() const { return false; }
 
     AtomicCategory(const std::string& type, Feat feat, const std::string& semantics)
         : Category(type + feat->ToStr(), semantics), type_(type), feat_(feat) {}

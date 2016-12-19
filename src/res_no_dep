@@ -1,0 +1,2901 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="candc.xml"?>
+<candc>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="0" span="1" word="東京" lemma="東京" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="1" span="1" word="・" lemma="・" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="2" span="1" word="上野" lemma="上野" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="4" span="1" word="不" lemma="不" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="5" span="1" word="忍" lemma="忍" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<lf start="6" span="1" word="池" lemma="池" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="7" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="8" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="9" span="1" word="無残" lemma="無残" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="10" span="1" word="な" lemma="な" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="11" span="1" word="姿" lemma="姿" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="12" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<lf start="13" span="1" word="鳥" lemma="鳥" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="14" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="15" span="1" word="目立つ" lemma="目立つ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="16" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="片足" lemma="片足" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="2" span="1" word="切れ" lemma="切れ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="3" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="4" span="1" word="ユリカモメ" lemma="ユリカモメ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="釣り糸" lemma="釣り糸" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="2" span="1" word="引っ掛け" lemma="引っ掛け" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="3" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="4" span="1" word="取れ" lemma="取れ" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="5" span="1" word="なく" lemma="なく" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="6" span="1" word="なっ" lemma="なっ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="7" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="8" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="9" span="1" word="その" lemma="その" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="10" span="1" word="うち" lemma="うち" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="11" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="12" span="1" word="足" lemma="足" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="13" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="14" span="1" word="切断" lemma="切断" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="15" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="16" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="17" span="1" word="しまう" lemma="しまう" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="18" span="1" word="ケース" lemma="ケース" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="19" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="20" span="1" word="多い" lemma="多い" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="21" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="くし" lemma="くし" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<lf start="2" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="センチ" lemma="センチ" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="4" span="1" word="ほど" lemma="ほど" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="5" span="1" word="体" lemma="体" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="7" span="1" word="外" lemma="外" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="8" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="9" span="1" word="のぞく" lemma="のぞく" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+</rule>
+</rule>
+<lf start="10" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="水面" lemma="水面" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="2" span="1" word="浮かん" lemma="浮かん" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="3" span="1" word="だ" lemma="だ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<rule type="&gt;B1" cat="(S\S)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="4" span="1" word="ゴム" lemma="ゴム" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="5" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="6" span="1" word="絡み付き" lemma="絡み付き" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="7" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<lf start="8" span="1" word="もがく" lemma="もがく" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+<lf start="9" span="1" word="うち" lemma="うち" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="10" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="11" span="1" word="首" lemma="首" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="12" span="1" word="まで" lemma="まで" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<lf start="13" span="1" word="入っ" lemma="入っ" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<lf start="14" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="15" span="1" word="しまっ" lemma="しまっ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="16" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="17" span="1" word="らしい" lemma="らしい" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="18" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="0" span="1" word="上野動物園" lemma="上野動物園" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="野本" lemma="野本" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="3" span="1" word="浩司" lemma="浩司" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="4" span="1" word="普及" lemma="普及" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="5" span="1" word="指導" lemma="指導" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="6" span="1" word="係長" lemma="係長" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="7" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<lf start="8" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="9" span="1" word="いずれ" lemma="いずれ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="10" span="1" word="も" lemma="も" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="11" span="1" word="海" lemma="海" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="12" span="1" word="や" lemma="や" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<lf start="13" span="1" word="川" lemma="川" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="14" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="15" span="1" word="池" lemma="池" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="16" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="17" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="18" span="1" word="水辺" lemma="水辺" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="19" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="20" span="1" word="捨て" lemma="捨て" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="21" span="1" word="られ" lemma="られ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="22" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="23" span="1" word="ごみ" lemma="ごみ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="24" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="25" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="26" span="1" word="引き起こし" lemma="引き起こし" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="27" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="28" span="1" word="可能" lemma="可能" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="29" span="1" word="性" lemma="性" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="30" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="31" span="1" word="高い" lemma="高い" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="32" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="33" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\S)" />
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="34" span="1" word="話し" lemma="話し" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<lf start="35" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="36" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="37" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="村山" lemma="村山" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="連立" lemma="連立" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="2" span="1" word="政権" lemma="政権" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="3" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="4" span="1" word="最" lemma="最" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="5" span="1" word="重要" lemma="重要" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="6" span="1" word="政策" lemma="政策" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="7" span="1" word="課題" lemma="課題" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="8" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="9" span="1" word="なっ" lemma="なっ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="10" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="11" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<rule type="&gt;B1" cat="(S\S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="12" span="1" word="特殊" lemma="特殊" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="13" span="1" word="法人" lemma="法人" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="14" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="15" span="1" word="整理" lemma="整理" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="16" span="1" word="・" lemma="・" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="17" span="1" word="合理" lemma="合理" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="18" span="1" word="化" lemma="化" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="19" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="20" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="21" span="1" word="通産省" lemma="通産省" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="22" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&gt;" cat="NP">
+<lf start="23" span="1" word="日本" lemma="日本" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="24" span="1" word="貿易" lemma="貿易" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="25" span="1" word="振興" lemma="振興" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="26" span="1" word="会" lemma="会" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="27" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="28" span="1" word="アジア経済研究所" lemma="アジア経済研究所" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="29" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="30" span="1" word="統合" lemma="統合" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="31" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="32" span="1" word="方針" lemma="方針" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="33" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="34" span="1" word="固め" lemma="固め" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="35" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="36" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="関係" lemma="関係" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="筋" lemma="筋" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="2" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="3" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="4" span="1" word="三" lemma="三" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="5" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="6" span="1" word="明らか" lemma="明らか" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="7" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="8" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="9" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<lf start="10" span="1" word="もの" lemma="もの" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="11" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="12" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="13" span="1" word="海外" lemma="海外" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="14" span="1" word="経済" lemma="経済" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+<lf start="15" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="16" span="1" word="研究" lemma="研究" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="17" span="1" word="・" lemma="・" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<lf start="18" span="1" word="調査" lemma="調査" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="19" span="1" word="機関" lemma="機関" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="20" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="21" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="22" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="23" span="1" word="機能" lemma="機能" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="24" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="25" span="1" word="重複" lemma="重複" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="26" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="27" span="1" word="こと" lemma="こと" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="28" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="29" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="30" span="1" word="理由" lemma="理由" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+<lf start="31" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="今後" lemma="今後" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="2" span="1" word="職員" lemma="職員" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="4" span="1" word="処遇" lemma="処遇" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="5" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="6" span="1" word="細部" lemma="細部" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="7" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="8" span="1" word="詰め" lemma="詰め" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="9" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="10" span="1" word="いく" lemma="いく" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="11" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="ジェトロ" lemma="ジェトロ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<lf start="2" span="1" word="輸出" lemma="輸出" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP\NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="S">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="3" span="1" word="振興" lemma="振興" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="4" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="5" span="1" word="目的" lemma="目的" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="7" span="1" word="一" lemma="一" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="8" span="1" word="九" lemma="九" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="9" span="1" word="五" lemma="五" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="10" span="1" word="八" lemma="八" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="11" span="1" word="年" lemma="年" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="12" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+</rule>
+<lf start="13" span="1" word="設立" lemma="設立" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+<lf start="14" span="1" word="さ" lemma="さ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="15" span="1" word="れ" lemma="れ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="16" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="17" span="1" word="輸入" lemma="輸入" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="18" span="1" word="促進" lemma="促進" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="19" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="20" span="1" word="向け" lemma="向け" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="((NP/NP)\S)">
+<lf start="21" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="22" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\S)" />
+</rule>
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="23" span="1" word="ＰＲ" lemma="ＰＲ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="24" span="1" word="や" lemma="や" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="25" span="1" word="海外" lemma="海外" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="26" span="1" word="経済" lemma="経済" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="27" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<lf start="28" span="1" word="情勢" lemma="情勢" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<lf start="29" span="1" word="報告" lemma="報告" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="30" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="31" span="1" word="対" lemma="対" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="32" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="33" span="1" word="投資" lemma="投資" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="34" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="35" span="1" word="目指す" lemma="目指す" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="36" span="1" word="海外" lemma="海外" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="37" span="1" word="企業" lemma="企業" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="38" span="1" word="支援" lemma="支援" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="39" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="40" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="41" span="1" word="事業" lemma="事業" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="42" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="43" span="1" word="行っ" lemma="行っ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="44" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="45" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="46" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="0" span="1" word="職員" lemma="職員" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="2" span="1" word="八" lemma="八" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="3" span="1" word="百" lemma="百" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="4" span="1" word="九" lemma="九" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="5" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="人" lemma="人" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="7" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="アジア" lemma="アジア" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="研" lemma="研" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="2" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="3" span="1" word="途上" lemma="途上" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="4" span="1" word="国" lemma="国" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="5" span="1" word="経済" lemma="経済" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="7" span="1" word="研究" lemma="研究" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="8" span="1" word="・" lemma="・" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="9" span="1" word="調査" lemma="調査" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="10" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="11" span="1" word="目的" lemma="目的" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="12" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="13" span="1" word="六" lemma="六" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="14" span="1" word="〇" lemma="〇" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="15" span="1" word="年" lemma="年" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="16" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="17" span="1" word="設立" lemma="設立" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="18" span="1" word="さ" lemma="さ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="19" span="1" word="れ" lemma="れ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="20" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="21" span="1" word="職員" lemma="職員" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="22" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="23" span="1" word="二" lemma="二" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="24" span="1" word="百" lemma="百" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="25" span="1" word="五" lemma="五" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="26" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="27" span="1" word="人" lemma="人" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="28" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<lf start="0" span="1" word="ともに" lemma="ともに" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="(S\NP)">
+<lf start="1" span="1" word="シンクタンク" lemma="シンクタンク" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="2" span="1" word="的" lemma="的" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<lf start="3" span="1" word="な" lemma="な" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="4" span="1" word="機能" lemma="機能" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="5" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="6" span="1" word="持つ" lemma="持つ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="7" span="1" word="こと" lemma="こと" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="8" span="1" word="から" lemma="から" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<lf start="9" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="10" span="1" word="統合" lemma="統合" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="11" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<lf start="12" span="1" word="よる" lemma="よる" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="13" span="1" word="効率" lemma="効率" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="14" span="1" word="化" lemma="化" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="15" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="16" span="1" word="期待" lemma="期待" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="17" span="1" word="さ" lemma="さ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="18" span="1" word="れ" lemma="れ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="19" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="20" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="21" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="0" span="1" word="同省" lemma="同省" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="特殊" lemma="特殊" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="3" span="1" word="法人" lemma="法人" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="4" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S/S)">
+<lf start="5" span="1" word="計" lemma="計" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<lf start="6" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="SSEQ" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<lf start="7" span="1" word="三" lemma="三" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<lf start="8" span="1" word="あり" lemma="あり" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+<lf start="9" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="10" span="1" word="所管" lemma="所管" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="11" span="1" word="省庁" lemma="省庁" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="12" span="1" word="別" lemma="別" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="13" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="14" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="15" span="1" word="運輸省" lemma="運輸省" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="16" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<lf start="17" span="1" word="次い" lemma="次い" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<lf start="18" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="19" span="1" word="多い" lemma="多い" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="20" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="この" lemma="この" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="1" span="1" word="ため" lemma="ため" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="2" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<lf start="3" span="1" word="橋本" lemma="橋本" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="竜太郎" lemma="竜太郎" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="5" span="1" word="通産" lemma="通産" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="相" lemma="相" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="7" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S/S)">
+<lf start="8" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="9" span="1" word="全" lemma="全" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="10" span="1" word="法人" lemma="法人" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="11" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="12" span="1" word="対象" lemma="対象" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="13" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="14" span="1" word="見直し" lemma="見直し" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="15" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(NP\NP)">
+<lf start="16" span="1" word="進める" lemma="進める" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(NP\S)">
+<lf start="17" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="18" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="19" span="1" word="表明" lemma="表明" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="20" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="21" span="1" word="同省" lemma="同省" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="22" span="1" word="事務" lemma="事務" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="23" span="1" word="当局" lemma="当局" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="24" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<lf start="25" span="1" word="検討" lemma="検討" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="26" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="27" span="1" word="進め" lemma="進め" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+</rule>
+</rule>
+<lf start="28" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="29" span="1" word="き" lemma="き" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="30" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="31" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="同省" lemma="同省" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="2" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="3" span="1" word="この" lemma="この" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="4" span="1" word="ほか" lemma="ほか" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="5" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<lf start="6" span="1" word="中小" lemma="中小" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="7" span="1" word="企業" lemma="企業" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="8" span="1" word="信用" lemma="信用" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="9" span="1" word="保険" lemma="保険" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="10" span="1" word="公庫" lemma="公庫" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="11" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="12" span="1" word="中小" lemma="中小" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="13" span="1" word="企業" lemma="企業" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="14" span="1" word="金融" lemma="金融" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="15" span="1" word="公庫" lemma="公庫" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="16" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="17" span="1" word="一部" lemma="一部" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="18" span="1" word="統合" lemma="統合" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="19" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="20" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="21" span="1" word="案" lemma="案" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="22" span="1" word="も" lemma="も" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="23" span="1" word="検討" lemma="検討" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="24" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="25" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="26" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="27" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="村山" lemma="村山" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="富市" lemma="富市" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="2" span="1" word="首相" lemma="首相" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;B2" cat="((S\NP)\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="4" span="1" word="二" lemma="二" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="5" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="7" span="1" word="召集" lemma="召集" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="8" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="9" span="1" word="通常" lemma="通常" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="10" span="1" word="国会" lemma="国会" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="11" span="1" word="冒頭" lemma="冒頭" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="12" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="13" span="1" word="行う" lemma="行う" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<lf start="14" span="1" word="施政" lemma="施政" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="15" span="1" word="方針" lemma="方針" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="16" span="1" word="演説" lemma="演説" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="17" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="18" span="1" word="骨格" lemma="骨格" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="19" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="20" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="21" span="1" word="三" lemma="三" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="22" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="23" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="24" span="1" word="固まっ" lemma="固まっ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="25" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="26" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="1" span="1" word="改革" lemma="改革" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="2" span="1" word="から" lemma="から" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="3" span="1" word="創造" lemma="創造" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+<lf start="4" span="1" word="へ" lemma="へ" pos="DT" chunk="I-NP" entity="O" cat="(NP\S)" />
+</rule>
+<lf start="5" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="6" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="7" span="1" word="新た" lemma="新た" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="8" span="1" word="な" lemma="な" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="9" span="1" word="キャッチフレーズ" lemma="キャッチフレーズ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="10" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="11" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&gt;" cat="NP">
+<lf start="12" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="13" span="1" word="政権" lemma="政権" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="14" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="15" span="1" word="最" lemma="最" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="16" span="1" word="重要" lemma="重要" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="17" span="1" word="課題" lemma="課題" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="18" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="19" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="20" span="1" word="位置づける" lemma="位置づける" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="21" span="1" word="行政" lemma="行政" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="22" span="1" word="改革" lemma="改革" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="23" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="24" span="1" word="公約" lemma="公約" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="25" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="26" span="1" word="特殊" lemma="特殊" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="27" span="1" word="法人" lemma="法人" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="28" span="1" word="年度内" lemma="年度内" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="29" span="1" word="見直し" lemma="見直し" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="30" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="31" span="1" word="断行" lemma="断行" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="32" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="33" span="1" word="姿勢" lemma="姿勢" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="34" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="35" span="1" word="強調" lemma="強調" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="36" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="37" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="S">
+<lf start="0" span="1" word="また" lemma="また" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&gt;" cat="S">
+<lf start="1" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="2" span="1" word="首相" lemma="首相" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="年頭" lemma="年頭" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="5" span="1" word="所感" lemma="所感" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="6" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S/S)">
+<lf start="7" span="1" word="明らか" lemma="明らか" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="8" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="9" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="10" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="11" span="1" word="経済" lemma="経済" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="12" span="1" word="構造" lemma="構造" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="13" span="1" word="改革" lemma="改革" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="14" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="15" span="1" word="政権" lemma="政権" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="16" span="1" word="ビジョン" lemma="ビジョン" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="17" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="18" span="1" word="理念" lemma="理念" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="19" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="20" span="1" word="具体" lemma="具体" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="21" span="1" word="化" lemma="化" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="22" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="23" span="1" word="進める" lemma="進める" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="24" span="1" word="とともに" lemma="とともに" pos="DT" chunk="I-NP" entity="O" cat="(NP\S)" />
+</rule>
+<lf start="25" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="26" span="1" word="地方" lemma="地方" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="27" span="1" word="分権" lemma="分権" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="28" span="1" word="推進" lemma="推進" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="29" span="1" word="法案" lemma="法案" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="30" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="31" span="1" word="通常" lemma="通常" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="32" span="1" word="国会" lemma="国会" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="33" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="34" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<lf start="35" span="1" word="成立" lemma="成立" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="36" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<lf start="37" span="1" word="意欲" lemma="意欲" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="38" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="39" span="1" word="表明" lemma="表明" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<lf start="40" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="41" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="経済" lemma="経済" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="2" span="1" word="社会" lemma="社会" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="4" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="5" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="6" span="1" word="行政" lemma="行政" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="7" span="1" word="改革" lemma="改革" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="8" span="1" word="や" lemma="や" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="9" span="1" word="経済" lemma="経済" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&gt;" cat="S">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="10" span="1" word="構造" lemma="構造" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="11" span="1" word="改革" lemma="改革" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="12" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S/S)">
+<lf start="13" span="1" word="中心" lemma="中心" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="14" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="15" span="1" word="規制" lemma="規制" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="16" span="1" word="緩和" lemma="緩和" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="17" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="18" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="19" span="1" word="重点的" lemma="重点的" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<lf start="20" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\S)" />
+</rule>
+<rule type="&lt;" cat="S">
+<lf start="21" span="1" word="取り組む" lemma="取り組む" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<rule type="&gt;B1" cat="(S\S)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="22" span="1" word="考え" lemma="考え" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="23" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="24" span="1" word="示し" lemma="示し" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="25" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="26" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<lf start="27" span="1" word="やさしい" lemma="やさしい" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="28" span="1" word="社会" lemma="社会" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+<lf start="29" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="30" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="31" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="32" span="1" word="学校" lemma="学校" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="33" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="34" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="35" span="1" word="いじめ" lemma="いじめ" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="36" span="1" word="問題" lemma="問題" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="37" span="1" word="へ" lemma="へ" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="38" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="39" span="1" word="対策" lemma="対策" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="40" span="1" word="づくり" lemma="づくり" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="41" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="42" span="1" word="必要" lemma="必要" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="43" span="1" word="性" lemma="性" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="44" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+</rule>
+<lf start="45" span="1" word="言及" lemma="言及" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="46" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="47" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="外交" lemma="外交" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="2" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="3" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="5" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="6" span="1" word="首脳" lemma="首脳" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="7" span="1" word="会談" lemma="会談" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+<lf start="8" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="9" span="1" word="示し" lemma="示し" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="10" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="12" span="1" word="創造" lemma="創造" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="13" span="1" word="的" lemma="的" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="14" span="1" word="パートナーシップ" lemma="パートナーシップ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="15" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="16" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<lf start="17" span="1" word="改めて" lemma="改めて" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<lf start="18" span="1" word="説明" lemma="説明" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="19" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="20" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="21" span="1" word="会談" lemma="会談" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="22" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="23" span="1" word="成果" lemma="成果" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="24" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="25" span="1" word="強調" lemma="強調" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="26" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="戦後" lemma="戦後" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="五" lemma="五" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="3" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="4" span="1" word="周年" lemma="周年" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="5" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="6" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S/S)">
+<lf start="7" span="1" word="節目" lemma="節目" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="8" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&gt;" cat="S">
+<lf start="9" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="10" span="1" word="戦後" lemma="戦後" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="処理" lemma="処理" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="12" span="1" word="問題" lemma="問題" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="13" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;" cat="S">
+<lf start="14" span="1" word="引き続き" lemma="引き続き" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<lf start="15" span="1" word="取り組む" lemma="取り組む" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="16" span="1" word="考え" lemma="考え" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="17" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="18" span="1" word="示す" lemma="示す" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="19" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="0" span="1" word="村山" lemma="村山" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="1" span="1" word="富市" lemma="富市" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="2" span="1" word="首相" lemma="首相" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="4" span="1" word="さきがけ" lemma="さきがけ" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="5" span="1" word="代表" lemma="代表" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="7" span="1" word="武村" lemma="武村" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="8" span="1" word="正義" lemma="正義" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="9" span="1" word="蔵相" lemma="蔵相" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="10" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="11" span="1" word="よる" lemma="よる" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+</rule>
+</rule>
+<lf start="12" span="1" word="社会" lemma="社会" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="13" span="1" word="・" lemma="・" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="14" span="1" word="さきがけ" lemma="さきがけ" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="15" span="1" word="党首" lemma="党首" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="16" span="1" word="会談" lemma="会談" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="17" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="18" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="19" span="1" word="外遊" lemma="外遊" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="20" span="1" word="中" lemma="中" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="21" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="22" span="1" word="武村" lemma="武村" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="23" span="1" word="蔵相" lemma="蔵相" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="24" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="25" span="1" word="帰国" lemma="帰国" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="26" span="1" word="後" lemma="後" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="27" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="28" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="29" span="1" word="五" lemma="五" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="30" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="31" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="32" span="1" word="も" lemma="も" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="33" span="1" word="行わ" lemma="行わ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="34" span="1" word="れる" lemma="れる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="35" span="1" word="見通し" lemma="見通し" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="36" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="37" span="1" word="なっ" lemma="なっ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="38" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="39" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="0" span="1" word="社会党" lemma="社会党" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="分裂" lemma="分裂" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="3" span="1" word="状況" lemma="状況" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="4" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="5" span="1" word="加速" lemma="加速" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="6" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="7" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="8" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;B1" cat="(S\S)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="9" span="1" word="中" lemma="中" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="10" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="11" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="12" span="1" word="両" lemma="両" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="13" span="1" word="党" lemma="党" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="14" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="15" span="1" word="連携" lemma="連携" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="16" span="1" word="強化" lemma="強化" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="17" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="18" span="1" word="確認" lemma="確認" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="19" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="20" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\S)" />
+</rule>
+<lf start="21" span="1" word="み" lemma="み" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="22" span="1" word="られる" lemma="られる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="23" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="社会党" lemma="社会党" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="筋" lemma="筋" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="2" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="3" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="4" span="1" word="三" lemma="三" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="5" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<lf start="6" span="1" word="夜" lemma="夜" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="7" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&gt;" cat="NP">
+<lf start="8" span="1" word="両" lemma="両" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="9" span="1" word="党" lemma="党" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="10" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="統一" lemma="統一" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="12" span="1" word="会派" lemma="会派" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="13" span="1" word="結成" lemma="結成" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="14" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="15" span="1" word="検討" lemma="検討" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<lf start="16" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="17" span="1" word="協議" lemma="協議" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="18" span="1" word="会" lemma="会" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="19" span="1" word="設置" lemma="設置" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="20" span="1" word="構想" lemma="構想" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="21" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="22" span="1" word="浮上" lemma="浮上" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="23" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="24" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="25" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="26" span="1" word="こと" lemma="こと" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="27" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B2" cat="((S\NP)\NP)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="28" span="1" word="明らか" lemma="明らか" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="29" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="30" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+</rule>
+</rule>
+<lf start="31" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="32" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="0" span="1" word="首相" lemma="首相" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="3" span="1" word="三" lemma="三" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="4" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="5" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="S">
+<rule type="&lt;" cat="(S/S)">
+<lf start="6" span="1" word="訪米" lemma="訪米" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="7" span="1" word="から" lemma="から" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="8" span="1" word="帰国" lemma="帰国" pos="DT" chunk="I-NP" entity="O" cat="S" />
+</rule>
+<lf start="9" span="1" word="後" lemma="後" pos="DT" chunk="I-NP" entity="O" cat="(NP\S)" />
+</rule>
+<lf start="10" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="さきがけ" lemma="さきがけ" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="12" span="1" word="幹部" lemma="幹部" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="13" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="14" span="1" word="電話" lemma="電話" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="15" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<lf start="16" span="1" word="会談" lemma="会談" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="17" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="18" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="19" span="1" word="新進党" lemma="新進党" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="20" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="21" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="22" span="1" word="連携" lemma="連携" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="23" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="24" span="1" word="探る" lemma="探る" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<rule type="&gt;B1" cat="(S\S)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="25" span="1" word="山花" lemma="山花" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="26" span="1" word="貞夫" lemma="貞夫" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="27" span="1" word="新民連" lemma="新民連" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="28" span="1" word="会長" lemma="会長" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="29" span="1" word="へ" lemma="へ" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="30" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="31" span="1" word="対抗" lemma="対抗" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="32" span="1" word="策" lemma="策" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="33" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="34" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="35" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="36" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="37" span="1" word="社会" lemma="社会" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="38" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="39" span="1" word="さきがけ" lemma="さきがけ" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="40" span="1" word="両" lemma="両" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="41" span="1" word="党" lemma="党" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="42" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="43" span="1" word="連携" lemma="連携" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="44" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="45" span="1" word="深める" lemma="深める" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="46" span="1" word="必要" lemma="必要" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="47" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(NP\NP)">
+<lf start="48" span="1" word="ある" lemma="ある" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="49" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\S)" />
+</rule>
+</rule>
+<lf start="50" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="51" span="1" word="認識" lemma="認識" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+<lf start="52" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="53" span="1" word="一致" lemma="一致" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="54" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="55" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="56" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="一" lemma="一" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="九" lemma="九" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="五" lemma="五" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="3" span="1" word="二" lemma="二" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="4" span="1" word="年" lemma="年" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="5" span="1" word="以来" lemma="以来" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="6" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="7" span="1" word="不平等" lemma="不平等" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="8" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="9" span="1" word="続い" lemma="続い" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="10" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="11" span="1" word="いる" lemma="いる" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="12" span="1" word="「" lemma="「" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="13" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="14" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="15" span="1" word="航空" lemma="航空" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="SSEQ" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="16" span="1" word="協定" lemma="協定" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="17" span="1" word="」" lemma="」" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="18" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="19" span="1" word="平等" lemma="平等" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="20" span="1" word="化" lemma="化" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="21" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="22" span="1" word="実現" lemma="実現" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="23" span="1" word="する" lemma="する" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<lf start="24" span="1" word="ため" lemma="ため" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="25" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="26" span="1" word="政府" lemma="政府" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="27" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="28" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="29" span="1" word="側" lemma="側" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="30" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="31" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="32" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="33" span="1" word="航空" lemma="航空" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="34" span="1" word="会社" lemma="会社" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="35" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<lf start="36" span="1" word="新規" lemma="新規" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&gt;" cat="NP">
+<lf start="37" span="1" word="路線" lemma="路線" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="38" span="1" word="開設" lemma="開設" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="39" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<rule type="&gt;B2" cat="((S\NP)\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<lf start="40" span="1" word="今後" lemma="今後" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="41" span="1" word="認め" lemma="認め" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<lf start="42" span="1" word="ない" lemma="ない" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="43" span="1" word="強硬" lemma="強硬" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="44" span="1" word="方針" lemma="方針" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="45" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="46" span="1" word="通告" lemma="通告" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<lf start="47" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="48" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="49" span="1" word="い" lemma="い" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="50" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="51" span="1" word="こと" lemma="こと" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+<lf start="52" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+<lf start="53" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<lf start="54" span="1" word="十" lemma="十" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="NP">
+<lf start="55" span="1" word="三" lemma="三" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="56" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="57" span="1" word="明らか" lemma="明らか" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<lf start="58" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\S)" />
+</rule>
+<lf start="59" span="1" word="なっ" lemma="なっ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="60" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="61" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="0" span="1" word="航空" lemma="航空" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="1" span="1" word="業界" lemma="業界" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="2" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="3" span="1" word="競争" lemma="競争" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<lf start="4" span="1" word="激化" lemma="激化" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="5" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+<lf start="6" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="S">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="7" span="1" word="これ" lemma="これ" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="8" span="1" word="以上" lemma="以上" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="9" span="1" word="日本" lemma="日本" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="10" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP\NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="11" span="1" word="航空" lemma="航空" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="12" span="1" word="会社" lemma="会社" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="13" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<lf start="14" span="1" word="不平等" lemma="不平等" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<lf start="15" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\S)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="16" span="1" word="耐え難く" lemma="耐え難く" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="17" span="1" word="なっ" lemma="なっ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="18" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="19" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="20" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<lf start="21" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="22" span="1" word="独" lemma="独" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="23" span="1" word="仏" lemma="仏" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="24" span="1" word="など" lemma="など" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="25" span="1" word="も" lemma="も" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<lf start="26" span="1" word="最近" lemma="最近" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<rule type="&gt;B1" cat="(S/S)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<lf start="27" span="1" word="相次い" lemma="相次い" pos="DT" chunk="I-NP" entity="O" cat="S" />
+<lf start="28" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="29" span="1" word="米国" lemma="米国" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="30" span="1" word="と" lemma="と" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="31" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="32" span="1" word="不平等" lemma="不平等" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="33" span="1" word="解消" lemma="解消" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="34" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="35" span="1" word="成功" lemma="成功" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="36" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+<lf start="37" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+<lf start="38" span="1" word="事情" lemma="事情" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="39" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="40" span="1" word="受け" lemma="受け" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+<lf start="41" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<lf start="42" span="1" word="もの" lemma="もの" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="43" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="0" span="1" word="昨年" lemma="昨年" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="1" span="1" word="十一月" lemma="十一月" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="2" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<lf start="3" span="1" word="アジア" lemma="アジア" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="4" span="1" word="・" lemma="・" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="5" span="1" word="太平洋" lemma="太平洋" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="6" span="1" word="経済" lemma="経済" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="7" span="1" word="協力" lemma="協力" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="8" span="1" word="会議" lemma="会議" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="9" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;B1" cat="(S\NP)">
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<lf start="10" span="1" word="際" lemma="際" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="11" span="1" word="行わ" lemma="行わ" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="12" span="1" word="れ" lemma="れ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="13" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;B1" cat="(S\S)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="14" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="15" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<lf start="16" span="1" word="首脳" lemma="首脳" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="17" span="1" word="会談" lemma="会談" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="18" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<lf start="19" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="20" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="21" span="1" word="大統領" lemma="大統領" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="22" span="1" word="が" lemma="が" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="23" span="1" word="村山" lemma="村山" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="24" span="1" word="富市" lemma="富市" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+</rule>
+<lf start="25" span="1" word="首相" lemma="首相" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+<lf start="26" span="1" word="に" lemma="に" pos="DT" chunk="I-NP" entity="O" cat="((S/S)\NP)" />
+</rule>
+<rule type="&lt;" cat="(S\NP)">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&gt;" cat="NP">
+<lf start="27" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="28" span="1" word="貨物" lemma="貨物" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="29" span="1" word="航空" lemma="航空" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<lf start="30" span="1" word="会社" lemma="会社" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+<lf start="31" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="32" span="1" word="新規" lemma="新規" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;" cat="(NP/NP)">
+<rule type="&lt;" cat="NP">
+<lf start="33" span="1" word="乗り入れ" lemma="乗り入れ" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="34" span="1" word="便" lemma="便" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="35" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+</rule>
+<rule type="&lt;" cat="NP">
+<lf start="36" span="1" word="認可" lemma="認可" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="37" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B2" cat="((S\NP)\NP)">
+<lf start="38" span="1" word="求め" lemma="求め" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="39" span="1" word="て" lemma="て" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="40" span="1" word="い" lemma="い" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="41" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="42" span="1" word="こと" lemma="こと" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="43" span="1" word="も" lemma="も" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="44" span="1" word="判明" lemma="判明" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="45" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="0" span="1" word="今回" lemma="今回" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="1" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<lf start="2" span="1" word="通告" lemma="通告" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="3" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="4" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&gt;B1" cat="(S\NP)">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&lt;" cat="S">
+<rule type="&gt;" cat="NP">
+<lf start="5" span="1" word="この" lemma="この" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="6" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<rule type="&lt;" cat="(NP/NP)">
+<lf start="7" span="1" word="大統領" lemma="大統領" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="8" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="((NP/NP)\NP)" />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="9" span="1" word="要求" lemma="要求" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="10" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="11" span="1" word="拒否" lemma="拒否" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="12" span="1" word="し" lemma="し" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="13" span="1" word="た" lemma="た" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="14" span="1" word="形" lemma="形" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="15" span="1" word="で" lemma="で" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="16" span="1" word="、" lemma="、" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="17" span="1" word="新た" lemma="新た" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<lf start="18" span="1" word="な" lemma="な" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="NP">
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="19" span="1" word="日" lemma="日" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;B1" cat="(NP/NP)">
+<lf start="20" span="1" word="米" lemma="米" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&lt;un&gt;" cat="(NP/NP)">
+<rule type="&lt;" cat="S">
+<rule type="&lt;" cat="NP">
+<lf start="21" span="1" word="摩擦" lemma="摩擦" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="22" span="1" word="を" lemma="を" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="23" span="1" word="巻き起こす" lemma="巻き起こす" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="24" span="1" word="の" lemma="の" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<lf start="25" span="1" word="は" lemma="は" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<rule type="&lt;B1" cat="(S\NP)">
+<lf start="26" span="1" word="確実" lemma="確実" pos="DT" chunk="I-NP" entity="O" cat="(S\NP)" />
+<rule type="&lt;B1" cat="(S\S)">
+<lf start="27" span="1" word="だ" lemma="だ" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+<lf start="28" span="1" word="。" lemma="。" pos="DT" chunk="I-NP" entity="O" cat="(S\S)" />
+</rule>
+</rule>
+</rule>
+</ccg>
+</candc>

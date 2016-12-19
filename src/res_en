@@ -1,0 +1,2111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="candc.xml"?>
+<candc>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="0" span="1" word="No" lemma="No" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="1" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<lf start="2" span="1" word="it" lemma="it" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/NP)">
+<lf start="3" span="1" word="was" lemma="was" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/NP)" />
+<lf start="4" span="1" word="n't" lemma="n't" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="5" span="1" word="Black" lemma="Black" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="6" span="1" word="Monday" lemma="Monday" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="7" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<lf start="0" span="1" word="But" lemma="But" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="1" span="1" word="while" lemma="while" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/S[dcl])" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="3" span="1" word="New" lemma="New" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="4" span="1" word="York" lemma="York" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="5" span="1" word="Stock" lemma="Stock" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="6" span="1" word="Exchange" lemma="Exchange" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[b]\NP))">
+<lf start="7" span="1" word="did" lemma="did" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[b]\NP))" />
+<lf start="8" span="1" word="n't" lemma="n't" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&lt;" cat="(S[b]\NP)">
+<rule type="&lt;" cat="(S[b]\NP)">
+<rule type="&lt;" cat="(S[b]\NP)">
+<lf start="9" span="1" word="fall" lemma="fall" pos="DT" chunk="I-NP" entity="O" cat="(S[b]\NP)" />
+<lf start="10" span="1" word="apart" lemma="apart" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<lf start="11" span="1" word="Friday" lemma="Friday" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="12" span="1" word="as" lemma="as" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/S[dcl])" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="13" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="14" span="1" word="Dow" lemma="Dow" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="15" span="1" word="Jones" lemma="Jones" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="16" span="1" word="Industrial" lemma="Industrial" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="17" span="1" word="Average" lemma="Average" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="18" span="1" word="plunged" lemma="plunged" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="19" span="1" word="190.58" lemma="190.58" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/((S\NP)\(S\NP)))" />
+<lf start="20" span="1" word="points" lemma="points" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="21" span="1" word="--" lemma="--" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="22" span="1" word="most" lemma="most" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="23" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<lf start="24" span="1" word="it" lemma="it" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="25" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="26" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="27" span="1" word="final" lemma="final" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="28" span="1" word="hour" lemma="hour" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="29" span="1" word="--" lemma="--" pos="DT" chunk="I-NP" entity="O" cat=":" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<lf start="30" span="1" word="it" lemma="it" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="31" span="1" word="barely" lemma="barely" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)/(S\NP))" />
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="32" span="1" word="managed" lemma="managed" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[to]\NP))" />
+<rule type="&gt;" cat="(S[to]\NP)">
+<lf start="33" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="((S[to]\NP)/(S[b]\NP))" />
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="34" span="1" word="stay" lemma="stay" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="35" span="1" word="this" lemma="this" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="36" span="1" word="side" lemma="side" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="37" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="38" span="1" word="chaos" lemma="chaos" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="39" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="Some" lemma="Some" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="circuit" lemma="circuit" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="2" span="1" word="breakers" lemma="breakers" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;un&gt;" cat="(NP\NP)">
+<rule type="&lt;" cat="(S[pss]\NP)">
+<lf start="3" span="1" word="installed" lemma="installed" pos="DT" chunk="I-NP" entity="O" cat="(S[pss]\NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="4" span="1" word="after" lemma="after" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="5" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="6" span="1" word="October" lemma="October" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="1987" lemma="1987" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="8" span="1" word="crash" lemma="crash" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="9" span="1" word="failed" lemma="failed" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="10" span="1" word="their" lemma="their" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="11" span="1" word="first" lemma="first" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="12" span="1" word="test" lemma="test" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;" cat="(NP\NP)">
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="13" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="14" span="1" word="traders" lemma="traders" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="15" span="1" word="say" lemma="say" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)\(NP\NP))" />
+</rule>
+</rule>
+<lf start="16" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP\NP)">
+<rule type="&gt;" cat="(S[adj]\NP)">
+<lf start="17" span="1" word="unable" lemma="unable" pos="DT" chunk="I-NP" entity="O" cat="((S[adj]\NP)/(S[to]\NP))" />
+<rule type="&gt;" cat="(S[to]\NP)">
+<lf start="18" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="((S[to]\NP)/(S[b]\NP))" />
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="19" span="1" word="cool" lemma="cool" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="20" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="21" span="1" word="selling" lemma="selling" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="22" span="1" word="panic" lemma="panic" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="23" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="24" span="1" word="both" lemma="both" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="25" span="1" word="stocks" lemma="stocks" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="26" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="27" span="1" word="futures" lemma="futures" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="28" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="49" lemma="49" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="2" span="1" word="stock" lemma="stock" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="3" span="1" word="specialist" lemma="specialist" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="4" span="1" word="firms" lemma="firms" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="5" span="1" word="on" lemma="on" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="6" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="Big" lemma="Big" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="8" span="1" word="Board" lemma="Board" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="9" span="1" word="floor" lemma="floor" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="10" span="1" word="--" lemma="--" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="12" span="1" word="buyers" lemma="buyers" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="13" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="14" span="1" word="sellers" lemma="sellers" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="15" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="16" span="1" word="last" lemma="last" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="17" span="1" word="resort" lemma="resort" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="18" span="1" word="who" lemma="who" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/(S[dcl]\NP))" />
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="19" span="1" word="were" lemma="were" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[pss]\NP))" />
+<rule type="&lt;" cat="(S[pss]\NP)">
+<lf start="20" span="1" word="criticized" lemma="criticized" pos="DT" chunk="I-NP" entity="O" cat="(S[pss]\NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="21" span="1" word="after" lemma="after" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="22" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="23" span="1" word="1987" lemma="1987" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="24" span="1" word="crash" lemma="crash" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="25" span="1" word="--" lemma="--" pos="DT" chunk="I-NP" entity="O" cat=":" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&gt;" cat="((S\NP)/(S\NP))">
+<lf start="26" span="1" word="once" lemma="once" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)/(S\NP))/((S\NP)/(S\NP)))" />
+<lf start="27" span="1" word="again" lemma="again" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)/(S\NP))" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[b]\NP))">
+<lf start="28" span="1" word="could" lemma="could" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[b]\NP))" />
+<lf start="29" span="1" word="n't" lemma="n't" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="30" span="1" word="handle" lemma="handle" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="31" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="32" span="1" word="selling" lemma="selling" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="33" span="1" word="pressure" lemma="pressure" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="34" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="0" span="1" word="Big" lemma="Big" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="investment" lemma="investment" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="2" span="1" word="banks" lemma="banks" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="3" span="1" word="refused" lemma="refused" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[to]\NP))" />
+<rule type="&gt;" cat="(S[to]\NP)">
+<lf start="4" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="((S[to]\NP)/(S[b]\NP))" />
+<rule type="&gt;" cat="(S[b]\NP)">
+<rule type="&lt;B1" cat="((S[b]\NP)/PP)">
+<lf start="5" span="1" word="step" lemma="step" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/PP)" />
+<lf start="6" span="1" word="up" lemma="up" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&gt;" cat="PP">
+<lf start="7" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="(PP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="8" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&lt;" cat="N">
+<lf start="9" span="1" word="plate" lemma="plate" pos="DT" chunk="I-NP" entity="O" cat="N" />
+<rule type="&lt;un&gt;" cat="(N\N)">
+<rule type="&gt;" cat="(S[to]\NP)">
+<lf start="10" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="((S[to]\NP)/(S[b]\NP))" />
+<rule type="&lt;" cat="(S[b]\NP)">
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="11" span="1" word="support" lemma="support" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="12" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="13" span="1" word="beleaguered" lemma="beleaguered" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="14" span="1" word="floor" lemma="floor" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="15" span="1" word="traders" lemma="traders" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="16" span="1" word="by" lemma="by" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/(S[ng]\NP))" />
+<rule type="&gt;" cat="(S[ng]\NP)">
+<lf start="17" span="1" word="buying" lemma="buying" pos="DT" chunk="I-NP" entity="O" cat="((S[ng]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="18" span="1" word="big" lemma="big" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="19" span="1" word="blocks" lemma="blocks" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="20" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="21" span="1" word="stock" lemma="stock" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="22" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\S[dcl])">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="23" span="1" word="traders" lemma="traders" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="24" span="1" word="say" lemma="say" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\S[dcl])\NP)" />
+</rule>
+</rule>
+<lf start="25" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/N)">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="0" span="1" word="Heavy" lemma="Heavy" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="1" span="1" word="selling" lemma="selling" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="2" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="3" span="1" word="Standard" lemma="Standard" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="4" span="1" word="&amp;" lemma="&amp;" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="5" span="1" word="Poor" lemma="Poor" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="6" span="1" word="'s" lemma="'s" pos="DT" chunk="I-NP" entity="O" cat="((NP/N)\NP)" />
+</rule>
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="500-stock" lemma="500-stock" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="8" span="1" word="index" lemma="index" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="9" span="1" word="futures" lemma="futures" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="10" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="11" span="1" word="Chicago" lemma="Chicago" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="12" span="1" word="relentlessly" lemma="relentlessly" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)/(S\NP))" />
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="13" span="1" word="beat" lemma="beat" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/NP)" />
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="14" span="1" word="stocks" lemma="stocks" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<lf start="15" span="1" word="downward" lemma="downward" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+</rule>
+<lf start="16" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="0" span="1" word="Seven" lemma="Seven" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="Big" lemma="Big" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="2" span="1" word="Board" lemma="Board" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="3" span="1" word="stocks" lemma="stocks" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="4" span="1" word="--" lemma="--" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="5" span="1" word="UAL" lemma="UAL" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="6" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="7" span="1" word="AMR" lemma="AMR" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="8" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="9" span="1" word="BankAmerica" lemma="BankAmerica" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="10" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="11" span="1" word="Walt" lemma="Walt" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="12" span="1" word="Disney" lemma="Disney" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="13" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="14" span="1" word="Capital" lemma="Capital" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="15" span="1" word="Cities\/ABC" lemma="Cities\/ABC" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="16" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="17" span="1" word="Philip" lemma="Philip" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="18" span="1" word="Morris" lemma="Morris" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="19" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="20" span="1" word="Pacific" lemma="Pacific" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="21" span="1" word="Telesis" lemma="Telesis" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="22" span="1" word="Group" lemma="Group" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<lf start="23" span="1" word="--" lemma="--" pos="DT" chunk="I-NP" entity="O" cat=":" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="24" span="1" word="stopped" lemma="stopped" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[ng]\NP))" />
+<lf start="25" span="1" word="trading" lemma="trading" pos="DT" chunk="I-NP" entity="O" cat="(S[ng]\NP)" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="((S[dcl]\NP)\(S[dcl]\NP))">
+<lf start="26" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="27" span="1" word="never" lemma="never" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)/(S\NP))" />
+<lf start="28" span="1" word="resumed" lemma="resumed" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="29" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="1" span="1" word="finger-pointing" lemma="finger-pointing" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[pt]\NP))">
+<lf start="2" span="1" word="has" lemma="has" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[pt]\NP))" />
+<lf start="3" span="1" word="already" lemma="already" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<lf start="4" span="1" word="begun" lemma="begun" pos="DT" chunk="I-NP" entity="O" cat="(S[pt]\NP)" />
+</rule>
+</rule>
+<lf start="5" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="equity" lemma="equity" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="2" span="1" word="market" lemma="market" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="3" span="1" word="was" lemma="was" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[adj]\NP))" />
+<lf start="4" span="1" word="illiquid" lemma="illiquid" pos="DT" chunk="I-NP" entity="O" cat="(S[adj]\NP)" />
+</rule>
+</rule>
+<lf start="5" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="Once" lemma="Once" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/(S/S))" />
+<lf start="1" span="1" word="again" lemma="again" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;rp&gt;" cat="(NP/N)">
+<lf start="2" span="1" word="-LCB-" lemma="-LCB-" pos="DT" chunk="I-NP" entity="O" cat="LRB" />
+<lf start="3" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+</rule>
+<lf start="4" span="1" word="specialists" lemma="specialists" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="5" span="1" word="-RCB-" lemma="-RCB-" pos="DT" chunk="I-NP" entity="O" cat="RRB" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[adj]\NP))">
+<lf start="6" span="1" word="were" lemma="were" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[adj]\NP))" />
+<lf start="7" span="1" word="not" lemma="not" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&gt;" cat="(S[adj]\NP)">
+<lf start="8" span="1" word="able" lemma="able" pos="DT" chunk="I-NP" entity="O" cat="((S[adj]\NP)/(S[to]\NP))" />
+<rule type="&gt;" cat="(S[to]\NP)">
+<lf start="9" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="((S[to]\NP)/(S[b]\NP))" />
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="10" span="1" word="handle" lemma="handle" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="12" span="1" word="imbalances" lemma="imbalances" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="13" span="1" word="on" lemma="on" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="14" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="15" span="1" word="floor" lemma="floor" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="16" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="17" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="18" span="1" word="New" lemma="New" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="19" span="1" word="York" lemma="York" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="20" span="1" word="Stock" lemma="Stock" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="21" span="1" word="Exchange" lemma="Exchange" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="22" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\S[dcl])">
+<lf start="23" span="1" word="said" lemma="said" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\S[dcl])/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="24" span="1" word="Christopher" lemma="Christopher" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="25" span="1" word="Pedersen" lemma="Pedersen" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="26" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="27" span="1" word="senior" lemma="senior" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="28" span="1" word="vice" lemma="vice" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="29" span="1" word="president" lemma="president" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="30" span="1" word="at" lemma="at" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="31" span="1" word="Twenty-First" lemma="Twenty-First" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="32" span="1" word="Securities" lemma="Securities" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="33" span="1" word="Corp" lemma="Corp" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<lf start="34" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="(S/S)">
+<rule type="&gt;" cat="(S[pss]\NP)">
+<lf start="0" span="1" word="Countered" lemma="Countered" pos="DT" chunk="I-NP" entity="O" cat="((S[pss]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="James" lemma="James" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="2" span="1" word="Maguire" lemma="Maguire" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="3" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="4" span="1" word="chairman" lemma="chairman" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="5" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="6" span="1" word="specialists" lemma="specialists" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="Henderson" lemma="Henderson" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="8" span="1" word="Brothers" lemma="Brothers" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="9" span="1" word="Inc." lemma="Inc." pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="10" span="1" word=":" lemma=":" pos="DT" chunk="I-NP" entity="O" cat=":" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<lf start="11" span="1" word="It" lemma="It" pos="DT" chunk="I-NP" entity="O" cat="NP[expl]" />
+<rule type="&gt;" cat="(S[dcl]\NP[expl])">
+<rule type="&gt;" cat="((S[dcl]\NP[expl])/(S[to]\NP))">
+<lf start="12" span="1" word="is" lemma="is" pos="DT" chunk="I-NP" entity="O" cat="(((S[dcl]\NP[expl])/(S[to]\NP))/(S[adj]\NP))" />
+<lf start="13" span="1" word="easy" lemma="easy" pos="DT" chunk="I-NP" entity="O" cat="(S[adj]\NP)" />
+</rule>
+<rule type="&gt;" cat="(S[to]\NP)">
+<lf start="14" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="((S[to]\NP)/(S[b]\NP))" />
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="15" span="1" word="say" lemma="say" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/S[dcl])" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="16" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="17" span="1" word="specialist" lemma="specialist" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[ng]\NP))">
+<lf start="18" span="1" word="is" lemma="is" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[ng]\NP))" />
+<lf start="19" span="1" word="n't" lemma="n't" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&gt;" cat="(S[ng]\NP)">
+<lf start="20" span="1" word="doing" lemma="doing" pos="DT" chunk="I-NP" entity="O" cat="((S[ng]\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="21" span="1" word="his" lemma="his" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="22" span="1" word="job" lemma="job" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="23" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="When" lemma="When" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/S[dcl])" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="2" span="1" word="dollar" lemma="dollar" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="3" span="1" word="is" lemma="is" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/PP)" />
+<rule type="&gt;" cat="PP">
+<lf start="4" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="(PP/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="5" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="6" span="1" word="free-fall" lemma="free-fall" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="7" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="8" span="1" word="even" lemma="even" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="9" span="1" word="central" lemma="central" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="10" span="1" word="banks" lemma="banks" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[b]\NP))">
+<lf start="11" span="1" word="ca" lemma="ca" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[b]\NP))" />
+<lf start="12" span="1" word="n't" lemma="n't" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="13" span="1" word="stop" lemma="stop" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<lf start="14" span="1" word="it" lemma="it" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<lf start="15" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="0" span="1" word="Speculators" lemma="Speculators" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="1" span="1" word="are" lemma="are" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[ng]\NP))" />
+<rule type="&gt;" cat="(S[ng]\NP)">
+<lf start="2" span="1" word="calling" lemma="calling" pos="DT" chunk="I-NP" entity="O" cat="((S[ng]\NP)/PP)" />
+<rule type="&gt;" cat="PP">
+<lf start="3" span="1" word="for" lemma="for" pos="DT" chunk="I-NP" entity="O" cat="(PP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="5" span="1" word="degree" lemma="degree" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="6" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="7" span="1" word="liquidity" lemma="liquidity" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="8" span="1" word="that" lemma="that" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/(S[dcl]\NP))" />
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="9" span="1" word="is" lemma="is" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="10" span="1" word="not" lemma="not" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/((S\NP)\(S\NP)))" />
+<lf start="11" span="1" word="there" lemma="there" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="12" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="13" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="14" span="1" word="market" lemma="market" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="15" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="0" span="1" word="Many" lemma="Many" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="money" lemma="money" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="2" span="1" word="managers" lemma="managers" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="3" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="some" lemma="some" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="5" span="1" word="traders" lemma="traders" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[pt]\NP))">
+<lf start="6" span="1" word="had" lemma="had" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[pt]\NP))" />
+<lf start="7" span="1" word="already" lemma="already" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&lt;" cat="(S[pt]\NP)">
+<rule type="&lt;" cat="(S[pt]\NP)">
+<rule type="&lt;" cat="(S[pt]\NP)">
+<rule type="&gt;" cat="(S[pt]\NP)">
+<lf start="8" span="1" word="left" lemma="left" pos="DT" chunk="I-NP" entity="O" cat="((S[pt]\NP)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="9" span="1" word="their" lemma="their" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="10" span="1" word="offices" lemma="offices" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="11" span="1" word="early" lemma="early" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/((S\NP)\(S\NP)))" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="12" span="1" word="Friday" lemma="Friday" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/((S\NP)\(S\NP)))" />
+<lf start="13" span="1" word="afternoon" lemma="afternoon" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="14" span="1" word="on" lemma="on" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="15" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="16" span="1" word="warm" lemma="warm" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="17" span="1" word="autumn" lemma="autumn" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="18" span="1" word="day" lemma="day" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<lf start="19" span="1" word="--" lemma="--" pos="DT" chunk="I-NP" entity="O" cat=":" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="20" span="1" word="because" lemma="because" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/S[dcl])" />
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="21" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="22" span="1" word="stock" lemma="stock" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="23" span="1" word="market" lemma="market" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="24" span="1" word="was" lemma="was" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[adj]\NP))" />
+<rule type="&gt;" cat="(S[adj]\NP)">
+<lf start="25" span="1" word="so" lemma="so" pos="DT" chunk="I-NP" entity="O" cat="((S[adj]\NP)/(S[adj]\NP))" />
+<lf start="26" span="1" word="quiet" lemma="quiet" pos="DT" chunk="I-NP" entity="O" cat="(S[adj]\NP)" />
+</rule>
+</rule>
+</rule>
+<lf start="27" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<lf start="0" span="1" word="Then" lemma="Then" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="1" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="2" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="3" span="1" word="lightning" lemma="lightning" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="4" span="1" word="plunge" lemma="plunge" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="5" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="6" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="Dow" lemma="Dow" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="8" span="1" word="Jones" lemma="Jones" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="9" span="1" word="industrials" lemma="industrials" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="10" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="barely" lemma="barely" pos="DT" chunk="I-NP" entity="O" cat="(NP/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="12" span="1" word="an" lemma="an" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="13" span="1" word="hour" lemma="hour" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/NP)">
+<lf start="14" span="1" word="surrendered" lemma="surrendered" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="15" span="1" word="about" lemma="about" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="16" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="17" span="1" word="third" lemma="third" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="18" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="19" span="1" word="their" lemma="their" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="20" span="1" word="gains" lemma="gains" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="21" span="1" word="this" lemma="this" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/N)" />
+<lf start="22" span="1" word="year" lemma="year" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="23" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP\NP)">
+<rule type="&gt;" cat="(S[ng]\NP)">
+<rule type="&lt;B1" cat="((S[ng]\NP)/NP)">
+<lf start="24" span="1" word="chalking" lemma="chalking" pos="DT" chunk="I-NP" entity="O" cat="((S[ng]\NP)/NP)" />
+<lf start="25" span="1" word="up" lemma="up" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&lt;" cat="NP">
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="26" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="27" span="1" word="190.58-point" lemma="190.58-point" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="28" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="29" span="1" word="or" lemma="or" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="30" span="1" word="6.9" lemma="6.9" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="31" span="1" word="%" lemma="%" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="32" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="33" span="1" word="loss" lemma="loss" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="34" span="1" word="on" lemma="on" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="35" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="36" span="1" word="day" lemma="day" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="37" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="38" span="1" word="gargantuan" lemma="gargantuan" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="39" span="1" word="trading" lemma="trading" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="40" span="1" word="volume" lemma="volume" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<lf start="41" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="0" span="1" word="Final-hour" lemma="Final-hour" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="1" span="1" word="trading" lemma="trading" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="2" span="1" word="accelerated" lemma="accelerated" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="3" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<rule type="&gt;" cat="(N/N)">
+<lf start="4" span="1" word="108.1" lemma="108.1" pos="DT" chunk="I-NP" entity="O" cat="((N/N)/(N/N))" />
+<lf start="5" span="1" word="million" lemma="million" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+</rule>
+<lf start="6" span="1" word="shares" lemma="shares" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="7" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="8" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="9" span="1" word="record" lemma="record" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="10" span="1" word="for" lemma="for" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="12" span="1" word="Big" lemma="Big" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="13" span="1" word="Board" lemma="Board" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="14" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="At" lemma="At" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="2" span="1" word="end" lemma="end" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="3" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="5" span="1" word="day" lemma="day" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="6" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<rule type="&gt;" cat="(N/N)">
+<lf start="7" span="1" word="251.2" lemma="251.2" pos="DT" chunk="I-NP" entity="O" cat="((N/N)/(N/N))" />
+<lf start="8" span="1" word="million" lemma="million" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+</rule>
+<lf start="9" span="1" word="shares" lemma="shares" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="10" span="1" word="were" lemma="were" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[pss]\NP))" />
+<lf start="11" span="1" word="traded" lemma="traded" pos="DT" chunk="I-NP" entity="O" cat="(S[pss]\NP)" />
+</rule>
+</rule>
+<lf start="12" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="Dow" lemma="Dow" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="2" span="1" word="Jones" lemma="Jones" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="3" span="1" word="industrials" lemma="industrials" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="4" span="1" word="closed" lemma="closed" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/PP)" />
+<rule type="&gt;" cat="PP">
+<lf start="5" span="1" word="at" lemma="at" pos="DT" chunk="I-NP" entity="O" cat="(PP/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="6" span="1" word="2569.26" lemma="2569.26" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="7" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/N)">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="1" span="1" word="Dow" lemma="Dow" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="2" span="1" word="'s" lemma="'s" pos="DT" chunk="I-NP" entity="O" cat="((NP/N)\NP)" />
+</rule>
+<lf start="3" span="1" word="decline" lemma="decline" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="4" span="1" word="was" lemma="was" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[adj]\NP))" />
+<lf start="5" span="1" word="second" lemma="second" pos="DT" chunk="I-NP" entity="O" cat="(S[adj]\NP)" />
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="6" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="point" lemma="point" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="8" span="1" word="terms" lemma="terms" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="9" span="1" word="only" lemma="only" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/((S\NP)\(S\NP)))" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="10" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="12" span="1" word="508-point" lemma="508-point" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="13" span="1" word="Black" lemma="Black" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="14" span="1" word="Monday" lemma="Monday" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="15" span="1" word="crash" lemma="crash" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="16" span="1" word="that" lemma="that" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/(S[dcl]\NP))" />
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="17" span="1" word="occurred" lemma="occurred" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="18" span="1" word="Oct." lemma="Oct." pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/N[num])" />
+<lf start="19" span="1" word="19" lemma="19" pos="DT" chunk="I-NP" entity="O" cat="N[num]" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="20" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="21" span="1" word="1987" lemma="1987" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="22" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="In" lemma="In" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="percentage" lemma="percentage" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="2" span="1" word="terms" lemma="terms" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="3" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+<lf start="4" span="1" word="however" lemma="however" pos="DT" chunk="I-NP" entity="O" cat="(NP\NP)" />
+</rule>
+<lf start="5" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/N)">
+<rule type="&gt;" cat="NP">
+<lf start="6" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="7" span="1" word="Dow" lemma="Dow" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="8" span="1" word="'s" lemma="'s" pos="DT" chunk="I-NP" entity="O" cat="((NP/N)\NP)" />
+</rule>
+<lf start="9" span="1" word="dive" lemma="dive" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="10" span="1" word="was" lemma="was" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="12" span="1" word="12th-worst" lemma="12th-worst" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP\NP)">
+<lf start="13" span="1" word="ever" lemma="ever" pos="DT" chunk="I-NP" entity="O" cat="(S[adj]\NP)" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="14" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="15" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="16" span="1" word="sharpest" lemma="sharpest" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="17" span="1" word="since" lemma="since" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/S[dcl])" />
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="18" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="19" span="1" word="market" lemma="market" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="20" span="1" word="fell" lemma="fell" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+<lf start="21" span="1" word="156.83" lemma="156.83" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+</rule>
+<lf start="22" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="23" span="1" word="or" lemma="or" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="24" span="1" word="8" lemma="8" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="25" span="1" word="%" lemma="%" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="26" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="27" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="28" span="1" word="week" lemma="week" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="29" span="1" word="after" lemma="after" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="30" span="1" word="Black" lemma="Black" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="31" span="1" word="Monday" lemma="Monday" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="32" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="1" span="1" word="Dow" lemma="Dow" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="2" span="1" word="fell" lemma="fell" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="3" span="1" word="22.6" lemma="22.6" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/((S\NP)\(S\NP)))" />
+<lf start="4" span="1" word="%" lemma="%" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="5" span="1" word="on" lemma="on" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="6" span="1" word="Black" lemma="Black" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="7" span="1" word="Monday" lemma="Monday" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="8" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="0" span="1" word="Shares" lemma="Shares" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="1" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="2" span="1" word="UAL" lemma="UAL" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="3" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="5" span="1" word="parent" lemma="parent" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="6" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="United" lemma="United" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="8" span="1" word="Airlines" lemma="Airlines" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="9" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="10" span="1" word="were" lemma="were" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[adj]\NP))" />
+<rule type="&gt;" cat="(S[adj]\NP)">
+<lf start="11" span="1" word="extremely" lemma="extremely" pos="DT" chunk="I-NP" entity="O" cat="((S[adj]\NP)/(S[adj]\NP))" />
+<lf start="12" span="1" word="active" lemma="active" pos="DT" chunk="I-NP" entity="O" cat="(S[adj]\NP)" />
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="13" span="1" word="all" lemma="all" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/N)" />
+<lf start="14" span="1" word="day" lemma="day" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="15" span="1" word="Friday" lemma="Friday" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="((S[dcl]\NP)\(S[dcl]\NP))">
+<lf start="16" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="17" span="1" word="reacting" lemma="reacting" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/PP)" />
+<rule type="&lt;un&gt;" cat="((S\NP)\((S\NP)/PP))">
+<rule type="&gt;" cat="PP">
+<lf start="18" span="1" word="to" lemma="to" pos="DT" chunk="I-NP" entity="O" cat="(PP/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="19" span="1" word="news" lemma="news" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="20" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="21" span="1" word="rumors" lemma="rumors" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="22" span="1" word="about" lemma="about" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="23" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="24" span="1" word="proposed" lemma="proposed" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<rule type="&gt;" cat="(N/N)">
+<lf start="25" span="1" word="$" lemma="$" pos="DT" chunk="I-NP" entity="O" cat="((N/N)/N[num])" />
+<rule type="&gt;" cat="N[num]">
+<lf start="26" span="1" word="6.79" lemma="6.79" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="27" span="1" word="billion" lemma="billion" pos="DT" chunk="I-NP" entity="O" cat="N[num]" />
+</rule>
+</rule>
+<lf start="28" span="1" word="buy-out" lemma="buy-out" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="29" span="1" word="of" lemma="of" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="30" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="31" span="1" word="airline" lemma="airline" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="32" span="1" word="by" lemma="by" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="33" span="1" word="an" lemma="an" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="34" span="1" word="employee-management" lemma="employee-management" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="35" span="1" word="group" lemma="group" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="36" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/N)">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="0" span="1" word="Wall" lemma="Wall" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="1" span="1" word="Street" lemma="Street" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="2" span="1" word="'s" lemma="'s" pos="DT" chunk="I-NP" entity="O" cat="((NP/N)\NP)" />
+</rule>
+<rule type="&gt;" cat="N">
+<lf start="3" span="1" word="takeover-stock" lemma="takeover-stock" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="4" span="1" word="speculators" lemma="speculators" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="5" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="6" span="1" word="or" lemma="or" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="risk" lemma="risk" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="8" span="1" word="arbitragers" lemma="arbitragers" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="9" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="10" span="1" word="had" lemma="had" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[pt]\NP))" />
+<rule type="&lt;" cat="(S[pt]\NP)">
+<lf start="11" span="1" word="placed" lemma="placed" pos="DT" chunk="I-NP" entity="O" cat="((S[pt]\NP)/NP)" />
+<rule type="&lt;un&gt;" cat="((S\NP)\((S\NP)/NP))">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<rule type="&gt;" cat="(N/N)">
+<lf start="12" span="1" word="unusually" lemma="unusually" pos="DT" chunk="I-NP" entity="O" cat="((N/N)/(N/N))" />
+<lf start="13" span="1" word="large" lemma="large" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+</rule>
+<rule type="&gt;" cat="N">
+<lf start="14" span="1" word="bets" lemma="bets" pos="DT" chunk="I-NP" entity="O" cat="(N/S[em])" />
+<rule type="&gt;" cat="S[em]">
+<lf start="15" span="1" word="that" lemma="that" pos="DT" chunk="I-NP" entity="O" cat="(S[em]/S[dcl])" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="16" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="17" span="1" word="takeover" lemma="takeover" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="18" span="1" word="would" lemma="would" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[b]\NP))" />
+<lf start="19" span="1" word="succeed" lemma="succeed" pos="DT" chunk="I-NP" entity="O" cat="(S[b]\NP)" />
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="(S[dcl]\S[dcl])">
+<lf start="20" span="1" word="and" lemma="and" pos="DT" chunk="I-NP" entity="O" cat="conj" />
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="21" span="1" word="UAL" lemma="UAL" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="22" span="1" word="stock" lemma="stock" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="23" span="1" word="would" lemma="would" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[b]\NP))" />
+<lf start="24" span="1" word="rise" lemma="rise" pos="DT" chunk="I-NP" entity="O" cat="(S[b]\NP)" />
+</rule>
+</rule>
+<lf start="25" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="At" lemma="At" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="2:43" lemma="2:43" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="2" span="1" word="p.m." lemma="p.m." pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="3" span="1" word="EDT" lemma="EDT" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<lf start="4" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+<rule type="&lt;un&gt;" cat="(NP\NP)">
+<lf start="5" span="1" word="came" lemma="came" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]/NP)" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="6" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="7" span="1" word="sickening" lemma="sickening" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="8" span="1" word="news" lemma="news" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="9" span="1" word=":" lemma=":" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="10" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="11" span="1" word="Big" lemma="Big" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="12" span="1" word="Board" lemma="Board" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="13" span="1" word="was" lemma="was" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[ng]\NP))" />
+<rule type="&gt;" cat="(S[ng]\NP)">
+<lf start="14" span="1" word="halting" lemma="halting" pos="DT" chunk="I-NP" entity="O" cat="((S[ng]\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="15" span="1" word="trading" lemma="trading" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="16" span="1" word="in" lemma="in" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="17" span="1" word="UAL" lemma="UAL" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&lt;Φ&gt;" cat="(NP\NP)">
+<lf start="18" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="19" span="1" word="pending" lemma="pending" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="20" span="1" word="news" lemma="news" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="21" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="(S/S)">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="On" lemma="On" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="2" span="1" word="exchange" lemma="exchange" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="3" span="1" word="floor" lemma="floor" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<rule type="&lt;Φ&gt;" cat="((S/S)\(S/S))">
+<lf start="4" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+<rule type="&gt;" cat="(S/S)">
+<lf start="5" span="1" word="as" lemma="as" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/(S/S))" />
+<rule type="&lt;" cat="(S/S)">
+<lf start="6" span="1" word="soon" lemma="soon" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&gt;" cat="((S/S)\(S/S))">
+<lf start="7" span="1" word="as" lemma="as" pos="DT" chunk="I-NP" entity="O" cat="(((S/S)\(S/S))/S[dcl])" />
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="8" span="1" word="UAL" lemma="UAL" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="9" span="1" word="stopped" lemma="stopped" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[ng]\NP))" />
+<lf start="10" span="1" word="trading" lemma="trading" pos="DT" chunk="I-NP" entity="O" cat="(S[ng]\NP)" />
+</rule>
+</rule>
+<lf start="11" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<lf start="12" span="1" word="we" lemma="we" pos="DT" chunk="I-NP" entity="O" cat="NP" />
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="13" span="1" word="braced" lemma="braced" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/PP)" />
+<rule type="&gt;" cat="PP">
+<lf start="14" span="1" word="for" lemma="for" pos="DT" chunk="I-NP" entity="O" cat="(PP/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="15" span="1" word="a" lemma="a" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="16" span="1" word="panic" lemma="panic" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="17" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\S[dcl])">
+<lf start="18" span="1" word="said" lemma="said" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\S[dcl])/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="19" span="1" word="one" lemma="one" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="20" span="1" word="top" lemma="top" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="21" span="1" word="floor" lemma="floor" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="22" span="1" word="trader" lemma="trader" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+<lf start="23" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="0" span="1" word="Several" lemma="Several" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="1" span="1" word="traders" lemma="traders" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="2" span="1" word="could" lemma="could" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[b]\NP))" />
+<rule type="&gt;" cat="(S[b]\NP)">
+<lf start="3" span="1" word="be" lemma="be" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/(S[pss]\NP))" />
+<rule type="&gt;" cat="(S[pss]\NP)">
+<lf start="4" span="1" word="seen" lemma="seen" pos="DT" chunk="I-NP" entity="O" cat="((S[pss]\NP)/(S[ng]\NP))" />
+<rule type="&lt;" cat="(S[ng]\NP)">
+<rule type="&gt;" cat="(S[ng]\NP)">
+<lf start="5" span="1" word="shaking" lemma="shaking" pos="DT" chunk="I-NP" entity="O" cat="((S[ng]\NP)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="6" span="1" word="their" lemma="their" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="7" span="1" word="heads" lemma="heads" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="8" span="1" word="when" lemma="when" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/S[dcl])" />
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="9" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="10" span="1" word="news" lemma="news" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="11" span="1" word="flashed" lemma="flashed" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+</rule>
+<lf start="12" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="For" lemma="For" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="1" span="1" word="weeks" lemma="weeks" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="2" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="3" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="4" span="1" word="market" lemma="market" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="5" span="1" word="had" lemma="had" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[pt]\NP))" />
+<rule type="&lt;" cat="(S[pt]\NP)">
+<rule type="&gt;" cat="(S[pt]\NP)">
+<lf start="6" span="1" word="been" lemma="been" pos="DT" chunk="I-NP" entity="O" cat="((S[pt]\NP)/(S[adj]\NP))" />
+<rule type="&gt;" cat="(S[adj]\NP)">
+<lf start="7" span="1" word="nervous" lemma="nervous" pos="DT" chunk="I-NP" entity="O" cat="((S[adj]\NP)/PP)" />
+<rule type="&gt;" cat="PP">
+<lf start="8" span="1" word="about" lemma="about" pos="DT" chunk="I-NP" entity="O" cat="(PP/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="9" span="1" word="takeovers" lemma="takeovers" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="10" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="((S\NP)\(S\NP))">
+<lf start="11" span="1" word="after" lemma="after" pos="DT" chunk="I-NP" entity="O" cat="(((S\NP)\(S\NP))/S[dcl])" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<rule type="&lt;" cat="(NP/N)">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="12" span="1" word="Campeau" lemma="Campeau" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="13" span="1" word="Corp." lemma="Corp." pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="14" span="1" word="'s" lemma="'s" pos="DT" chunk="I-NP" entity="O" cat="((NP/N)\NP)" />
+</rule>
+<rule type="&gt;" cat="N">
+<lf start="15" span="1" word="cash" lemma="cash" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="16" span="1" word="crunch" lemma="crunch" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&lt;" cat="(S[dcl]\NP)">
+<lf start="17" span="1" word="spurred" lemma="spurred" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/NP)" />
+<rule type="&lt;un&gt;" cat="((S\NP)\((S\NP)/NP))">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="18" span="1" word="concern" lemma="concern" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="19" span="1" word="about" lemma="about" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="20" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="21" span="1" word="prospects" lemma="prospects" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="22" span="1" word="for" lemma="for" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="23" span="1" word="future" lemma="future" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<rule type="&gt;" cat="(N/N)">
+<lf start="24" span="1" word="highly" lemma="highly" pos="DT" chunk="I-NP" entity="O" cat="((N/N)/(N/N))" />
+<lf start="25" span="1" word="leveraged" lemma="leveraged" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+</rule>
+<lf start="26" span="1" word="takeovers" lemma="takeovers" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+<lf start="27" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<lf start="0" span="1" word="And" lemma="And" pos="DT" chunk="I-NP" entity="O" cat="(S/S)" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="1" span="1" word="10" lemma="10" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="2" span="1" word="minutes" lemma="minutes" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="3" span="1" word="after" lemma="after" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="5" span="1" word="UAL" lemma="UAL" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<rule type="&gt;" cat="N">
+<lf start="6" span="1" word="trading" lemma="trading" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="7" span="1" word="halt" lemma="halt" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="8" span="1" word="came" lemma="came" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/NP)" />
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<lf start="9" span="1" word="news" lemma="news" pos="DT" chunk="I-NP" entity="O" cat="(N/S[em])" />
+<rule type="&gt;" cat="S[em]">
+<lf start="10" span="1" word="that" lemma="that" pos="DT" chunk="I-NP" entity="O" cat="(S[em]/S[dcl])" />
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="11" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<rule type="&gt;" cat="N">
+<lf start="12" span="1" word="UAL" lemma="UAL" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+<lf start="13" span="1" word="group" lemma="group" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<rule type="&lt;B1" cat="((S[dcl]\NP)/(S[b]\NP))">
+<lf start="14" span="1" word="could" lemma="could" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[b]\NP))" />
+<lf start="15" span="1" word="n't" lemma="n't" pos="DT" chunk="I-NP" entity="O" cat="((S\NP)\(S\NP))" />
+</rule>
+<rule type="&lt;" cat="(S[b]\NP)">
+<lf start="16" span="1" word="get" lemma="get" pos="DT" chunk="I-NP" entity="O" cat="((S[b]\NP)/NP)" />
+<rule type="&lt;un&gt;" cat="((S\NP)\((S\NP)/NP))">
+<rule type="&lt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<lf start="17" span="1" word="financing" lemma="financing" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(NP\NP)">
+<lf start="18" span="1" word="for" lemma="for" pos="DT" chunk="I-NP" entity="O" cat="((NP\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="19" span="1" word="its" lemma="its" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="20" span="1" word="bid" lemma="bid" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="21" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&gt;" cat="S[dcl]">
+<rule type="&gt;" cat="(S/S)">
+<lf start="0" span="1" word="At" lemma="At" pos="DT" chunk="I-NP" entity="O" cat="((S/S)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&gt;" cat="NP">
+<lf start="1" span="1" word="this" lemma="this" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="2" span="1" word="point" lemma="point" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="3" span="1" word="," lemma="," pos="DT" chunk="I-NP" entity="O" cat="," />
+</rule>
+</rule>
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="4" span="1" word="the" lemma="the" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="5" span="1" word="Dow" lemma="Dow" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<rule type="&gt;" cat="(S[dcl]\NP)">
+<lf start="6" span="1" word="was" lemma="was" pos="DT" chunk="I-NP" entity="O" cat="((S[dcl]\NP)/(S[adj]\NP))" />
+<rule type="&gt;" cat="(S[adj]\NP)">
+<lf start="7" span="1" word="down" lemma="down" pos="DT" chunk="I-NP" entity="O" cat="((S[adj]\NP)/NP)" />
+<rule type="&lt;rp&gt;" cat="NP">
+<rule type="&lt;un&gt;" cat="NP">
+<rule type="&gt;" cat="N">
+<rule type="&gt;" cat="(N/N)">
+<lf start="8" span="1" word="about" lemma="about" pos="DT" chunk="I-NP" entity="O" cat="((N/N)/(N/N))" />
+<lf start="9" span="1" word="35" lemma="35" pos="DT" chunk="I-NP" entity="O" cat="(N/N)" />
+</rule>
+<lf start="10" span="1" word="points" lemma="points" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+</rule>
+<lf start="11" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</rule>
+</rule>
+</rule>
+</rule>
+</ccg>
+<ccg>
+<rule type="&lt;rp&gt;" cat="S[dcl]">
+<rule type="&lt;" cat="S[dcl]">
+<rule type="&gt;" cat="NP">
+<lf start="0" span="1" word="The" lemma="The" pos="DT" chunk="I-NP" entity="O" cat="(NP/N)" />
+<lf start="1" span="1" word="market" lemma="market" pos="DT" chunk="I-NP" entity="O" cat="N" />
+</rule>
+<lf start="2" span="1" word="crumbled" lemma="crumbled" pos="DT" chunk="I-NP" entity="O" cat="(S[dcl]\NP)" />
+</rule>
+<lf start="3" span="1" word="." lemma="." pos="DT" chunk="I-NP" entity="O" cat="." />
+</rule>
+</ccg>
+</candc>

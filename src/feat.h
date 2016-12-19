@@ -3,6 +3,7 @@
 #define INCLUDE_FEAT_H_
 
 #include <iostream>
+#include <vector>
 #include "cacheable.h"
 
 
@@ -25,6 +26,14 @@ public:
     bool Matches(const Feature* other) const;
     bool ContainsWildcard() const { return contains_wildcard_; }
     std::string SubstituteWildcard(const std::string& string) const;
+    bool ContainsKeyValue(const std::string& key, const std::string& value) const {
+        for (auto&& pair : values_) {
+            if (pair.first == key && pair.second == value)
+                return true;
+        }
+        return false;
+    }
+
 
 private:
     Feature(const std::string& value);
