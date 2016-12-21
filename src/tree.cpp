@@ -8,7 +8,6 @@
 #define SPACE(out, size) REPEAT(out, size, " ")
 
 namespace myccg {
-namespace tree {
 
 const std::string Node::ToStr() const {
     auto res = AUTO(this);
@@ -121,6 +120,5 @@ void ToXML(std::vector<const Node*>& trees, std::ostream& out) {
     }
     out << "</candc>" << std::endl;
 }
-} // namespace tree
 } // namespace myccg
 

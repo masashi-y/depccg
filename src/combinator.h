@@ -2,16 +2,12 @@
 #ifndef INCLUDE_COMBINATOR_H_
 #define INCLUDE_COMBINATOR_H_
 
-#include "cat.h"
 #include <vector>
-#include <stdexcept>
 #include <unordered_set>
+#include "cat.h"
+#include "debug.h"
 
 namespace myccg {
-namespace combinator {
-
-using cat::Slash;
-using cat::Cat;
 
 enum RuleType {
     FA      = 0,
@@ -60,13 +56,8 @@ class UnaryRule: public Combinator
 public:
     UnaryRule(): Combinator(UNARY) {}
     bool CanApply(Cat left, Cat right) const { return false; }
-    Cat Apply(Cat left, Cat right) const { 
-        throw std::runtime_error("UnaryRule::Apply is not implemented.");
-    }
-
-    bool HeadIsLeft(Cat left, Cat right) const {
-        throw std::runtime_error("UnaryRule::HeadIsLeft is not implemented.");
-    }
+    Cat Apply(Cat left, Cat right) const NO_IMPLEMENTATION
+    bool HeadIsLeft(Cat left, Cat right) const NO_IMPLEMENTATION
 
     const std::string ToStr() const { return "<un>"; };
 };
@@ -89,12 +80,12 @@ class Conjunction: public Combinator
 {
 public:
     Conjunction(): Combinator(CONJ),
-      puncts_({cat::Category::Parse(","),
-               cat::Category::Parse(";"),
-               cat::Category::Parse("conj")}) {}
+      puncts_({Category::Parse(","),
+               Category::Parse(";"),
+               Category::Parse("conj")}) {}
 
     bool CanApply(Cat left, Cat right) const {
-        if (cat::Category::Parse("NP\\NP")->Matches(right))
+        if (Category::Parse("NP\\NP")->Matches(right))
             return false;
         return (puncts_.count(left) > 0 &&
                 !right->IsPunct() &&
@@ -104,7 +95,7 @@ public:
     }
 
     Cat Apply(Cat left, Cat right) const {
-        return cat::Make(right, Slash::Bwd(), right);
+        return Category::Make(right, Slash::Bwd(), right);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
@@ -142,8 +133,8 @@ class RemovePunctuationLeft: public Combinator
 {
 public:
     RemovePunctuationLeft(): Combinator(LP),
-      puncts_({cat::Category::Parse("LQU"),
-               cat::Category::Parse("LRB"),}) {}
+      puncts_({Category::Parse("LQU"),
+               Category::Parse("LRB"),}) {}
 
     bool CanApply(Cat left, Cat right) const {
         return puncts_.count(left) > 0;
@@ -189,7 +180,7 @@ class ForwardApplication: public Combinator
     Cat Apply(Cat left, Cat right) const {
         if (left->IsModifier()) return right;
         Cat result = left->GetLeft();
-        return cat::CorrectWildcardFeatures(result, left->GetRight(), right);
+        return Category::CorrectWildcardFeatures(result, left->GetRight(), right);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
@@ -210,7 +201,7 @@ class BackwardApplication: public Combinator
 
     Cat Apply(Cat left, Cat right) const {
         Cat res = right->IsModifier() ? left : right->GetLeft();
-        return cat::CorrectWildcardFeatures(res, right->GetRight(), left);
+        return Category::CorrectWildcardFeatures(res, right->GetRight(), left);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
@@ -236,8 +227,8 @@ class GeneralizedForwardComposition: public Combinator
 
     Cat Apply(Cat left, Cat right) const {
         Cat res = left->IsModifier() ? right :
-            cat::Compose<Order>(left->GetLeft(), result_, right);
-        return cat::CorrectWildcardFeatures(res,
+            Category::Compose<Order>(left->GetLeft(), result_, right);
+        return Category::CorrectWildcardFeatures(res,
                 right->GetLeft<Order+1>(), left->GetRight());
     }
 
@@ -270,8 +261,8 @@ class GeneralizedBackwardComposition: public Combinator
 
     Cat Apply(Cat left, Cat right) const {
         Cat res = right->IsModifier() ? left :
-            cat::Compose<Order>(right->GetLeft(), result_, left);
-        return cat::CorrectWildcardFeatures(
+            Category::Compose<Order>(right->GetLeft(), result_, left);
+        return Category::CorrectWildcardFeatures(
                 res, left->GetLeft<Order+1>(), right->GetRight());
     }
     bool HeadIsLeft(Cat left, Cat right) const {
@@ -288,7 +279,6 @@ private:
 extern std::vector<Combinator*> binary_rules;
 extern Combinator* unary_rule;
 
-} // namespace combinator
 } // namespace myccg
 
 #endif // include

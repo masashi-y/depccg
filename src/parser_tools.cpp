@@ -1,62 +1,78 @@
 
+#include <limits>
+#include <cmath>
 #include "parser_tools.h"
+#include "configure.h"
+#include "grammar.h"
 
 namespace myccg {
-namespace parser {
 
-bool IsModifier(Cat cat) {
-    return (cat->IsFunctor() &&
-            !cat->GetLeft()->IsFunctor() &&
-            !cat->GetRight()->IsFunctor() &&
-            cat->GetLeft()->GetType() == cat->GetRight()->GetType());
+bool JapaneseComparator(const AgendaItem& left, const AgendaItem& right) {
+    if ( fabs(left.prob - right.prob) > 0.00001 )
+        return left.prob < right.prob;
+
+    // if ((IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())) &&
+    //         !(IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())))
+    //     return false;
+    // if ((IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())) &&
+    //         !(IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())))
+    //     return true;
+    // if (IsPeriod(right.parse->GetCategory()))
+    //     return false;
+    // if (IsPeriod(left.parse->GetCategory()))
+    //     return true;
+    // if (left.parse->LeftNumDescendants() != right.parse->LeftNumDescendants())
+        // return left.parse->LeftNumDescendants() <= right.parse->LeftNumDescendants();
+// #else
+    if (left.parse->GetDependencyLength() != right.parse->GetDependencyLength())
+        return left.parse->GetDependencyLength() < right.parse->GetDependencyLength();
+
+    return left.id > right.id;
 }
 
-bool IsVerb(NodeType tree) {
-    Cat cat = tree->GetCategory();
-    if (cat->IsFunctor()) {
-        return (cat->GetSlash().IsBackward() &&
-                cat->Arg(0)->GetType() == "S" &&
-                cat->Arg(1)->GetType() == "NP");
-    } else {
-        return (tree->GetLeftMostChild()->GetCategory()->ToStrWithoutFeat() == "S" &&
-                tree->GetLeftMostChild()->GetRuleType() == combinator::LEXICON);
+
+bool LongerDependencyComparator(const AgendaItem& left, const AgendaItem& right) {
+    if ( fabs(left.prob - right.prob) > 0.00001 )
+        return left.prob < right.prob;
+    if (left.parse->GetDependencyLength() != right.parse->GetDependencyLength())
+        return left.parse->GetDependencyLength() > right.parse->GetDependencyLength();
+    return left.id > right.id;
+}
+
+ChartCell::ChartCell()
+    : items(std::unordered_map<Cat, ChartItem>()),
+      best_prob(std::numeric_limits<float>::lowest()), best(NULL) {}
+
+
+bool ChartCell::update(NodeType parse, float prob) {
+    Cat cat = parse->GetCategory();
+    if (items.count(cat) > 0)
+        return false;
+    items.emplace(cat, std::make_pair(parse, prob));
+    if (best_prob < prob) {
+        best_prob = prob;
+        best = parse;
+    }
+    return true;
+}
+
+void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
+    float from_left[MAX_LENGTH + 1];
+    float from_right[MAX_LENGTH + 1];
+    from_left[0] = 0.0;
+    from_right[sent_size] = 0.0;
+
+    for (int i = 0; i < sent_size - 1; i++) {
+        int j = sent_size - i;
+        from_left[i + 1] = from_left[i] + probs[i];
+        from_right[j - 1] = from_right[j] + probs[j - 1];
+    }
+
+    for (int i = 0; i < sent_size + 1; i++) {
+        for (int j = i; j < sent_size + 1; j++) {
+            out[i * sent_size + j] = from_left[i] + from_right[j];
+        }
     }
 }
 
-bool IsAdjective(Cat cat) {
-    return (IsModifier(cat) &&
-            cat->GetSlash().IsForward() &&
-            cat->Arg(0)->GetType() == "NP" &&
-            cat->Arg(1)->GetType() == "NP");
-}
-
-bool IsAdverb(Cat cat) {
-    return (IsModifier(cat) &&
-            cat->GetSlash().IsForward() &&
-            cat->Arg(0)->GetType() == "S" &&
-            cat->Arg(1)->GetType() == "S");
-}
-
-bool IsAUX(Cat cat) {
-    return (IsModifier(cat) &&
-            cat->GetSlash().IsBackward() &&
-            cat->Arg(0)->GetType() == "S" &&
-            cat->Arg(1)->GetType() == "S");
-}
-
-bool IsPeriod(Cat cat) {
-#ifdef JAPANESE
-    if (IsModifier(cat) && cat->GetSlash().IsBackward()) {
-        Cat first = cat->Arg(0);
-        Cat second = cat->Arg(1);
-        return (first->GetType() == "S" &&
-                second->GetType() == "S" &&
-                first->GetFeat()->ContainsKeyValue("fin", "t") &&
-                second->GetFeat()->ContainsKeyValue("fin", "f"));
-    }
-#endif
-    return false;
-}
-
-}
 }

@@ -4,15 +4,15 @@
 
 
 namespace myccg {
-namespace cat {
+        
 
 const char* slashes = "/\\|";
 Feat kNONE      = Feature::Parse("");
 Feat kNB        = Feature::Parse("nb");
 
 
-template<> Cat Compose<0>(Cat head, const Slash& op, Cat tail) {
-    return Make(head, op, tail->GetRight());
+template<> Cat Category::Compose<0>(Cat head, const Slash& op, Cat tail) {
+    return Category::Make(head, op, tail->GetRight());
 }
 
 template<> bool Category::HasFunctorAtLeft<0>() const {
@@ -94,15 +94,14 @@ Cat Category::Substitute(Feat feat) const {
     return Category::Parse(std::move(feat->SubstituteWildcard(str_)));
 }
 
-Cat Make(Cat left, const Slash& op, Cat right) {
+Cat Category::Make(Cat left, const Slash& op, Cat right) {
     return Category::Parse(left->WithBrackets() + op.ToStr() + right->WithBrackets());
 }
 
-Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
+Cat Category::CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
     return to_correct->Substitute(match1->GetSubstitution(match2));
 }
 
 
 
-} // namespace cat
 } // namespace myccg

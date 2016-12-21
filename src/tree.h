@@ -10,10 +10,7 @@
 
 
 namespace myccg {
-namespace tree {
 
-using cat::Cat;
-using combinator::Op;
 
 class Node;
 class Leaf;
@@ -31,15 +28,15 @@ public:
 class Node
 {
 public:
-    Node(Cat cat, const combinator::RuleType rule_type)
+    Node(Cat cat, const RuleType rule_type)
     : cat_(cat), rule_type_(rule_type) {}
 
     virtual ~Node() {}
 
     Cat GetCategory() { return cat_; }
     Cat GetCategory() const { return cat_; }
-    const combinator::RuleType GetRuleType() { return rule_type_; }
-    const combinator::RuleType GetRuleType() const { return rule_type_; }
+    const RuleType GetRuleType() { return rule_type_; }
+    const RuleType GetRuleType() const { return rule_type_; }
     const std::string ToStr() const;
     virtual int GetHeadId() const = 0;
     virtual int GetDependencyLength() const = 0;
@@ -59,14 +56,14 @@ public:
 
 protected:
     Cat cat_;
-    const combinator::RuleType rule_type_;
+    const RuleType rule_type_;
 };
         
 class Leaf: public Node
 {
 public:
     Leaf(const std::string& word, Cat cat, int position)
-    : Node(cat, combinator::LEXICON), word_(word), position_(position) {}
+    : Node(cat, LEXICON), word_(word), position_(position) {}
 
     ~Leaf() {}
     std::string GetWord() const { return word_; }
@@ -106,13 +103,13 @@ public:
             rchild_->GetDependencyLength() + lchild_->GetDependencyLength()) {}
 
     Tree(Cat cat, const Node* lchild)
-    : Node(cat, combinator::UNARY), left_is_head_(true),
-      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule),
+    : Node(cat, UNARY), left_is_head_(true),
+      lchild_(lchild), rchild_(NULL), rule_(unary_rule),
       dependency_length_(lchild_->GetDependencyLength()) {}
 
     Tree(Cat cat, ChildType lchild)
-    : Node(cat, combinator::UNARY), left_is_head_(true),
-      lchild_(lchild), rchild_(NULL), rule_(combinator::unary_rule),
+    : Node(cat, UNARY), left_is_head_(true),
+      lchild_(lchild), rchild_(NULL), rule_(unary_rule),
       dependency_length_(lchild_->GetDependencyLength()) {}
 
     ~Tree() {}
@@ -256,7 +253,6 @@ private:
     std::stringstream out_;
 };
 
-} // namespace tree
 } // namespace myccg
 
 #endif

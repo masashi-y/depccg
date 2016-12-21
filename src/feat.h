@@ -2,72 +2,65 @@
 #ifndef INCLUDE_FEAT_H_
 #define INCLUDE_FEAT_H_
 
-#include <iostream>
 #include <vector>
 #include "cacheable.h"
+#include "debug.h"
 
 
 namespace myccg {
-namespace cat {
 
 class Feature;
 typedef const Feature* Feat;
 
-#ifdef JAPANESE
 class Feature: public Cacheable
 {
 public:
     static Feat Parse(const std::string& string);
 
-    ~Feature() {}
+    virtual ~Feature() {}
+    virtual std::string ToStr() const = 0;
+    virtual bool IsEmpty() const = 0;
+    virtual bool Matches(Feat other) const = 0;
+    virtual bool ContainsWildcard() const = 0;
+    virtual std::string SubstituteWildcard(const std::string& string) const = 0;
+    virtual bool ContainsKeyValue(const std::string& key, const std::string& value) const = 0;
+    Feature() {}
+};
 
+class MultiValueFeature: public Feature
+{
+public:
+    MultiValueFeature(const std::string& value);
+    ~MultiValueFeature() {}
     std::string ToStr() const;
     bool IsEmpty() const { return values_.empty(); }
-    bool Matches(const Feature* other) const;
+    bool Matches(Feat other) const;
     bool ContainsWildcard() const { return contains_wildcard_; }
     std::string SubstituteWildcard(const std::string& string) const;
-    bool ContainsKeyValue(const std::string& key, const std::string& value) const {
-        for (auto&& pair : values_) {
-            if (pair.first == key && pair.second == value)
-                return true;
-        }
-        return false;
-    }
+    bool ContainsKeyValue(const std::string& key, const std::string& value) const;
 
-
-private:
-    Feature(const std::string& value);
 private:
     std::vector<std::pair<std::string, std::string>> values_;
     bool contains_wildcard_;
 };
 
-#else
-class Feature: public Cacheable
+class SingleValueFeature: public Feature
 {
 public:
-    static Feat Parse(const std::string& string);
-
-    ~Feature() {}
+    SingleValueFeature(const std::string& value): value_(value) {}
+    ~SingleValueFeature() {}
 
     std::string ToStr() const { return IsEmpty() ? "" : "[" + value_ + "]"; }
     bool IsEmpty() const { return value_.empty(); }
-    bool Matches(const Feature* other) const {
-        return (GetId() == other->GetId() ||
-                this->ContainsWildcard() ||
-                other->ContainsWildcard());
-    }
+    bool Matches(Feat other) const;
     bool ContainsWildcard() const { return value_ == "X"; }
-
     std::string SubstituteWildcard(const std::string& string) const;
-private:
-    Feature(const std::string& value): value_(value) {}
+    bool ContainsKeyValue(const std::string& key, const std::string& value) const NO_IMPLEMENTATION
+
 private:
     std::string value_;
 };
-#endif
 
-} // namespace cat
 } // namespace myccg
 
 #endif
