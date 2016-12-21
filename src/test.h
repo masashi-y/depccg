@@ -1,7 +1,6 @@
 
 #include "parser.h"
 #include "grammar.h"
-#include <chrono>
 
 namespace myccg {
 namespace parser {

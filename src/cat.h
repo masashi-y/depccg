@@ -10,16 +10,12 @@
 #include "debug.h"
 
 namespace myccg {
-namespace cat {
 
 class Category;
 class Slash;
 
 typedef const Category* Cat;
 typedef std::pair<Cat, Cat> CatPair;
-
-Cat Make(Cat left, const Slash& op, Cat right);
-Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
 
 extern Feat kNONE;
 extern Feat kNB;
@@ -54,12 +50,17 @@ class Category: public Cacheable
 public:
     static Cat Parse(const std::string& cat);
     static Cat ParseUncached(const std::string& cat);
+    static Cat Make(Cat left, const Slash& op, Cat right);
+    static Cat CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2);
+    template<int Order>
+    static Cat Compose(Cat head, const Slash& op, Cat tail);
+
 
     template<typename T>
-    const T& As() const { return dynamic_cast<const T&>(*this); }
+    const T& As() const { return static_cast<const T&>(*this); }
     
     template<typename T>
-    T& As() { return dynamic_cast<T&>(*this); }
+    T& As() { return static_cast<T&>(*this); }
 
     std::string ToStr() { return str_; }
     std::string ToStr() const { return str_; }
@@ -127,15 +128,14 @@ private:
 //   --> (((A/C)/D)/E)
 
 template<int Order>
-Cat Compose(Cat head, const Slash& op, Cat tail) {
+Cat Category::Compose(Cat head, const Slash& op, Cat tail) {
     Cat target = tail->GetLeft<Order>();
     target = target->GetRight();
-    return Compose<Order-1>(Make(head, op, target),
+    return Category::Compose<Order-1>(Make(head, op, target),
             tail->GetLeft<Order-1>()->GetSlash(), tail);
 }
 
-template<> Cat Compose<0>(Cat head, const Slash& op, Cat tail);
-
+template<> Cat Category::Compose<0>(Cat head, const Slash& op, Cat tail);
 
 template<int i> bool Category::HasFunctorAtLeft() const {
     return this->IsFunctor() ? GetLeft()->HasFunctorAtLeft<i-1>() : false; }
@@ -165,29 +165,17 @@ public:
     }
 
     const std::string& GetType() const NO_IMPLEMENTATION
-
     Feat GetFeat() const NO_IMPLEMENTATION
-
     Cat GetLeft() const { return left_;  }
-
     Cat GetRight() const { return right_;  }
-
     Slash GetSlash() const { return slash_;  }
 
     const std::string WithBrackets() const { return "(" + ToStr() + ")"; }
-
-    // bool IsModifier() const {
-    //     return (!left_->IsFunctor() &&
-    //             !right_->IsFunctor() &&
-    //             left_->GetType() == right_->GetType());
-    // }
     bool IsModifier() const { return *this->left_ == *this->right_; }
-
     bool IsModifierWithoutFeat() const { return *left_->StripFeat() == *right_->StripFeat(); }
 
     bool IsTypeRaised() const {
-        return (right_->IsFunctor() &&
-                *right_->GetLeft() == *left_);
+        return (right_->IsFunctor() && *right_->GetLeft() == *left_);
     }
 
     bool IsTypeRaisedWithoutFeat() const {
@@ -314,32 +302,31 @@ private:
     Feat feat_;
 };
 
-} // namespace cat
 } // namespace myccg
 
 
 namespace std {
 
 template<>
-struct equal_to<myccg::cat::Cat>
+struct equal_to<myccg::Cat>
 {
-    inline bool operator () (myccg::cat::Cat c1, myccg::cat::Cat c2) const {
+    inline bool operator () (myccg::Cat c1, myccg::Cat c2) const {
         return c1->GetId() == c2->GetId();
     }
 };
 
 template<>
-struct hash<myccg::cat::Cat>
+struct hash<myccg::Cat>
 {
-    inline size_t operator () (myccg::cat::Cat c) const {
+    inline size_t operator () (myccg::Cat c) const {
         return c->GetId();
     }
 };
 
 template<>
-struct hash<myccg::cat::CatPair>
+struct hash<myccg::CatPair>
 {
-    inline size_t operator () (const myccg::cat::CatPair& p) const {
+    inline size_t operator () (const myccg::CatPair& p) const {
         return ((p.first->GetId() << 31) | (p.second->GetId()));
     }
 };

@@ -1,4 +1,6 @@
 
+#include <stdexcept>
+
 #ifndef INCLUDE_DEBUG_H_
 #define INCLUDE_DEBUG_H_
 
@@ -15,3 +17,4 @@
 #define DEBUG(x) std::cerr << #x": " << (x) << std::endl
 
 #endif
+

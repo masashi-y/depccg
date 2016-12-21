@@ -13,9 +13,6 @@
 namespace myccg {
 namespace utils {
 
-using cat::Cat;
-using cat::CatPair;
-
 const std::string DropBrackets(const std::string& in);
 
 int FindClosingBracket(const std::string& in, int start);

@@ -3,7 +3,6 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include <regex>
 #include "utils.h"
 
 namespace myccg {
@@ -87,9 +86,9 @@ std::unordered_map<Cat, std::vector<Cat>> LoadUnary(const std::string& filename)
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat from = cat::Category::Parse(buf);
+        Cat from = Category::Parse(buf);
         ss >> buf;
-        Cat to = cat::Category::Parse(buf);
+        Cat to = Category::Parse(buf);
         if (res.count(from) == 0)
             res[from] = std::vector<Cat>();
         res[from].push_back(to);
@@ -113,7 +112,7 @@ std::vector<Cat> LoadCategoryList(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat ca = cat::Category::Parse(buf);
+        Cat ca = Category::Parse(buf);
         res.push_back(ca);
     }
     return res;
@@ -143,9 +142,9 @@ std::unordered_set<CatPair> LoadSeenRules(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat ca1 = cat::Category::Parse(buf)->StripFeat();
+        Cat ca1 = Category::Parse(buf)->StripFeat();
         ss >> buf;
-        Cat ca2 = cat::Category::Parse(buf)->StripFeat();
+        Cat ca2 = Category::Parse(buf)->StripFeat();
         auto p = CatPair(ca1, ca2);
         res.insert(p);
     }

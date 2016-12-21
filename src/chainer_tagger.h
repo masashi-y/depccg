@@ -13,7 +13,6 @@
 #include "utils.h"
 
 namespace myccg {
-namespace tagger {
 
 
 class Tagger
@@ -23,7 +22,7 @@ public:
 
     virtual int TargetSize() const = 0;
 
-    virtual const cat::Category* TagAt(int idx) const  = 0;
+    virtual const Category* TagAt(int idx) const  = 0;
 
     virtual std::unique_ptr<float*[]> predict(const std::vector<std::string>& doc) const = 0;
 };
@@ -35,7 +34,7 @@ public:
 
     virtual int TargetSize() const = 0;
 
-    virtual const cat::Category* TagAt(int idx) const  = 0;
+    virtual const Category* TagAt(int idx) const  = 0;
 
     virtual std::pair<std::unique_ptr<float*[]>, std::unique_ptr<float*[]>> predict(
             const std::vector<std::string>& doc) const = 0;
@@ -52,13 +51,13 @@ public:
 
     int TargetSize() const { return this->targets_.size(); }
 
-    const cat::Category* TagAt(int idx) const { return targets_[idx]; }
+    const Category* TagAt(int idx) const { return targets_[idx]; }
 
     std::unique_ptr<float*[]> predict(const std::vector<std::string>& doc) const;
 
 private:
     const std::string& model_;
-    std::vector<const cat::Category*> targets_;
+    std::vector<const Category*> targets_;
 
 };
 
@@ -72,20 +71,19 @@ public:
 
     int TargetSize() const { return this->targets_.size(); }
 
-    const cat::Category* TagAt(int idx) const { return targets_[idx]; }
+    const Category* TagAt(int idx) const { return targets_[idx]; }
 
     std::pair<std::unique_ptr<float*[]>, std::unique_ptr<float*[]>> predict(
             const std::vector<std::string>& doc) const;
 
 private:
     const std::string& model_;
-    std::vector<const cat::Category*> targets_;
+    std::vector<const Category*> targets_;
 
 };
 
 void test();
         
-} // namespace tagger
 } // namespace myccg
 
 #endif

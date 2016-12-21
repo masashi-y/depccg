@@ -8,7 +8,6 @@
 #include "debug.h"
 
 namespace myccg {
-namespace tagger {
 
 char PYPATH[] = "PYTHONPATH=.";
 
@@ -74,6 +73,5 @@ std::pair<std::unique_ptr<float*[]>, std::unique_ptr<float*[]>> ChainerDependenc
             std::unique_ptr<float*[]>(cats), std::unique_ptr<float*[]>(deps));
 }
 
-} // namespace tagger
 } // namespace myccg
 
