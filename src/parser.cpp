@@ -1,4 +1,5 @@
 
+#include <cmath>
 #include <queue>
 #include <utility>
 #include <limits>
@@ -59,8 +60,7 @@ NodeType AStarParser<Lang>::Parse(const std::string& sent) {
 }
 
 template<typename Lang>
-std::vector<NodeType> AStarParser<Lang>::Parse(
-        const std::vector<std::string>& doc) {
+std::vector<NodeType> AStarParser<Lang>::Parse(const std::vector<std::string>& doc) {
     std::unique_ptr<float*[]> scores = tagger_->predict(doc);
     std::vector<NodeType> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)

@@ -89,7 +89,7 @@ bool MultiValueFeature::ContainsKeyValue(
 // S[X] --> S[feat] ; for English grammar
 std::string SingleValueFeature::SubstituteWildcard(const std::string& string) const {
     std::string res(string);
-    utils::ReplaceAll(&res, "X", this->ToStr());
+    utils::ReplaceAll(&res, "[X]", this->ToStr());
     return res;
 }
 
@@ -98,8 +98,7 @@ bool SingleValueFeature::Matches(Feat other) const {
     if ((o = dynamic_cast<const SingleValueFeature*>(other)) == nullptr)
         return false;
     return (GetId() == o->GetId() ||
-            this->ContainsWildcard() ||
-            o->ContainsWildcard());
+            this->ContainsWildcard() || o->ContainsWildcard());
 }
 
 } // namespace myccg

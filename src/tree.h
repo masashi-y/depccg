@@ -211,8 +211,10 @@ public:
              << (tree->IsUnary() ? "1" : "2")
              << "> ";
         tree->GetLeftChild()->Accept(*this);
-        if (! tree->IsUnary())
+        if (! tree->IsUnary()) {
+            out_ << " ";
             tree->GetRightChild()->Accept(*this);
+        }
         out_ << " )";
         return 0;
     }

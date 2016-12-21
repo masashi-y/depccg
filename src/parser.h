@@ -35,6 +35,7 @@ public:
     virtual NodeType Parse(const std::string& sent);
     virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc);
     NodeType Parse( const std::string& sent, float* scores);
+
 protected:
     bool IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const ;
     bool IsSeen(Cat left, Cat right) const;
