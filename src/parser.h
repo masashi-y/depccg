@@ -7,55 +7,98 @@
 #include "combinator.h"
 #include "parser_tools.h"
 #include "cat.h"
+#include "cat_loader.h"
+#include <iostream>
 
 namespace myccg {
 
 typedef bool (*Comparator)(const AgendaItem&, const AgendaItem&);
 
-template<typename Lang>
-class AStarParser
+class Parser
 {
 public:
-    AStarParser(
-            const Tagger* tagger,
-            const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
-            const std::unordered_set<CatPair>& seen_rules,
-            const std::unordered_set<Cat>& possible_root_cats,
-            Comparator comparator,
-            float beta=0.0000001,
-            int pruning_size=50)
+    Parser(const Tagger* tagger,
+           const std::string& model,
+           const std::unordered_set<Cat>& possible_root_cats,
+           Comparator comparator=LongerDependencyComparator,
+           float beta=0.0000001,
+           int pruning_size=50)
      :tagger_(tagger),
-      unary_rules_(unary_rules),
-      seen_rules_(seen_rules),
+      model_(model),
+      unary_rules_(utils::LoadUnary(model + "/unary_rules.txt")),
+      use_seen_rules_(false),
+      use_category_dict_(false),
       possible_root_cats_(possible_root_cats),
       comparator_(comparator),
       beta_(beta),
       pruning_size_(pruning_size) {}
 
-    virtual NodeType Parse(const std::string& sent);
-    virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc);
-    NodeType Parse( const std::string& sent, float* scores);
+    virtual ~Parser() {}
 
-protected:
-    bool IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const ;
-    bool IsSeen(Cat left, Cat right) const;
-    virtual Cat TagAt(int index) const { return tagger_->TagAt(index); }
-    virtual int TagSize() const { return tagger_->TargetSize(); }
-    std::vector<RuleCache>& GetRules(Cat left, Cat right);
+    void LoadSeenRules() {
+        use_seen_rules_ = true;
+        seen_rules_ = utils::LoadSeenRules(model_ + "/seen_rules.txt");
+    }
+
+    void LoadCategoryDict() {
+        use_category_dict_ = true;
+        category_dict_ = utils::LoadCategoryDict(
+                model_ + "/cat_dict.txt", tagger_->Targets());
+    }
+
+    void SetComparator(Comparator comp) { comparator_ = comp; }
+    void SetBeta(float beta) { beta_ = beta; }
+    void SetPruningSize(int prune) { pruning_size_ = prune; }
+
+    virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc) = 0;
 
 protected:
     NodeType failure_node = std::make_shared<Tree>(
             Category::Parse("XX"), new Leaf("FAILURE", Category::Parse("XX"), 0));
 
+
     const Tagger* tagger_;
+    std::string model_;
+
     std::unordered_map<Cat, std::vector<Cat>> unary_rules_;
+
+    bool use_seen_rules_;
     std::unordered_set<CatPair> seen_rules_;
+
+    bool use_category_dict_;
+    std::unordered_map<std::string, std::vector<bool>> category_dict_;
+
     std::unordered_set<Cat> possible_root_cats_;
     std::unordered_map<CatPair, std::vector<RuleCache>> rule_cache_;
     Comparator comparator_;
     float beta_;
     int pruning_size_;
+};
 
+template<typename Lang>
+class AStarParser: public Parser
+{
+public:
+    AStarParser(
+            const Tagger* tagger,
+            const std::string& model,
+            const std::unordered_set<Cat>& possible_root_cats,
+            Comparator comparator=LongerDependencyComparator,
+            float beta=0.0000001,
+            int pruning_size=50)
+    : Parser(tagger, model, possible_root_cats,
+                        comparator, beta, pruning_size) {}
+
+    std::vector<NodeType> Parse(const std::vector<std::string>& doc);
+    NodeType Parse( const std::string& sent, float* scores);
+
+
+protected:
+    bool IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const ;
+    bool IsSeen(Cat left, Cat right) const;
+    Cat TagAt(int index) const { return tagger_->TagAt(index); }
+    int TagSize() const { return tagger_->TargetSize(); }
+    std::vector<RuleCache>& GetRules(Cat left, Cat right);
 };
         
 template<typename Lang>
@@ -66,22 +109,17 @@ public:
     typedef AStarParser<Lang> Base;
 
     DepAStarParser(
-            const DependencyTagger* tagger,
-            const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
-            const std::unordered_set<CatPair>& seen_rules,
+            const Tagger* tagger,
+            const std::string& model,
             const std::unordered_set<Cat>& possible_root_cats,
-            Comparator comparator)
-    : AStarParser<Lang>(NULL, unary_rules, seen_rules,
-            possible_root_cats, comparator), dep_tagger_(tagger) {}
+            Comparator comparator=LongerDependencyComparator,
+            float beta=0.0000001,
+            int pruning_size=50)
+    : AStarParser<Lang>(tagger, model, possible_root_cats,
+                                comparator, beta, pruning_size) {}
 
-    NodeType Parse(const std::string& sent);
     std::vector<NodeType> Parse(const std::vector<std::string>& doc);
-    int TagSize() const { return dep_tagger_->TargetSize(); }
-    Cat TagAt(int index) const { return dep_tagger_->TagAt(index); }
     NodeType Parse(const std::string& sent, float* tag_scores, float* dep_scores);
-
-private:
-    const DependencyTagger* dep_tagger_;
 };
 
 

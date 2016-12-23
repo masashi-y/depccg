@@ -14,6 +14,7 @@
 #include "configure.h"
 #include "debug.h"
 #include "grammar.h"
+#include "matrix.h"
 
 namespace myccg {
 
@@ -27,9 +28,8 @@ bool AStarParser<Lang>::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_l
 
 template<typename Lang>
 bool AStarParser<Lang>::IsSeen(Cat left, Cat right) const {
-#ifdef JAPANESE
-    return true;
-#endif
+    if (! use_seen_rules_)
+        return true;
     return (seen_rules_.count(
                 std::make_pair(left->StripFeat(), right->StripFeat())) > 0);
 }
@@ -53,15 +53,8 @@ std::vector<RuleCache>& AStarParser<Lang>::GetRules(Cat left, Cat right) {
 }
 
 template<typename Lang>
-NodeType AStarParser<Lang>::Parse(const std::string& sent) {
-    std::unique_ptr<float[]> scores = tagger_->predict(sent);
-    NodeType res = Parse(sent, scores.get());
-    return res;
-}
-
-template<typename Lang>
 std::vector<NodeType> AStarParser<Lang>::Parse(const std::vector<std::string>& doc) {
-    std::unique_ptr<float*[]> scores = tagger_->predict(doc);
+    std::unique_ptr<float*[]> scores = tagger_->PredictTags(doc);
     std::vector<NodeType> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++) {
@@ -77,7 +70,8 @@ NodeType AStarParser<Lang>::Parse(const std::string& sent, float* scores) {
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
     float best_in_probs[MAX_LENGTH];
-    float out_probs[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
+    float p_out[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
+    Matrix<float> out_probs(p_out, sent_size + 1, sent_size + 1);
     AgendaType agenda(comparator_);
     int agenda_id = 0;
 
@@ -89,30 +83,34 @@ NodeType AStarParser<Lang>::Parse(const std::string& sent, float* scores) {
 
 #ifdef DEBUGGING
 
+    Matrix<float> m(scores, sent_size, TagSize());
     for (unsigned i = 0; i < tokens.size(); i++) {
-        std::cerr << tokens[i] << " --> ";
-        std::cerr << tagger_->TagAt( utils::ArgMax(scores + (i * TagSize()),
-                    scores + (i * TagSize() + TagSize() - 1)))->ToStr() << std::endl;
+        std::cerr << tokens[i] << " --> " << tagger_->TagAt(m.ArgMax(i)) << std::endl;
     }
     std::cerr << std::endl;
 #endif
 
     for (int i = 0; i < sent_size; i++) {
         totals[i] = 0.0;
+        bool do_pruning = category_dict_.count(tokens[i]) > 0;
         for (int j = 0; j < TagSize(); j++) {
-            float score = scores[i * TagSize() + j];
-            totals[i] += std::exp(score);
-            scored_cats[i].emplace(score, TagAt(j));
+            if ( ! do_pruning ||
+                    (do_pruning && category_dict_[tokens[i]][j])) {
+                float score = scores[i * TagSize() + j];
+                totals[i] += std::exp(score);
+                scored_cats[i].emplace(score, TagAt(j));
+            }
         }
         best_in_probs[i] = NORMALIZED_PROB( scored_cats[i].top().first, totals[i] );
     }
-    ComputeOutsideProbs(best_in_probs, sent_size, out_probs);
+    ComputeOutsideProbs(best_in_probs, sent_size, p_out);
 
     for (int i = 0; i < sent_size; i++) {
         float threshold = scored_cats[i].top().first * beta_;
-        float out_prob = out_probs[i * sent_size + (i + 1)];
+        float out_prob = out_probs(i, i + 1);
 
-        for (int j = 0; j < pruning_size_; j++) {
+        int j = 0;
+        while (j++ < pruning_size_ && 0 < scored_cats[i].size()) {
             auto prob_and_cat = scored_cats[i].top();
             scored_cats[i].pop();
             if (prob_and_cat.first > threshold) {
@@ -144,6 +142,7 @@ NodeType AStarParser<Lang>::Parse(const std::string& sent, float* scores) {
         ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
 
         if (cell.update(parse, item.in_prob)) {
+
             if (item.span_length != sent_size) {
                 for (Cat unary: unary_rules_[parse->GetCategory()]) {
                     NodeType subtree = std::make_shared<const Tree>(unary, parse);
@@ -176,8 +175,8 @@ NodeType AStarParser<Lang>::Parse(const std::string& sent, float* scores) {
                             NodeType subtree = std::make_shared<const Tree>(
                                     rule.result, rule.left_is_head, parse, right, rule.combinator);
                             float in_prob = item.in_prob + prob;
-                            float out_prob = out_probs[item.start_of_span *
-                                            sent_size + item.start_of_span + span_length];
+                            float out_prob = out_probs(item.start_of_span,
+                                            item.start_of_span + span_length);
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 item.start_of_span, span_length);
 #ifdef DEBUGGING
@@ -208,17 +207,17 @@ NodeType AStarParser<Lang>::Parse(const std::string& sent, float* scores) {
                             NodeType subtree = std::make_shared<const Tree>(
                                     rule.result, rule.left_is_head, left, parse, rule.combinator);
                             float in_prob = item.in_prob + prob;
-                            float out_prob = out_probs[start_of_span * sent_size +
-                                            start_of_span + span_length];
+                            float out_prob = out_probs(start_of_span,
+                                            start_of_span + span_length);
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 start_of_span, span_length);
-                        }
-                    }
 #ifdef DEBUGGING
         ACCEPT;
         std::cerr << Derivation(subtree);
         BORDER;
 #endif
+                        }
+                    }
                 }
             }
         }

@@ -1,0 +1,1 @@
+{"word_dim": 50, "relu_dim": 300, "afix_dim": 100, "nlayers": 2, "hidden_dim": 128, "model": "LSTMParser", "dep_dim": 100}

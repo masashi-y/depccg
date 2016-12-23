@@ -86,40 +86,38 @@ private:
 class Tree: public Node
 {
 public:
-    typedef std::shared_ptr<const Node> ChildType;
 
     Tree(Cat cat, bool left_is_head, const Node* lchild,
             const Node* rchild, Op rule)
     : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
       lchild_(lchild), rchild_(rchild), rule_(rule),
       dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
-            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()) {}
+            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
+      headid_(left_is_head ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
 
-    Tree(Cat cat, bool left_is_head, ChildType lchild,
-            ChildType rchild, Op rule)
+    Tree(Cat cat, bool left_is_head, NodeType lchild,
+            NodeType rchild, Op rule)
     : Node(cat, rule->GetRuleType()), left_is_head_(left_is_head),
       lchild_(lchild), rchild_(rchild), rule_(rule),
       dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
-            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()) {}
+            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
+      headid_(left_is_head ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
 
     Tree(Cat cat, const Node* lchild)
     : Node(cat, UNARY), left_is_head_(true),
       lchild_(lchild), rchild_(NULL), rule_(unary_rule),
-      dependency_length_(lchild_->GetDependencyLength()) {}
+      dependency_length_(lchild_->GetDependencyLength()),
+      headid_(lchild_->GetHeadId()) {}
 
-    Tree(Cat cat, ChildType lchild)
+    Tree(Cat cat, NodeType lchild)
     : Node(cat, UNARY), left_is_head_(true),
       lchild_(lchild), rchild_(NULL), rule_(unary_rule),
-      dependency_length_(lchild_->GetDependencyLength()) {}
+      dependency_length_(lchild_->GetDependencyLength()),
+      headid_(lchild_->GetHeadId()) {}
 
     ~Tree() {}
 
-    int GetHeadId() const {
-        if (NULL == rchild_)
-            return lchild_->GetHeadId();
-        else
-            return left_is_head_ ? lchild_->GetHeadId() : rchild_->GetHeadId();
-    }
+    int GetHeadId() const { return headid_; }
 
     int GetDependencyLength() const { return dependency_length_; }
     bool HeadIsLeft() const { return left_is_head_; }
@@ -130,18 +128,19 @@ public:
 
     int LeftNumDescendants() const { return lchild_->NumDescendants() + 1; }
     int RightNumDescendants() const { return rchild_->NumDescendants() + 1; }
-    ChildType GetLeftChild() const { return lchild_; }
-    ChildType GetRightChild() const { return rchild_; }
+    NodeType GetLeftChild() const { return lchild_; }
+    NodeType GetRightChild() const { return rchild_; }
     Op GetRule() const { return rule_; }
     int Accept(FormatVisitor& visitor) const { return visitor.Visit(this); }
     const Node* GetLeftMostChild() const { return lchild_->GetLeftMostChild(); }
 
 private:
     bool left_is_head_;
-    ChildType lchild_;
-    ChildType rchild_;
+    NodeType lchild_;
+    NodeType rchild_;
     Op rule_;
     int dependency_length_;
+    int headid_;
 };
 
 void ToXML(std::vector<std::shared_ptr<const Node>>&

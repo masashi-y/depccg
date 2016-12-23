@@ -1,0 +1,105 @@
+#ifndef MATRIX_H_INCLUDE_
+#define MATRIX_H_INCLUDE_
+
+#include <stdexcept>
+#include <iostream>
+#include "utils.h"
+
+namespace myccg {
+
+#define IGNORE -1
+// #define CHECK(y, t) if ((y) != IGNORE || (y) != (t)) { \
+//             throw std::runtime_error(#y" :shape error detected"); }
+#define CHECK(y, t) NULL;
+
+
+template<typename T>
+class Matrix
+{
+public:
+    Matrix(T* data, int row, int column)
+        : data_(data), row_(row), column_(column),
+          size_(row * column) {}
+
+    Matrix(T* begin, T* end)
+        : data_(begin), column_(1) {
+        T* beg = begin;
+        size_ = 0;
+        while (beg++ != end) size_++;
+        row_ = size_;
+    }
+
+    Matrix(int row, int column)
+        : data_(new T[row * column]), row_(row), column_(column),
+          size_(row * column) {
+              for (int i = 0; i < size_; i++)
+                  data_[i] = T(0);
+          }
+
+    ~Matrix() {}
+
+    friend std::ostream& operator<<(std::ostream& out, Matrix<T> m) {
+        for (int i = 0; i < m.row_; i++) {
+            for (int j = 0; j < m.column_; j++) {
+                out << (j ? ", " : "") << m.data_[i * m.column_ + j];
+            }
+            out << std::endl;
+        }
+        out << std::endl;
+        return out;
+    }
+
+    Matrix<T> Reshaped(int row, int column) {
+        ShapeCheck(IGNORE, IGNORE, row * column);
+        row_ = row;
+        column_ = column;
+        return *this;
+    }
+
+    T* Ptr() {
+        return data_;
+    }
+
+    T operator() (int row, int column) const {
+        return data_[row * column_ + column];
+    }
+
+    int ArgMax() const {
+        return utils::ArgMax(data_, data_ + size_);
+    }
+
+    int ArgMax(int row) const {
+        return utils::ArgMax(data_ + (row * column_),
+                data_ + (row * column_ + column_));
+    }
+
+    T Max() const {
+        int idx = ArgMax();
+        return data_[idx];
+    }
+
+    int Max(int row) const {
+        int idx = ArgMax(row);
+        return data_[row * row_ + idx];
+    }
+
+    int Size() const { return size_; }
+    int Column() const { return column_; }
+    int Row() const { return row_; }
+
+    void ShapeCheck(int row, int column, int size) {
+        CHECK(row, row_);
+        CHECK(column, column_);
+        CHECK(size, size_);
+    }
+
+private:
+    T* data_;
+    int row_;
+    int column_;
+    int size_;
+};
+
+} // namespace myccg
+
+#endif

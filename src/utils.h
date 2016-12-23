@@ -4,11 +4,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
 #include <limits>
-#include "cat.h"
 
 namespace myccg {
 namespace utils {
@@ -23,12 +19,6 @@ std::vector<std::string> Split(const std::string& line, char delim);
 
 std::string
 trim(const std::string& string, const char* trimCharacterList=" \t\v\r\n");
-
-std::unordered_map<Cat, std::vector<Cat>>
-LoadUnary(const std::string& filename);
-
-std::vector<Cat>
-LoadCategoryList(const std::string& filename);
 
 template<typename T> int ArgMax(T* from, T* to) {
     T max_val = std::numeric_limits<T>::lowest();
@@ -58,10 +48,6 @@ template<typename T> int ArgMin(T* from, T* to) {
 
 void ReplaceAll(std::string* target,
         const std::string& from, const std::string& to);
-
-
-std::unordered_set<CatPair>
-LoadSeenRules(const std::string& filename);
 
 unsigned int utf8_strlen(std::string str);
 

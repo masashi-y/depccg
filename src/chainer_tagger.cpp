@@ -1,28 +1,25 @@
 
 #include <Python.h>
-#include <iostream>
-#include <utility>
 #include "py/tagger.h"
 #include "chainer_tagger.h"
-#include "utils.h"
-#include "debug.h"
 
 namespace myccg {
 
 char PYPATH[] = "PYTHONPATH=.";
 
-std::unique_ptr<float[]> ChainerTagger::predict(const std::string& tokens) const {
-    putenv(PYPATH);
-    if ( !Py_IsInitialized() )
-        Py_Initialize();
-    initchainer_tagger();
-    std::unique_ptr<float[]> res(
-            new float[ this->TargetSize() * tokens.size() ]);
-    tag(this->model_.c_str(), tokens.c_str(), tokens.size(), res.get());
-    return res;
-}
+// std::unique_ptr<float[]> ChainerTagger::predict(const std::string& tokens) const {
+//     putenv(PYPATH);
+//     if ( !Py_IsInitialized() )
+//         Py_Initialize();
+//     initchainer_tagger();
+//     std::unique_ptr<float[]> res(
+//             new float[ this->TargetSize() * tokens.size() ]);
+//     tag(this->model_.c_str(), tokens.c_str(), tokens.size(), res.get());
+//     return res;
+// }
+//
 
-std::unique_ptr<float*[]> ChainerTagger::predict(const std::vector<std::string>& doc) const {
+Probs ChainerTagger::PredictTags(Doc& doc) const {
     putenv(PYPATH);
     if ( !Py_IsInitialized() )
         Py_Initialize();
@@ -42,14 +39,7 @@ std::unique_ptr<float*[]> ChainerTagger::predict(const std::vector<std::string>&
     return std::unique_ptr<float*[]>(res);
 }
 
-std::unique_ptr<float[]> ChainerDependencyTagger::predict(
-        const std::string& tokens) const NO_IMPLEMENTATION
-
-
-// std::unique_ptr<float*[]> ChainerDependencyTagger::predict(
-        // const std::vector<std::string>& doc) const NO_IMPLEMENTATION
-
-std::pair<std::unique_ptr<float*[]>, std::unique_ptr<float*[]>> ChainerDependencyTagger::predict(const std::vector<std::string>& doc) const {
+std::pair<Probs, Probs> ChainerDependencyTagger::PredictTagsAndDeps(Doc& doc) const {
     putenv(PYPATH);
     if ( !Py_IsInitialized() )
         Py_Initialize();
