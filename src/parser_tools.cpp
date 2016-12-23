@@ -70,7 +70,7 @@ void ComputeOutsideProbs(float* probs, int sent_size, float* out) {
 
     for (int i = 0; i < sent_size + 1; i++) {
         for (int j = i; j < sent_size + 1; j++) {
-            out[i * sent_size + j] = from_left[i] + from_right[j];
+            out[i * (sent_size + 1) + j] = from_left[i] + from_right[j];
         }
     }
 }

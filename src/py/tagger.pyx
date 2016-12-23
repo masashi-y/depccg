@@ -51,6 +51,7 @@ cdef public void tag_doc(const char* model_path, const char** c_strs, int* lengt
 
 cdef public void tag_and_parse_doc(const char* model_path, const char** c_strs, int* lengths, int doc_size, float** tags, float** deps):
     from py.ja_lstm_parser import JaLSTMParser
+    from py.lstm_parser import LSTMParser
     cdef object tagger
     cdef str model = os.path.join(model_path, "tagger_model")
 

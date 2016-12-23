@@ -6,84 +6,54 @@
 #include <vector>
 #include <utility>
 #include <string>
-#include <stdlib.h>
-#include <utility>
-#include <iostream>
 #include "cat.h"
-#include "utils.h"
+#include "cat_loader.h"
+#include "debug.h"
 
 namespace myccg {
 
+typedef std::unique_ptr<float*[]> Probs;
+typedef const std::vector<std::string> Doc;
 
 class Tagger
 {
 public:
-    virtual std::unique_ptr<float[]> predict(const std::string& tokens) const = 0;
+    Tagger(const std::string& model)
+        : model_(model),
+        targets_(utils::LoadCategoryList(model + "/target.txt")) {}
 
-    virtual int TargetSize() const = 0;
+    int TargetSize() const { return this->targets_.size(); }
+    Cat TagAt(int idx) const { return targets_[idx]; }
+    std::vector<Cat> Targets() const { return targets_; }
 
-    virtual const Category* TagAt(int idx) const  = 0;
+    virtual Probs PredictTags(Doc& doc) const = 0;
+    virtual std::pair<Probs, Probs> PredictTagsAndDeps(Doc& doc) const = 0;
 
-    virtual std::unique_ptr<float*[]> predict(const std::vector<std::string>& doc) const = 0;
-};
-
-class DependencyTagger
-{
-public:
-    virtual std::unique_ptr<float[]> predict(const std::string& tokens) const = 0;
-
-    virtual int TargetSize() const = 0;
-
-    virtual const Category* TagAt(int idx) const  = 0;
-
-    virtual std::pair<std::unique_ptr<float*[]>, std::unique_ptr<float*[]>> predict(
-            const std::vector<std::string>& doc) const = 0;
+protected:
+    std::string model_;
+    std::vector<Cat> targets_;
 
 };
 
 class ChainerTagger: public Tagger
 {
 public:
-    ChainerTagger(const std::string& model)
-    : model_(model), targets_(utils::LoadCategoryList(model + "/target.txt")) {}
- 
-    std::unique_ptr<float[]> predict(const std::string& tokens) const;
+    ChainerTagger(const std::string& model): Tagger(model) {}
 
-    int TargetSize() const { return this->targets_.size(); }
-
-    const Category* TagAt(int idx) const { return targets_[idx]; }
-
-    std::unique_ptr<float*[]> predict(const std::vector<std::string>& doc) const;
-
-private:
-    const std::string& model_;
-    std::vector<const Category*> targets_;
+    Probs PredictTags(Doc& doc) const;
+    std::pair<Probs, Probs> PredictTagsAndDeps(Doc& doc) const NO_IMPLEMENTATION
 
 };
 
-class ChainerDependencyTagger: public DependencyTagger
+class ChainerDependencyTagger: public Tagger
 {
 public:
-    ChainerDependencyTagger(const std::string& model)
-    : model_(model), targets_(utils::LoadCategoryList(model + "/target.txt")) {}
- 
-    std::unique_ptr<float[]> predict(const std::string& tokens) const;
+    ChainerDependencyTagger(const std::string& model): Tagger(model) {}
 
-    int TargetSize() const { return this->targets_.size(); }
-
-    const Category* TagAt(int idx) const { return targets_[idx]; }
-
-    std::pair<std::unique_ptr<float*[]>, std::unique_ptr<float*[]>> predict(
-            const std::vector<std::string>& doc) const;
-
-private:
-    const std::string& model_;
-    std::vector<const Category*> targets_;
-
+    Probs PredictTags(Doc& tokens) const NO_IMPLEMENTATION;
+    std::pair<Probs, Probs> PredictTagsAndDeps(Doc& doc) const;
 };
 
-void test();
-        
 } // namespace myccg
 
 #endif

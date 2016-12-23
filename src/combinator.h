@@ -114,8 +114,8 @@ public:
     bool CanApply(Cat left, Cat right) const {
         return punct_is_left_ ? left->IsPunct() :
             (right->IsPunct() &&
-            !left->IsFunctor() &&
-            left->GetType() != "N");
+             !(!left->IsFunctor() &&
+              left->GetType() == "N"));
     }
     Cat Apply(Cat left, Cat right) const {
         return punct_is_left_ ? right : left;

@@ -1,8 +1,6 @@
 
 #include <stdexcept>
 #include <sstream>
-#include <iostream>
-#include <fstream>
 #include "utils.h"
 
 namespace myccg {
@@ -70,85 +68,12 @@ trim(const std::string& string, const char* trimCharacterList) {
 }
 
 
-std::unordered_map<Cat, std::vector<Cat>> LoadUnary(const std::string& filename) {
-    auto res = std::unordered_map<Cat, std::vector<Cat>>();
-    std::ifstream in(filename);
-    if (!in)
-        throw std::runtime_error("failed to open: " + filename);
-    std::string line, buf;
-
-    while (getline(in, line)) {
-        int comment = line.find("#");
-        if (comment > -1)
-            line = line.substr(0, comment);
-        
-        line = trim(line);
-        if (line.size() == 0) continue;
-        std::stringstream ss(line);
-        ss >> buf;
-        Cat from = Category::Parse(buf);
-        ss >> buf;
-        Cat to = Category::Parse(buf);
-        if (res.count(from) == 0)
-            res[from] = std::vector<Cat>();
-        res[from].push_back(to);
-    }
-    return res;
-}
-
-std::vector<Cat> LoadCategoryList(const std::string& filename) {
-    auto res = std::vector<Cat>();
-    std::ifstream in(filename);
-    if (!in)
-        throw std::runtime_error("failed to open: " + filename);
-    std::string line, buf;
-
-    while (getline(in, line)) {
-        int comment = line.find("#");
-        if (comment > -1)
-            line = line.substr(0, comment);
-        
-        line = trim(line);
-        if (line.size() == 0) continue;
-        std::stringstream ss(line);
-        ss >> buf;
-        Cat ca = Category::Parse(buf);
-        res.push_back(ca);
-    }
-    return res;
-}
-
 void ReplaceAll(std::string* target, const std::string& from, const std::string& to) {
     std::string::size_type pos = 0;
     while(pos = target->find(from, pos), pos != std::string::npos) {
         target->replace(pos, from.length(), to);
         pos += to.length();
     }
-}
-
-std::unordered_set<CatPair> LoadSeenRules(const std::string& filename) {
-    auto res = std::unordered_set<CatPair>();
-    std::ifstream in(filename);
-    if (!in)
-        throw std::runtime_error("failed to open: " + filename);
-    std::string line, buf;
-
-    while (getline(in, line)) {
-        int comment = line.find("#");
-        if (comment > -1)
-            line = line.substr(0, comment);
-       
-        line = trim(line);
-        if (line.size() == 0) continue;
-        std::stringstream ss(line);
-        ss >> buf;
-        Cat ca1 = Category::Parse(buf)->StripFeat();
-        ss >> buf;
-        Cat ca2 = Category::Parse(buf)->StripFeat();
-        auto p = CatPair(ca1, ca2);
-        res.insert(p);
-    }
-    return res;
 }
 
 unsigned int utf8_strlen(std::string str) {

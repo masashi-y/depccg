@@ -87,6 +87,7 @@ int XML::Visit(const Leaf* leaf) {
          << "\" pos=\"DT\" chunk=\"I-NP\" entity=\"O\" cat=\""
          << leaf->GetCategory()->ToStrWithoutFeat() << "\" />"
          << std::endl;
+   return 0;
 }
 
 int XML::Visit(const Tree* tree) {
@@ -99,6 +100,7 @@ int XML::Visit(const Tree* tree) {
    if (! tree->IsUnary())
        tree->GetRightChild()->Accept(*this);
    out_ << "</rule>" << std::endl;
+   return 0;
 }
 
 void ToXML(std::vector<std::shared_ptr<const Node>>& trees, std::ostream& out) {

@@ -1,7 +1,7 @@
 CC=g++
 PYTHON=python2
 PROG=myccg
-SRCS=main.cpp parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp grammar.cpp cacheable.cpp feat.cpp dep.cpp parser_tools.cpp
+SRCS=main.cpp parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp grammar.cpp cacheable.cpp feat.cpp dep.cpp parser_tools.cpp cat_loader.cpp
 OBJS=$(SRCS:.cpp=.o) tagger.o
 DEPS=$(SRCS:.cpp=.d)
 CFLAGS= -std=c++11 -g -fpic $(OPTIONS) -Wall -march=native -O3
