@@ -24,6 +24,7 @@ public:
     virtual bool ContainsWildcard() const = 0;
     virtual std::string SubstituteWildcard(const std::string& string) const = 0;
     virtual bool ContainsKeyValue(const std::string& key, const std::string& value) const = 0;
+    virtual Feat ToMultiValue() const = 0;
     Feature() {}
 };
 
@@ -38,6 +39,7 @@ public:
     bool ContainsWildcard() const { return contains_wildcard_; }
     std::string SubstituteWildcard(const std::string& string) const;
     bool ContainsKeyValue(const std::string& key, const std::string& value) const;
+    Feat ToMultiValue() const { return this; }
 
 private:
     std::vector<std::pair<std::string, std::string>> values_;
@@ -56,6 +58,7 @@ public:
     bool ContainsWildcard() const { return value_ == "X"; }
     std::string SubstituteWildcard(const std::string& string) const;
     bool ContainsKeyValue(const std::string& key, const std::string& value) const NO_IMPLEMENTATION
+    Feat ToMultiValue() const;
 
 private:
     std::string value_;

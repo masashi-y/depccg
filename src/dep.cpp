@@ -15,6 +15,7 @@
 #include "parser_tools.h"
 #include "grammar.h"
 #include "matrix.h"
+#include "chart.h"
 
 namespace myccg {
 
@@ -24,209 +25,209 @@ template <typename Lang>
 std::vector<NodeType>
 DepAStarParser<Lang>::Parse(const std::vector<std::string>& doc) {
     std::unique_ptr<float*[]> cat_scores, dep_scores;
+
+    Base::logger_.InitStatistics(doc.size());
+
+    Base::logger_.RecordTimeStartRunning();
     std::tie(cat_scores, dep_scores) = Base::tagger_->PredictTagsAndDeps(doc);
+    Base::logger_.RecordTimeEndOfTagging();
+
     std::vector<NodeType> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++) {
-        res[i] = Parse(doc[i], cat_scores[i], dep_scores[i]);
+        if ( Base::keep_going )
+            res[i] = Parse(i, doc[i], cat_scores[i], dep_scores[i]);
     }
+    Base::logger_.RecordTimeEndOfParsing();
+    Base::logger_.Report();
     return res;
 }
 
-#define NORMALIZED_PROB(x, y) std::log( std::exp((x)) / (y) )
-
 template <typename Lang>
 NodeType DepAStarParser<Lang>::Parse(
+        int id,
         const std::string& sent,
         float* tag_scores,
         float* dep_scores) {
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
+    if (sent_size >= MAX_LENGTH)
+        return Base::failure_node;
     float best_tag_probs[MAX_LENGTH];
     float best_dep_probs[MAX_LENGTH];
     float p_tag_out[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
     float p_dep_out[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
 
+    // std::cerr << id << " " << sent << std::endl;
+
     Matrix<float> tag_out_probs(p_tag_out, sent_size + 1, sent_size + 1);
     Matrix<float> dep_out_probs(p_dep_out, sent_size + 1, sent_size + 1);
-    Matrix<float> t(tag_scores, sent_size, Base::TagSize());
-    Matrix<float> d(dep_scores, sent_size, sent_size + 1);
+    Matrix<float> tag_in_probs(tag_scores, sent_size, Base::TagSize());
+    Matrix<float> dep_in_probs(dep_scores, sent_size, sent_size + 1);
 
     AgendaType agenda(Base::comparator_);
     int agenda_id = 0;
 
-    float tag_totals[MAX_LENGTH];
+    float tag_exp_totals[MAX_LENGTH];
 
     std::priority_queue<std::pair<float, Cat>,
                         std::vector<std::pair<float, Cat>>,
                         CompareFloatCat> scored_cats[MAX_LENGTH];
 
-#ifdef DEBUGGING
-    for (int i = 0; i < sent_size; i++)
-        std::cerr << tokens[i] << " --> " << Base::tagger_->TagAt(t.ArgMax(i)) << std::endl;
-    std::cerr << std::endl;
+    Base::logger_.ShowTaggingOneBest(Base::tagger_, tag_scores, tokens);
+    Base::logger_.ShowDependencyOneBest(dep_scores, tokens);
 
-    for (int i = 0; i < sent_size; i++)
-        std::cerr << i + 1 << " " << tokens[i] << " --> " << d.ArgMax(i) << std::endl;
-    std::cerr << std::endl;
-#endif
-
+    int root_idx = -1;
     for (int i = 0; i < sent_size; i++) {
-        tag_totals[i] = 0.0;
+        tag_exp_totals[i] = 0.0;
+        bool do_pruning = Base::use_category_dict_ &&
+                            Base::category_dict_.count(tokens[i]) > 0;
         for (int j = 0; j < Base::TagSize(); j++) {
-            float score = t(i, j);
-            tag_totals[i] += std::exp(score);
-            scored_cats[i].emplace(score, Base::TagAt(j));
+            if ( ! do_pruning ||
+                    (do_pruning && Base::category_dict_[tokens[i]][j])) {
+                float score = tag_in_probs(i, j);
+                tag_exp_totals[i] += std::exp(score);
+                scored_cats[i].emplace(score, Base::TagAt(j));
+            }
         }
-        best_tag_probs[i] = NORMALIZED_PROB( scored_cats[i].top().first, tag_totals[i] );
-        float max_d = d.Max(i);
-        best_dep_probs[i] = max_d;
+        best_tag_probs[i] = scored_cats[i].top().first;
+        // best_tag_probs[i] = std::log( std::exp(scored_cats[i].top().first) / tag_exp_totals[i] );
+        int idx = dep_in_probs.ArgMax(i);
+        best_dep_probs[i] = dep_in_probs(i, idx);
+        if (idx == 0) { // ignore dep_prob for root
+            if (root_idx == -1 ||
+                    best_dep_probs[i] > best_dep_probs[root_idx])
+                root_idx = i;
+        }
+    }
+    float dep_leaf_out_prob = 0.0;
+    for (int i = 0; i < sent_size; i++) {
+        // if (root_idx != i)
+        dep_leaf_out_prob += best_dep_probs[i];
     }
     ComputeOutsideProbs(best_tag_probs, sent_size, p_tag_out);
     ComputeOutsideProbs(best_dep_probs, sent_size, p_dep_out);
 
-    float dep_leaf_out_prob = 0.0;
-    for (int i = 0; i < sent_size; i++)
-        dep_leaf_out_prob += best_dep_probs[i];
-
     for (int i = 0; i < sent_size; i++) {
-        float threshold = -100000; //scored_cats[i].top().first * Base::beta_;
-        float out_prob = tag_out_probs(i, i + 1);
+        float threshold = Base::use_beta_ ?
+            std::numeric_limits<float>::lowest() : scored_cats[i].top().first * Base::beta_;
+        float out_prob = tag_out_probs(i, i + 1) + dep_leaf_out_prob;
 
-        for (int j = 0; j < Base::pruning_size_; j++) {
+        int j = 0;
+        while (j++ < Base::pruning_size_ && 0 < scored_cats[i].size()) {
             auto prob_and_cat = scored_cats[i].top();
-            if (prob_and_cat.first > threshold) {
-                float in_prob = NORMALIZED_PROB( prob_and_cat.first, tag_totals[i] );
+            scored_cats[i].pop();
+            if (std::exp(prob_and_cat.first) > threshold) {
+                float in_prob = prob_and_cat.first;
+                // float in_prob = std::log( std::exp(prob_and_cat.first) / tag_exp_totals[i] );
                 agenda.emplace(agenda_id++, std::make_shared<const Leaf>(
                             tokens[i], prob_and_cat.second, i), in_prob, out_prob, i, 1);
-                            // tokens[i], prob_and_cat.second, i), in_prob, dep_leaf_out_prob + out_prob, i, 1);
             } else
                 break;
         }
     }
 
-    ChartCell chart[MAX_LENGTH * MAX_LENGTH];
+    Chart chart(sent_size);
 
-    while (chart[sent_size - 1].IsEmpty() && agenda.size() > 0) {
+    while (chart.IsEmpty() && agenda.size() > 0) {
 
         const AgendaItem item = agenda.top();
+        if (item.fin) break;
         agenda.pop();
         NodeType parse = item.parse;
+        Base::logger_.RecordAgendaItem("POPPED", item);
 
-#ifdef DEBUGGING
-        POPPED;
-        std::cerr << Derivation(parse);
-        std::cerr << "score: " << item.prob << std::endl;
-        DEBUG(item.start_of_span);
-        DEBUG(item.span_length);
-        BORDER;
-#endif
+        ChartCell* cell = chart(item.start_of_span, item.span_length - 1);
 
-        ChartCell& cell = chart[item.start_of_span * sent_size + (item.span_length - 1)];
+        if (cell->update(parse, item.in_prob)) {
 
-        if (cell.update(parse, item.in_prob)) {
+            if ( parse->GetLength() == sent_size &&
+                    Base::possible_root_cats_.count(parse->GetCategory()) ) {
+                float dep_score = dep_in_probs(parse->GetHeadId(), 0);
+                float in_prob = item.in_prob +  dep_score;
+                agenda.emplace(agenda_id++, parse, in_prob, 0.0,
+                                    item.start_of_span, item.span_length);
+            }
 
             if (item.span_length != sent_size) {
                 for (Cat unary: Base::unary_rules_[parse->GetCategory()]) {
-                    NodeType subtree = std::make_shared<const Tree>(unary, parse);
-                    agenda.emplace(agenda_id++, subtree, item.in_prob, item.out_prob,
-                                        item.start_of_span, item.span_length);
-#ifdef DEBUGGING
-        TREETYPE("UNARY");
-        std::cerr << Derivation(subtree);
-        BORDER;
-#endif
+                    if (Lang::IsAcceptableUnary(unary, parse)) {
+                        NodeType subtree = std::make_shared<const Tree>(unary, parse);
+                        agenda.emplace(agenda_id++, subtree, item.in_prob - 0.1, item.out_prob,
+                                            item.start_of_span, item.span_length);
+                        Base::logger_.RecordTree("UNARY", subtree);
+                    }
                 }
             }
-            for (int span_length = item.span_length + 1
-                ; span_length < 1 + sent_size - item.start_of_span
-                ; span_length++) {
-                ChartCell& other = chart[(item.start_of_span + item.span_length) * 
-                                sent_size + (span_length - item.span_length - 1)];
-                for (auto&& pair: other.items) {
+            for (auto&& other: chart.GetCellsStartingAt(item.start_of_span + item.span_length)) {
+                for (auto&& pair: other->items) {
                     NodeType right = pair.second.first;
                     float prob = pair.second.second;
-#ifdef DEBUGGING
-        TREETYPE("RIGHT ARG");
-        std::cerr << Derivation(right);
-        std::cerr << "start_of_span: " << item.start_of_span + item.span_length << std::endl;
-        std::cerr << "span_length: " << span_length - item.span_length << std::endl;
-        BORDER;
-#endif
+                    int span_length = parse->GetLength() + right->GetLength();
+                    Base::logger_.RecordTree("RIGHT", right);
+
                     if (! Base::IsSeen(parse->GetCategory(), right->GetCategory())) continue;
+
                     for (auto&& rule: Base::GetRules(parse->GetCategory(), right->GetCategory())) {
-                        if (Lang::IsAcceptable(rule.combinator->GetRuleType(), parse, right) &&
-                                Base::IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
+                        if (Lang::IsAcceptableBinary(rule.combinator->GetRuleType(), rule.result, parse, right)) {
                             NodeType subtree = std::make_shared<const Tree>(
                                     rule.result, rule.left_is_head, parse, right, rule.combinator);
-                            int head = rule.left_is_head ? parse->GetHeadId() : right->GetHeadId();
-                            int dep  = rule.left_is_head ? right->GetHeadId() : parse->GetHeadId();
-                            float dep_score = d(dep, head + 1);
-                            float in_prob = item.in_prob + prob;// + dep_score;
+                            NodeType head = rule.left_is_head ? parse : right;
+                            NodeType dep  = rule.left_is_head ? right : parse;
+                            float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
+                            float in_prob = item.in_prob + prob + dep_score;
                             float out_prob = tag_out_probs(item.start_of_span,
+                                            item.start_of_span + span_length)
+                                           + dep_out_probs(item.start_of_span,
                                             item.start_of_span + span_length);
-                                           // + dep_out_probs(item.start_of_span,
-                                           //  item.start_of_span + span_length);
+                                           + best_dep_probs[head->GetHeadId()];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 item.start_of_span, span_length);
-#ifdef DEBUGGING
-        ACCEPT;
-        std::cerr << Derivation(subtree);
-        BORDER;
-                            std::cerr << dep << ", " << head << ", " << sent_size << std::endl;
-                            std::cerr << tokens[dep] << " --> " << tokens[head] << ": " << dep_score << std::endl;
-#endif
+                            Base::logger_.RecordTree("ACCEPTED", subtree);
                         }
                     }
                 }
             }
-            for (int start_of_span = 0; start_of_span < item.start_of_span; start_of_span++) {
-                int span_length = item.start_of_span + item.span_length - start_of_span;
-                ChartCell& other = chart[start_of_span * sent_size +
-                                    (span_length - item.span_length - 1)];
-                for (auto&& pair: other.items) {
+            for (auto&& other: chart.GetCellsEndingAt(item.start_of_span)) {
+                for (auto&& pair: other->items) {
                     NodeType left = pair.second.first;
                     float prob = pair.second.second;
-#ifdef DEBUGGING
-        TREETYPE("LEFT ARG");
-        std::cerr << Derivation(left);
-        std::cerr << "start_of_span: " << start_of_span << std::endl;
-        std::cerr << "span_length: " << span_length - item.span_length << std::endl;
-        BORDER;
-#endif
+                    int span_length = parse->GetLength() + left->GetLength();
+                    int start_of_span = left->GetStartOfSpan();
+                    Base::logger_.RecordTree("LEFT", left);
+
                     if (! Base::IsSeen(left->GetCategory(), parse->GetCategory())) continue;
                     for (auto&& rule: Base::GetRules(left->GetCategory(), parse->GetCategory())) {
-                        if (Lang::IsAcceptable(rule.combinator->GetRuleType(), left, parse) &&
-                                Base::IsAcceptableRootOrSubtree(rule.result, span_length, sent_size)) {
+                        if (Lang::IsAcceptableBinary(rule.combinator->GetRuleType(), rule.result, left, parse)) {
                             NodeType subtree = std::make_shared<const Tree>(
                                     rule.result, rule.left_is_head, left, parse, rule.combinator);
-                            int head  = rule.left_is_head ? left->GetHeadId() : parse->GetHeadId();
-                            int dep = rule.left_is_head ? parse->GetHeadId() : left->GetHeadId();
-                            float dep_score = d(dep, head + 1);
-                            float in_prob = item.in_prob + prob;// + dep_score;
+                            NodeType head  = rule.left_is_head ? left : parse;
+                            NodeType dep   = rule.left_is_head ? parse : left;
+                            float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
+                            float in_prob = item.in_prob + prob + dep_score;
                             float out_prob = tag_out_probs(start_of_span,
+                                            start_of_span + span_length)
+                                           + dep_out_probs(start_of_span,
                                             start_of_span + span_length);
-                                           // + dep_out_probs(start_of_span,
-                                           //  start_of_span + span_length);
+                                           + best_dep_probs[head->GetHeadId()];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 start_of_span, span_length);
-#ifdef DEBUGGING
-        ACCEPT;
-        std::cerr << Derivation(subtree);
-        BORDER;
-                            std::cerr << dep << ", " << head << ", " << sent_size << std::endl;
-                            std::cerr << tokens[dep] << " --> " << tokens[head] << ": " << dep_score << std::endl;
-#endif
+                            Base::logger_.RecordTree("ACCEPTED", subtree);
                         }
                     }
                 }
             }
         }
     }
-    if (chart[sent_size - 1].IsEmpty())
+    Base::logger_.CompleteOne(id, agenda_id);
+
+    if (chart.IsEmpty()) {
+        Base::logger_ << "failed to parse: " << sent << std::endl;
         return Base::failure_node;
-    auto res = chart[sent_size - 1].GetBestParse();
-    std::cerr << ".";
+    }
+    auto res = chart(1,  -1)->GetBestParse();
+    Base::logger_.CalculateNumOneBestTags(
+            id, Base::tagger_, tag_scores, res);
     return res;
 }
 

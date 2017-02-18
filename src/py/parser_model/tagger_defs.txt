@@ -1,1 +1,0 @@
-{"word_dim": 200, "char_dim": 200, "relu_dim": 300, "nlayers": 2, "hidden_dim": 200, "model": "JaLSTMParser", "dep_dim": 100}

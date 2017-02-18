@@ -1,5 +1,6 @@
 
 import sys
+import random
 import numpy as np
 import json
 import chainer
@@ -11,50 +12,14 @@ from chainer.training import extensions
 from chainer.optimizer import WeightDecay, GradientClipping
 from ccgbank import walk_autodir
 from japanese_ccg import JaCCGReader
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from py_utils import read_pretrained_embeddings, read_model_defs
 from tree import Leaf, Tree, get_leaves
+from biaffine import Biaffine
 from param import Param
 
-UNK = "*UNKNOWN*"
-OOR2 = "OOR2"
-OOR3 = "OOR3"
-OOR4 = "OOR4"
-START = "*START*"
-END = "*END*"
-IGNORE = -1
-MISS = -2
-
-def log(args, out):
-    for k, v in vars(args).items():
-        out.write("{}: {}\n".format(k, v))
-
-def get_suffix(word):
-    return [word[-1],
-           word[-2:] if len(word) > 1 else OOR2,
-           word[-3:] if len(word) > 2 else OOR3,
-           word[-4:] if len(word) > 3 else OOR4]
-
-
-def get_prefix(word):
-    return [word[0],
-            word[:2] if len(word) > 1 else OOR2,
-            word[:3] if len(word) > 2 else OOR3,
-            word[:4] if len(word) > 3 else OOR4]
-
-
-def normalize(word):
-    if word == "-LRB-":
-        return "("
-    elif word == "-RRB-":
-        return ")"
-    elif word == "-LCB-":
-        return "("
-    elif word == "-RCB-":
-        return ")"
-    else:
-        return word
-
+from lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
+from lstm_tagger import log, get_suffix, get_prefix, normalize
 
 class TrainingDataCreator(object):
     """
@@ -75,7 +40,7 @@ class TrainingDataCreator(object):
                             OOR2: afix_freq_cut, OOR3: afix_freq_cut, OOR4: afix_freq_cut}
         self.prefixes = defaultdict(int, afix_defaults)
         self.suffixes = defaultdict(int, afix_defaults)
-        self.samples = {}
+        self.samples = []
         self.sents = []
 
     def _traverse(self, tree):
@@ -90,11 +55,11 @@ class TrainingDataCreator(object):
         else:
             children = tree.children
             if len(children) == 1:
-                rule = (str(children[0].cat), str(tree.cat))
+                rule = str(tree.cat), str(children[0].cat)
                 self.unary_rules[rule] += 1
                 self._traverse(children[0])
             else:
-                rule = (str(children[0].cat), str(children[1].cat))
+                rule = str(children[0].cat), str(children[1].cat)
                 self.seen_rules[rule] += 1
                 self._traverse(children[0])
                 self._traverse(children[1])
@@ -108,14 +73,43 @@ class TrainingDataCreator(object):
                 out.write("# ")
             out.write(str(value) + "\n")
 
+    def _get_dependencies(self, tree, sent_len):
+        def rec(subtree):
+            if isinstance(subtree, Tree):
+                children = subtree.children
+                if len(children) == 2:
+                    head = rec(children[0 if subtree.left_is_head else 1])
+                    dep  = rec(children[1 if subtree.left_is_head else 0])
+                    res[dep] = head
+                else:
+                    head = rec(children[0])
+                return head
+            else:
+                return subtree.pos
+
+        res = [-1 for _ in range(sent_len)]
+        rec(tree)
+        res = [i + 1 for i in res]
+        assert len(filter(lambda i:i == 0, res)) == 1
+        return res
+
+    def _to_conll(self, out):
+        for sent, tags, (cats, deps) in self.samples:
+            for i, (w, t, c, d) in enumerate(zip(sent.split(" "), tags, cats, deps), 1):
+                out.write("{0}\t{1}\t{1}\t{2}\t{2}\t_\t{4}\tnone\t_\t{3}\n"
+                        .format(i, w.encode("utf-8"), t, c, d))
+            out.write("\n")
+
     def _create_samples(self, trees):
         for tree in trees:
             tokens = get_leaves(tree)
             words = [normalize(token.word) for token in tokens]
+            tags = [token.tag for token in tokens]
             cats = [str(token.cat) for token in tokens]
+            deps = self._get_dependencies(tree, len(tokens))
             sent = " ".join(words)
             self.sents.append(sent)
-            self.samples[sent] = cats
+            self.samples.append((sent, tags, (cats, deps)))
 
     @staticmethod
     def create_traindata(args):
@@ -156,9 +150,11 @@ class TrainingDataCreator(object):
         with open(args.out + "/prefixes.txt", "w") as f:
             self._write(self.prefixes, f, comment_out_value=False)
         with open(args.out + "/traindata.json", "w") as f:
-            json.dump(self.samples, f)
+            json.dump([(s, t) for (s, _, t) in self.samples], f) # no need for tags
         with open(args.out + "/trainsents.txt", "w") as f:
             for sent in self.sents: f.write(sent.encode("utf-8") + "\n")
+        with open(args.out + "/trainsents.conll", "w") as f:
+            self._to_conll(f)
 
     @staticmethod
     def create_testdata(args):
@@ -169,9 +165,11 @@ class TrainingDataCreator(object):
         trees = walk_autodir(self.filepath, args.subset)
         self._create_samples(trees)
         with open(args.out + "/{}data.json".format(args.subset), "w") as f:
-            json.dump(self.samples, f)
+            json.dump([(s, t) for (s, _, t) in self.samples], f)
         with open(args.out + "/{}sents.txt".format(args.subset), "w") as f:
             for sent in self.sents: f.write(sent.encode("utf-8") + "\n")
+        with open(args.out + "/{}sents.conll".format(args.subset), "w") as f:
+            self._to_conll(f)
 
 
 class FeatureExtractor(object):
@@ -202,27 +200,70 @@ class FeatureExtractor(object):
         return w, s, p
 
 
-class LSTMTaggerDataset(chainer.dataset.DatasetMixin):
+class LSTMParserDataset(chainer.dataset.DatasetMixin):
     def __init__(self, model_path, samples_path):
         self.model_path = model_path
         self.targets = read_model_defs(model_path + "/target.txt")
         self.extractor = FeatureExtractor(model_path)
         with open(samples_path) as f:
-            self.samples = json.load(f).items()
+            self.samples = json.load(f)
 
     def __len__(self):
         return len(self.samples)
 
     def get_example(self, i):
-        words, y = self.samples[i]
+        words, [cats, deps] = self.samples[i]
         w, s, p = self.extractor.process(words.split(" "))
-        y = np.array([-1] + [self.targets.get(x, IGNORE) for x in y] + [-1], 'i')
-        return w, s, p, y
+        cats = np.array([IGNORE] + [self.targets.get(x, IGNORE) for x in cats] + [IGNORE], 'i')
+        deps = np.array([IGNORE] + deps + [IGNORE], 'i')
+        return w, s, p, cats, deps
 
 
-class LSTMTagger(chainer.Chain):
-    def __init__(self, model_path, word_dim=None, afix_dim=None,
-            nlayers=2, hidden_dim=128, relu_dim=64, dropout_ratio=0.5):
+class LSTMParserTriTrainDataset(chainer.dataset.DatasetMixin):
+    def __init__(self, model_path, ccgbank_path, tritrain_path, weight):
+        self.model_path = model_path
+        self.targets = read_model_defs(model_path + "/target.txt")
+        self.extractor = FeatureExtractor(model_path)
+        self.weight = weight
+        self.ncopies = 15
+        with open(ccgbank_path) as f:
+            self.ccgbank_samples = json.load(f)
+            self.ccgbank_size = len(self.ccgbank_samples)
+        with open(tritrain_path) as f:
+            self.tritrain_samples = json.load(f)
+            self.tritrain_size = len(self.tritrain_samples)
+
+        print >> sys.stderr, "len(ccgbank):", self.ccgbank_size
+        print >> sys.stderr, "len(ccgbank) * # copies:", self.ccgbank_size * self.ncopies
+        print >> sys.stderr, "len(tritrain):", self.tritrain_size
+
+    def __len__(self):
+        # some copies of ccgbank corpus plus tritrain dataset
+        return self.ccgbank_size * self.ncopies + self.tritrain_size
+
+    def get_example(self, i):
+        if i < self.tritrain_size:
+            sent, [cats, deps] = self.tritrain_samples[i]
+            words = sent.split(" ")
+            # tri-train dataset is noisy and contains unwanted zero-length word ...
+            if any(len(w) == 0 for w in words):
+                print >> sys.stderr, "ignore sentence:", sent
+                return self.get_example(random.randint(0, len(self)))
+            weight = np.array(self.weight, 'f')
+        else:
+            words, [cats, deps] = self.ccgbank_samples[(i - self.tritrain_size) % self.ccgbank_size]
+            words = words.split(" ")
+            weight = np.array(1., 'f')
+
+        w, s, p = self.extractor.process(words)
+        cats = np.array([IGNORE] + [self.targets.get(x, IGNORE) for x in cats] + [IGNORE], 'i')
+        deps = np.array([IGNORE] + deps + [IGNORE], 'i')
+        return w, s, p, cats, deps, weight
+
+
+class LSTMParser(chainer.Chain):
+    def __init__(self, model_path, word_dim=None, afix_dim=None, nlayers=2,
+            hidden_dim=128, elu_dim=64, dep_dim=100, dropout_ratio=0.5):
         self.model_path = model_path
         defs_file = model_path + "/tagger_defs.txt"
         if word_dim is None:
@@ -230,29 +271,36 @@ class LSTMTagger(chainer.Chain):
             Param.load(self, defs_file)
             self.extractor = FeatureExtractor(model_path)
         else:
+            # training
             self.train = True
             p = Param(self)
+            p.dep_dim = dep_dim
             p.word_dim = word_dim
             p.afix_dim = afix_dim
             p.hidden_dim = hidden_dim
-            p.relu_dim = relu_dim
+            p.elu_dim = elu_dim
             p.nlayers = nlayers
+            p.n_words = len(read_model_defs(model_path + "/words.txt"))
+            p.n_suffixes = len(read_model_defs(model_path + "/suffixes.txt"))
+            p.n_prefixes = len(read_model_defs(model_path + "/prefixes.txt"))
+            p.targets = read_model_defs(model_path + "/target.txt")
             p.dump(defs_file)
 
-        self.targets = read_model_defs(model_path + "/target.txt")
-        self.words = read_model_defs(model_path + "/words.txt")
-        self.suffixes = read_model_defs(model_path + "/suffixes.txt")
-        self.prefixes = read_model_defs(model_path + "/prefixes.txt")
         self.in_dim = self.word_dim + 8 * self.afix_dim
         self.dropout_ratio = dropout_ratio
-        super(LSTMTagger, self).__init__(
-                emb_word=L.EmbedID(len(self.words), self.word_dim),
-                emb_suf=L.EmbedID(len(self.suffixes), self.afix_dim, ignore_label=IGNORE),
-                emb_prf=L.EmbedID(len(self.prefixes), self.afix_dim, ignore_label=IGNORE),
-                lstm_f=L.NStepLSTM(nlayers, self.in_dim, self.hidden_dim, 0.),
-                lstm_b=L.NStepLSTM(nlayers, self.in_dim, self.hidden_dim, 0.),
-                linear1=L.Linear(2 * self.hidden_dim, self.relu_dim),
-                linear2=L.Linear(self.relu_dim, len(self.targets)),
+        super(LSTMParser, self).__init__(
+                emb_word=L.EmbedID(self.n_words, self.word_dim),
+                emb_suf=L.EmbedID(self.n_suffixes, self.afix_dim, ignore_label=IGNORE),
+                emb_prf=L.EmbedID(self.n_prefixes, self.afix_dim, ignore_label=IGNORE),
+                lstm_f=L.NStepLSTM(nlayers, self.in_dim,
+                    self.hidden_dim, self.dropout_ratio),
+                lstm_b=L.NStepLSTM(nlayers, self.in_dim,
+                    self.hidden_dim, self.dropout_ratio),
+                linear_cat1=L.Linear(2 * self.hidden_dim, self.elu_dim),
+                linear_cat2=L.Linear(self.elu_dim, len(self.targets)),
+                linear_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
+                linear_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
+                biaffine=Biaffine(self.dep_dim)
                 )
 
     def load_pretrained_embeddings(self, path):
@@ -261,23 +309,32 @@ class LSTMTagger(chainer.Chain):
     def __call__(self, xs):
         """
         xs [(w,s,p,y), ..., ]
-        w: word, s: suffix, p: prefix, y: label
+        w: word, c: char, l: length, y: label
         """
         batchsize = len(xs)
-        ws, ss, ps, ts = zip(*xs)
-        ys = self.forward(ws, ss, ps)
-        loss = reduce(lambda x, y: x + y,
-            [F.softmax_cross_entropy(y, t) for y, t in zip(ys, ts)])
+        ws, ss, ps, cat_ts, dep_ts = zip(*xs)
+        cat_ys, dep_ys = self.forward(ws, ss, ps)
 
-        acc = reduce(lambda x, y: x + y,
-            [F.accuracy(y, t, ignore_label=IGNORE) for y, t in zip(ys, ts)])
+        cat_loss = reduce(lambda x, y: x + y,
+            [F.softmax_cross_entropy(y, t) for y, t in zip(cat_ys, cat_ts)])
+        cat_acc = reduce(lambda x, y: x + y,
+            [F.accuracy(y, t, ignore_label=IGNORE) for y, t in zip(cat_ys, cat_ts)])
 
-        acc /= batchsize
+        dep_loss = reduce(lambda x, y: x + y,
+            [F.softmax_cross_entropy(y, t) for y, t in zip(dep_ys, dep_ts)])
+        dep_acc = reduce(lambda x, y: x + y,
+            [F.accuracy(y, t, ignore_label=IGNORE) for y, t in zip(dep_ys, dep_ts)])
+
+
+        cat_acc /= batchsize
+        dep_acc /= batchsize
         chainer.report({
-            "loss": loss,
-            "accuracy": acc
+            "tagging_loss": cat_loss,
+            "tagging_accuracy": cat_acc,
+            "parsing_loss": dep_loss,
+            "parsing_accuracy": dep_acc
             }, self)
-        return loss
+        return cat_loss + dep_loss
 
     def forward(self, ws, ss, ps):
         batchsize = len(ws)
@@ -285,7 +342,6 @@ class LSTMTagger(chainer.Chain):
         ws = map(self.emb_word, ws)
         ss = [F.reshape(self.emb_suf(s), (s.shape[0], 4 * self.afix_dim)) for s in ss]
         ps = [F.reshape(self.emb_prf(s), (s.shape[0], 4 * self.afix_dim)) for s in ps]
-        # [(sentence length, (word_dim + suf_dim + prf_dim))]
         xs_f = [F.dropout(F.concat([w, s, p]),
             self.dropout_ratio, train=self.train) for w, s, p in zip(ws, ss, ps)]
         xs_b = [x[::-1] for x in xs_f]
@@ -294,15 +350,16 @@ class LSTMTagger(chainer.Chain):
         _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
         hs_b = [x[::-1] for x in hs_b]
         # ys: [(sentence length, number of category)]
-        ys = [self.linear2(F.relu(
-                self.linear1(F.concat([h_f, h_b]))))
-                    for h_f, h_b in zip(hs_f, hs_b)]
-        return ys
+        hs = [F.concat([h_f, h_b]) for h_f, h_b in zip(hs_f, hs_b)]
 
-    def _init_state(self, xp, batchsize):
-        res = [Variable(xp.zeros(( # forward cx, hx, backward cx, hx
-                self.nlayers, batchsize, self.hidden_dim), 'f')) for _ in range(4)]
-        return res
+        cat_ys = [self.linear_cat2(
+            F.dropout(F.elu(self.linear_cat1(h)), 0.5, train=self.train)) for h in hs]
+
+        dep_ys = [self.biaffine(
+            F.elu(F.dropout(self.linear_dep(h), 0.32, train=self.train)),
+            F.elu(F.dropout(self.linear_head(h), 0.32, train=self.train))) for h in hs]
+
+        return cat_ys, dep_ys
 
     def predict(self, xs):
         """
@@ -310,19 +367,23 @@ class LSTMTagger(chainer.Chain):
         """
         xs = [self.extractor.process(x) for x in xs]
         ws, ss, ps = zip(*xs)
-        ys = self.forward(ws, ss, ps)
-        return [y.data[1:-1] for y in ys]
+        cat_ys, dep_ys = self.forward(ws, ss, ps)
+        return zip([y.data[1:-1] for y in cat_ys],
+                [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
 
     def predict_doc(self, doc, batchsize=16):
         """
         doc list of splitted sentences
         """
         res = []
-        print >> sys.stderr, "start", len(doc) / batchsize
         for i in xrange(0, len(doc), batchsize):
-            print >> sys.stderr, i
             res.extend([(i + j, 0, y)
                 for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
+        return res
+
+    def _init_state(self, xp, batchsize):
+        res = [Variable(xp.zeros(( # forward cx, hx, backward cx, hx
+                self.nlayers, batchsize, self.hidden_dim), 'f')) for _ in range(4)]
         return res
 
     @property
@@ -341,10 +402,10 @@ def converter(xs, device):
 
 
 def train(args):
-    model = LSTMTagger(args.model, args.word_emb_size, args.afix_emb_size,
-            args.nlayers, args.hidden_dim, args.relu_dim, args.dropout_ratio)
-    with open(args.model + "/params", "w") as f:
-            log(args, f)
+    model = LSTMParser(args.model, args.word_emb_size, args.afix_emb_size, args.nlayers,
+            args.hidden_dim, args.elu_dim, args.dep_dim, args.dropout_ratio)
+    with open(args.model + "/params", "w") as f: log(args, f)
+
     if args.initmodel:
         print 'Load model from', args.initmodel
         chainer.serializers.load_npz(args.initmodel, model)
@@ -357,33 +418,37 @@ def train(args):
         chainer.cuda.get_device(args.gpu).use()
         model.to_gpu()
 
-    train = LSTMTaggerDataset(args.model, args.train)
+    train = LSTMParserDataset(args.model, args.train)
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    val = LSTMTaggerDataset(args.model, args.val)
+    val = LSTMParserDataset(args.model, args.val)
     val_iter = chainer.iterators.SerialIterator(
             val, args.batchsize, repeat=False, shuffle=False)
-    optimizer = chainer.optimizers.MomentumSGD(momentum=0.7)
+    optimizer = chainer.optimizers.Adam(beta2=0.9)
+    # optimizer = chainer.optimizers.MomentumSGD(momentum=0.7)
     optimizer.setup(model)
     optimizer.add_hook(WeightDecay(1e-6))
-    optimizer.add_hook(GradientClipping(5.))
+    # optimizer.add_hook(GradientClipping(5.))
     updater = training.StandardUpdater(train_iter, optimizer,
             device=args.gpu, converter=converter)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)
 
-    val_interval = 2000, 'iteration'
+    val_interval = 1000, 'iteration'
     log_interval = 200, 'iteration'
 
     eval_model = model.copy()
     eval_model.train = False
 
-    trainer.extend(extensions.Evaluator(
-        val_iter, eval_model, converter, device=args.gpu), trigger=val_interval)
+    trainer.extend(extensions.Evaluator(val_iter, eval_model,
+                    converter, device=args.gpu), trigger=val_interval)
     trainer.extend(extensions.snapshot_object(
         model, 'model_iter_{.updater.iteration}'), trigger=val_interval)
     trainer.extend(extensions.LogReport(trigger=log_interval))
     trainer.extend(extensions.PrintReport([
-        'epoch', 'iteration', 'main/loss', 'validation/main/loss',
-        'main/accuracy', 'validation/main/accuracy',
+        'epoch', 'iteration',
+        'main/tagging_accuracy', 'main/tagging_loss',
+        'main/parsing_accuracy', 'main/parsing_loss',
+        'validation/main/tagging_accuracy',
+        'validation/main/parsing_accuracy'
     ]), trigger=log_interval)
     trainer.extend(extensions.ProgressBar(update_interval=10))
 
@@ -453,9 +518,12 @@ if __name__ == "__main__":
     parser_t.add_argument("--hidden-dim",
             type=int, default=128,
             help="dimensionality of hidden layer")
-    parser_t.add_argument("--relu-dim",
+    parser_t.add_argument("--elu-dim",
             type=int, default=64,
-            help="dimensionality of relu layer")
+            help="dimensionality of elu layer")
+    parser_t.add_argument("--dep-dim",
+            type=int, default=100,
+            help="dim")
     parser_t.add_argument("--dropout-ratio",
             type=float, default=0.5,
             help="dropout ratio")

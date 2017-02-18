@@ -1,1 +1,0 @@
-{"afix_dim": 32, "model": "LSTMTagger", "word_dim": 50}

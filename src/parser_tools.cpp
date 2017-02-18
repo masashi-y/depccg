@@ -1,5 +1,4 @@
 
-#include <limits>
 #include <cmath>
 #include "parser_tools.h"
 #include "configure.h"
@@ -11,23 +10,26 @@ bool JapaneseComparator(const AgendaItem& left, const AgendaItem& right) {
     if ( fabs(left.prob - right.prob) > 0.00001 )
         return left.prob < right.prob;
 
-    // if ((IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())) &&
-    //         !(IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())))
-    //     return false;
-    // if ((IsVerb(right.parse) || IsAdjective(right.parse->GetCategory())) &&
-    //         !(IsVerb(left.parse) || IsAdjective(left.parse->GetCategory())))
-    //     return true;
-    // if (IsPeriod(right.parse->GetCategory()))
-    //     return false;
-    // if (IsPeriod(left.parse->GetCategory()))
-    //     return true;
-    // if (left.parse->LeftNumDescendants() != right.parse->LeftNumDescendants())
-        // return left.parse->LeftNumDescendants() <= right.parse->LeftNumDescendants();
-// #else
+    if ((Ja::IsVerb(left.parse) || Ja::IsAdjective(left.parse->GetCategory())) &&
+            !(Ja::IsVerb(right.parse) || Ja::IsAdjective(right.parse->GetCategory())))
+        return false;
+    if ((Ja::IsVerb(right.parse) || Ja::IsAdjective(right.parse->GetCategory())) &&
+            !(Ja::IsVerb(left.parse) || Ja::IsAdjective(left.parse->GetCategory())))
+        return true;
+    if (Ja::IsPeriod(right.parse->GetCategory()))
+        return false;
+    if (Ja::IsPeriod(left.parse->GetCategory()))
+        return true;
+    if (left.parse->LeftNumDescendants() != right.parse->LeftNumDescendants())
+        return left.parse->LeftNumDescendants() <= right.parse->LeftNumDescendants();
     if (left.parse->GetDependencyLength() != right.parse->GetDependencyLength())
         return left.parse->GetDependencyLength() < right.parse->GetDependencyLength();
 
     return left.id > right.id;
+}
+
+bool NormalComparator(const AgendaItem& left, const AgendaItem& right) {
+    return left.prob < right.prob;
 }
 
 
@@ -37,23 +39,6 @@ bool LongerDependencyComparator(const AgendaItem& left, const AgendaItem& right)
     if (left.parse->GetDependencyLength() != right.parse->GetDependencyLength())
         return left.parse->GetDependencyLength() > right.parse->GetDependencyLength();
     return left.id > right.id;
-}
-
-ChartCell::ChartCell()
-    : items(std::unordered_map<Cat, ChartItem>()),
-      best_prob(std::numeric_limits<float>::lowest()), best(NULL) {}
-
-
-bool ChartCell::update(NodeType parse, float prob) {
-    Cat cat = parse->GetCategory();
-    if (items.count(cat) > 0)
-        return false;
-    items.emplace(cat, std::make_pair(parse, prob));
-    if (best_prob < prob) {
-        best_prob = prob;
-        best = parse;
-    }
-    return true;
 }
 
 void ComputeOutsideProbs(float* probs, int sent_size, float* out) {

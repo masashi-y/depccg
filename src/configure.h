@@ -1,6 +1,6 @@
 
 #ifndef MAX_LENGTH
-#define MAX_LENGTH 100
+#define MAX_LENGTH 300
 #endif
 
 #ifndef PARALLEL_SCHEDULE

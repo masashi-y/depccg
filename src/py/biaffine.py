@@ -25,6 +25,50 @@ class Biaffine(link.Link):
                        initializer=self._W_initializer)
 
     def __call__(self, x1, x2):
+        xp = cuda.get_array_module(x1.data)
         return F.matmul(
-                F.concat([x1, np.ones((x1.shape[0], 1), 'f')]),
+                F.concat([x1, xp.ones((x1.shape[0], 1), 'f')]),
                 F.matmul(self.W, F.transpose(x2)))
+
+
+class Bilinear(link.Link):
+
+    ## chainer.links.Bilinear may have some problem with GPU
+    ## and results in nan with batches with big size
+
+    def __init__(self, in_size1, in_size2, out_size, wscale=1,
+                 initialW=None, initial_bias=None, bias=0):
+        super(Bilinear, self).__init__()
+
+        self._W_initializer = initializers._get_initializer(
+            initialW, math.sqrt(wscale))
+        if initial_bias is None:
+            initial_bias = bias
+        self.bias_initializer = initializers._get_initializer(initial_bias)
+
+        ## same parameters as chainer.links.Bilinear
+        ## so that both can use serialized parameters of the other
+        self.add_param('W', (in_size1, in_size2, out_size),
+                       initializer=self._W_initializer)
+        self.add_param('V1', (in_size1, out_size),
+                       initializer=self._W_initializer)
+        self.add_param('V2', (in_size2, out_size),
+                       initializer=self._W_initializer)
+        self.add_param('b', out_size,
+                initializer=self.bias_initializer)
+        self.in_size1 = in_size1
+        self.in_size2 = in_size2
+        self.out_size = out_size
+
+    def __call__(self, e1, e2):
+        ele2 = F.reshape(
+                F.batch_matmul(e1[:,:,None], e2[:,None,:]), (-1, self.in_size1 * self.in_size2))
+
+        res = F.matmul(ele2,
+                F.reshape(self.W, (self.in_size1 * self.in_size2, self.out_size))) + \
+            F.matmul(e1, self.V1) + \
+            F.matmul(e2, self.V2)
+
+        res, bias = F.broadcast(res, self.b)
+        return res + bias
+

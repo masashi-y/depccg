@@ -5,7 +5,16 @@
 
 namespace myccg {
 
-char PYPATH[] = "PYTHONPATH=.";
+char* PYPATH;
+
+void Tagger::SetEnv(const char* path) const {
+    size_t len = strlen(path);
+    PYPATH = new char[len + 40];
+    strcpy(PYPATH, "PYTHONPATH=");
+    strcat(PYPATH, path);
+    *strrchr(PYPATH, '/') = '\0';
+    strcat(PYPATH, ":$PYTHONPATH");
+}
 
 // std::unique_ptr<float[]> ChainerTagger::predict(const std::string& tokens) const {
 //     putenv(PYPATH);
@@ -18,7 +27,7 @@ char PYPATH[] = "PYTHONPATH=.";
 //     return res;
 // }
 //
-
+//
 Probs ChainerTagger::PredictTags(Doc& doc) const {
     putenv(PYPATH);
     if ( !Py_IsInitialized() )

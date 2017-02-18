@@ -195,7 +195,7 @@ class FeatureExtractor(object):
         for i, word in enumerate(words, 1):
             for j in range(len(word)):
                 c[i, j] = self.chars.get(word[j], self.unk_char)
-        return w, c, l
+        return w, c, np.array([l], 'i')
 
 
 class LSTMParserDataset(chainer.dataset.DatasetMixin):

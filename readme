@@ -1,0 +1,56 @@
+
+Required:
+python2.7
+cython
+preshed
+chainer
+
+Installation:
+pip install cython preshed chainer
+in src directory, do ``make".
+
+Usage:
+./myccg -i INPUT_RAW.txt -m MODEL -l en -f auto --dep > result.txt
+./myccg -i INPUT_RAW.txt -m MODEL -l ja -f ja --no-cat-dict --no-beta --dep > result.txt
+
+-l, --lang option needs to be specified explicitly to run Japanese parser.
+
+INPUT_RAW.txt is a text file with sentences in each line,
+with --dep option runs supertag- and dependency-factored model.
+
+MODEL is model, found in py/ directory.
+these are recommended:
+for English: src/py/lstm_425dep_4layer/
+for Japanese: src/py/ja_lstm_4layer/
+
+src/py/precomputed/もMODELの代わりに使えます．
+これは，サーバ上でパーザが使えない問題を回避するためにテストデータ(wsj_23.txt)に
+ついて計算済みのCCGカテゴリ，係り受けの確率を格納したpickleファイルを呼び出します．
+これで何回でも探索の実験はできます．
+eval_tagger.pyで任意のテキストのpickleファイルをつくることができます．
+
+
+Output formats are available among:
+auto: CCGBank .auto format
+xml: C&C like xml format
+ja: Japanese CCGBank format
+conll: output only dependency structure in CoNLL format
+deriv: print in derivation tree
+
+--beta, --pruning are pruning options in Lewis et al., 2014.
+
+cat-dictは，単語->その単語にありうるCCGカテゴリの集合を定義したファイルなのですが，
+これの日本語バージョンは作っていないため，--no-cat-dictオプションをつけてます．
+つけなくても読み込み失敗して，cat-dictを使わないで動きます．
+--betaは，Lewisのパーザのpruningオプションですが，
+これが日本語にどのように影響するか調べていないので，--no-beta推奨です．
+
+
+いまの実装はCtrl+Cできません．pkillとかで中断してください．
+
+I owe very much to:
+- easyCCG: https://github.com/mikelewis0/easyccg
+- NLTK: for nice pretty printing for derivation tree
+- spacy: https://github.com/explosion/spaCy
+- http://andreinc.net/2011/06/01/implementing-a-generic-priority-queue-in-c/
+

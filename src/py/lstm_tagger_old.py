@@ -184,17 +184,18 @@ class FeatureExtractor(object):
         self.end_word = self.words[END]
         self.unk_suf = self.suffixes[UNK]
         self.unk_prf = self.prefixes[UNK]
-        self.start_pre = [[self.prefixes[START]] + [IGNORE] * 3]
-        self.start_suf = [[self.suffixes[START]] + [IGNORE] * 3]
-        self.end_pre = [[self.prefixes[END]] + [IGNORE] * 3]
-        self.end_suf = [[self.suffixes[END]] + [IGNORE] * 3]
+        self.start_pre = [[self.prefixes[START]] + [-1] * 3]
+        self.start_suf = [[self.suffixes[START]] + [-1] * 3]
+        self.end_pre = [[self.prefixes[END]] + [-1] * 3]
+        self.end_suf = [[self.suffixes[END]] + [-1] * 3]
 
     def process(self, words):
         """
         words: list of unicode tokens
         """
+        words = map(normalize, words)
         w = np.array([self.start_word] + [self.words.get(
-            normalize(x).lower(), self.unk_word) for x in words] + [self.end_word], 'i')
+            x.lower(), self.unk_word) for x in words] + [self.end_word], 'i')
         s = np.asarray(self.start_suf + [[self.suffixes.get(
             f, self.unk_suf) for f in get_suffix(x)] for x in words] + self.end_suf, 'i')
         p = np.asarray(self.start_pre + [[self.prefixes.get(

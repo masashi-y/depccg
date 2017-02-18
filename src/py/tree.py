@@ -136,6 +136,8 @@ class Tree(Node):
                 op = "" if node.op is None else str(node.op)
                 print(lwidth * " " + (rwidth - lwidth) * "-" + str(op))
                 str_res = str(node.cat)
+                if (len(node.children) > 1):
+                    str_res += " ->" if node.left_is_head else " <-"
                 respadlen = (rwidth - lwidth - len(str_res)) // 2 + lwidth
                 print(respadlen * " " + str_res)
                 return rwidth
