@@ -22,6 +22,8 @@ public:
         : model_(model),
         targets_(utils::LoadCategoryList(model + "/target.txt")) {}
 
+    void SetEnv(const char* path) const;
+
     int TargetSize() const { return this->targets_.size(); }
     Cat TagAt(int idx) const { return targets_[idx]; }
     std::vector<Cat> Targets() const { return targets_; }

@@ -1,7 +1,7 @@
 CC=g++
 PYTHON=python2
 PROG=myccg
-SRCS=main.cpp parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp grammar.cpp cacheable.cpp feat.cpp dep.cpp parser_tools.cpp cat_loader.cpp
+SRCS=main.cpp parser.cpp utils.cpp cat.cpp chainer_tagger.cpp tree.cpp combinator.cpp ja_grammar.cpp en_grammar.cpp cacheable.cpp feat.cpp dep.cpp parser_tools.cpp cat_loader.cpp chart.cpp logger.cpp
 OBJS=$(SRCS:.cpp=.o) tagger.o
 DEPS=$(SRCS:.cpp=.d)
 CFLAGS= -std=c++11 -g -fpic $(OPTIONS) -Wall -march=native -O3
@@ -16,7 +16,7 @@ $(PROG): $(OBJS)
 
 tagger.o: py/tagger.pyx
 	python2 setup.py build_ext --inplace
-	$(CC) $(CFLAGS) -c py/tagger.c $(INCLUDES) $(LIBDIR)
+	$(CC) $(CFLAGS) -c py/tagger.cpp $(INCLUDES) $(LIBDIR)
 
 chainer_tagger.o: chainer_tagger.cpp tagger.o
 	$(CC) $(CFLAGS) -c -MMD -MP $< $(INCLUDES) $(LIBDIR)

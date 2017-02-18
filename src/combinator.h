@@ -19,13 +19,19 @@ enum RuleType {
     FX      = 6,
     BX      = 7,
     CONJ    = 8,
-    RP      = 9,
-    LP      = 10,
-    NOISE   = 11,
-    UNARY   = 12,
-    LEXICON = 13,
-    NONE    = 14,
-    SSEQ    = 15
+    CONJ2   = 9,
+    RP      = 10,
+    LP      = 11,
+    NOISE   = 12,
+    UNARY   = 13,
+    LEXICON = 14,
+    NONE    = 15,
+    SSEQ    = 16,
+    F_MOD   = 17,
+    B_MOD   = 18,
+    FWD_TYPERAISE = 19,
+    BWD_TYPERAISE = 20,
+    COORD = 21
 };
 
 class Combinator
@@ -62,18 +68,59 @@ public:
     const std::string ToStr() const { return "<un>"; };
 };
 
-class Conjoin: public Combinator
+class Conjunction2: public Combinator
 {
 public:
-    Conjoin(): Combinator(SSEQ) {}
+    Conjunction2(): Combinator(CONJ),
+      puncts_({Category::Parse(",")}) {}
+               // Category::Parse(";")}) {}
+
     bool CanApply(Cat left, Cat right) const {
-        return (*left == *right &&
-                !left->IsFunctor() &&
-                left->GetType() == "S");
+        if (*left == *Category::Parse("conj")
+                && *right == *Category::Parse("NP\\NP"))
+            return true;
+        if (Category::Parse("NP\\NP")->Matches(right))
+            return false;
+        return (puncts_.count(left) > 0 &&
+                !right->IsPunct() &&
+                !right->IsTypeRaised() &&
+                ! (!right->IsFunctor() &&
+                        right->GetType() == "N"));
     }
-    Cat Apply(Cat left, Cat right) const { return left; }
+
+    Cat Apply(Cat left, Cat right) const {
+        return right;
+    }
+
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
-    const std::string ToStr() const { return "SSEQ"; };
+    const std::string ToStr() const { return "<Φ>"; }
+
+private:
+    std::unordered_set<Cat> puncts_;
+};
+
+class Coordinate: public Combinator
+{
+public:
+    Coordinate(): Combinator(COORD) {}
+
+    bool CanApply(Cat left, Cat right) const {
+        if (*left == *Category::Parse("NP")
+                && *right == *Category::Parse("NP\\NP"))
+            return true;
+        // if (*left == *Category::Parse("N")
+        //         && *right == *Category::Parse("N\\N"))
+        //     return true;
+        return false;
+    }
+
+    Cat Apply(Cat left, Cat right) const {
+        return left;
+    }
+
+    bool HeadIsLeft(Cat left, Cat right) const { return false; }
+    const std::string ToStr() const { return "<Φ>"; }
+
 };
 
 class Conjunction: public Combinator
@@ -105,17 +152,74 @@ private:
     std::unordered_set<Cat> puncts_;
 };
 
+//  ,  S[ng|pss]\NP
+// -----------------
+//   (S\NP)\(S\NP)
+class CommaAndVerbPhraseToAdverb: public Combinator
+{
+public:
+    CommaAndVerbPhraseToAdverb()
+        : Combinator(NOISE),
+          ngVP_(Category::Parse("S[ng]\\NP")),
+          pssVP_(Category::Parse("S[pss]\\NP")),
+          result_(Category::Parse("(S\\NP)\\(S\\NP)")) {}
+
+    bool CanApply(Cat left, Cat right) const {
+        return (!left->IsFunctor() &&
+                left->GetType() == "," &&
+                (*right == *ngVP_ || *right == *pssVP_));
+    }
+
+    Cat Apply(Cat left, Cat right) const { return result_; }
+
+    bool HeadIsLeft(Cat left, Cat right) const { return false; }
+
+    const std::string ToStr() const { return "<*>"; };
+
+private:
+    Cat ngVP_;
+    Cat pssVP_;
+    Cat result_;
+};
+
+//  ,  S[dcl]/S[dcl]
+// -----------------
+//   (S\NP)\(S\NP)
+class ParentheticalDirectSpeech: public Combinator
+{
+public:
+    ParentheticalDirectSpeech()
+        : Combinator(NOISE),
+          SdclSdcl_(Category::Parse("S[dcl]/S[dcl]")),
+          result_(Category::Parse("(S\\NP)/(S\\NP)")) {}
+
+    bool CanApply(Cat left, Cat right) const {
+        return (!left->IsFunctor() &&
+                left->GetType() == "," &&
+                *right == *SdclSdcl_);
+    }
+
+    Cat Apply(Cat left, Cat right) const { return result_; }
+
+    bool HeadIsLeft(Cat left, Cat right) const { return false; }
+
+    const std::string ToStr() const { return "<*>"; };
+
+private:
+    Cat SdclSdcl_;
+    Cat result_;
+};
+
 class RemovePunctuation: public Combinator
 {
 public:
     RemovePunctuation(bool punct_is_left)
-        : Combinator(RP), punct_is_left_(punct_is_left) {}
+        : Combinator(punct_is_left ? LP : RP), punct_is_left_(punct_is_left) {}
 
     bool CanApply(Cat left, Cat right) const {
-        return punct_is_left_ ? left->IsPunct() :
-            (right->IsPunct() &&
-             !(!left->IsFunctor() &&
-              left->GetType() == "N"));
+        return punct_is_left_ ? left->IsPunct() : (right->IsPunct()); //&&
+             // !(!left->IsFunctor() &&
+              // left->GetType() == "N"));
     }
     Cat Apply(Cat left, Cat right) const {
         return punct_is_left_ ? right : left;
@@ -184,7 +288,8 @@ class ForwardApplication: public Combinator
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
-        return !(left->IsModifierWithoutFeat() || left->IsTypeRaisedWithoutFeat());}
+        return !(left->IsModifier() || left->IsTypeRaised());
+    }
 
     const std::string ToStr() const { return ">"; };
 };
@@ -205,7 +310,7 @@ class BackwardApplication: public Combinator
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
-        return right->IsModifierWithoutFeat() || right->IsTypeRaisedWithoutFeat();
+        return (right->IsModifier() || right->IsTypeRaised());
     }
 
     const std::string ToStr() const { return "<"; }
@@ -233,7 +338,7 @@ class GeneralizedForwardComposition: public Combinator
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
-        return ! (left->IsModifierWithoutFeat() || left->IsTypeRaisedWithoutFeat());
+        return ! (left->IsModifier() || left->IsTypeRaised());
     }
 
     const std::string ToStr() const { return ">B" + std::to_string(Order + 1); }
@@ -266,7 +371,7 @@ class GeneralizedBackwardComposition: public Combinator
                 res, left->GetLeft<Order+1>(), right->GetRight());
     }
     bool HeadIsLeft(Cat left, Cat right) const {
-        return right->IsModifierWithoutFeat() || right->IsTypeRaisedWithoutFeat();
+        return right->IsModifier() || right->IsTypeRaised();
     }
     const std::string ToStr() const { return "<B" + std::to_string(Order + 1); }
 
@@ -276,7 +381,6 @@ private:
     Slash result_;
 };
 
-extern std::vector<Combinator*> binary_rules;
 extern Combinator* unary_rule;
 
 } // namespace myccg

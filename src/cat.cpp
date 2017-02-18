@@ -26,17 +26,6 @@ template<> bool Category::HasFunctorAtRight<0>() const {
 template<> Cat Category::GetLeft<0>() const { return this; }
 template<> Cat Category::GetRight<0>() const { return this; }
 
-std::string AtomicCategory::ToStrWithoutFeat() const {
-#ifdef JAPANESE
-    return type_;
-#else
-    std::string res(ToStr());
-    utils::ReplaceAll(&res, "[X]", "");
-    utils::ReplaceAll(&res, "[nb]", "");
-    return res;
-#endif
-}
-
 Cat Category::Parse(const std::string& cat) {
     Cat res;
     if (Cacheable::Count(cat) > 0) {
@@ -100,6 +89,39 @@ Cat Category::Make(Cat left, const Slash& op, Cat right) {
 
 Cat Category::CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
     return to_correct->Substitute(match1->GetSubstitution(match2));
+}
+
+Cat Category::StripFeat() const {
+    return Category::Parse(this->ToStrWithoutFeat());
+}
+Cat Category::StripFeat(Str f1) const {
+    std::string res(ToStr());
+    utils::ReplaceAll(&res, f1, "");
+    return Category::Parse(res);
+}
+
+Cat Category::StripFeat(Str f1, Str f2) const {
+    std::string res(ToStr());
+    utils::ReplaceAll(&res, f1, "");
+    utils::ReplaceAll(&res, f2, "");
+    return Category::Parse(res);
+}
+
+Cat Category::StripFeat(Str f1, Str f2, Str f3) const {
+    std::string res(ToStr());
+    utils::ReplaceAll(&res, f1, "");
+    utils::ReplaceAll(&res, f2, "");
+    utils::ReplaceAll(&res, f3, "");
+    return Category::Parse(res);
+}
+
+Cat Category::StripFeat(Str f1, Str f2, Str f3, Str f4) const {
+    std::string res(ToStr());
+    utils::ReplaceAll(&res, f1, "");
+    utils::ReplaceAll(&res, f2, "");
+    utils::ReplaceAll(&res, f3, "");
+    utils::ReplaceAll(&res, f4, "");
+    return Category::Parse(res);
 }
 
 

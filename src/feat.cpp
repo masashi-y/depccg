@@ -12,7 +12,7 @@ Feat Feature::Parse(const std::string& string) {
         return Cacheable::Get<Feat>(string);
     } else {
         Feat res;
-        if (string.find(",") > std::string::npos)
+        if (string.find(",") != std::string::npos)
             res = new MultiValueFeature(string);
         else
             res = new SingleValueFeature(string);
@@ -99,6 +99,10 @@ bool SingleValueFeature::Matches(Feat other) const {
         return false;
     return (GetId() == o->GetId() ||
             this->ContainsWildcard() || o->ContainsWildcard());
+}
+
+Feat SingleValueFeature::ToMultiValue() const {
+    return IsEmpty() ? this  : Feature::Parse(value_ + "=true");
 }
 
 } // namespace myccg

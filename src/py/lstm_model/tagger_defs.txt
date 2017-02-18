@@ -1,1 +1,0 @@
-{"afix_dim": 32, "model": "LSTMTagger", "word_dim": 50, "hidden_dim": 128, "relu_dim": 64, "nlayers": 2}

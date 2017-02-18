@@ -72,7 +72,12 @@ public:
 
     virtual std::string ToStrWithoutFeat() const = 0;
 
-    Cat StripFeat() const { return Category::Parse(this->ToStrWithoutFeat()); }
+    typedef const std::string& Str;
+    Cat StripFeat() const;
+    Cat StripFeat(Str f1) const;
+    Cat StripFeat(Str f1, Str f2) const;
+    Cat StripFeat(Str f1, Str f2, Str f3) const;
+    Cat StripFeat(Str f1, Str f2, Str f3, Str f4) const;
 
     virtual const std::string& GetType() const = 0;
     virtual Feat GetFeat() const = 0;
@@ -108,6 +113,9 @@ public:
 
     virtual Cat Arg(int argn) const = 0;
     virtual Cat LeftMostArg() const = 0;
+    virtual bool IsFunctionInto(Cat cat) const = 0;
+    virtual Cat ToMultiValue() const = 0;
+
     Cat Substitute(Feat feat) const;
 
 protected:
@@ -119,6 +127,7 @@ private:
     int id_;
     std::string str_;
 };
+
 
 // perform composition where `Order` is size of `tail` - 1.
 //   e.g.  A/B B/C/D/E -> A/C/D/E
@@ -225,6 +234,15 @@ public:
         }
     }
 
+    bool IsFunctionInto(Cat cat) const {
+        return (cat->Matches(this) || left_->IsFunctionInto(cat));
+    }
+
+    Cat ToMultiValue() const {
+        return Category::Parse("(" + left_->ToMultiValue()->ToStr() +
+                slash_.ToStr() + right_->ToMultiValue()->ToStr() + ")");
+    }
+
     Functor(Cat left, const Slash& slash, Cat right, std::string& semantics)
     : Category(left->WithBrackets() + slash.ToStr() + right->WithBrackets(),
             semantics), left_(left), right_(right), slash_(slash) {}
@@ -238,7 +256,7 @@ private:
 class AtomicCategory: public Category
 {
 public:
-    std::string ToStrWithoutFeat() const; // { return type_; }
+    std::string ToStrWithoutFeat() const { return type_; }
 
     const std::string& GetType() const { return type_; }
 
@@ -282,8 +300,10 @@ public:
         return (!other->IsFunctor() &&
                 this->type_ == other->GetType() &&
                 (this->feat_->IsEmpty() ||
+                 other->GetFeat()->IsEmpty() ||
                  this->feat_->Matches(other->GetFeat()) ||
-                 this->feat_->Matches(kNB)));
+                 this->feat_->Matches(kNB) ||
+                 other->GetFeat()->Matches(kNB)));
     }
 
     Cat LeftMostArg() const NO_IMPLEMENTATION
@@ -292,6 +312,15 @@ public:
         if (argn == 0)
             return this;
         throw std::runtime_error("Error getting argument of category");
+    }
+
+    bool IsFunctionInto(Cat cat) const {
+        return false;
+    }
+
+    Cat ToMultiValue() const {
+        return Category::Parse(
+                type_ + feat_->ToMultiValue()->ToStr());
     }
 
     AtomicCategory(const std::string& type, Feat feat, const std::string& semantics)

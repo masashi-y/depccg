@@ -8,6 +8,20 @@
 namespace myccg {
 namespace utils {
 
+Cat GetCategory(const std::string& str) {
+    return Category::Parse(str)->StripFeat("[X]", "[nb]");
+    // Cat cat = Category::Parse(str);
+    // if (cat->IsTypeRaised() && cat->IsFunctionInto(Category::Parse("S"))) {
+    //     std::cerr << cat << std::endl;
+    //     std::string s(cat->ToStr());
+    //     utils::ReplaceAll(&s, "S/", "S[X]/");
+    //     utils::ReplaceAll(&s, "S\\", "S[X]\\");
+    //     std::cerr << s << std::endl;
+    //     return Category::Parse(s);
+    // }
+    // return cat;
+}
+
 std::unordered_set<CatPair> LoadSeenRules(const std::string& filename) {
     auto res = std::unordered_set<CatPair>();
     std::ifstream in(filename);
@@ -24,9 +38,9 @@ std::unordered_set<CatPair> LoadSeenRules(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat ca1 = Category::Parse(buf)->StripFeat();
+        Cat ca1 = GetCategory(buf);
         ss >> buf;
-        Cat ca2 = Category::Parse(buf)->StripFeat();
+        Cat ca2 = GetCategory(buf);
         auto p = CatPair(ca1, ca2);
         res.insert(p);
     }

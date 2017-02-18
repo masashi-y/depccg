@@ -26,12 +26,19 @@ struct AgendaItem
 {
     AgendaItem(int id, NodeType parse_, float in_prob_, float out_prob_,
             int start_of_span_, int span_length_)
-    : parse(parse_), in_prob(in_prob_), out_prob(out_prob_),
+    : fin(false), id(id), parse(parse_), in_prob(in_prob_), out_prob(out_prob_),
+    prob(in_prob_ + out_prob_), start_of_span(start_of_span_),
+    span_length(span_length_) {}
+
+    AgendaItem(bool fin, int id, NodeType parse_, float in_prob_, float out_prob_,
+            int start_of_span_, int span_length_)
+    : fin(fin), id(id), parse(parse_), in_prob(in_prob_), out_prob(out_prob_),
     prob(in_prob_ + out_prob_), start_of_span(start_of_span_),
     span_length(span_length_) {}
 
     ~AgendaItem() {}
 
+    bool fin;
     int id;
     NodeType parse;
     float in_prob;
@@ -42,26 +49,12 @@ struct AgendaItem
 
 };
 
-typedef std::pair<NodeType, float> ChartItem;
-struct ChartCell
-{
-    ChartCell();
-    ~ChartCell() {}
-
-    bool IsEmpty() const { return items.size() == 0; }
-    NodeType GetBestParse() { return best; }
-    bool update(NodeType parse, float prob);
-    std::unordered_map<Cat, ChartItem> items;
-    float best_prob;
-    NodeType best;
-};
-
-
 typedef std::priority_queue<AgendaItem,
                             std::vector<AgendaItem>,
                             bool (*)(const AgendaItem&, const AgendaItem&)
                             > AgendaType;
 
+bool NormalComparator(const AgendaItem& left, const AgendaItem& right);
 bool JapaneseComparator(const AgendaItem& left, const AgendaItem& right);
 bool LongerDependencyComparator(const AgendaItem& left, const AgendaItem& right);
 
