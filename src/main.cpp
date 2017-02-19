@@ -1,5 +1,6 @@
 
 #include "parser.h"
+#include "dep.h"
 #include "cmdline.h"
 #include "grammar.h"
 #include "parser_tools.h"

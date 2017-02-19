@@ -123,15 +123,21 @@ std::vector<NodeType> AStarParser<Lang>::Parse(const std::vector<std::string>& d
     logger_.RecordTimeStartRunning();
     std::unique_ptr<float*[]> scores = tagger_->PredictTags(doc);
     logger_.RecordTimeEndOfTagging();
+    std::vector<NodeType> res = Parse(doc, scores.get());
+    logger_.RecordTimeEndOfParsing();
+    logger_.Report();
+    return res;
+}
 
+template<typename Lang>
+std::vector<NodeType> AStarParser<Lang>::Parse(const std::vector<std::string>& doc,
+                                               float** scores) {
     std::vector<NodeType> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++) {
         if ( keep_going )
             res[i] = Parse(i, doc[i], scores[i]);
     }
-    logger_.RecordTimeEndOfParsing();
-    logger_.Report();
     return res;
 }
 

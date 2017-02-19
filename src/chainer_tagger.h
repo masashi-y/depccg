@@ -28,8 +28,8 @@ public:
     Cat TagAt(int idx) const { return targets_[idx]; }
     std::vector<Cat> Targets() const { return targets_; }
 
-    virtual Probs PredictTags(Doc& doc) const = 0;
-    virtual std::pair<Probs, Probs> PredictTagsAndDeps(Doc& doc) const = 0;
+    virtual Probs PredictTags(Doc& doc) const NO_IMPLEMENTATION;
+    virtual std::pair<Probs, Probs> PredictTagsAndDeps(Doc& doc) const NO_IMPLEMENTATION;
 
 protected:
     std::string model_;

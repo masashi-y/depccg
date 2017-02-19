@@ -13,8 +13,6 @@
 
 namespace myccg {
 
-typedef bool (*Comparator)(const AgendaItem&, const AgendaItem&);
-
 class Parser
 {
 public:
@@ -95,6 +93,7 @@ public:
             comparator, binary_rules, beta, pruning_size, loglevel) {}
 
     std::vector<NodeType> Parse(const std::vector<std::string>& doc);
+    std::vector<NodeType> Parse(const std::vector<std::string>& doc, float** scores);
     NodeType Parse(int id, const std::string& sent, float* scores);
 
 
@@ -106,29 +105,30 @@ protected:
     std::vector<RuleCache>& GetRules(Cat left, Cat right);
 };
         
-template<typename Lang>
-class DepAStarParser: public AStarParser<Lang>
-{
-public:
-
-    typedef AStarParser<Lang> Base;
-
-    DepAStarParser(
-            Tagger* tagger,
-            const std::string& model,
-            const std::unordered_set<Cat>& possible_root_cats,
-            Comparator comparator,
-           std::vector<Op> binary_rules,
-            float beta,
-            int pruning_size,
-            LogLevel loglevel)
-    : AStarParser<Lang>(tagger, model, possible_root_cats,
-                comparator, binary_rules, beta, pruning_size, loglevel) {}
-
-    std::vector<NodeType> Parse(const std::vector<std::string>& doc);
-
-    NodeType Parse(int id, const std::string& sent, float* tag_scores, float* dep_scores);
-};
+// template<typename Lang>
+// class DepAStarParser: public AStarParser<Lang>
+// {
+// public:
+//
+//     typedef AStarParser<Lang> Base;
+//
+//     DepAStarParser(
+//             Tagger* tagger,
+//             const std::string& model,
+//             const std::unordered_set<Cat>& possible_root_cats,
+//             Comparator comparator,
+//            std::vector<Op> binary_rules,
+//             float beta,
+//             int pruning_size,
+//             LogLevel loglevel)
+//     : AStarParser<Lang>(tagger, model, possible_root_cats,
+//                 comparator, binary_rules, beta, pruning_size, loglevel) {}
+//
+//     std::vector<NodeType> Parse(const std::vector<std::string>& doc);
+//     std::vector<NodeType> Parse(const std::vector<std::string>& doc,
+//                                 float** tag_scores, float** dep_scores);
+//     NodeType Parse(int id, const std::string& sent, float* tag_scores, float* dep_scores);
+// };
 
 
 } // namespace myccg

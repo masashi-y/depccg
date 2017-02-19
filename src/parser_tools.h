@@ -12,6 +12,7 @@
 namespace myccg {
 
 
+
 struct RuleCache
 {
     RuleCache(Cat result, bool left_is_head, Op combinator)
@@ -65,6 +66,7 @@ struct CompareFloatCat {
     }
 };
 
+typedef bool (*Comparator)(const AgendaItem&, const AgendaItem&);
 
 void ComputeOutsideProbs(float* probs, int sent_size, float* out);
 

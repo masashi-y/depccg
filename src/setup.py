@@ -5,6 +5,24 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy
 
+sources = ["parse.pyx",
+           "cacheable.cpp",
+           "cat.cpp",
+           "cat_loader.cpp",
+           "chainer_tagger.cpp",
+           "chart.cpp",
+           "combinator.cpp",
+           "dep.cpp",
+           "en_grammar.cpp",
+           "feat.cpp",
+           "ja_grammar.cpp",
+           "logger.cpp",
+           "parser.cpp",
+           "parser_tools.cpp",
+           "py/tagger.cpp",
+           "tree.cpp",
+           "utils.cpp"]
+
 ext_modules = [
         Extension("chainer_tagger",
                   ["py/tagger.pyx"],
@@ -16,6 +34,12 @@ ext_modules = [
                   ["py/py_utils.pyx"],
                   include_dirs=[numpy.get_include()],
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"],
+                  language='c++'
+                  ),
+        Extension("parser",
+                  sources,
+                  include_dirs=[".", numpy.get_include()],
+                  extra_compile_args=["-O3", "-std=c++11"],
                   language='c++'
                   ),
         ]

@@ -9,7 +9,7 @@
 #include <omp.h>
 #endif
 
-#include "parser.h"
+#include "dep.h"
 #include "configure.h"
 #include "debug.h"
 #include "parser_tools.h"
@@ -31,15 +31,22 @@ DepAStarParser<Lang>::Parse(const std::vector<std::string>& doc) {
     Base::logger_.RecordTimeStartRunning();
     std::tie(cat_scores, dep_scores) = Base::tagger_->PredictTagsAndDeps(doc);
     Base::logger_.RecordTimeEndOfTagging();
+    std::vector<NodeType> res = Parse(doc, cat_scores.get(), dep_scores.get());
+    Base::logger_.RecordTimeEndOfParsing();
+    Base::logger_.Report();
+    return res;
+}
 
+template <typename Lang>
+std::vector<NodeType>
+DepAStarParser<Lang>::Parse(const std::vector<std::string>& doc,
+                            float** tag_scores, float** dep_scores) {
     std::vector<NodeType> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++) {
         if ( Base::keep_going )
-            res[i] = Parse(i, doc[i], cat_scores[i], dep_scores[i]);
+            res[i] = Parse(i, doc[i], tag_scores[i], dep_scores[i]);
     }
-    Base::logger_.RecordTimeEndOfParsing();
-    Base::logger_.Report();
     return res;
 }
 
@@ -58,8 +65,6 @@ NodeType DepAStarParser<Lang>::Parse(
     float p_tag_out[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
     float p_dep_out[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
 
-    // std::cerr << id << " " << sent << std::endl;
-
     Matrix<float> tag_out_probs(p_tag_out, sent_size + 1, sent_size + 1);
     Matrix<float> dep_out_probs(p_dep_out, sent_size + 1, sent_size + 1);
     Matrix<float> tag_in_probs(tag_scores, sent_size, Base::TagSize());
@@ -77,7 +82,7 @@ NodeType DepAStarParser<Lang>::Parse(
     Base::logger_.ShowTaggingOneBest(Base::tagger_, tag_scores, tokens);
     Base::logger_.ShowDependencyOneBest(dep_scores, tokens);
 
-    int root_idx = -1;
+    float dep_leaf_out_prob = 0.0;
     for (int i = 0; i < sent_size; i++) {
         tag_exp_totals[i] = 0.0;
         bool do_pruning = Base::use_category_dict_ &&
@@ -91,20 +96,11 @@ NodeType DepAStarParser<Lang>::Parse(
             }
         }
         best_tag_probs[i] = scored_cats[i].top().first;
-        // best_tag_probs[i] = std::log( std::exp(scored_cats[i].top().first) / tag_exp_totals[i] );
         int idx = dep_in_probs.ArgMax(i);
         best_dep_probs[i] = dep_in_probs(i, idx);
-        if (idx == 0) { // ignore dep_prob for root
-            if (root_idx == -1 ||
-                    best_dep_probs[i] > best_dep_probs[root_idx])
-                root_idx = i;
-        }
+        dep_leaf_out_prob += dep_in_probs(i, idx);
     }
-    float dep_leaf_out_prob = 0.0;
-    for (int i = 0; i < sent_size; i++) {
-        // if (root_idx != i)
-        dep_leaf_out_prob += best_dep_probs[i];
-    }
+
     ComputeOutsideProbs(best_tag_probs, sent_size, p_tag_out);
     ComputeOutsideProbs(best_dep_probs, sent_size, p_dep_out);
 
@@ -119,7 +115,6 @@ NodeType DepAStarParser<Lang>::Parse(
             scored_cats[i].pop();
             if (std::exp(prob_and_cat.first) > threshold) {
                 float in_prob = prob_and_cat.first;
-                // float in_prob = std::log( std::exp(prob_and_cat.first) / tag_exp_totals[i] );
                 agenda.emplace(agenda_id++, std::make_shared<const Leaf>(
                             tokens[i], prob_and_cat.second, i), in_prob, out_prob, i, 1);
             } else
@@ -179,7 +174,7 @@ NodeType DepAStarParser<Lang>::Parse(
                             float out_prob = tag_out_probs(item.start_of_span,
                                             item.start_of_span + span_length)
                                            + dep_out_probs(item.start_of_span,
-                                            item.start_of_span + span_length);
+                                            item.start_of_span + span_length)
                                            + best_dep_probs[head->GetHeadId()];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 item.start_of_span, span_length);
@@ -208,7 +203,7 @@ NodeType DepAStarParser<Lang>::Parse(
                             float out_prob = tag_out_probs(start_of_span,
                                             start_of_span + span_length)
                                            + dep_out_probs(start_of_span,
-                                            start_of_span + span_length);
+                                            start_of_span + span_length)
                                            + best_dep_probs[head->GetHeadId()];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 start_of_span, span_length);
