@@ -1,15 +1,15 @@
 
-from libcpp.memory cimport shared_ptr
-from libcpp.vector cimport vector
-
-cdef extern from "tree.h" namespace "myccg" nogil:
-    cdef cppclass Node
-    cdef cppclass Leaf
-    cdef cppclass Tree
-
-    ctypedef shared_ptr[const Node] NodeType
-    ctypedef shared_ptr[const Tree] TreeType
-    ctypedef shared_ptr[const Leaf] LeafType
+# from libcpp.memory cimport shared_ptr
+# from libcpp.vector cimport vector
+#
+# cdef extern from "tree.h" namespace "myccg" nogil:
+#     cdef cppclass Node
+#     cdef cppclass Leaf
+#     cdef cppclass Tree
+#
+#     ctypedef shared_ptr[const Node] NodeType
+#     ctypedef shared_ptr[const Tree] TreeType
+#     ctypedef shared_ptr[const Leaf] LeafType
 
     # void ToXML(vector<shared_ptr<const Node>>&
     #         trees, bool feat, std::ostream& out=std::cout);
@@ -148,10 +148,10 @@ cdef extern from "tree.h" namespace "myccg" nogil:
     #     std::stringstream out_;
     # };
     #
-
-cdef class Parse:
-    NodeType node
-
-    def __cinit__(self, NodeType node):
-        self.node = node
-
+#
+# cdef class Parse:
+#     NodeType node
+#
+#     def __cinit__(self, NodeType node):
+#         self.node = node
+#

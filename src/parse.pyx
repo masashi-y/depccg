@@ -1,6 +1,7 @@
 
 cimport numpy as np
 import numpy as np
+from libc.stdlib cimport malloc, free
 from libcpp.memory cimport make_shared, shared_ptr
 from libcpp.vector cimport vector
 from libcpp.string cimport string
@@ -154,11 +155,10 @@ cdef extern from "dep.h" namespace "myccg" nogil:
                     int pruning_size,
                     LogLevel loglevel) except +
 
+        vector[NodeType] ParseDoc(const vector[string]& doc, float** tag_scores, float** dep_scores)
         NodeType Parse(int id, const string& sent, float* tag_scores)
         NodeType Parse(int id, const string& sent, float* tag_scores, float* dep_scores)
 
-        # vector[NodeType] Parse(const vector[string]& doc)
-        # vector[NodeType] Parse(const vector[string]& doc, float** tag_scores, float** dep_scores)
 
 cdef class Parse:
     cdef NodeType node
@@ -171,6 +171,12 @@ cdef class Parse:
     def __cinit__(self):
         self.suppress_feat = False
         # self.node.reset(<const Node*>new const Leaf("fail", Category.Parse("NP"), 0))
+
+    def __str__(self):
+        return self.auto
+
+    def __repr__(self):
+        return self.auto
 
     property auto:
         def __get__(self):
@@ -192,6 +198,7 @@ cdef class Parse:
         def __get__(self):
             return CoNLL(self.node).Get()
 
+
 cdef class PyAStarParser:
     cdef Tagger* tagger_
     cdef DepAStarParser[En]* parser_
@@ -203,7 +210,7 @@ cdef class PyAStarParser:
                         path,
                         possible_root_cats,
                         NormalComparator,
-                        binary_rules,
+                        headfirst_binary_rules,
                         beta,
                         pruning_size,
                         Error)
@@ -236,3 +243,32 @@ cdef class PyAStarParser:
                 0, sent, <float*>flat_tag.data, <float*>flat_dep.data)
         cdef Parse parse = Parse()
         return parse.from_ptr(res)
+
+    def parse_doc(self, sents, probs):
+        return self._parse_doc_tag_and_dep(sents, probs)
+
+    cdef list _parse_doc_tag_and_dep(self, list sents, list probs):
+        cdef int doc_size = len(sents), i
+        cdef np.ndarray[np.float32_t, ndim=2] cat_scores, dep_scores
+        cdef np.ndarray[np.float32_t, ndim=1] cat_flat_scores, dep_flat_scores
+        cdef vector[string] csents = sents
+        cdef float **tags = <float**>malloc(doc_size * sizeof(float*))
+        cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
+        for i, _, (cat_scores, dep_scores) in probs:
+            cat_flat_scores = cat_scores.flatten()
+            dep_flat_scores = dep_scores.flatten()
+            tags[i] = <float*>cat_flat_scores.data
+            deps[i] = <float*>dep_flat_scores.data
+        cdef vector[NodeType] cres = self.parser_.ParseDoc(sents, tags, deps)
+        cdef list res = []
+        cdef Parse parse
+        for i in range(len(sents)):
+            parse = Parse()
+            parse.from_ptr(cres[i])
+            res.append(parse)
+        free(tags)
+        free(deps)
+        return res
+
+        # cdef Parse parse = Parse()
+        # return parse.from_ptr(res)
