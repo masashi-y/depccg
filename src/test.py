@@ -1,4 +1,5 @@
 
+import sys
 import parser
 import chainer
 from py.ja_lstm_parser import JaLSTMParser
@@ -15,15 +16,15 @@ from py.lstm_parser_bi_fast import FastBiaffineLSTMParser
 from py.ja_lstm_parser_bi import BiaffineJaLSTMParser
 
 model = "/home/masashi-y/myccg/models/tri_headfirst"
-sent = "this is test sentence ."
+doc = [l.strip() for l in open(sys.argv[1])]
 
 tagger = FastBiaffineLSTMParser(model)
 chainer.serializers.load_npz(model + "/tagger_model", tagger)
 
 parser = parser.PyAStarParser(model)
 
-_, _, tag = tagger.predict_doc([sent.split(" "), sent])[0]
+tag = tagger.predict_doc([s.split(" ") for s in doc])
 # print [tagger.cats[i] for i in tag.argmax(1)]
-tree = parser.parse(sent, tag)
-print tree.deriv
-print tree.auto
+res = parser.parse_doc(doc, tag)
+for r in res:
+    print r.deriv
