@@ -36,7 +36,12 @@ std::ostream& operator<<(std::ostream& out, const Color<T>& color) {
     return out << color.color_ << color.ob_ << "\033[0m";
 }
 
-enum LogLevel { Debug, Info, Warn, Error };
+enum LogLevel {
+    Debug = 0,
+    Info  = 1,
+    Warn  = 2,
+    Error = 3
+};
 
 class ParserLogger
 {
@@ -71,24 +76,34 @@ public:
         float* probs, std::vector<std::string>& tokens);
 
     template<typename T> ParserLogger& operator<<(const T& message) {
-        std::cerr << "[LOG] " << message << std::endl;
+        if (cur_level_ >= level_)
+            std::cerr << "[LOG] " << message << std::endl;
         return *this;
     }
 
     template<typename T>
     ParserLogger& operator<<(const Color<T>& color) {
-        std::cerr << "[LOG] " << color.color_ << color.ob_ << "\033[0m" << std::endl;
+        if (cur_level_ >= level_)
+            std::cerr << "[LOG] "
+                      << color.color_
+                      << color.ob_
+                      << "\033[0m" << std::endl;
         return *this;
     }
 
     typedef std::ostream& (*stream_function)(std::ostream&);
     ParserLogger& operator<<(stream_function func) {
-        func(std::cout);
+        func(std::cerr);
+        return *this;
+    }
+
+    ParserLogger& operator() (LogLevel level) {
+        cur_level_ = level;
         return *this;
     }
 
 private:
-    LogLevel level_;
+    LogLevel level_, cur_level_;
     int nprocessed_;
     std::unordered_map<std::string,
         std::chrono::system_clock::time_point> times_;

@@ -9,7 +9,7 @@
 namespace myccg {
 
 ParserLogger::ParserLogger(LogLevel level)
-    : level_(level), nprocessed_(0),
+    : level_(level), cur_level_(Info), nprocessed_(0),
       do_statistics_(false),
       num_sents_(0), agenda_sizes_(nullptr),
       num_one_best_tags_(nullptr) {}
@@ -52,18 +52,18 @@ void ParserLogger::RecordTime(const std::string& name) {
 }
 
 void ParserLogger::RecordTimeStartRunning() {
-    *this << "running super tagger ...";
+    (*this)(Info) << "running super tagger ...";
     RecordTime("time_start_running");
 }
 
 void ParserLogger::RecordTimeEndOfTagging() {
-    *this << "finished";
-    *this << "running A* parser ...";
+    (*this)(Info) << "finished";
+    (*this)(Info) << "running A* parser ...";
     RecordTime("time_end_of_tagging");
 }
 
 void ParserLogger::RecordTimeEndOfParsing() {
-    *this << "finished";
+    (*this)(Info) << "finished";
     RecordTime("time_end_of_parsing");
 }
 
@@ -87,7 +87,7 @@ void ParserLogger::RecordAgendaItem(const char* message, const AgendaItem& item)
 }
 
 void ParserLogger::CompleteOne() {
-    if (++nprocessed_ % 10 == 0) {
+    if (++nprocessed_ % 10 == 0 && level_ <= Info) {
         std::cerr << ".";
         if (nprocessed_ % 500 == 0)
             std::cerr << nprocessed_ << std::endl;
@@ -141,6 +141,7 @@ void ParserLogger::ShowDependencyOneBest(
 }
 
 void ParserLogger::Report() {
+    if (cur_level_ < level_) return;
     double tagging_time= std::chrono::duration_cast<std::chrono::seconds>(
             times_["time_end_of_tagging"]-times_["time_start_running"]).count();
     double parsing_time= std::chrono::duration_cast<std::chrono::seconds>(

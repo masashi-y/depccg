@@ -6,6 +6,7 @@ from libcpp.memory cimport make_shared, shared_ptr
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp.unordered_set cimport unordered_set
+from cython.operator cimport dereference as deref
 
 cdef extern from "<iostream>" namespace "std":
     #TODO: does not resolve template???
@@ -22,16 +23,72 @@ cdef extern from "cat.h" namespace "myccg" nogil:
     cdef cppclass Category:
         @staticmethod
         Cat Parse(const string& cat)
+        string ToStr()
+        string ToStrWithoutFeat()
+
+        # ctypedef const string& Str
+        # Cat StripFeat() const
+        # Cat StripFeat(Str f1) const
+        # Cat StripFeat(Str f1, Str f2) const
+        # Cat StripFeat(Str f1, Str f2, Str f3) const
+        # Cat StripFeat(Str f1, Str f2, Str f3, Str f4) const
+
+        const string& GetType() const
+        # Feat GetFeat() const = 0;
+        Cat GetLeft() const
+        Cat GetRight() const
+
+        # template<int i> Cat GetLeft() const;
+        # template<int i> Cat GetRight() const;
+        # template<int i> bool HasFunctorAtLeft() const;
+        # template<int i> bool HasFunctorAtRight() const;
+        # virtual Slash GetSlash() const = 0;
+
+        const string WithBrackets() const
+        bint IsModifier() const
+        bint IsModifierWithoutFeat() const
+        bint IsTypeRaised() const
+        bint IsTypeRaisedWithoutFeat() const
+        bint IsForwardTypeRaised() const
+        bint IsBackwardTypeRaised() const
+        bint IsFunctor() const
+        bint IsPunct() const
+        bint IsNorNP() const
+        int NArgs() const
+        # Feat GetSubstitution(Cat other) const = 0;
+        bint Matches(Cat other) const
+        Cat Arg(int argn) const
+        Cat LeftMostArg() const
+        bint IsFunctionInto(Cat cat) const
+        Cat ToMultiValue() const
+        # Cat Substitute(Feat feat) const
 
 cdef extern from "tree.h" namespace "myccg" nogil:
-    cdef cppclass Node:
-        ostream& operator<<(ostream& ost, const Node* node)
-
     cdef cppclass Leaf:
         Leaf(const string& word, Cat cat, int position)
 
     cdef cppclass Tree:
         pass
+
+    cdef cppclass Node:
+        Cat GetCategory() const
+        const int GetLength() const
+        shared_ptr[const Node] GetLeftChild() const
+        shared_ptr[const Node] GetRightChild() const
+        bint IsLeaf() const
+        # RuleType GetRuleType()
+        # RuleType GetRuleType()
+        const Leaf* GetHeadLeaf() const
+        int GetStartOfSpan() const
+        string GetWord() const
+        int GetHeadId() const
+        int GetDependencyLength() const
+        bint HeadIsLeft() const
+        bint IsUnary() const
+        int NumDescendants() const
+        int RightNumDescendants() const
+        int LeftNumDescendants() const
+        ostream& operator<<(ostream& ost, const Node* node)
 
     ctypedef shared_ptr[const Node] NodeType
     ctypedef shared_ptr[const Tree] TreeType
@@ -159,18 +216,176 @@ cdef extern from "dep.h" namespace "myccg" nogil:
         NodeType Parse(int id, const string& sent, float* tag_scores)
         NodeType Parse(int id, const string& sent, float* tag_scores, float* dep_scores)
 
+cdef class PyCat:
+    cdef Cat cat_
+
+    def __cinit__(self):
+        pass
+
+    def __str__(self):
+        return self.cat_.ToStr()
+
+    def __repr__(self):
+        return self.cat_.ToStr()
+
+    @staticmethod
+    def parse(cat):
+        c = PyCat()
+        c.cat_ = Category.Parse(cat)
+        return c
+
+    @staticmethod
+    cdef PyCat from_ptr(Cat cat):
+        c = PyCat()
+        c.cat_ = cat
+        return c
+
+    property without_feat:
+        def __get__(self):
+            return self.cat_.ToStrWithoutFeat()
+
+        # const string& GetType() const
+    property left:
+        def __get__(self):
+            assert self.is_functor
+            return PyCat.from_ptr(self.cat_.GetLeft())
+
+    property right:
+        def __get__(self):
+            assert self.is_functor
+            return PyCat.from_ptr(self.cat_.GetRight())
+
+        # const string WithBrackets()
+
+    property is_modifier:
+        def __get__(self):
+            return self.cat_.IsModifier()
+
+    property is_modifier_without_feat:
+        def __get__(self):
+            return self.cat_.IsModifierWithoutFeat()
+
+    property is_type_raised:
+        def __get__(self):
+            return self.cat_.IsTypeRaised()
+
+    property is_type_raised_without_feat:
+        def __get__(self):
+            return self.cat_.IsTypeRaisedWithoutFeat()
+
+    property is_forward_type_raised:
+        def __get__(self):
+            return self.cat_.IsForwardTypeRaised()
+
+    property is_backward_type_raised:
+        def __get__(self):
+            return self.cat_.IsBackwardTypeRaised()
+
+    property is_functor:
+        def __get__(self):
+            return self.cat_.IsFunctor()
+
+    property is_punct:
+        def __get__(self):
+            return self.cat_.IsPunct()
+
+    property is_NorNP:
+        def __get__(self):
+            return self.cat_.IsNorNP()
+
+    def is_function_into(self, cat):
+        return self._is_function_into(cat)
+
+    cdef bint _is_function_into(self, PyCat cat):
+        cdef Cat ccat = cat.cat_
+        return self.cat_.IsFunctionInto(ccat)
+
+    property n_args:
+        def __get__(self):
+            return self.cat_.NArgs()
+
+    def matches(self, other):
+        return self._matches(other)
+
+    cdef bint _matches(self, PyCat other):
+        return self.cat_.Matches(other.cat_)
+
+    def arg(self, i):
+        return PyCat.from_ptr(self.cat_.Arg(i))
+
 
 cdef class Parse:
     cdef NodeType node
     cdef public bint suppress_feat
 
-    cdef Parse from_ptr(self, NodeType node):
-        self.node = node
-        return self
+    @staticmethod
+    cdef Parse from_ptr(NodeType node):
+        p = Parse()
+        p.node = node
+        return p
 
     def __cinit__(self):
         self.suppress_feat = False
         # self.node.reset(<const Node*>new const Leaf("fail", Category.Parse("NP"), 0))
+
+    property cat:
+        def __get__(self):
+            return PyCat.from_ptr(deref(self.node).GetCategory())
+
+    def __len__(self):
+        return deref(self.node).GetLength()
+
+    property left_child:
+        def __get__(self):
+            return Parse.from_ptr(<NodeType>deref(self.node).GetLeftChild())
+
+    property right_child:
+        def __get__(self):
+            return Parse.from_ptr(<NodeType>deref(self.node).GetRightChild())
+
+    property is_leaf:
+        def __get__(self):
+            return deref(self.node).IsLeaf()
+
+    # property head_leaf:
+    #     def __get__(self):
+    #         return Parse.from_ptr(deref(self.node).GetHeadLeaf())
+    #
+    property start_of_span:
+        def __get__(self):
+            return deref(self.node).GetStartOfSpan()
+
+    property word:
+        def __get__(self):
+            return deref(self.node).GetWord()
+
+    property head_id:
+        def __get__(self):
+            return deref(self.node).GetHeadId()
+
+    property dependency_length:
+        def __get__(self):
+            return deref(self.node).GetDependencyLength()
+
+    property head_is_left:
+        def __get__(self):
+            return deref(self.node).HeadIsLeft()
+
+    property is_unary:
+        def __get__(self):
+            return deref(self.node).IsUnary()
+
+    property num_descendants:
+        def __get__(self):
+            return deref(self.node).NumDescendants()
+
+    property right_num_descendants:
+        def __get__(self):
+            return deref(self.node).RightNumDescendants()
+
+    property left_num_descendants:
+        def __get__(self):
+            return deref(self.node).LeftNumDescendants()
 
     def __str__(self):
         return self.auto
@@ -231,8 +446,7 @@ cdef class PyAStarParser:
     cdef Parse _parse_tag(self, str sent, np.ndarray[np.float32_t, ndim=2] mat):
         cdef np.ndarray[np.float32_t, ndim=1] flatten = mat.flatten()
         cdef NodeType res = self.parser_.Parse(0, sent, <float*>flatten.data)
-        cdef Parse parse = Parse()
-        return parse.from_ptr(res)
+        return Parse.from_ptr(res)
 
     cdef Parse _parse_tag_and_dep(self, str sent,
                                   np.ndarray[np.float32_t, ndim=2] tag,
@@ -241,8 +455,7 @@ cdef class PyAStarParser:
         cdef np.ndarray[np.float32_t, ndim=1] flat_dep = dep.flatten()
         cdef NodeType res = self.parser_.Parse(
                 0, sent, <float*>flat_tag.data, <float*>flat_dep.data)
-        cdef Parse parse = Parse()
-        return parse.from_ptr(res)
+        return Parse.from_ptr(res)
 
     def parse_doc(self, sents, probs):
         return self._parse_doc_tag_and_dep(sents, probs)
@@ -263,12 +476,9 @@ cdef class PyAStarParser:
         cdef list res = []
         cdef Parse parse
         for i in range(len(sents)):
-            parse = Parse()
-            parse.from_ptr(cres[i])
+            parse = Parse.from_ptr(cres[i])
             res.append(parse)
         free(tags)
         free(deps)
         return res
 
-        # cdef Parse parse = Parse()
-        # return parse.from_ptr(res)

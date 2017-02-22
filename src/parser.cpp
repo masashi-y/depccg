@@ -22,28 +22,28 @@ namespace myccg {
 bool Parser::keep_going = true;
 
 void Parser::LoadSeenRules() {
-    logger_ << "loading seen rules .. ";
+    logger_(Info) << "loading seen rules .. ";
     use_seen_rules_ = true;
     try {
         seen_rules_ = utils::LoadSeenRules(model_ + "/seen_rules.txt");
     } catch(std::runtime_error) {
-        logger_ << "failed loading. will not use seen rules";
+        logger_(Info) << "failed loading. will not use seen rules";
         use_seen_rules_ = false;
     }
-    logger_ << "done";
+    logger_(Info) << "done";
 }
 
 void Parser::LoadCategoryDict() {
-    logger_ << "loading category dictionary .. ";
+    logger_(Info) << "loading category dictionary .. ";
     use_category_dict_ = true;
     try {
         category_dict_ = utils::LoadCategoryDict(
                 model_ + "/cat_dict.txt", tagger_->Targets());
     } catch(std::runtime_error) {
-        logger_ << Red("failed loading. will not use category dictionary");
+        logger_(Info) << Red("failed loading. will not use category dictionary");
         use_seen_rules_ = false;
     }
-    logger_ << "done";
+    logger_(Info) << "done";
 }
 
 
