@@ -217,7 +217,7 @@ NodeType DepAStarParser<Lang>::Parse(
     Base::logger_.CompleteOne(id, agenda_id);
 
     if (chart.IsEmpty()) {
-        Base::logger_ << "failed to parse: " << sent << std::endl;
+        Base::logger_(Info) << "failed to parse: " << sent << std::endl;
         return Base::failure_node;
     }
     auto res = chart(1,  -1)->GetBestParse();
