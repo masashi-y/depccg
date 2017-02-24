@@ -29,11 +29,11 @@ template<> Cat Category::GetRight<0>() const { return this; }
 Cat Category::Parse(const std::string& cat) {
     Cat res;
     if (Cacheable::Count(cat) > 0) {
-        return Cacheable::Get<Cat>(cat);
+        return Cacheable::Get(cat);
     } else {
         const std::string name = utils::DropBrackets(cat);
         if (Cacheable::Count(name) > 0) {
-            res = Cacheable::Get<Cat>(name);
+            res = Cacheable::Get(name);
         } else {
             res = ParseUncached(name);
             if (name != cat) {

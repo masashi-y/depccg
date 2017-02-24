@@ -9,7 +9,7 @@ namespace myccg {
     
 Feat Feature::Parse(const std::string& string) {
     if (Cacheable::Count(string) > 0) {
-        return Cacheable::Get<Feat>(string);
+        return Cacheable::Get(string);
     } else {
         Feat res;
         if (string.find(",") != std::string::npos)

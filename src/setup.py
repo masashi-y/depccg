@@ -36,12 +36,12 @@ ext_modules = [
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"],
                   language='c++'
                   ),
-        Extension("parser",
-                  sources,
-                  include_dirs=[".", numpy.get_include()],
-                  extra_compile_args=["-O3", "-std=c++11"],
-                  language='c++'
-                  ),
+        # Extension("parser",
+        #           sources,
+        #           include_dirs=[".", numpy.get_include()],
+        #           extra_compile_args=["-O3", "-std=c++11"],
+        #           language='c++'
+        #           ),
         ]
 
 setup(
