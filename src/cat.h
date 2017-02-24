@@ -12,7 +12,6 @@
 namespace myccg {
 
 class Category;
-class Slash;
 
 typedef const Category* Cat;
 typedef std::pair<Cat, Cat> CatPair;
@@ -45,7 +44,7 @@ private:
     char slash_;
 };
 
-class Category: public Cacheable
+class Category: public Cacheable<Category>
 {
 public:
     static Cat Parse(const std::string& cat);
@@ -120,8 +119,7 @@ public:
 
 protected:
     Category(const std::string& str, const std::string& semantics)
-        : str_(semantics.empty() ? str : str + "{" + semantics + "}") {
-    }
+        : str_(semantics.empty() ? str : str + "{" + semantics + "}") {}
 
 private:
     int id_;

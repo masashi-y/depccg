@@ -12,7 +12,7 @@ namespace myccg {
 class Feature;
 typedef const Feature* Feat;
 
-class Feature: public Cacheable
+class Feature: public Cacheable<Feature>
 {
 public:
     static Feat Parse(const std::string& string);

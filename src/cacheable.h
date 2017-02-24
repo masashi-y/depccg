@@ -2,34 +2,45 @@
 #ifndef INCLUDE_CACHEABLE_H_
 #define INCLUDE_CACHEABLE_H_
 
+#include <omp.h>
 #include <unordered_map>
 
 namespace myccg {
 
+template<typename T>
 class Cacheable
 {
 public:
-    Cacheable();
-    static std::unordered_map<std::string, const Cacheable*>& cache_() {
-        static std::unordered_map<std::string, const Cacheable*> cache;
+    typedef const T* Cached;
+    Cacheable() {
+    #pragma omp atomic capture
+        id_ = ids++;
+    }
+    static std::unordered_map<std::string, Cached>& cache_() {
+        static std::unordered_map<std::string, Cached> cache;
         return cache;
     }
-    bool operator==(const Cacheable& other) { return this->id_ == other.id_; }
-    bool operator==(const Cacheable& other) const { return this->id_ == other.id_; }
+    bool operator==(const Cacheable<T>& other) { return this->id_ == other.id_; }
+    bool operator==(const Cacheable<T>& other) const { return this->id_ == other.id_; }
     inline int GetId() const { return id_; }
-    void RegisterCache(const std::string& key) const;
+    void RegisterCache(const std::string& key) const {
+    #pragma omp critical(RegisterCache)
+        cache_().emplace(key, static_cast<Cached>(this));
+    }
     static unsigned Count(const std::string& string) { return cache_().count(string); }
 
 
-    template <typename T>
-    static T Get(const std::string& key) {
-        return static_cast<T>(cache_()[key]);
+    static Cached Get(const std::string& key) {
+        return cache_()[key];
     }
 
 private:
     static int ids;
     int id_;
 };
+
+template<typename T>
+int Cacheable<T>::ids = 0;
 
 } // namespace myccg
 
