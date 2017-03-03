@@ -59,7 +59,8 @@ NodeType DepAStarParser<Lang>::Parse(
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
     if (sent_size >= MAX_LENGTH)
-        return Base::failure_node;
+        return Base::Failed(sent, "input sentence exceeding max length");
+
     float best_tag_probs[MAX_LENGTH];
     float best_dep_probs[MAX_LENGTH];
     float p_tag_out[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
@@ -124,7 +125,7 @@ NodeType DepAStarParser<Lang>::Parse(
 
     Chart chart(sent_size);
 
-    while (chart.IsEmpty() && agenda.size() > 0) {
+    while (Base::keep_going && chart.IsEmpty() && agenda.size() > 0) {
 
         const AgendaItem item = agenda.top();
         if (item.fin) break;
@@ -216,10 +217,9 @@ NodeType DepAStarParser<Lang>::Parse(
     }
     Base::logger_.CompleteOne(id, agenda_id);
 
-    if (chart.IsEmpty()) {
-        Base::logger_(Info) << "failed to parse: " << sent << std::endl;
-        return Base::failure_node;
-    }
+    if (chart.IsEmpty())
+        return Base::Failed(sent, "no candidate parse found");
+
     auto res = chart(1,  -1)->GetBestParse();
     Base::logger_.CalculateNumOneBestTags(
             id, Base::tagger_, tag_scores, res);

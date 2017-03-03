@@ -413,12 +413,43 @@ cdef class Parse:
         def __get__(self):
             return CoNLL(self.node).Get()
 
+import os
+import json
+import chainer
+from py.ja_lstm_parser import JaLSTMParser
+from py.lstm_parser import LSTMParser
+from py.tagger import EmbeddingTagger
+from py.japanese_tagger import JaCCGEmbeddingTagger
+from py.ja_lstm_tagger import JaLSTMTagger
+from py.lstm_tagger import LSTMTagger
+from py.lstm_tagger_ph import PeepHoleLSTMTagger
+from py.ja_lstm_parser_ph import PeepHoleJaLSTMParser
+from py.lstm_parser_bi import BiaffineLSTMParser
+from py.precomputed_parser import PrecomputedParser
+from py.lstm_parser_bi_fast import FastBiaffineLSTMParser
+from py.ja_lstm_parser_bi import BiaffineJaLSTMParser
 
 cdef class PyAStarParser:
     cdef Tagger* tagger_
     cdef DepAStarParser[En]* parser_
+    cdef object py_tagger
+    cdef object use_seen_rules
+    cdef object use_cat_dict
+    cdef object use_beta
+    cdef object beta
+    cdef object pruning_size
+    cdef object batchsize
+    cdef object loglevel
 
-    def __cinit__(self, path, beta=0.00001, pruning_size=50):
+    def __cinit__(self, path,
+                  use_seen_rules=True,
+                  use_cat_dict=True,
+                  use_beta=True,
+                  beta=0.00001,
+                  pruning_size=50,
+                  batchsize=16,
+                  loglevel=3):
+
         self.tagger_ = new Tagger(path)
         self.parser_ = new DepAStarParser[En](
                         self.tagger_,
@@ -428,20 +459,54 @@ cdef class PyAStarParser:
                         headfirst_binary_rules,
                         beta,
                         pruning_size,
-                        Error)
+                        loglevel)
         cdef Parser* p = <Parser*>self.parser_
-        p.LoadSeenRules()
-        p.LoadCategoryDict()
-        # SetComparator(Comparator comp)
-        # SetBeta(float beta)
-        # SetUseBeta(bint use_beta)
-        # SetPruningSize(int prune)
 
-    def parse(self, sent, mat):
+        if use_seen_rules:
+            p.LoadSeenRules()
+        if use_cat_dict:
+            p.LoadCategoryDict()
+        if not use_beta:
+            p.SetUseBeta(False)
+
+        with open(os.path.join(path, "tagger_defs.txt")) as f:
+            self.py_tagger = eval(json.load(f)["model"])(path)
+        model = os.path.join(path, "tagger_model")
+        chainer.serializers.load_npz(model, self.py_tagger)
+
+        self.use_seen_rules = use_seen_rules
+        self.use_cat_dict   = use_cat_dict
+        self.use_beta       = use_beta
+        self.beta           = beta
+        self.pruning_size   = pruning_size
+        self.batchsize      = batchsize
+        self.loglevel       = loglevel
+
+    def parse(self, sent):
+        if not isinstance(sent, list) \
+            and isinstance(sent, (str, unicode)):
+            splitted = sent.split(" ")
+        else:
+            splitted = sent
+            sent = " ".join(sent)
+
+        [mat] = self.py_tagger.predict([splitted])
         if isinstance(mat, (tuple, list)):
             return self._parse_tag_and_dep(sent, mat[0], mat[1])
         else:
             return self._parse_tag(sent, mat)
+
+    def parse_doc(self, sents):
+        if not isinstance(sents[0], list) \
+            and isinstance(sents[0], (str, unicode)):
+            splitted = [s.split(" ") for s in sents]
+        else:
+            splitted = sents
+            sents = [" ".join(s) for s in sents]
+
+        probs = self.py_tagger.predict_doc(splitted, batchsize=self.batchsize)
+        print "tagging done"
+        return self._parse_doc_tag_and_dep(sents, probs)
 
     cdef Parse _parse_tag(self, str sent, np.ndarray[np.float32_t, ndim=2] mat):
         cdef np.ndarray[np.float32_t, ndim=1] flatten = mat.flatten()
@@ -457,9 +522,6 @@ cdef class PyAStarParser:
                 0, sent, <float*>flat_tag.data, <float*>flat_dep.data)
         return Parse.from_ptr(res)
 
-    def parse_doc(self, sents, probs):
-        return self._parse_doc_tag_and_dep(sents, probs)
-
     cdef list _parse_doc_tag_and_dep(self, list sents, list probs):
         cdef int doc_size = len(sents), i
         cdef np.ndarray[np.float32_t, ndim=2] cat_scores, dep_scores
@@ -472,6 +534,7 @@ cdef class PyAStarParser:
             dep_flat_scores = dep_scores.flatten()
             tags[i] = <float*>cat_flat_scores.data
             deps[i] = <float*>dep_flat_scores.data
+        print "start parsing"
         cdef vector[NodeType] cres = self.parser_.ParseDoc(sents, tags, deps)
         cdef list res = []
         cdef Parse parse

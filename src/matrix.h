@@ -8,11 +8,11 @@
 namespace myccg {
 
 #define IGNORE -1
-// #define CHECK(y, t) if ((y) != IGNORE || (y) != (t)) { \
-//             throw std::runtime_error(#y" :shape error detected"); }
-#define CHECK(y, t) NULL;
 
 
+// just wrap a pointer to 2d matrix
+// does not own the pointer and not delete it
+// in the deconstructor
 template<typename T>
 class Matrix
 {
@@ -50,7 +50,6 @@ public:
     }
 
     Matrix<T> Reshaped(int row, int column) {
-        ShapeCheck(IGNORE, IGNORE, row * column);
         row_ = row;
         column_ = column;
         return *this;
@@ -86,12 +85,6 @@ public:
     int Size() const { return size_; }
     int Column() const { return column_; }
     int Row() const { return row_; }
-
-    void ShapeCheck(int row, int column, int size) {
-        CHECK(row, row_);
-        CHECK(column, column_);
-        CHECK(size, size_);
-    }
 
 private:
     T* data_;

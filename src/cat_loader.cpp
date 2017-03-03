@@ -22,7 +22,8 @@ Cat GetCategory(const std::string& str) {
     // return cat;
 }
 
-std::unordered_set<CatPair> LoadSeenRules(const std::string& filename) {
+std::unordered_set<CatPair> LoadSeenRules(const std::string& filename,
+                                          Cat (*Preprocess)(Cat)) {
     auto res = std::unordered_set<CatPair>();
     std::ifstream in(filename);
     if (!in)
@@ -38,9 +39,9 @@ std::unordered_set<CatPair> LoadSeenRules(const std::string& filename) {
         if (line.size() == 0) continue;
         std::stringstream ss(line);
         ss >> buf;
-        Cat ca1 = GetCategory(buf);
+        Cat ca1 = Preprocess(Category::Parse(buf));
         ss >> buf;
-        Cat ca2 = GetCategory(buf);
+        Cat ca2 = Preprocess(Category::Parse(buf));
         auto p = CatPair(ca1, ca2);
         res.insert(p);
     }
