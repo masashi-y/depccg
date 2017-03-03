@@ -22,7 +22,7 @@ std::unordered_map<std::string, std::vector<bool>>
 LoadCategoryDict(const std::string& filename, const std::vector<Cat>& targets);
 
 std::unordered_set<CatPair>
-LoadSeenRules(const std::string& filename);
+LoadSeenRules(const std::string& filename, Cat (*Preprocess)(Cat));
 
 } // namespace utils
 } // namespace myccg

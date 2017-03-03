@@ -28,7 +28,7 @@ class Biaffine(link.Link):
         xp = cuda.get_array_module(x1.data)
         return F.matmul(
                 F.concat([x1, xp.ones((x1.shape[0], 1), 'f')]),
-                F.matmul(self.W, F.transpose(x2)))
+                F.matmul(self.W, x2, transb=True))
 
 
 class Bilinear(link.Link):

@@ -13,19 +13,20 @@
 #include "parser.h"
 #include "configure.h"
 #include "debug.h"
-#include "grammar.h"
 #include "matrix.h"
 #include "chart.h"
+#include "grammar.h"
 
 namespace myccg {
 
 bool Parser::keep_going = true;
 
-void Parser::LoadSeenRules() {
+template<typename Lang>
+void AStarParser<Lang>::LoadSeenRules() {
     logger_(Info) << "loading seen rules .. ";
     use_seen_rules_ = true;
     try {
-        seen_rules_ = utils::LoadSeenRules(model_ + "/seen_rules.txt");
+        seen_rules_ = SeenRules<Lang>(model_ + "/seen_rules.txt");
     } catch(std::runtime_error) {
         logger_(Info) << "failed loading. will not use seen rules";
         use_seen_rules_ = false;
@@ -33,7 +34,8 @@ void Parser::LoadSeenRules() {
     logger_(Info) << "done";
 }
 
-void Parser::LoadCategoryDict() {
+template<typename Lang>
+void AStarParser<Lang>::LoadCategoryDict() {
     logger_(Info) << "loading category dictionary .. ";
     use_category_dict_ = true;
     try {
@@ -41,11 +43,18 @@ void Parser::LoadCategoryDict() {
                 model_ + "/cat_dict.txt", tagger_->Targets());
     } catch(std::runtime_error) {
         logger_(Info) << Red("failed loading. will not use category dictionary");
-        use_seen_rules_ = false;
+        use_category_dict_ = false;
     }
     logger_(Info) << "done";
 }
 
+NodeType Parser::Failed(const std::string& sent, const std::string& message) {
+    static NodeType failure_node =
+        std::make_shared<Leaf>("fail", Category::Parse("NP"), 0);
+    logger_(Info) << "failed to parse: " << sent
+                  << " : " << message << std::endl;
+    return failure_node;
+}
 
 template<typename Lang>
 bool AStarParser<Lang>::IsAcceptableRootOrSubtree(Cat cat, int span_len, int s_len) const {
@@ -58,62 +67,21 @@ template<typename Lang>
 bool AStarParser<Lang>::IsSeen(Cat left, Cat right) const {
     if (! use_seen_rules_)
         return true;
-    return (seen_rules_.count(
-                std::make_pair(left, right)) > 0);
+    return seen_rules_.IsSeen(left, right);
 }
 
-// template<>
-// bool AStarParser<Ja>::IsSeen(Cat left, Cat right) const {
-//     if (! use_seen_rules_)
-//         return true;
-//     return (seen_rules_.count(
-//                 std::make_pair(left->StripFeat(),
-//                     right->StripFeat())) > 0);
-// }
-
-template<>
-bool AStarParser<En>::IsSeen(Cat left, Cat right) const {
-    if (! use_seen_rules_)
-        return true;
-    return (seen_rules_.count(
-                std::make_pair(left->StripFeat("[X]", "[nb]"),
-                    right->StripFeat("[X]", "[nb]"))) > 0);
+template<> template<>
+Cat AStarParser<En>::SeenRules<En>::Preprocess(Cat cat) {
+    return cat->StripFeat("[X]", "[nb]");
 }
 
+template<> template<>
+Cat AStarParser<En>::CachedRules<En>::Preprocess(Cat cat) {
+    return cat->StripFeat("[nb]");
+}
 template<typename Lang>
 std::vector<RuleCache>& AStarParser<Lang>::GetRules(Cat left, Cat right) {
-    auto key = std::make_pair(left, right);
-    if (rule_cache_.count(key) > 0)
-        return rule_cache_[key];
-    std::vector<RuleCache> tmp;
-    for (auto rule: binary_rules_) {
-        if (rule->CanApply(left, right)) {
-            tmp.emplace_back(rule->Apply(left, right),
-                        rule->HeadIsLeft(left, right), rule);
-        }
-    }
-    #pragma omp critical(GetRules)
-    rule_cache_.emplace(key, std::move(tmp));
-    return rule_cache_[key];
-}
-
-template<>
-std::vector<RuleCache>& AStarParser<En>::GetRules(Cat left1, Cat right1) {
-    Cat left = left1->StripFeat("[nb]");
-    Cat right = right1->StripFeat("[nb]");
-    auto key = std::make_pair(left, right);
-    if (rule_cache_.count(key) > 0)
-        return rule_cache_[key];
-    std::vector<RuleCache> tmp;
-    for (auto rule: binary_rules_) {
-        if (rule->CanApply(left, right)) {
-            tmp.emplace_back(rule->Apply(left, right),
-                        rule->HeadIsLeft(left, right), rule);
-        }
-    }
-    #pragma omp critical(GetRules)
-    rule_cache_.emplace(key, std::move(tmp));
-    return rule_cache_[key];
+    return rule_cache_.GetRules(left, right);
 }
 
 template<typename Lang>
@@ -149,12 +117,11 @@ float GetLengthPenalty(NodeType left, NodeType right) {
 }
 
 template<typename Lang>
-NodeType AStarParser<Lang>::Parse(
-        int id, const std::string& sent, float* scores) {
+NodeType AStarParser<Lang>::Parse(int id, const std::string& sent, float* scores) {
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
     if (sent_size >= MAX_LENGTH)
-        return failure_node;
+        return Failed(sent, "input sentence exceeding max length");
     float best_in_probs[MAX_LENGTH];
     float p_out[(MAX_LENGTH + 1) * (MAX_LENGTH + 1)];
     Matrix<float> out_probs(p_out, sent_size + 1, sent_size + 1);
@@ -205,7 +172,7 @@ NodeType AStarParser<Lang>::Parse(
 
     Chart chart(sent_size);
 
-    while (chart.IsEmpty() && agenda.size() > 0) {
+    while (keep_going && chart.IsEmpty() && agenda.size() > 0) {
 
         const AgendaItem item = agenda.top();
         agenda.pop();
@@ -278,10 +245,9 @@ NodeType AStarParser<Lang>::Parse(
 
     logger_.CompleteOne(id, agenda_id);
 
-    if (chart.IsEmpty()) {
-        logger_ << "failed to parse: " << sent << std::endl;
-        return failure_node;
-    }
+    if (chart.IsEmpty())
+        return Failed(sent, "no candidate parse found");
+
     auto res = chart(1,  -1)->GetBestParse();
     logger_.CalculateNumOneBestTags(id, tagger_, scores, res);
     return res;
