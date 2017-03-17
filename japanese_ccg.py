@@ -8,10 +8,25 @@ combinators = ["<", ">", "ADNext", "ADNint", "ADV0",
                "ADV1", "ADV2", ">B", "<B1", "<B2", "<B3",
                "<B4", ">Bx1", ">Bx2", ">Bx3", "SSEQ"]
 
+
+class JaCCGReader(object):
+    def __init__(self, filepath):
+        self.filepath = filepath
+
+    def readall(self):
+        res = []
+        for line in open(self.filepath):
+            line = line.strip().decode("utf-8")
+            if len(line) == 0: continue
+            res.append(JaCCGLineReader(line).parse())
+        return res
+
+
 class JaCCGLineReader(object):
     def __init__(self, line):
         self.line = line
         self.index = 0
+        self.word_id = -1
 
     def next(self, target):
         end = self.line.find(target, self.index)
@@ -38,16 +53,18 @@ class JaCCGLineReader(object):
             return self.parse_leaf
 
     def parse_leaf(self):
+        self.word_id += 1
         self.check("{")
         cate = self.next(" ")[1:].encode("utf-8")
-        cate = cate[:cate.rfind("_")]
+        cate = cate[:cate.find("_")]
         cate = cat.parse(cate)
         word = self.next("}")[:-1].split("/")[0]
-        return Leaf(word, cate, 0)
+        return Leaf(word, cate, self.word_id)
 
     def parse_tree(self):
         self.check("{")
-        self.next(" ")
+        op = self.next(" ")
+        op = op[1:]
         cate = cat.parse(self.next(" ").encode("utf-8"))
         left_is_head = True # TODO
         self.check("{")
@@ -57,7 +74,7 @@ class JaCCGLineReader(object):
             if self.peek() == " ":
                 self.next(" ")
         self.next("}")
-        return Tree(cate, left_is_head, children, combinator.UnaryRule())
+        return Tree(cate, left_is_head, children, op)
 
 def test():
     sents = \
@@ -72,4 +89,5 @@ def test():
             if not isinstance(tree, Leaf):
                 tree.show_derivation()
 
-test()
+# test()
+
