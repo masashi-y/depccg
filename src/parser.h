@@ -35,7 +35,7 @@ public:
       pruning_size_(pruning_size),
       logger_(loglevel) {}
 
-    virtual ~Parser() = 0;
+    virtual ~Parser() {};
 
     virtual void LoadSeenRules() = 0;
     virtual void LoadCategoryDict() = 0;

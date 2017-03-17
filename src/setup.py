@@ -5,7 +5,7 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy
 
-sources = ["parse.pyx",
+sources = ["depccg.pyx",
            "cat.cpp",
            "cat_loader.cpp",
            "chainer_tagger.cpp",
@@ -35,13 +35,13 @@ ext_modules = [
                   extra_compile_args=["-O3", "-ffast-math", "-fPIC"],
                   language='c++'
                   ),
-        # Extension("parser",
-        #           sources,
-        #           include_dirs=[".", numpy.get_include()],
-        #           extra_link_args=["-fopenmp"],
-        #           extra_compile_args=["-O3", "-std=c++11", "-march=native", "-fpic", "-fopenmp"],
-        #           language='c++'
-        #           ),
+        Extension("depccg",
+                  sources,
+                  include_dirs=[".", numpy.get_include()],
+                  extra_link_args=["-fopenmp"],
+                  extra_compile_args=["-O3", "-std=c++11", "-march=native", "-fpic", "-fopenmp"],
+                  language='c++'
+                  ),
         ]
 
 setup(
