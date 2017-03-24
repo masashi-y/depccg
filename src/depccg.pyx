@@ -414,6 +414,7 @@ cdef class Parse:
             return CoNLL(self.node).Get()
 
 import os
+import sys
 import json
 import chainer
 from py.ja_lstm_parser import JaLSTMParser
@@ -428,6 +429,7 @@ from py.lstm_parser_bi import BiaffineLSTMParser
 from py.precomputed_parser import PrecomputedParser
 from py.lstm_parser_bi_fast import FastBiaffineLSTMParser
 from py.ja_lstm_parser_bi import BiaffineJaLSTMParser
+from libc.string cimport memcpy
 
 cdef class PyAStarParser:
     cdef Tagger* tagger_
@@ -472,7 +474,10 @@ cdef class PyAStarParser:
         with open(os.path.join(path, "tagger_defs.txt")) as f:
             self.py_tagger = eval(json.load(f)["model"])(path)
         model = os.path.join(path, "tagger_model")
-        chainer.serializers.load_npz(model, self.py_tagger)
+        if os.path.exists(model):
+            chainer.serializers.load_npz(model, self.py_tagger)
+        else:
+            print >> sys.stderr, "not loading parser model"
 
         self.use_seen_rules = use_seen_rules
         self.use_cat_dict   = use_cat_dict
@@ -524,18 +529,16 @@ cdef class PyAStarParser:
 
     cdef list _parse_doc_tag_and_dep(self, list sents, list probs):
         cdef int doc_size = len(sents), i
-        cdef np.ndarray[np.float32_t, ndim=2] cat_scores, dep_scores
-        cdef np.ndarray[np.float32_t, ndim=1] cat_flat_scores, dep_flat_scores
+        cdef np.ndarray[float, ndim=2, mode="c"] cat_scores, dep_scores
         cdef vector[string] csents = sents
+        cdef float *tt, *dd
         cdef float **tags = <float**>malloc(doc_size * sizeof(float*))
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
         for i, _, (cat_scores, dep_scores) in probs:
-            cat_flat_scores = cat_scores.flatten()
-            dep_flat_scores = dep_scores.flatten()
-            tags[i] = <float*>cat_flat_scores.data
-            deps[i] = <float*>dep_flat_scores.data
+            tags[i] = &cat_scores[0, 0]
+            deps[i] = &dep_scores[0, 0]
         print "start parsing"
-        cdef vector[NodeType] cres = self.parser_.ParseDoc(sents, tags, deps)
+        cdef vector[NodeType] cres = self.parser_.ParseDoc(csents, tags, deps)
         cdef list res = []
         cdef Parse parse
         for i in range(len(sents)):

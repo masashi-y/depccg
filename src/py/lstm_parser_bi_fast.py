@@ -18,6 +18,7 @@ from py_utils import read_pretrained_embeddings, read_model_defs
 from tree import Leaf, Tree, get_leaves
 from biaffine import Biaffine, Bilinear
 from param import Param
+from fixed_length_n_step_lstm import FixedLengthNStepLSTM
 
 from lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
 from lstm_tagger import log, get_suffix, get_prefix, normalize
@@ -31,6 +32,18 @@ def scanl(f, base, l):
         acc = f(acc, x)
         res += [acc]
     return res
+
+
+class Linear(L.Linear):
+
+    def __call__(self, x):
+        shape = x.shape
+        if len(shape) == 3:
+            x = F.reshape(x, (-1, shape[2]))
+        y = super(Linear, self).__call__(x)
+        if len(shape) == 3:
+            y = F.reshape(y, (shape[0], shape[1], -1))
+        return y
 
 
 def concat_examples(batch, device=None):
@@ -48,10 +61,10 @@ def concat_examples(batch, device=None):
 
     result = [to_device(_concat_arrays([s[0] for s in batch], -1)), # ws
               to_device(_concat_arrays([s[1] for s in batch], -1)), # ps
-              to_device(_concat_arrays([s[2] for s in batch], -1))] # ss
+              to_device(_concat_arrays([s[2] for s in batch], -1)), # ss
+              [s[3] for s in batch]]                                # ls
 
     if len(batch[0]) == 7:
-        result.append([s[3] for s in batch])                       # ls
         result.append([to_device(s[4]) for s in batch])            # cat_ts
         result.append([to_device(s[5]) for s in batch])            # dep_ts
         result.append(to_device(_concat_arrays([s[6] for s in batch], None))) # weights
@@ -73,7 +86,7 @@ class FastBiaffineLSTMParser(chainer.Chain):
         if word_dim is None:
             self.train = False
             Param.load(self, defs_file)
-            self.extractor = FeatureExtractor(model_path)
+            self.extractor = FeatureExtractor(model_path, length=True)
         else:
             # training
             self.train = True
@@ -95,12 +108,12 @@ class FastBiaffineLSTMParser(chainer.Chain):
                 emb_word=L.EmbedID(self.n_words, self.word_dim, ignore_label=IGNORE),
                 emb_suf=L.EmbedID(self.n_suffixes, self.afix_dim, ignore_label=IGNORE),
                 emb_prf=L.EmbedID(self.n_prefixes, self.afix_dim, ignore_label=IGNORE),
-                lstm_f=L.NStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
-                lstm_b=L.NStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
-                arc_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
-                arc_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
-                rel_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
-                rel_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
+                lstm_f=FixedLengthNStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
+                lstm_b=FixedLengthNStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
+                arc_dep=Linear(2 * self.hidden_dim, self.dep_dim),
+                arc_head=Linear(2 * self.hidden_dim, self.dep_dim),
+                rel_dep=Linear(2 * self.hidden_dim, self.dep_dim),
+                rel_head=Linear(2 * self.hidden_dim, self.dep_dim),
                 biaffine_arc=Biaffine(self.dep_dim),
                 biaffine_tag=Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
 
@@ -143,44 +156,43 @@ class FastBiaffineLSTMParser(chainer.Chain):
             }, self)
         return cat_loss + dep_loss
 
-    def forward(self, ws, ss, ps, dep_ts=None):
-        batchsize = len(ws)
+    def forward(self, ws, ss, ps, ls, dep_ts=None):
+        batchsize, slen = ws.shape
         xp = chainer.cuda.get_array_module(ws[0])
-        split = scanl(lambda x,y: x+y, 0, [w.shape[0] for w in ws])[1:-1]
 
-        wss = self.emb_word(F.hstack(ws))
-        sss = F.reshape(self.emb_suf(F.vstack(ss)), (-1, 4 * self.afix_dim))
-        pss = F.reshape(self.emb_prf(F.vstack(ps)), (-1, 4 * self.afix_dim))
-        ins = F.dropout(F.concat([wss, sss, pss]), self.dropout_ratio, train=self.train)
-
-        xs_f = list(F.split_axis(ins, split, 0)) if batchsize > 1 else [ins]
-        xs_b = [x[::-1] for x in xs_f]
+        wss = self.emb_word(ws)
+        sss = F.reshape(self.emb_suf(ss), (batchsize, slen, 4 * self.afix_dim))
+        pss = F.reshape(self.emb_prf(ps), (batchsize, slen, 4 * self.afix_dim))
+        ins = F.dropout(F.concat([wss, sss, pss], 2), self.dropout_ratio, train=self.train)
+        xs_f = F.transpose(ins, (1, 0, 2))
+        xs_b = xs_f[::-1]
 
         cx_f, hx_f, cx_b, hx_b = self._init_state(xp, batchsize)
         _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
         _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
-        hs_b = [x[::-1] for x in hs_b]
-        # ys: [(sentence length, number of category)]
-        hs = [F.concat([h_f, h_b]) for h_f, h_b in zip(hs_f, hs_b)]
 
-        dep_ys = [self.biaffine_arc(
-            F.elu(F.dropout(self.arc_dep(h), 0.32, train=self.train)),
-            F.elu(F.dropout(self.arc_head(h), 0.32, train=self.train))) for h in hs]
+        # (batch, length, hidden_dim)
+        hs = F.transpose(F.concat([hs_f, hs_b[::-1]], 2), (1, 0, 2))
+
+        dep_ys = self.biaffine_arc(
+            F.elu(F.dropout(self.arc_dep(hs), 0.32, train=self.train)),
+            F.elu(F.dropout(self.arc_head(hs), 0.32, train=self.train)))
 
         if dep_ts is not None and random.random >= 0.5:
             heads = dep_ts
         else:
-            heads = [F.argmax(y, axis=1) for y in dep_ys]
+            heads = F.flatten(F.argmax(dep_ys, axis=2)) + \
+                    xp.repeat(xp.arange(0, batchsize * slen, slen), slen)
 
+        hs = F.reshape(hs, (batchsize * slen, -1))
         heads = F.elu(F.dropout(
-            self.rel_head(
-                F.vstack([F.embed_id(t, h, ignore_label=IGNORE) for h, t in zip(hs, heads)])),
-            0.32, train=self.train))
+                self.rel_head(F.permutate(hs, heads)), 0.32, train=self.train))
 
-        childs = F.elu(F.dropout(self.rel_dep(F.vstack(hs)), 0.32, train=self.train))
+        childs = F.elu(F.dropout(self.rel_dep(hs), 0.32, train=self.train))
         cat_ys = self.biaffine_tag(childs, heads)
 
-        cat_ys = list(F.split_axis(cat_ys, split, 0)) if batchsize > 1 else [cat_ys]
+        dep_ys = [F.reshape(v, v.shape[1:])[:l, :l] for v, l in zip(F.split_axis(dep_ys, batchsize, 0), ls)] if batchsize > 1 else [dep_ys]
+        cat_ys = [v[:l] for v, l in zip(F.split_axis(cat_ys, batchsize, 0), ls)] if batchsize > 1 else [cat_ys]
 
         return cat_ys, dep_ys
 
@@ -189,19 +201,21 @@ class FastBiaffineLSTMParser(chainer.Chain):
         batch: list of splitted sentences
         """
         xs = [self.extractor.process(x) for x in xs]
-        ws, ss, ps = zip(*xs)
-        cat_ys, dep_ys = self.forward(ws, ss, ps)
+        ws, ss, ps, ls = concat_examples(xs)
+        cat_ys, dep_ys = self.forward(ws, ss, ps, ls)
         return zip([F.log_softmax(y[1:-1]).data for y in cat_ys],
                 [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
 
-    def predict_doc(self, doc, batchsize=16):
+    def predict_doc(self, doc, batchsize=32):
         """
         doc list of splitted sentences
         """
         res = []
+        doc = sorted(enumerate(doc), key=lambda x: len(x[1]))
         for i in xrange(0, len(doc), batchsize):
-            res.extend([(i + j, 0, y)
-                for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
+            ids, batch = zip(*doc[i:i + batchsize])
+            pred = self.predict(batch)
+            res.extend([(j, 0, y) for j, y in zip(ids, pred)])
         return res
 
     def _init_state(self, xp, batchsize):
