@@ -173,7 +173,7 @@ class TrainingDataCreator(object):
 
 
 class FeatureExtractor(object):
-    def __init__(self, model_path):
+    def __init__(self, model_path, length=False):
         self.words = read_model_defs(model_path + "/words.txt")
         self.suffixes = read_model_defs(model_path + "/suffixes.txt")
         self.prefixes = read_model_defs(model_path + "/prefixes.txt")
@@ -186,6 +186,7 @@ class FeatureExtractor(object):
         self.start_suf = [[self.suffixes[START]] + [IGNORE] * 3]
         self.end_pre = [[self.prefixes[END]] + [IGNORE] * 3]
         self.end_suf = [[self.suffixes[END]] + [IGNORE] * 3]
+        self.length = length
 
     def process(self, words):
         """
@@ -198,7 +199,10 @@ class FeatureExtractor(object):
             f, self.unk_suf) for f in get_suffix(x)] for x in words] + self.end_suf, 'i')
         p = np.asarray(self.start_pre + [[self.prefixes.get(
             f, self.unk_prf) for f in get_prefix(x)] for x in words] + self.end_pre, 'i')
-        return w, s, p
+        if not self.length:
+            return w, s, p
+        else:
+            return w, s, p, w.shape[0]
 
 
 class LSTMParserDataset(chainer.dataset.DatasetMixin):

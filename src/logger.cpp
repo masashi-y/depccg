@@ -95,10 +95,10 @@ void ParserLogger::CompleteOne() {
 }
 
 void ParserLogger::CompleteOne(int id, int agenda_size) {
+    CompleteOne();
     if (! do_statistics_)
         return;
     agenda_sizes_[id] = agenda_size;
-    CompleteOne();
 }
 void ParserLogger::CalculateNumOneBestTags(
         int id, Tagger* tagger, float* probs, NodeType parse) {

@@ -32,7 +32,7 @@ def calc_acc(preds, targets, name="tagging"):
     totals = len([i for a in preds for i in a])
     assert len(preds) == len(targets)
     for y, t in zip(preds, targets):
-        assert len(y) == len(t)
+        assert len(y) == len(t), "{}: len(y) = {} != len(t) = {}".format(name, len(y), len(t))
         for yy, tt in zip(y, t):
             if yy == tt: corrects += 1
 
@@ -66,13 +66,14 @@ if args.save is not None:
 if isinstance(tagger, Parser):
     pred_tags = [[tagger.cats[i] for i in y.argmax(1)] for _,_,(y,_) in res]
     pred_deps = [y.argmax(1) for _,_,(_,y) in res]
-    tags = [t for t, _ in target]
-    deps = [t for _, t in target]
+    tags = [target[i][0] for i,_,_ in res]
+    deps = [target[i][1] for i,_,_ in res]
     calc_acc(pred_tags, tags, name="tagging")
     calc_acc(pred_deps, deps, name="parsing")
 else:
     preds = [[tagger.cats[i] for i in y.argmax(1)] for _,_,y in res]
     tags = target
+    tags = [target[i] for i,_,_ in res]
     calc_acc(preds, tags, name="tagging")
 
 # from chainer.training import extension

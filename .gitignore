@@ -8,3 +8,6 @@ __pycache__
 model_all
 tmp
 models
+*.d
+*.o
+data

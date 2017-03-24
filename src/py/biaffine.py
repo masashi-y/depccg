@@ -24,11 +24,29 @@ class Biaffine(link.Link):
         self.add_param('W', (in_size + 1, in_size),
                        initializer=self._W_initializer)
 
-    def __call__(self, x1, x2):
+    def forward_one(self, x1, x2):
         xp = cuda.get_array_module(x1.data)
         return F.matmul(
-                F.concat([x1, xp.ones((x1.shape[0], 1), 'f')]),
-                F.matmul(self.W, x2, transb=True))
+                F.concat([x1, xp.ones((x1.shape[0], 1), 'f')]), # (slen, hidden+1)
+                F.matmul(self.W, x2, transb=True)) # (hidden+1, hidden) * (slen, hidden)^T
+
+    def forward_batch(self, x1, x2):
+        xp = cuda.get_array_module(x1.data)
+        batch, slen, hidden = x2.shape
+        return F.batch_matmul(
+                F.concat([x1, xp.ones((batch, slen, 1), 'f')], 2), # (batch, slen, hidden+1)
+                F.reshape(F.linear(F.reshape(x2, (batch * slen, -1)), self.W),
+                    (batch, slen, -1)), transb=True)
+
+
+    def __call__(self, x1, x2):
+        dim = len(x1.shape)
+        if dim == 3:
+            return self.forward_batch(x1, x2)
+        elif dim == 2:
+            return self.forward_one(x1, x2)
+        else:
+            raise RuntimeError()
 
 
 class Bilinear(link.Link):
