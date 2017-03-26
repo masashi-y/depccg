@@ -206,10 +206,10 @@ class FeatureExtractor(object):
 
 
 class LSTMParserDataset(chainer.dataset.DatasetMixin):
-    def __init__(self, model_path, samples_path):
+    def __init__(self, model_path, samples_path, length=False):
         self.model_path = model_path
         self.targets = read_model_defs(model_path + "/target.txt")
-        self.extractor = FeatureExtractor(model_path)
+        self.extractor = FeatureExtractor(model_path, length)
         with open(samples_path) as f:
             self.samples = json.load(f)
 
@@ -218,17 +218,17 @@ class LSTMParserDataset(chainer.dataset.DatasetMixin):
 
     def get_example(self, i):
         words, [cats, deps] = self.samples[i]
-        w, s, p = self.extractor.process(words.split(" "))
+        feat = self.extractor.process(words.split(" "))
         cats = np.array([IGNORE] + [self.targets.get(x, IGNORE) for x in cats] + [IGNORE], 'i')
         deps = np.array([IGNORE] + deps + [IGNORE], 'i')
-        return w, s, p, cats, deps
+        return feat + (cats, deps)
 
 
 class LSTMParserTriTrainDataset(chainer.dataset.DatasetMixin):
-    def __init__(self, model_path, ccgbank_path, tritrain_path, weight):
+    def __init__(self, model_path, ccgbank_path, tritrain_path, weight, length=False):
         self.model_path = model_path
         self.targets = read_model_defs(model_path + "/target.txt")
-        self.extractor = FeatureExtractor(model_path)
+        self.extractor = FeatureExtractor(model_path, length)
         self.weight = weight
         self.ncopies = 15
         with open(ccgbank_path) as f:
@@ -260,10 +260,10 @@ class LSTMParserTriTrainDataset(chainer.dataset.DatasetMixin):
             words = words.split(" ")
             weight = np.array(1., 'f')
 
-        w, s, p = self.extractor.process(words)
+        feat = self.extractor.process(words)
         cats = np.array([IGNORE] + [self.targets.get(x, IGNORE) for x in cats] + [IGNORE], 'i')
         deps = np.array([IGNORE] + deps + [IGNORE], 'i')
-        return w, s, p, cats, deps, weight
+        return feat + (cats, deps, weight)
 
 
 class LSTMParser(chainer.Chain):

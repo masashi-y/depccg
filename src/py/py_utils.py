@@ -1,11 +1,10 @@
 
 import numpy as np
 
-from preshed.maps cimport PreshMap
 import cat
 import re
 
-cpdef str drop_brackets(str cat):
+def drop_brackets(cat):
     if cat.startswith('(') and \
         cat.endswith(')') and \
         find_closing_bracket(cat, 0) == len(cat)-1:
@@ -14,8 +13,8 @@ cpdef str drop_brackets(str cat):
         return cat
 
 
-cpdef int find_closing_bracket(str source, int start) except -1:
-    cdef int open_brackets = 0
+def find_closing_bracket(source, start):
+    open_brackets = 0
     for i, c in enumerate(source):
         if c == '(':
             open_brackets += 1
@@ -28,9 +27,8 @@ cpdef int find_closing_bracket(str source, int start) except -1:
     raise Exception("Mismatched brackets in string: " + source)
 
 
-cpdef int find_non_nested_char(str haystack, str needles):
-    cdef int open_brackets = 0
-
+def find_non_nested_char(haystack, needles):
+    open_brackets = 0
     # for i, c in enumerate(haystack):
     for i in range(len(haystack) -1, -1, -1):
         c = haystack[i]
@@ -44,12 +42,8 @@ cpdef int find_non_nested_char(str haystack, str needles):
     return -1
 
 
-cpdef list get_context_by_window(
-        list items, int window_size, object lpad, object rpad):
-    cdef list res = []
-    cdef list context
-    cdef int i, j
-    cdef object item
+def get_context_by_window(items, window_size, lpad, rpad):
+    res = []
     for i, item in enumerate(items):
         context = []
         if window_size - i > 0:
@@ -75,13 +69,8 @@ cpdef list get_context_by_window(
     return res
 
 
-cpdef np.ndarray[FLOAT_T, ndim=2] read_pretrained_embeddings(str filepath):
-    cdef object io
-    cdef int i, dim
-    cdef int nvocab = 0
-    cdef str line
-    cdef np.ndarray[FLOAT_T, ndim=2] res
-
+def read_pretrained_embeddings(filepath):
+    nvocab = 0
     io = open(filepath)
     dim = len(io.readline().split())
     io.seek(0)
@@ -97,28 +86,15 @@ cpdef np.ndarray[FLOAT_T, ndim=2] read_pretrained_embeddings(str filepath):
     return res
 
 
-cpdef dict read_model_defs(str filepath):
-    """
-    input file is made up of lines, "ITEM FREQUENCY".
-    """
-    cdef dict res = {}
-    cdef int i
-    cdef str line
-    cdef unicode word, _
-
+def read_model_defs(filepath):
+    res = {}
     for i, line in enumerate(open(filepath)):
         word, _ = line.strip().decode("utf-8").split(" ")
         res[word] = i
     return res
 
 
-cpdef dict load_unary(str filename):
-    cdef dict res = {}
-    cdef str line
-    cdef int comment
-    cdef list items
-    cdef object inp, out
-
+def load_unary(filename):
     for line in open(filename):
         comment = line.find("#")
         if comment > -1:
@@ -135,27 +111,4 @@ cpdef dict load_unary(str filename):
         else:
             res[inp] = [out]
     return res
-
-feat = re.compile("\[nb\]|\[X\]")
-cdef PreshMap load_seen_rules(str filename):
-    cdef PreshMap res = PreshMap()
-    cdef str line
-    cdef int comment
-    cdef list items
-    cdef object cat1, cat2
-
-    for line in open(filename):
-        comment = line.find("#")
-        if comment > -1:
-            line = line[:comment]
-        line = line.strip()
-        if len(line) == 0:
-            continue
-        items = line.split()
-        assert len(items) == 2
-        cat1 = cat.parse(feat.sub("", items[0]))
-        cat2 = cat.parse(feat.sub("", items[1]))
-        res[hash_int_int(cat1.id, cat2.id)] = 1
-    return res
-
 

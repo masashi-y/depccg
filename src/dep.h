@@ -40,10 +40,6 @@ public:
     NodeType Parse(int id, const std::string& sent, float* tag_scores) {
         return Base::Parse(id, sent, tag_scores);
     }
-    std::vector<NodeType> ParseDoc(const std::vector<std::string>& doc,
-                                float** tag_scores, float** dep_scores) {
-        return Parse(doc, tag_scores, dep_scores);
-    }
 };
 
 } // namespace myccg

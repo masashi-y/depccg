@@ -50,8 +50,6 @@ public:
     virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc) NO_IMPLEMENTATION
     virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc, float** scores) NO_IMPLEMENTATION
     virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc, float** tag_scores, float** dep_scores) NO_IMPLEMENTATION
-    // virtual std::vector<NodeType> ParseDoc(const std::vector<std::string>& doc,
-    //                             float** tag_scores, float** dep_scores) NO_IMPLEMENTATION
 
     // to capture SIGINT or SIGTERM
     static bool keep_going;
