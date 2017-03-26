@@ -23,6 +23,7 @@ cdef extern from "<iostream>" namespace "std":
         ostream& operator<< (const CoNLL& deriv)
     ostream cout
 
+
 cdef extern from "cat.h" namespace "myccg" nogil:
     ctypedef const Category* Cat
     cdef cppclass Category:
@@ -67,6 +68,7 @@ cdef extern from "cat.h" namespace "myccg" nogil:
         bint IsFunctionInto(Cat cat) const
         Cat ToMultiValue() const
         # Cat Substitute(Feat feat) const
+
 
 cdef extern from "tree.h" namespace "myccg" nogil:
     cdef cppclass Leaf:
@@ -134,9 +136,11 @@ cdef extern from "combinator.h" namespace "myccg" nogil:
         pass
     ctypedef const Combinator* Op
 
+
 cdef extern from "chainer_tagger.h" namespace "myccg" nogil:
     cdef cppclass Tagger:
         Tagger(const string& model)
+
 
 cdef extern from "grammar.h" namespace "myccg" nogil:
     cdef cppclass En:
@@ -152,12 +156,24 @@ cdef extern from "grammar.h" namespace "myccg" nogil:
     cdef const vector[Op]         ja_binary_rules           "myccg::Ja::binary_rules"
     cdef const vector[Op]         ja_headfinal_binary_rules "myccg::Ja::headfinal_binary_rules"
 
+
 cdef extern from "logger.h" namespace "myccg" nogil:
     enum LogLevel:
         Debug
         Info
         Warn
         Error
+
+    cdef cppclass ParserLogger:
+        void InitStatistics(int num_sents)
+        void ShowStatistics()
+        void RecordTimeStartRunning()
+        void RecordTimeEndOfTagging()
+        void RecordTimeEndOfParsing()
+        void Report()
+        void CompleteOne()
+        void CompleteOne(int id, int agenda_size)
+
 
 cdef extern from "parser_tools.h" namespace "myccg" nogil:
     cdef cppclass AgendaItem:
@@ -182,6 +198,7 @@ cdef extern from "parser.h" namespace "myccg" nogil:
         void SetBeta(float beta)
         void SetUseBeta(bint use_beta)
         void SetPruningSize(int prune)
+        ParserLogger& GetLogger()
 
     cdef cppclass AStarParser[Lang]:
         AStarParser(
@@ -516,6 +533,9 @@ cdef class PyAStarParser:
             return self._parse_tag(sent, mat)
 
     def parse_doc(self, sents):
+        cdef list res
+        cdef ParserLogger* logger = &self.parser_.GetLogger()
+
         if not isinstance(sents[0], list) \
             and isinstance(sents[0], (str, unicode)):
             splitted = [s.split(" ") for s in sents]
@@ -523,9 +543,14 @@ cdef class PyAStarParser:
             splitted = sents
             sents = [" ".join(s) for s in sents]
 
+        logger.InitStatistics(len(sents))
+        logger.RecordTimeStartRunning()
         probs = self.py_tagger.predict_doc(splitted, batchsize=self.batchsize)
-        print >> sys.stderr, "tagging done"
-        return self._parse_doc_tag_and_dep(sents, probs)
+        logger.RecordTimeEndOfTagging()
+        res = self._parse_doc_tag_and_dep(sents, probs)
+        logger.RecordTimeEndOfParsing()
+        logger.Report()
+        return res
 
     cdef Parse _parse_tag(self, str sent, np.ndarray[float, ndim=2, mode="c"] mat):
         cdef string csent = sent
@@ -547,7 +572,7 @@ cdef class PyAStarParser:
         for i, _, (cat_scores, dep_scores) in probs:
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
-        print >> sys.stderr, "start parsing"
+        if self.loglevel < 3: print >> sys.stderr, "start parsing"
         cdef vector[NodeType] cres = self.parser_.Parse(csents, tags, deps)
         cdef list res = []
         cdef Parse parse
