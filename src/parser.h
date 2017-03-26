@@ -43,6 +43,7 @@ public:
     void SetBeta(float beta) { beta_ = beta; }
     void SetUseBeta(bool use_beta) { use_beta_ = use_beta; }
     void SetPruningSize(int prune) { pruning_size_ = prune; }
+    ParserLogger& GetLogger() { return logger_; }
     NodeType Failed(const std::string& sent, const std::string& message);
 
     virtual NodeType Parse(int id, const std::string& sent, float* scores) NO_IMPLEMENTATION
