@@ -25,14 +25,6 @@ from lstm_tagger import log, get_suffix, get_prefix, normalize
 from lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
 from lstm_parser import LSTMParserTriTrainDataset
 
-def scanl(f, base, l):
-    res = [base]
-    acc = base
-    for x in l:
-        acc = f(acc, x)
-        res += [acc]
-    return res
-
 
 class Linear(L.Linear):
 
@@ -127,14 +119,14 @@ class FastBiaffineLSTMParser(chainer.Chain):
         """
         batchsize = len(xs)
 
-        if len(xs[0]) == 5:
-            ws, ss, ps, cat_ts, dep_ts = zip(*xs)
+        if len(xs[0]) == 6:
+            ws, ss, ps, ls, cat_ts, dep_ts = zip(*xs)
             xp = chainer.cuda.get_array_module(ws[0])
             weights = [xp.array(1, 'f') for _ in xs]
         else:
-            ws, ss, ps, cat_ts, dep_ts, weights = zip(*xs)
+            ws, ss, ps, ls, cat_ts, dep_ts, weights = zip(*xs)
 
-        cat_ys, dep_ys = self.forward(ws, ss, ps, dep_ts if self.train else None)
+        cat_ys, dep_ys = self.forward(ws, ss, ps, ls, dep_ts if self.train else None)
 
         cat_loss = reduce(lambda x, y: x + y,
             [we * F.softmax_cross_entropy(y, t) \
@@ -185,14 +177,18 @@ class FastBiaffineLSTMParser(chainer.Chain):
                     xp.repeat(xp.arange(0, batchsize * slen, slen), slen)
 
         hs = F.reshape(hs, (batchsize * slen, -1))
-        heads = F.elu(F.dropout(
-                self.rel_head(F.permutate(hs, heads)), 0.32, train=self.train))
+        heads = F.permutate(
+                    F.elu(F.dropout(
+                        self.rel_head(hs), 0.32, train=self.train)), heads)
 
         childs = F.elu(F.dropout(self.rel_dep(hs), 0.32, train=self.train))
         cat_ys = self.biaffine_tag(childs, heads)
 
-        dep_ys = [F.reshape(v, v.shape[1:])[:l, :l] for v, l in zip(F.split_axis(dep_ys, batchsize, 0), ls)] if batchsize > 1 else [dep_ys]
-        cat_ys = [v[:l] for v, l in zip(F.split_axis(cat_ys, batchsize, 0), ls)] if batchsize > 1 else [cat_ys]
+        dep_ys = F.split_axis(dep_ys, batchsize, 0) if batchsize > 1 else [dep_ys]
+        dep_ys = [F.reshape(v, v.shape[1:])[:l, :l] for v, l in zip(dep_ys, ls)]
+
+        cat_ys = F.split_axis(cat_ys, batchsize, 0) if batchsize > 1 else [cat_ys]
+        cat_ys = [v[:l] for v, l in zip(cat_ys, ls)]
 
         return cat_ys, dep_ys
 

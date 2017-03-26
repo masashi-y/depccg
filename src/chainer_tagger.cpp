@@ -1,6 +1,11 @@
 
 #include <Python.h>
+
+// do not include these lines in cythonized version of program
+#ifdef BUILD_CPP_PROGRAM_
 #include "py/tagger.h"
+#endif
+
 #include "chainer_tagger.h"
 
 namespace myccg {
@@ -28,6 +33,9 @@ void Tagger::SetEnv(const char* path) const {
 // }
 //
 //
+
+#ifdef BUILD_CPP_PROGRAM_
+
 Probs ChainerTagger::PredictTags(Doc& doc) const {
     putenv(PYPATH);
     if ( !Py_IsInitialized() )
@@ -72,5 +80,6 @@ std::pair<Probs, Probs> ChainerDependencyTagger::PredictTagsAndDeps(Doc& doc) co
             std::unique_ptr<float*[]>(cats), std::unique_ptr<float*[]>(deps));
 }
 
+#endif
 } // namespace myccg
 

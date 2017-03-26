@@ -8,6 +8,11 @@ from libcpp.string cimport string
 from libcpp.unordered_set cimport unordered_set
 from cython.operator cimport dereference as deref
 
+
+#######################################################
+###################### EXTERNs ########################
+#######################################################
+
 cdef extern from "<iostream>" namespace "std":
     #TODO: does not resolve template???
     cdef cppclass ostream:
@@ -136,27 +141,16 @@ cdef extern from "chainer_tagger.h" namespace "myccg" nogil:
 cdef extern from "grammar.h" namespace "myccg" nogil:
     cdef cppclass En:
         pass
-        # const unordered_set[Cat] possible_root_cats
-        # const vector[Op] binary_rules
-        # const vector[Op] dep_binary_rules
-        # const vector[Op] headfirst_binary_rules
+    cdef const unordered_set[Cat] en_possible_root_cats     "myccg::En::possible_root_cats"
+    cdef const vector[Op]         en_headfirst_binary_rules "myccg::En::headfirst_binary_rules"
+    cdef const vector[Op]         en_binary_rules           "myccg::En::binary_rules"
+    cdef const vector[Op]         en_dep_binary_rules       "myccg::En::dep_binary_rules"
 
-    # cdef cppclass Ja:
-        # pass
-        # const unordered_set[Cat] possible_root_cats
-        # const vector[Op] binary_rules
-        # const vector[Op] headfinal_binary_rules
-
-cdef extern from "grammar.h" namespace "myccg::En" nogil:
-    const unordered_set[Cat] possible_root_cats
-    const vector[Op] binary_rules
-    const vector[Op] dep_binary_rules
-    const vector[Op] headfirst_binary_rules
-
-# cdef extern from "grammar.h" namespace "myccg::Ja" nogil:
-#     const unordered_set[Cat] possible_root_cats
-#     const vector[Op] binary_rules
-#     const vector[Op] headfinal_binary_rules
+    cdef cppclass Ja:
+        pass
+    cdef const unordered_set[Cat] ja_possible_root_cats     "myccg::Ja::possible_root_cats"
+    cdef const vector[Op]         ja_binary_rules           "myccg::Ja::binary_rules"
+    cdef const vector[Op]         ja_headfinal_binary_rules "myccg::Ja::headfinal_binary_rules"
 
 cdef extern from "logger.h" namespace "myccg" nogil:
     enum LogLevel:
@@ -177,8 +171,11 @@ cdef extern from "parser_tools.h" namespace "myccg" nogil:
 
 cdef extern from "parser.h" namespace "myccg" nogil:
     cdef cppclass Parser:
-        NodeType Parse(int id, const string& sent, float* tag_scores)
+        NodeType Parse(int id, const string& sent, float* scores)
         NodeType Parse(int id, const string& sent, float* tag_scores, float* dep_scores)
+        vector[NodeType] Parse(const vector[string]& doc)
+        vector[NodeType] Parse(const vector[string]& doc, float** scores)
+        vector[NodeType] Parse(const vector[string]& doc, float** tag_scores, float** dep_scores)
         void LoadSeenRules()
         void LoadCategoryDict()
         void SetComparator(Comparator comp)
@@ -196,7 +193,6 @@ cdef extern from "parser.h" namespace "myccg" nogil:
                 float beta,
                 int pruning_size,
                 LogLevel loglevel) except +
-        NodeType Parse(int id, const string& sent, float* tag_scores)
 
 cdef extern from "dep.h" namespace "myccg" nogil:
     cdef cppclass DepAStarParser[Lang]:
@@ -212,9 +208,10 @@ cdef extern from "dep.h" namespace "myccg" nogil:
                     int pruning_size,
                     LogLevel loglevel) except +
 
-        vector[NodeType] ParseDoc(const vector[string]& doc, float** tag_scores, float** dep_scores)
-        NodeType Parse(int id, const string& sent, float* tag_scores)
-        NodeType Parse(int id, const string& sent, float* tag_scores, float* dep_scores)
+
+#######################################################
+####################### Category ######################
+#######################################################
 
 cdef class PyCat:
     cdef Cat cat_
@@ -313,6 +310,10 @@ cdef class PyCat:
     def arg(self, i):
         return PyCat.from_ptr(self.cat_.Arg(i))
 
+
+#######################################################
+###################### Parse Tree #####################
+#######################################################
 
 cdef class Parse:
     cdef NodeType node
@@ -413,6 +414,10 @@ cdef class Parse:
         def __get__(self):
             return CoNLL(self.node).Get()
 
+#######################################################
+################### English Parser ####################
+#######################################################
+
 import os
 import sys
 import json
@@ -433,7 +438,8 @@ from libc.string cimport memcpy
 
 cdef class PyAStarParser:
     cdef Tagger* tagger_
-    cdef DepAStarParser[En]* parser_
+    cdef Parser* parser_
+    cdef object path
     cdef object py_tagger
     cdef object use_seen_rules
     cdef object use_cat_dict
@@ -453,24 +459,24 @@ cdef class PyAStarParser:
                   loglevel=3,
                   type_check=False):
 
+        self.path           = path
+        self.use_seen_rules = use_seen_rules
+        self.use_cat_dict   = use_cat_dict
+        self.use_beta       = use_beta
+        self.beta           = beta
+        self.pruning_size   = pruning_size
+        self.batchsize      = batchsize
+        self.loglevel       = loglevel
+
         self.tagger_ = new Tagger(path)
-        self.parser_ = new DepAStarParser[En](
-                        self.tagger_,
-                        path,
-                        possible_root_cats,
-                        NormalComparator,
-                        headfirst_binary_rules,
-                        beta,
-                        pruning_size,
-                        loglevel)
-        cdef Parser* p = <Parser*>self.parser_
+        self.parser_ = self.load_parser()
 
         if use_seen_rules:
-            p.LoadSeenRules()
+            self.parser_.LoadSeenRules()
         if use_cat_dict:
-            p.LoadCategoryDict()
+            self.parser_.LoadCategoryDict()
         if not use_beta:
-            p.SetUseBeta(False)
+            self.parser_.SetUseBeta(False)
 
         with open(os.path.join(path, "tagger_defs.txt")) as f:
             self.py_tagger = eval(json.load(f)["model"])(path)
@@ -480,16 +486,20 @@ cdef class PyAStarParser:
         else:
             print >> sys.stderr, "not loading parser model"
 
+        # disable chainer's type chacking for efficiency
         if not type_check:
             os.environ["CHAINER_TYPE_CHECK"] = "0"
 
-        self.use_seen_rules = use_seen_rules
-        self.use_cat_dict   = use_cat_dict
-        self.use_beta       = use_beta
-        self.beta           = beta
-        self.pruning_size   = pruning_size
-        self.batchsize      = batchsize
-        self.loglevel       = loglevel
+    cdef Parser* load_parser(self):
+        return <Parser*>new DepAStarParser[En](
+                        self.tagger_,
+                        self.path,
+                        en_possible_root_cats,
+                        NormalComparator,
+                        en_headfirst_binary_rules,
+                        self.beta,
+                        self.pruning_size,
+                        self.loglevel)
 
     def parse(self, sent):
         if not isinstance(sent, list) \
@@ -514,35 +524,31 @@ cdef class PyAStarParser:
             sents = [" ".join(s) for s in sents]
 
         probs = self.py_tagger.predict_doc(splitted, batchsize=self.batchsize)
-        print "tagging done"
+        print >> sys.stderr, "tagging done"
         return self._parse_doc_tag_and_dep(sents, probs)
 
-    cdef Parse _parse_tag(self, str sent, np.ndarray[np.float32_t, ndim=2] mat):
-        cdef np.ndarray[np.float32_t, ndim=1] flatten = mat.flatten()
-        cdef NodeType res = self.parser_.Parse(0, sent, <float*>flatten.data)
+    cdef Parse _parse_tag(self, str sent, np.ndarray[float, ndim=2, mode="c"] mat):
+        cdef string csent = sent
+        cdef NodeType res = self.parser_.Parse(0, csent, &mat[0, 0])
         return Parse.from_ptr(res)
 
     cdef Parse _parse_tag_and_dep(self, str sent,
-                                  np.ndarray[np.float32_t, ndim=2] tag,
-                                  np.ndarray[np.float32_t, ndim=2] dep):
-        cdef np.ndarray[np.float32_t, ndim=1] flat_tag = tag.flatten()
-        cdef np.ndarray[np.float32_t, ndim=1] flat_dep = dep.flatten()
-        cdef NodeType res = self.parser_.Parse(
-                0, sent, <float*>flat_tag.data, <float*>flat_dep.data)
+                                  np.ndarray[float, ndim=2, mode="c"] tag,
+                                  np.ndarray[float, ndim=2, mode="c"] dep):
+        cdef NodeType res = self.parser_.Parse(0, sent, &tag[0, 0], &dep[0, 0])
         return Parse.from_ptr(res)
 
     cdef list _parse_doc_tag_and_dep(self, list sents, list probs):
         cdef int doc_size = len(sents), i
         cdef np.ndarray[float, ndim=2, mode="c"] cat_scores, dep_scores
         cdef vector[string] csents = sents
-        cdef float *tt, *dd
         cdef float **tags = <float**>malloc(doc_size * sizeof(float*))
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
         for i, _, (cat_scores, dep_scores) in probs:
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
-        print "start parsing"
-        cdef vector[NodeType] cres = self.parser_.ParseDoc(csents, tags, deps)
+        print >> sys.stderr, "start parsing"
+        cdef vector[NodeType] cres = self.parser_.Parse(csents, tags, deps)
         cdef list res = []
         cdef Parse parse
         for i in range(len(sents)):
@@ -552,3 +558,34 @@ cdef class PyAStarParser:
         free(deps)
         return res
 
+#######################################################
+################## Japanese Parser ####################
+#######################################################
+
+cdef class PyJaAStarParser(PyAStarParser):
+
+    def __cinit__(self, path,
+                  use_seen_rules=True,
+                  use_cat_dict=False,
+                  use_beta=True,
+                  beta=0.00001,
+                  pruning_size=50,
+                  batchsize=16,
+                  loglevel=3,
+                  type_check=False):
+
+        super(PyJaAStarParser, self).__cinit__(self, path,
+                  use_seen_rules, use_cat_dict, use_beta,
+                  beta, pruning_size, batchsize,
+                  loglevel, type_check)
+
+    cdef Parser* load_parser(self):
+        return <Parser*>new DepAStarParser[Ja](
+                        self.tagger_,
+                        self.path,
+                        ja_possible_root_cats,
+                        NormalComparator,
+                        ja_headfinal_binary_rules,
+                        self.beta,
+                        self.pruning_size,
+                        self.loglevel)
