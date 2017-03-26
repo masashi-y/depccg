@@ -450,7 +450,8 @@ cdef class PyAStarParser:
                   beta=0.00001,
                   pruning_size=50,
                   batchsize=16,
-                  loglevel=3):
+                  loglevel=3,
+                  type_check=False):
 
         self.tagger_ = new Tagger(path)
         self.parser_ = new DepAStarParser[En](
@@ -478,6 +479,9 @@ cdef class PyAStarParser:
             chainer.serializers.load_npz(model, self.py_tagger)
         else:
             print >> sys.stderr, "not loading parser model"
+
+        if not type_check:
+            os.environ["CHAINER_TYPE_CHECK"] = "0"
 
         self.use_seen_rules = use_seen_rules
         self.use_cat_dict   = use_cat_dict
