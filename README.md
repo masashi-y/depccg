@@ -3,13 +3,15 @@ A\* CCG Parser with a Supertag and Dependency Factored Model
 
 #### Requirements
 * Python 2.7
-* Chainer
-* Cython
-* A C++ compiler supporting C++11 standard
+* [Chainer](http://chainer.org/) (newer versions)
+* [Cython](http://cython.org/)
+* A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11)
 * OpenMP (optional)
 * CMake
 
 #### Build
+if you have not installed Chainer or Cython, do `pip install chainer cython`. Then,
+
     mkdir build
     cd build
     cmake ..
