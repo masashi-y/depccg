@@ -101,6 +101,17 @@ For the evaluation in CCG-based dependencies, please use
 evaluation scripts in [EasyCCG](https://github.com/mikelewis0/easyccg) and
 [C&C](http://www.cl.cam.ac.uk/~sc609/candc-1.00.html).
 
+#### Citation
+
+If you make use of this software, please cite the following:
+
+    @inproceedings{dyer:2015acl,
+      author={Chris Dyer and Miguel Ballesteros and Wang Ling and Austin Matthews and Noah A. Smith},
+      title={Transition-based Dependency Parsing with Stack Long Short-Term Memory},
+      booktitle={Proc. ACL},
+      year=2015,
+    }
+
 #### Licence
 MIT Licence
 
