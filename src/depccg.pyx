@@ -417,11 +417,11 @@ cdef class Parse:
 
     property deriv:
         def __get__(self):
-            return Derivation(self.node, self.suppress_feat).Get()
+            return Derivation(self.node, not self.suppress_feat).Get()
 
     property xml:
         def __get__(self):
-            return XML(self.node, self.suppress_feat).Get()
+            return XML(self.node, not self.suppress_feat).Get()
 
     property ja:
         def __get__(self):
