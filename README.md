@@ -1,8 +1,8 @@
 # depccg
-A\* CCG Parser with a Supertag and Dependency Factored Model
+Codebase for A\* CCG Parsing with a Supertag and Dependency Factored Model
 
 #### Requirements
-* Python 2.7
+* Python (Either 2 or 3)
 * [Chainer](http://chainer.org/) (newer versions)
 * [Cython](http://cython.org/)
 * A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11)
@@ -12,15 +12,19 @@ A\* CCG Parser with a Supertag and Dependency Factored Model
 #### Build
 if you have not installed Chainer or Cython, do `pip install chainer cython`. Then,
 
-    mkdir build
-    cd build
-    cmake ..
-    make
+```
+mkdir build
+cd build
+cmake ..
+# In pyenv environment, you may need to pass the path to libpython.so explicitly.
+# cmake -DPYTHON_LIBRARY=$HOME/.pyenv/versions/3.6.1/lib/libpython3.so ..
+make
+```
 
 #### Pretrained models
 Pretrained models are available:
-* [English](http://cl.naist.jp/~masashi-y/resources/depccg/en_hf_tri.tar.gz)
-* [Japanese](http://cl.naist.jp/~masashi-y/resources/depccg/ja_hf_ccgbank.tar.gz)
+* [English](http://cl.naist.jp/~masashi-y/resources/depccg/en_hf_tri.tar.gz) (189M)
+* [Japanese](http://cl.naist.jp/~masashi-y/resources/depccg/ja_hf_ccgbank.tar.gz) (56M)
 
 #### Running parser
 Having successfully built the sources, you'll see `depccg.so` in `build/src` directory.
@@ -88,7 +92,7 @@ usage: CCG parser's LSTM supertag tagger train [-h] [--gpu GPU]
 ```
 
 We make tri-training dataset publicly available:
-[English Tri-training Dataset](http://cl.naist.jp/~masashi-y/resources/depccg/headfirst_parsed.conll.stagged.gz)
+[English Tri-training Dataset](http://cl.naist.jp/~masashi-y/resources/depccg/headfirst_parsed.conll.stagged.gz) (309M)
 
 #### Evaluation
 You can evaluate the performance of a supertagger with `src/py/eval_tagger.py`:
@@ -105,11 +109,11 @@ evaluation scripts in [EasyCCG](https://github.com/mikelewis0/easyccg) and
 
 If you make use of this software, please cite the following:
 
-    @inproceedings{dyer:2015acl,
-      author={Chris Dyer and Miguel Ballesteros and Wang Ling and Austin Matthews and Noah A. Smith},
-      title={Transition-based Dependency Parsing with Stack Long Short-Term Memory},
+    @inproceedings{yoshikawa:2017acl,
+      author={Yoshikawa, Masashi and Noji, Hiroshi and Matsumoto, Yuji},
+      title={A* CCG Parsing with a Supertag and Dependency Factored Model},
       booktitle={Proc. ACL},
-      year=2015,
+      year=2017,
     }
 
 #### Licence
