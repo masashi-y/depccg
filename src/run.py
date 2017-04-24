@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 import argparse
 import fileinput
 from depccg import PyAStarParser, PyJaAStarParser
@@ -6,12 +7,12 @@ from depccg import PyAStarParser, PyJaAStarParser
 Parsers = {"en": PyAStarParser, "ja": PyJaAStarParser}
 
 def to_xml(trees):
-    print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-    print "<?xml-stylesheet type=\"text/xsl\" href=\"candc.xml\"?>"
-    print "<candc>"
+    print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+    print("<?xml-stylesheet type=\"text/xsl\" href=\"candc.xml\"?>")
+    print("<candc>")
     for tree in trees:
-        print "<ccg>\n{}\n</ccg>".format(tree.xml)
-    print "</candc>"
+        print("<ccg>\n{}\n</ccg>".format(tree.xml))
+    print("</candc>")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("A* CCG parser")
@@ -39,5 +40,5 @@ if __name__ == "__main__":
         to_xml(res)
     else:
         for i, r in enumerate(res):
-            print "ID={}".format(i)
-            print getattr(r, args.format)
+            print("ID={}".format(i))
+            print(getattr(r, args.format))

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import re
 import os
 import cat
@@ -63,7 +64,7 @@ class AutoLineReader(object):
 
     def check(self, text, offset=0):
         if self.line[self.index + offset] != text:
-            print self.line
+            print(self.line)
             raise RuntimeError("AutoLineReader.check catches parse error")
 
     def peek(self):

@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 import sys
 import numpy as np
 import json
@@ -74,7 +75,7 @@ class TrainingDataCreator(object):
 
     @staticmethod
     def _write(dct, out, comment_out_value=False):
-        print >> sys.stderr, "writing to", out.name
+        print("writing to", out.name, file=sys.stderr)
         for key, value in dct.items():
             out.write(key.encode("utf-8") + " ")
             if comment_out_value:
@@ -381,11 +382,11 @@ def train(args):
     with open(args.model + "/params", "w") as f: log(args, f)
 
     if args.initmodel:
-        print 'Load model from', args.initmodel
+        print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)
 
     if args.pretrained:
-        print 'Load pretrained word embeddings from', args.pretrained
+        print('Load pretrained word embeddings from', args.pretrained)
         model.load_pretrained_embeddings(args.pretrained)
 
     train = LSTMParserDataset(args.model, args.train)
