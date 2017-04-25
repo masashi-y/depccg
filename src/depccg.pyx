@@ -466,7 +466,7 @@ cdef class PyAStarParser:
     cdef object batchsize
     cdef object loglevel
 
-    def __cinit__(self, path,
+    def __init__(self, path,
                   use_seen_rules=True,
                   use_cat_dict=True,
                   use_beta=True,
@@ -538,7 +538,7 @@ cdef class PyAStarParser:
 
         if not isinstance(sents[0], list) \
             and isinstance(sents[0], (str, unicode)):
-            splitted = [s.split(" ") for s in sents]
+            splitted = [s.decode("utf-8").split(" ") for s in sents]
         else:
             splitted = sents
             sents = [" ".join(s) for s in sents]
@@ -589,17 +589,17 @@ cdef class PyAStarParser:
 
 cdef class PyJaAStarParser(PyAStarParser):
 
-    def __cinit__(self, path,
+    def __init__(self, path,
                   use_seen_rules=True,
                   use_cat_dict=False,
-                  use_beta=True,
+                  use_beta=False,
                   beta=0.00001,
                   pruning_size=50,
                   batchsize=16,
                   loglevel=3,
                   type_check=False):
 
-        super(PyJaAStarParser, self).__cinit__(self, path,
+        super(PyJaAStarParser, self).__init__(path,
                   use_seen_rules, use_cat_dict, use_beta,
                   beta, pruning_size, batchsize,
                   loglevel, type_check)

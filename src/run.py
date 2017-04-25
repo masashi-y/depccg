@@ -40,4 +40,5 @@ if __name__ == "__main__":
     else:
         for i, r in enumerate(res):
             print "ID={}".format(i)
+            r.suppress_feat = True
             print getattr(r, args.format)
