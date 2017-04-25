@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 cimport numpy as np
 import numpy as np
 from libc.stdlib cimport malloc, free
@@ -501,7 +502,7 @@ cdef class PyAStarParser:
         if os.path.exists(model):
             chainer.serializers.load_npz(model, self.py_tagger)
         else:
-            print >> sys.stderr, "not loading parser model"
+            print("not loading parser model", file=sys.stderr)
 
         # disable chainer's type chacking for efficiency
         if not type_check:
@@ -572,7 +573,7 @@ cdef class PyAStarParser:
         for i, _, (cat_scores, dep_scores) in probs:
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
-        if self.loglevel < 3: print >> sys.stderr, "start parsing"
+        if self.loglevel < 3: print("start parsing", sys.stderr)
         cdef vector[NodeType] cres = self.parser_.Parse(csents, tags, deps)
         cdef list res = []
         cdef Parse parse
