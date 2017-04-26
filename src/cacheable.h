@@ -2,7 +2,9 @@
 #ifndef INCLUDE_CACHEABLE_H_
 #define INCLUDE_CACHEABLE_H_
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <unordered_map>
 
 namespace myccg {

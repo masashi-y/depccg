@@ -2,12 +2,16 @@
 from __future__ import print_function, unicode_literals
 cimport numpy as np
 import numpy as np
+import sys
 from libc.stdlib cimport malloc, free
 from libcpp.memory cimport make_shared, shared_ptr
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp.unordered_set cimport unordered_set
 from cython.operator cimport dereference as deref
+
+if sys.version_info.major == 3:
+    unicode = str
 
 
 #######################################################
@@ -446,7 +450,6 @@ cdef class Parse:
 #######################################################
 
 import os
-import sys
 import json
 import chainer
 from py.ja_lstm_parser import JaLSTMParser
@@ -529,12 +532,13 @@ cdef class PyAStarParser:
                         self.loglevel)
 
     def parse(self, sent):
-        if not isinstance(sent, list) \
-            and isinstance(sent, (bytes, unicode)):
+        if not isinstance(sent, list):
+            assert isinstance(sent, unicode)
             splitted = sent.split(" ")
+            sent = sent.encode("utf-8")
         else:
             splitted = sent
-            sent = " ".join(sent)
+            sent = " ".join(sent).encode("utf-8")
 
         [mat] = self.py_tagger.predict([splitted])
         if isinstance(mat, (tuple, list)):
@@ -546,11 +550,12 @@ cdef class PyAStarParser:
         cdef list res
         cdef ParserLogger* logger = &self.parser_.GetLogger()
 
-        if not isinstance(sents[0], list) \
-            and isinstance(sents[0], (bytes, unicode)):
+        if not isinstance(sents[0], list):
+            assert isinstance(sents[0],  unicode)
             splitted = [s.split(" ") for s in sents]
             sents = [s.encode("utf-8") for s in sents]
         else:
+            assert isinstance(sents[0][0],  unicode)
             splitted = sents
             sents = [" ".join(s).encode("utf-8") for s in sents]
 
