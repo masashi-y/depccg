@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from cat import Slash
-import cat
+from py.cat import Slash
+import py.cat
 
 class RuleType:
     FA      = 0

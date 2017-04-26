@@ -30,7 +30,7 @@ def augment_pretrained_with_random_initialization(args):
     assert embeddings.shape[0] <= len(words), "pretrained size: {}, read words: {}".format(embeddings.shape[0], len(words))
     new_embeddings = 0.02 * np.random.random_sample(
             (len(words), embeddings.shape[1])).astype('f') - 0.01
-    for i in xrange(embeddings.shape[0]):
+    for i in range(embeddings.shape[0]):
         new_embeddings[i] = embeddings[i]
 
     new_pretrained = os.path.join(args.out, "new_embeddings.txt")

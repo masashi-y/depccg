@@ -73,8 +73,8 @@ void Derivation::Process() {
         SPACE(words, rwordlen);
     }
 
-    out_ << cats.str() << std::endl;
     out_ << words.str() << std::endl;
+    out_ << cats.str() << std::endl;
     tree_->Accept(*this);
 }
 

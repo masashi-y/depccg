@@ -10,11 +10,11 @@ from chainer import cuda
 from chainer import training, Variable
 from chainer.training import extensions
 from chainer.optimizer import WeightDecay, GradientClipping
-from japanese_ccg import JaCCGReader
+from py.japanese_ccg import JaCCGReader
 from collections import defaultdict, OrderedDict
-from py_utils import read_pretrained_embeddings, read_model_defs
-from tree import Leaf, Tree, get_leaves
-from biaffine import Biaffine
+from py.py_utils import read_pretrained_embeddings, read_model_defs
+from py.tree import Leaf, Tree, get_leaves
+from py.biaffine import Biaffine
 
 UNK = "*UNKNOWN*"
 START = "*START*"
@@ -352,7 +352,7 @@ class JaLSTMParser(chainer.Chain):
         doc list of splitted sentences
         """
         res = []
-        for i in xrange(0, len(doc), batchsize):
+        for i in range(0, len(doc), batchsize):
             res.extend([(i + j, 0, y)
                 for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
         return res

@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 import sys
 import numpy as np
 import json
@@ -9,10 +10,10 @@ from chainer import cuda
 from chainer import training, Variable
 from chainer.training import extensions
 from chainer.optimizer import WeightDecay, GradientClipping
-from japanese_ccg import JaCCGReader
+from py.japanese_ccg import JaCCGReader
 from collections import defaultdict
-from py_utils import read_pretrained_embeddings, read_model_defs
-from tree import Leaf, Tree, get_leaves
+from py.py_utils import read_pretrained_embeddings, read_model_defs
+from py.tree import Leaf, Tree, get_leaves
 
 UNK = "*UNKNOWN*"
 START = "*START*"
@@ -73,7 +74,7 @@ class TrainingDataCreator(object):
 
     @staticmethod
     def _write(dct, out, comment_out_value=False):
-        print >> sys.stderr, "writing to", out.name
+        print("writing to", out.name, file=sys.stderr)
         for key, value in dct.items():
             out.write(key.encode("utf-8") + " ")
             if comment_out_value:
@@ -325,7 +326,7 @@ class JaLSTMTagger(chainer.Chain):
         doc list of splitted sentences
         """
         res = []
-        for i in xrange(0, len(doc), batchsize):
+        for i in range(0, len(doc), batchsize):
             res.extend([(i + j, 0, y)
                 for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
         return res
@@ -355,11 +356,11 @@ def train(args):
     with open(args.model + "/params", "w") as f:
             log(args, f)
     if args.initmodel:
-        print 'Load model from', args.initmodel
+        print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)
 
     if args.pretrained:
-        print 'Load pretrained word embeddings from', args.pretrained
+        print('Load pretrained word embeddings from', args.pretrained)
         model.load_pretrained_embeddings(args.pretrained)
 
     train = LSTMTaggerDataset(args.model, args.train)

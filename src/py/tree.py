@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from combinator import Combinator, RuleType
+from py.combinator import Combinator, RuleType
 from xml.etree.ElementTree import Element, SubElement, ElementTree, tostring
 
 class Node(object):

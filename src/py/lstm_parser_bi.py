@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 import sys
 import numpy as np
 import json
@@ -9,17 +10,17 @@ from chainer import cuda
 from chainer import training, Variable
 from chainer.training import extensions
 from chainer.optimizer import WeightDecay, GradientClipping
-from ccgbank import walk_autodir
-from japanese_ccg import JaCCGReader
+from py.ccgbank import walk_autodir
+from py.japanese_ccg import JaCCGReader
 from collections import defaultdict, OrderedDict
-from py_utils import read_pretrained_embeddings, read_model_defs
-from tree import Leaf, Tree, get_leaves
-from biaffine import Biaffine
-from param import Param
+from py.py_utils import read_pretrained_embeddings, read_model_defs
+from py.tree import Leaf, Tree, get_leaves
+from py.biaffine import Biaffine
+from py.param import Param
 
-from lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
-from lstm_tagger import log, get_suffix, get_prefix, normalize
-from lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
+from py.lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
+from py.lstm_tagger import log, get_suffix, get_prefix, normalize
+from py.lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
 
 
 
@@ -148,7 +149,7 @@ class BiaffineLSTMParser(chainer.Chain):
         doc list of splitted sentences
         """
         res = []
-        for i in xrange(0, len(doc), batchsize):
+        for i in range(0, len(doc), batchsize):
             res.extend([(i + j, 0, y)
                 for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
         return res
@@ -180,11 +181,11 @@ def train(args):
     with open(args.model + "/params", "w") as f: log(args, f)
 
     if args.initmodel:
-        print 'Load model from', args.initmodel
+        print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)
 
     if args.pretrained:
-        print 'Load pretrained word embeddings from', args.pretrained
+        print('Load pretrained word embeddings from', args.pretrained)
         model.load_pretrained_embeddings(args.pretrained)
 
     if args.gpu >= 0:

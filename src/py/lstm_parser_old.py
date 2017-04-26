@@ -376,7 +376,7 @@ class LSTMParser(chainer.Chain):
         doc list of splitted sentences
         """
         res = []
-        for i in xrange(0, len(doc), batchsize):
+        for i in range(0, len(doc), batchsize):
             res.extend([(i + j, 0, y)
                 for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
         return res

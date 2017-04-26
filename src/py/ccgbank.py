@@ -3,10 +3,10 @@
 from __future__ import print_function
 import re
 import os
-import cat
-from tree import Tree, Leaf
-from combinator import Combinator
-import combinator
+import py.cat
+from py.tree import Tree, Leaf
+from py.combinator import Combinator
+import py.combinator
 
 re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
             "test": re.compile(r"wsj_23..\.auto"),

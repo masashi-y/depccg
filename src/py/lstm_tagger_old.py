@@ -320,7 +320,7 @@ class LSTMTagger(chainer.Chain):
         """
         res = []
         print >> sys.stderr, "start", len(doc) / batchsize
-        for i in xrange(0, len(doc), batchsize):
+        for i in range(0, len(doc), batchsize):
             print >> sys.stderr, i
             res.extend([(i + j, 0, y)
                 for j, y in enumerate(self.predict(doc[i:i + batchsize]))])

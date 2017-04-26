@@ -1,7 +1,6 @@
 
 import numpy as np
-
-import cat
+import py.cat
 import re
 
 def drop_brackets(cat):
@@ -47,21 +46,21 @@ def get_context_by_window(items, window_size, lpad, rpad):
     for i, item in enumerate(items):
         context = []
         if window_size - i > 0:
-            for j in xrange(window_size - i):
+            for j in range(window_size - i):
                 context.append(lpad)
-            for j in xrange(i):
+            for j in range(i):
                 context.append(items[j])
         else:
-            for j in xrange(i - window_size, i):
+            for j in range(i - window_size, i):
                 context.append(items[j])
         context.append(item)
         if i + window_size >= len(items):
-            for j in xrange(i + 1, len(items)):
+            for j in range(i + 1, len(items)):
                 context.append(items[j])
-            for j in xrange(i + window_size - len(items) + 1):
+            for j in range(i + window_size - len(items) + 1):
                 context.append(rpad)
         else:
-            for j in xrange(i + 1, i + window_size + 1):
+            for j in range(i + 1, i + window_size + 1):
                 context.append(items[j])
         assert len(context) == window_size * 2 + 1
 
@@ -86,10 +85,11 @@ def read_pretrained_embeddings(filepath):
     return res
 
 
+import codecs
 def read_model_defs(filepath):
     res = {}
-    for i, line in enumerate(open(filepath)):
-        word, _ = line.strip().decode("utf-8").split(" ")
+    for i, line in enumerate(codecs.open(filepath, encoding="utf-8")):
+        word, _ = line.strip().split(" ")
         res[word] = i
     return res
 

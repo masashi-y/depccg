@@ -1,8 +1,8 @@
 
-from ccgbank import Tree, Leaf
-import cat
-from combinator import *
-from tree import get_leaves
+from py.ccgbank import Tree, Leaf
+import py.cat as cat
+from py.combinator import *
+from py.tree import get_leaves
 
 combinators = ["<", ">", "ADNext", "ADNint", "ADV0",
                "ADV1", "ADV2", ">B", "<B1", "<B2", "<B3",

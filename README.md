@@ -35,8 +35,8 @@ model = "/path/to/model/directory"
 parser = PyAStarParser(model)
 res = parser.parse("this is a test sentence .")
 # print res.deriv
-#   NP   ((S\NP)/NP)  (NP/N)  (N/N)     N      . 
 #  this      is         a     test   sentence  . 
+#   NP   ((S\NP)/NP)  (NP/N)  (N/N)     N      . 
 #                            ----------------->
 #                                  N ->
 #                    ------------------------->
@@ -49,7 +49,7 @@ res = parser.parse("this is a test sentence .")
 #                      S ->
 
 # parser.parse_doc performs A* search in threads (using OpenMP), which is highly efficient. 
-res = praser.parse_doc(sents) # sents: list of str
+res = praser.parse_doc(sents) # sents: list of (python2: unicode, 3: str)
 for tree in res:
     print tree.deriv
 ```

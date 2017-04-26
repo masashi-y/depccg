@@ -1,12 +1,13 @@
 
+from __future__ import print_function
 import os
 import re
 import json
 from collections import defaultdict, OrderedDict
 import numpy as np
-from ccgbank import AutoReader
-from tree import Leaf, get_leaves
-from py_utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
+from py.ccgbank import AutoReader
+from py.tree import Leaf, get_leaves
+from py.py_utils import get_context_by_window, read_pretrained_embeddings, read_model_defs
 import chainer
 import multiprocessing
 import chainer.functions as F
@@ -100,7 +101,6 @@ class MultiProcessTaggerMixin(object):
         batch_lens = []
         batch_ids = []
         res = []
-        # for _ in xrange(0, len(doc), batchsize):
         while not res_queue.empty():
             for i in range(batchsize):
                 if res_queue.empty(): break
@@ -168,7 +168,7 @@ class EmbeddingTagger(chainer.Chain, MultiProcessTaggerMixin):
         emb_w = read_pretrained_embeddings(pretrained_path)
         new_emb_w = 0.02 * np.random.random_sample(
                 (len(self.words), emb_w.shape[1])).astype('f') - 0.01
-        for i in xrange(len(emb_w)):
+        for i in range(len(emb_w)):
             new_emb_w[i] = emb_w[i]
         self.emb_word.W.data = new_emb_w
         with open(os.path.join(self.model_path, "tagger_defs.txt"), "w") as out:
@@ -271,7 +271,7 @@ def feature_extract(word_str):
 
 def compress_traindata(args):
     words = OrderedDict()
-    print "reading embedding vocabulary"
+    print("reading embedding vocabulary")
     for word in open(args.vocab):
         words[word.strip()] = 1
     suffixes = defaultdict(int)
@@ -280,7 +280,7 @@ def compress_traindata(args):
     target = defaultdict(int)
     traindata = open(args.path)
     len_traindata = 0
-    print "reading training file"
+    print("reading training file")
     for line in traindata:
         len_traindata += 1
         items = line.strip().split(" ")
@@ -294,7 +294,7 @@ def compress_traindata(args):
             suffixes[suffix] += 1
             caps[cap] += 1
     def out_dict(d, outfile, freq_cut=-1):
-        print "writing to {}".format(outfile)
+        print("writing to {}".format(outfile))
         res = {}
         with open(outfile, "w") as out:
             i = 0
@@ -310,7 +310,7 @@ def compress_traindata(args):
     target2id = out_dict(target, os.path.join(args.out, "target.txt"), freq_cut=10)
     traindata.seek(0)
     new_traindata = os.path.join(args.out, "traindata.txt")
-    print "writing to {}".format(new_traindata)
+    print("writing to {}".format(new_traindata))
     with open(new_traindata, "w") as out:
         for i, line in enumerate(traindata):
             items = line.strip().split(" ")

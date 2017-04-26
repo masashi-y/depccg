@@ -1,5 +1,5 @@
 
-from py_utils import find_closing_bracket, \
+from py.py_utils import find_closing_bracket, \
     find_non_nested_char, drop_brackets
 import re
 

@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 import sys
 import random
 import numpy as np
@@ -10,16 +11,16 @@ from chainer import cuda
 from chainer import training, Variable
 from chainer.training import extensions
 from chainer.optimizer import WeightDecay, GradientClipping
-from ccgbank import walk_autodir
-from japanese_ccg import JaCCGReader
+from py.ccgbank import walk_autodir
+from py.japanese_ccg import JaCCGReader
 from collections import defaultdict, OrderedDict
-from py_utils import read_pretrained_embeddings, read_model_defs
-from tree import Leaf, Tree, get_leaves
-from biaffine import Biaffine
-from param import Param
+from py.py_utils import read_pretrained_embeddings, read_model_defs
+from py.tree import Leaf, Tree, get_leaves
+from py.biaffine import Biaffine
+from py.param import Param
 
-from lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
-from lstm_tagger import log, get_suffix, get_prefix, normalize
+from py.lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
+from py.lstm_tagger import log, get_suffix, get_prefix, normalize
 
 class TrainingDataCreator(object):
     """
@@ -66,7 +67,7 @@ class TrainingDataCreator(object):
 
     @staticmethod
     def _write(dct, out, comment_out_value=False):
-        print >> sys.stderr, "writing to", out.name
+        print("writing to", out.name, file=sys.stderr)
         for key, value in dct.items():
             out.write(key.encode("utf-8") + " ")
             if comment_out_value:
@@ -238,9 +239,9 @@ class LSTMParserTriTrainDataset(chainer.dataset.DatasetMixin):
             self.tritrain_samples = json.load(f)
             self.tritrain_size = len(self.tritrain_samples)
 
-        print >> sys.stderr, "len(ccgbank):", self.ccgbank_size
-        print >> sys.stderr, "len(ccgbank) * # copies:", self.ccgbank_size * self.ncopies
-        print >> sys.stderr, "len(tritrain):", self.tritrain_size
+        print("len(ccgbank):", self.ccgbank_size, file=sys.stderr)
+        print("len(ccgbank) * # copies:", self.ccgbank_size * self.ncopies, file=sys.stderr)
+        print("len(tritrain):", self.tritrain_size, file=sys.stderr)
 
     def __len__(self):
         # some copies of ccgbank corpus plus tritrain dataset
@@ -252,7 +253,7 @@ class LSTMParserTriTrainDataset(chainer.dataset.DatasetMixin):
             words = sent.split(" ")
             # tri-train dataset is noisy and contains unwanted zero-length word ...
             if any(len(w) == 0 for w in words):
-                print >> sys.stderr, "ignore sentence:", sent
+                print("ignore sentence:", sent, file=sys.stderr)
                 return self.get_example(random.randint(0, len(self)))
             weight = np.array(self.weight, 'f')
         else:
@@ -381,7 +382,7 @@ class LSTMParser(chainer.Chain):
         doc list of splitted sentences
         """
         res = []
-        for i in xrange(0, len(doc), batchsize):
+        for i in range(0, len(doc), batchsize):
             res.extend([(i + j, 0, y)
                 for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
         return res
@@ -412,11 +413,11 @@ def train(args):
     with open(args.model + "/params", "w") as f: log(args, f)
 
     if args.initmodel:
-        print 'Load model from', args.initmodel
+        print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)
 
     if args.pretrained:
-        print 'Load pretrained word embeddings from', args.pretrained
+        print('Load pretrained word embeddings from', args.pretrained)
         model.load_pretrained_embeddings(args.pretrained)
 
     if args.gpu >= 0:

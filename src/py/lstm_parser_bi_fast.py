@@ -12,19 +12,19 @@ from chainer import training, Variable
 from chainer.training import extensions
 from chainer.optimizer import WeightDecay, GradientClipping
 from chainer.dataset.convert import _concat_arrays
-from ccgbank import walk_autodir
-from japanese_ccg import JaCCGReader
+from py.ccgbank import walk_autodir
+from py.japanese_ccg import JaCCGReader
 from collections import defaultdict, OrderedDict
-from py_utils import read_pretrained_embeddings, read_model_defs
-from tree import Leaf, Tree, get_leaves
-from biaffine import Biaffine, Bilinear
-from param import Param
-from fixed_length_n_step_lstm import FixedLengthNStepLSTM
+from py.py_utils import read_pretrained_embeddings, read_model_defs
+from py.tree import Leaf, Tree, get_leaves
+from py.biaffine import Biaffine, Bilinear
+from py.param import Param
+from py.fixed_length_n_step_lstm import FixedLengthNStepLSTM
 
-from lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
-from lstm_tagger import log, get_suffix, get_prefix, normalize
-from lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
-from lstm_parser import LSTMParserTriTrainDataset
+from py.lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
+from py.lstm_tagger import log, get_suffix, get_prefix, normalize
+from py.lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
+from py.lstm_parser import LSTMParserTriTrainDataset
 
 
 class Linear(L.Linear):
@@ -209,7 +209,7 @@ class FastBiaffineLSTMParser(chainer.Chain):
         """
         res = []
         doc = sorted(enumerate(doc), key=lambda x: len(x[1]))
-        for i in xrange(0, len(doc), batchsize):
+        for i in range(0, len(doc), batchsize):
             ids, batch = zip(*doc[i:i + batchsize])
             pred = self.predict(batch)
             res.extend([(j, 0, y) for j, y in zip(ids, pred)])

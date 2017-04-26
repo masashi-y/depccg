@@ -1,7 +1,13 @@
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import argparse
 import fileinput
+import codecs
+import sys
+
+if sys.version_info.major == 2:
+    sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+
 from depccg import PyAStarParser, PyJaAStarParser
 
 Parsers = {"en": PyAStarParser, "ja": PyJaAStarParser}
@@ -18,7 +24,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("A* CCG parser")
     parser.add_argument("model", help="model directory")
     parser.add_argument("lang", help="language", choices=["en", "ja"])
-    parser.add_argument("--input", default="-",
+    parser.add_argument("--input", default=None,
             help="a file with tokenized sentences in each line")
     parser.add_argument("--batchsize", type=int, default=32,
             help="batchsize in supertagger")
@@ -28,7 +34,8 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-    doc = [l.strip() for l in fileinput.input(args.input)]
+    fin = sys.stdin if args.input is None else codecs.open(args.input, encoding="utf-8")
+    doc = [l.strip() for l in fin]
 
     parser = Parsers[args.lang](args.model,
                                batchsize=args.batchsize,
@@ -41,4 +48,5 @@ if __name__ == "__main__":
     else:
         for i, r in enumerate(res):
             print("ID={}".format(i))
+            r.suppress_feat = True
             print(getattr(r, args.format))

@@ -1,5 +1,5 @@
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 cimport numpy as np
 import numpy as np
 from libc.stdlib cimport malloc, free
@@ -238,13 +238,17 @@ cdef class PyCat:
         pass
 
     def __str__(self):
-        return self.cat_.ToStr()
+        cdef string res = self.cat_.ToStr()
+        return res.decode("utf-8")
 
     def __repr__(self):
-        return self.cat_.ToStr()
+        cdef string res = self.cat_.ToStr()
+        return res.decode("utf-8")
 
     @staticmethod
     def parse(cat):
+        if not isinstance(cat, bytes):
+            cat = cat.encode("utf-8")
         c = PyCat()
         c.cat_ = Category.Parse(cat)
         return c
@@ -414,23 +418,28 @@ cdef class Parse:
 
     property auto:
         def __get__(self):
-            return AUTO(self.node).Get()
+            cdef string res = AUTO(self.node).Get()
+            return res.decode("utf-8")
 
     property deriv:
         def __get__(self):
-            return Derivation(self.node, not self.suppress_feat).Get()
+            cdef string res = Derivation(self.node, not self.suppress_feat).Get()
+            return res.decode("utf-8")
 
     property xml:
         def __get__(self):
-            return XML(self.node, not self.suppress_feat).Get()
+            cdef string res = XML(self.node, not self.suppress_feat).Get()
+            return res.decode("utf-8")
 
     property ja:
         def __get__(self):
-            return JaCCG(self.node).Get()
+            cdef string res = JaCCG(self.node).Get()
+            return res.decode("utf-8")
 
     property conll:
         def __get__(self):
-            return CoNLL(self.node).Get()
+            cdef string res = CoNLL(self.node).Get()
+            return res.decode("utf-8")
 
 #######################################################
 ################### English Parser ####################
@@ -467,7 +476,7 @@ cdef class PyAStarParser:
     cdef object batchsize
     cdef object loglevel
 
-    def __cinit__(self, path,
+    def __init__(self, path,
                   use_seen_rules=True,
                   use_cat_dict=True,
                   use_beta=True,
@@ -477,7 +486,7 @@ cdef class PyAStarParser:
                   loglevel=3,
                   type_check=False):
 
-        self.path           = path
+        self.path           = path.encode("utf-8")
         self.use_seen_rules = use_seen_rules
         self.use_cat_dict   = use_cat_dict
         self.use_beta       = use_beta
@@ -486,7 +495,7 @@ cdef class PyAStarParser:
         self.batchsize      = batchsize
         self.loglevel       = loglevel
 
-        self.tagger_ = new Tagger(path)
+        self.tagger_ = new Tagger(self.path)
         self.parser_ = self.load_parser()
 
         if use_seen_rules:
@@ -521,7 +530,7 @@ cdef class PyAStarParser:
 
     def parse(self, sent):
         if not isinstance(sent, list) \
-            and isinstance(sent, (str, unicode)):
+            and isinstance(sent, (bytes, unicode)):
             splitted = sent.split(" ")
         else:
             splitted = sent
@@ -538,11 +547,12 @@ cdef class PyAStarParser:
         cdef ParserLogger* logger = &self.parser_.GetLogger()
 
         if not isinstance(sents[0], list) \
-            and isinstance(sents[0], (str, unicode)):
+            and isinstance(sents[0], (bytes, unicode)):
             splitted = [s.split(" ") for s in sents]
+            sents = [s.encode("utf-8") for s in sents]
         else:
             splitted = sents
-            sents = [" ".join(s) for s in sents]
+            sents = [" ".join(s).encode("utf-8") for s in sents]
 
         logger.InitStatistics(len(sents))
         logger.RecordTimeStartRunning()
@@ -553,12 +563,12 @@ cdef class PyAStarParser:
         logger.Report()
         return res
 
-    cdef Parse _parse_tag(self, str sent, np.ndarray[float, ndim=2, mode="c"] mat):
+    cdef Parse _parse_tag(self, bytes sent, np.ndarray[float, ndim=2, mode="c"] mat):
         cdef string csent = sent
         cdef NodeType res = self.parser_.Parse(0, csent, &mat[0, 0])
         return Parse.from_ptr(res)
 
-    cdef Parse _parse_tag_and_dep(self, str sent,
+    cdef Parse _parse_tag_and_dep(self, bytes sent,
                                   np.ndarray[float, ndim=2, mode="c"] tag,
                                   np.ndarray[float, ndim=2, mode="c"] dep):
         cdef NodeType res = self.parser_.Parse(0, sent, &tag[0, 0], &dep[0, 0])
@@ -590,7 +600,7 @@ cdef class PyAStarParser:
 
 cdef class PyJaAStarParser(PyAStarParser):
 
-    def __cinit__(self, path,
+    def __init__(self, path,
                   use_seen_rules=True,
                   use_cat_dict=False,
                   use_beta=True,
@@ -600,7 +610,7 @@ cdef class PyJaAStarParser(PyAStarParser):
                   loglevel=3,
                   type_check=False):
 
-        super(PyJaAStarParser, self).__cinit__(self, path,
+        super(PyJaAStarParser, self).__init__(path,
                   use_seen_rules, use_cat_dict, use_beta,
                   beta, pruning_size, batchsize,
                   loglevel, type_check)
