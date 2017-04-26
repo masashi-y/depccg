@@ -1,5 +1,5 @@
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import sys
 import random
 import numpy as np
@@ -193,7 +193,7 @@ class FeatureExtractor(object):
         """
         words: list of unicode tokens
         """
-        words = map(normalize, words)
+        words = list(map(normalize, words))
         w = np.array([self.start_word] + [self.words.get(
             x.lower(), self.unk_word) for x in words] + [self.end_word], 'i')
         s = np.asarray(self.start_suf + [[self.suffixes.get(
