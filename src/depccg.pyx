@@ -603,7 +603,7 @@ cdef class PyJaAStarParser(PyAStarParser):
     def __init__(self, path,
                   use_seen_rules=True,
                   use_cat_dict=False,
-                  use_beta=True,
+                  use_beta=False,
                   beta=0.00001,
                   pruning_size=50,
                   batchsize=16,
