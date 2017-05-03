@@ -111,8 +111,8 @@ int AUTO::Visit(const Leaf* leaf) {
     return 0;
 }
 
-std::string JaResolveCombinatorName(const Combinator* comb) {
-}
+// std::string JaResolveCombinatorName(const Combinator* comb) {
+// }
 
 int JaCCG::Visit(const Tree* tree) {
     out_ << "{";
@@ -181,6 +181,21 @@ int XML::Visit(const Leaf* leaf) {
    return 0;
 }
 
+int PyXML::Visit(const Leaf* leaf) {
+    Cat c = leaf->GetCategory();
+    int position = leaf->GetPosition();
+    out_ << "<lf start=\"" << position
+         << "\" span=\"" << 1
+         << "\" word=\"" << EscapeAMP(leaf->GetWord())
+         << "\" lemma=\"{" << position << ".lemma}\" "
+         << "pos=\"{" << position << ".pos}\" "
+         << "chunk=\"{" << position << ".chunk}\" "
+         << "entity=\"{" << position << ".entity}\" cat=\""
+         << ( feat_ ? c->ToStr() : c->ToStrWithoutFeat() ) << "\" />"
+         << std::endl;
+   return 0;
+}
+
 std::string ToCAndCStr(const Tree* tree) {
     if (tree->IsUnary()) {
         Cat init = tree->GetLeftChild()->GetCategory();
@@ -211,17 +226,28 @@ std::string ToCAndCStr(const Tree* tree) {
     }
 }
 
-int XML::Visit(const Tree* tree) {
+int XMLVisitBase(FormatVisitor* visitor,
+        const Tree* tree, std::ostream& out, bool feat) {
     Cat c = tree->GetCategory();
-    out_ << "<rule type=\""
+    out << "<rule type=\""
          << ToCAndCStr(tree)
          << "\" cat=\""
-         << ( feat_ ? c->ToStr() : c->ToStrWithoutFeat() ) << "\">"
+         << ( feat ? c->ToStr() : c->ToStrWithoutFeat() ) << "\">"
          << std::endl;
-    tree->GetLeftChild()->Accept(*this);
+    tree->GetLeftChild()->Accept(*visitor);
     if (! tree->IsUnary())
-        tree->GetRightChild()->Accept(*this);
-    out_ << "</rule>" << std::endl;
+        tree->GetRightChild()->Accept(*visitor);
+    out << "</rule>" << std::endl;
+    return 0;
+}
+
+int XML::Visit(const Tree* tree) {
+    XMLVisitBase(this, tree, out_, feat_);
+    return 0;
+}
+
+int PyXML::Visit(const Tree* tree) {
+    XMLVisitBase(this, tree, out_, feat_);
     return 0;
 }
 

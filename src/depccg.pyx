@@ -24,7 +24,7 @@ cdef extern from "<iostream>" namespace "std":
         ostream& operator<< (const Node* val)
         ostream& operator<< (const Derivation& deriv)
         ostream& operator<< (const JaCCG& deriv)
-        ostream& operator<< (const XML& deriv)
+        ostream& operator<< (const PyXML& deriv)
         ostream& operator<< (const CoNLL& deriv)
     ostream cout
 
@@ -123,10 +123,10 @@ cdef extern from "tree.h" namespace "myccg" nogil:
         ostream& operator<<(ostream& ost, const JaCCG& deriv)
         string Get()
 
-    cdef cppclass XML:
-        XML(const Node* tree, bint feat)
-        XML(NodeType tree, bint feat)
-        ostream& operator<<(ostream& ost, const XML& xml)
+    cdef cppclass PyXML:
+        PyXML(const Node* tree, bint feat)
+        PyXML(NodeType tree, bint feat)
+        ostream& operator<<(ostream& ost, const PyXML& xml)
         string Get()
 
     cdef cppclass CoNLL:
@@ -432,7 +432,7 @@ cdef class Parse:
 
     property xml:
         def __get__(self):
-            cdef string res = XML(self.node, not self.suppress_feat).Get()
+            cdef string res = PyXML(self.node, not self.suppress_feat).Get()
             return res.decode("utf-8")
 
     property ja:

@@ -299,6 +299,27 @@ private:
     std::stringstream out_;
 };
 
+class PyXML: public FormatVisitor {
+
+public:
+    PyXML(const Node* tree, bool feat=true): tree_(tree), feat_(feat) { Process(); }
+    PyXML(NodeType tree, bool feat=true): tree_(tree.get()), feat_(feat) { Process(); }
+
+    void Process() { tree_->Accept(*this); }
+    std::string Get() const { return out_.str(); }
+    friend std::ostream& operator<<(std::ostream& ost, const PyXML& xml) {
+        return ost << xml.out_.str();
+    }
+
+    int Visit(const Tree* tree);
+    int Visit(const Leaf* leaf);
+
+private:
+    const Node* tree_;
+    bool feat_;
+    std::stringstream out_;
+};
+
 class CoNLL: public FormatVisitor {
 
 public:
