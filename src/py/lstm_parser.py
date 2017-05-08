@@ -105,7 +105,7 @@ class TrainingDataCreator(object):
         for tree in trees:
             tokens = get_leaves(tree)
             words = [normalize(token.word) for token in tokens]
-            tags = [token.tag for token in tokens]
+            tags = ["POS" for token in tokens] # dummy
             cats = [str(token.cat) for token in tokens]
             deps = self._get_dependencies(tree, len(tokens))
             sent = " ".join(words)

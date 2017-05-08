@@ -88,7 +88,7 @@ class AutoLineReader(object):
         self.check("<", 1)
         self.check("L", 2)
         _    = self.next()
-        cate = cat.parse(self.next())
+        cate = py.cat.parse(self.next())
         _    = self.next() # POS tag
         _    = self.next()
         word = self.next()
@@ -100,13 +100,13 @@ class AutoLineReader(object):
         self.check("<", 1)
         self.check("T", 2)
         self.next()
-        cate = cat.parse(self.next())
+        cate = py.cat.parse(self.next())
         left_is_head = self.next() == "0"
         _ = self.next()
         children = []
         while self.peek() != ")":
             children.append(self.next_node())
         end = self.next()
-        return Tree(cate, left_is_head, children, combinator.UnaryRule())
+        return Tree(cate, left_is_head, children, py.combinator.UnaryRule())
 
 
