@@ -27,7 +27,7 @@ class MyEvaluator(extensions.Evaluator):
         for batch in it:
             observation = {}
             with reporter_module.report_scope(observation):
-                eval_func(*self.converter(batch, self.device))
+                eval_func(self.converter(batch, self.device))
             summary.add(observation)
         return summary.compute_mean()
 
