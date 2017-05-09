@@ -1,6 +1,52 @@
 # -*- coding: utf-8 -*-
-from py.combinator import Combinator, RuleType
+from combinator import Combinator, RuleType
+import combinator
 from xml.etree.ElementTree import Element, SubElement, ElementTree, tostring
+
+def is_normal_form(rule_type, left, right):
+    if (left.rule_type == FC or \
+            left.rule_type == GFC) and \
+        (rule_type == FA or \
+            rule_type == FC or \
+            rule_type == GFC):
+        return False
+    if (right.rule_type == BC or \
+            right.rule_type == GBC) and \
+        (rule_type == BA or \
+            rule_type == BC or \
+            left.rule_type == GBC):
+        return False
+    if left.rule_type == UNARY and \
+            rule_type == FA and \
+            left.cat.is_forward_type_raised:
+        return False
+    if right.rule_type == UNARY and \
+            rule_type == BA and \
+            right.cat.is_backward_type_raised:
+        return False
+
+    if (left.rule_type == FC or left.rule_type == GFC) \
+            and (rule_type == FA or rule_type == FC):
+        return False
+    if (right.rule_type == BC or right.rule_type == GBC) \
+            and (rule_type == BA or rule_type == BC):
+        return False
+    return True
+
+def count_normal_form(trees):
+    res = 0
+    total = 0
+    def rec(tree):
+        if isinstance(tree, Tree):
+            total += 1
+            res += int(tree.is_normal)
+            for child in tree.children:
+                res(child)
+
+    for tree in trees:
+        rec(tree)
+
+    print "normal form:", res, "total:", total
 
 class Node(object):
     def __init__(self, cat, rule_type):
@@ -10,10 +56,11 @@ class Node(object):
 
 class Leaf(Node):
     # (<L N/N NNP NNP Pierre N_73/N_73>)
-    def __init__(self, word, cat, position):
+    def __init__(self, word, cat, position, tag=None):
         super(Leaf, self).__init__(cat, RuleType.LEXICON)
         self.word = word
         self.pos  = position
+        self.tag = tag
 
     def __str__(self):
         pos = "POS" # dummy
@@ -37,6 +84,10 @@ class Leaf(Node):
                 ,"pos": "POS"
                 ,"chunk": "CHUNK"
                 ,"entity": "O"})
+
+    @property
+    def is_normal(self):
+        return False
 
     @property
     def headid(self):
@@ -73,19 +124,38 @@ class Tree(Node):
             child._to_xml(rule)
         return parent
 
+    @property
+    def is_normal(self):
+        children = self.children
+        if len(children) == 1:
+            return True
+        return is_normal_form(
+                self.rule_type, children[0].cat, children[1].cat)
 
     def resolve_op(self, ops):
         if len(self.children) == 1:
             self.rule_type = RuleType.UNARY
+            self.op = combinator.UnaryRule()
         else:
             left, right = self.children
             for op in ops:
                 if op.can_apply(left.cat, right.cat) and \
-                    op.apply(left.cat, right.cat) == self.cat:
-                    self.rule_type = op
-                    break
-            if self.rule_type is None:
-                self.rule_type = NONE
+                    op.apply(left.cat, right.cat).strip_feat() == self.cat.strip_feat():
+                    self.rule_type = op.rule_type
+                    new_head = op.head_is_left(left.cat, right.cat)
+                    if self.left_is_head != new_head:
+                        print "head error!!!: old: {}, new: {}" .format(self.head_is_left, new_head)
+                        print self.show_derivation()
+                        raise RuntimeError()
+                    self.left_is_head = new_head
+                    self.op = op
+                    return
+            print left.cat, right.cat, "-->", self.cat, "\n"
+
+            print self.show_derivation()
+            raise RuntimeError()
+                # self.rule_type = NONE
+                # self.op = Combinator()
 
     @property
     def headid(self):
@@ -156,10 +226,14 @@ def to_xml(trees, out):
 
 
 def resolve_op(tree, ops):
-    tree.resolve_op(ops)
-    for child in tree.children:
-        if isinstance(child, Tree):
-            resolve_op(child, ops)
+    try:
+        tree.resolve_op(ops)
+        for child in tree.children:
+            if isinstance(child, Tree):
+                resolve_op(child, ops)
+        return True
+    except:
+        return False
 
 def get_leaves(tree):
     res = []
