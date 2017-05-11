@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
 import re
 import os
-import py.cat
-from py.tree import Tree, Leaf
-from py.combinator import Combinator
-import py.combinator
+import cat
+from tree import Tree, Leaf
+from combinator import *
+
 
 re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
             "test": re.compile(r"wsj_23..\.auto"),
@@ -15,13 +14,14 @@ re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
 
 def walk_autodir(path, subset="train"):
     matcher = re_subset[subset]
-    res = []
+    autos = []
     for root, dirs, files in os.walk(path):
         for autofile in files:
             if matcher.match(autofile):
-                res.extend(AutoReader(
-                    os.path.join(root, autofile)).readall())
-    return res
+                f = os.path.join(str(root), autofile)
+                autos.append(f)
+    autos.sort()
+    return [tree for f in autos for tree in AutoReader(f).readall()]
 
 class AutoReader(object):
     def __init__(self, filename):
@@ -64,7 +64,7 @@ class AutoLineReader(object):
 
     def check(self, text, offset=0):
         if self.line[self.index + offset] != text:
-            print(self.line)
+            print self.line
             raise RuntimeError("AutoLineReader.check catches parse error")
 
     def peek(self):
@@ -89,11 +89,11 @@ class AutoLineReader(object):
         self.check("L", 2)
         _    = self.next()
         cate = cat.parse(self.next())
-        _    = self.next() # POS tag
-        _    = self.next()
+        tag  = self.next() # modified POS tag
+        tag2 = self.next() # original POS
         word = self.next()
         end  = self.next()
-        return Leaf(word, cate, self.word_id)
+        return Leaf(word, cate, self.word_id, tag2)
 
     def parse_tree(self):
         self.check("(")
@@ -102,11 +102,15 @@ class AutoLineReader(object):
         self.next()
         cate = cat.parse(self.next())
         left_is_head = self.next() == "0"
+        left_is_head = True
         _ = self.next()
         children = []
         while self.peek() != ")":
             children.append(self.next_node())
         end = self.next()
-        return Tree(cate, left_is_head, children, combinator.UnaryRule())
+        return Tree(cate, left_is_head, children, UnaryRule())
 
-
+# from tree import resolve_op
+#
+# data = AutoReader("/home/masashi-y/myccg/data/wsj_23.auto").readall()
+# res = map(lambda x: resolve_op(x, combinator.standard_combinators), data)

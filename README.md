@@ -63,7 +63,7 @@ the detailed usage of the parser.
 TODO
 
 ```
-$ python lstm_parser_bi_fast.py create
+$ python -m py.lstm_parser_bi create
 usage: CCG parser's LSTM supertag tagger create [-h]
                                                 [--cat-freq-cut CAT_FREQ_CUT]
                                                 [--word-freq-cut WORD_FREQ_CUT]
@@ -74,7 +74,7 @@ usage: CCG parser's LSTM supertag tagger create [-h]
 ```
 
 ```
-$ python lstm_parser_bi_fast.py train
+$ python -m py.lstm_parser_bi train
 usage: CCG parser's LSTM supertag tagger train [-h] [--gpu GPU]
                                                [--tritrain TRITRAIN]
                                                [--tri-weight TRI_WEIGHT]
