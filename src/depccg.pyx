@@ -472,7 +472,6 @@ from py.ja_lstm_tagger import JaLSTMTagger
 from py.lstm_tagger import LSTMTagger
 from py.lstm_tagger_ph import PeepHoleLSTMTagger
 from py.ja_lstm_parser_ph import PeepHoleJaLSTMParser
-from py.lstm_parser_bi import BiaffineLSTMParser
 from py.precomputed_parser import PrecomputedParser
 from py.lstm_parser_bi_fast import FastBiaffineLSTMParser
 from py.ja_lstm_parser_bi import BiaffineJaLSTMParser
