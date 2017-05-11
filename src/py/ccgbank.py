@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 import re
 import os
-import cat
-from tree import Tree, Leaf
-from combinator import *
+import py.cat
+from py.tree import Tree, Leaf
+from py.combinator import *
 
 
 re_subset = {"train": re.compile(r"wsj_(0[2-9]|1[0-9]|20|21)..\.auto"),
@@ -64,7 +64,7 @@ class AutoLineReader(object):
 
     def check(self, text, offset=0):
         if self.line[self.index + offset] != text:
-            print self.line
+            print(self.line)
             raise RuntimeError("AutoLineReader.check catches parse error")
 
     def peek(self):
@@ -88,7 +88,7 @@ class AutoLineReader(object):
         self.check("<", 1)
         self.check("L", 2)
         _    = self.next()
-        cate = cat.parse(self.next())
+        cate = py.cat.parse(self.next())
         tag  = self.next() # modified POS tag
         tag2 = self.next() # original POS
         word = self.next()
@@ -100,7 +100,7 @@ class AutoLineReader(object):
         self.check("<", 1)
         self.check("T", 2)
         self.next()
-        cate = cat.parse(self.next())
+        cate = py.cat.parse(self.next())
         left_is_head = self.next() == "0"
         left_is_head = True
         _ = self.next()

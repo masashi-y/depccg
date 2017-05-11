@@ -1,4 +1,5 @@
 
+from __future__ import print_function, unicode_literals
 import sys
 import numpy as np
 import json
@@ -197,11 +198,11 @@ def train(args):
     with open(args.model + "/params", "w") as f: log(args, f)
 
     if args.initmodel:
-        print 'Load model from', args.initmodel
+        print('Load model from', args.initmodel)
         chainer.serializers.load_npz(args.initmodel, model)
 
     if args.pretrained:
-        print 'Load pretrained word embeddings from', args.pretrained
+        print('Load pretrained word embeddings from', args.pretrained)
         model.load_pretrained_embeddings(args.pretrained)
 
     if args.gpu >= 0:

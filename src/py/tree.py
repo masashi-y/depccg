@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from combinator import Combinator, RuleType
-import combinator
+from __future__ import print_function, unicode_literals
+from py.combinator import Combinator, RuleType
+import py.combinator
 from xml.etree.ElementTree import Element, SubElement, ElementTree, tostring
 
 def is_normal_form(rule_type, left, right):
@@ -46,7 +47,7 @@ def count_normal_form(trees):
     for tree in trees:
         rec(tree)
 
-    print "normal form:", res, "total:", total
+    print("normal form:", res, "total:", total)
 
 class Node(object):
     def __init__(self, cat, rule_type):
@@ -135,7 +136,7 @@ class Tree(Node):
     def resolve_op(self, ops):
         if len(self.children) == 1:
             self.rule_type = RuleType.UNARY
-            self.op = combinator.UnaryRule()
+            self.op = py.combinator.UnaryRule()
         else:
             left, right = self.children
             for op in ops:
@@ -144,15 +145,15 @@ class Tree(Node):
                     self.rule_type = op.rule_type
                     new_head = op.head_is_left(left.cat, right.cat)
                     if self.left_is_head != new_head:
-                        print "head error!!!: old: {}, new: {}" .format(self.head_is_left, new_head)
-                        print self.show_derivation()
+                        print("head error!!!: old: {}, new: {}" .format(self.head_is_left, new_head))
+                        print(self.show_derivation())
                         raise RuntimeError()
                     self.left_is_head = new_head
                     self.op = op
                     return
-            print left.cat, right.cat, "-->", self.cat, "\n"
+            print(left.cat, right.cat, "-->", self.cat, "\n")
 
-            print self.show_derivation()
+            print(self.show_derivation())
             raise RuntimeError()
                 # self.rule_type = NONE
                 # self.op = Combinator()
