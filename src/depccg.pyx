@@ -75,12 +75,18 @@ cdef extern from "cat.h" namespace "myccg" nogil:
         # Cat Substitute(Feat feat) const
 
 
+cdef extern from "combinator.h" namespace "myccg" nogil:
+    cdef cppclass Combinator:
+        const string ToStr() const
+    ctypedef const Combinator* Op
+
+
 cdef extern from "tree.h" namespace "myccg" nogil:
     cdef cppclass Leaf:
         Leaf(const string& word, Cat cat, int position)
 
     cdef cppclass Tree:
-        pass
+        Op GetRule() const
 
     cdef cppclass Node:
         Cat GetCategory() const
@@ -134,12 +140,6 @@ cdef extern from "tree.h" namespace "myccg" nogil:
         CoNLL(NodeType tree)
         ostream& operator<<(ostream& ost, const CoNLL& xml)
         string Get()
-
-
-cdef extern from "combinator.h" namespace "myccg" nogil:
-    cdef cppclass Combinator:
-        pass
-    ctypedef const Combinator* Op
 
 
 cdef extern from "chainer_tagger.h" namespace "myccg" nogil:
@@ -265,17 +265,20 @@ cdef class PyCat:
 
     property without_feat:
         def __get__(self):
-            return self.cat_.ToStrWithoutFeat()
+            cdef string res = self.cat_.ToStrWithoutFeat()
+            return res.decode("utf-8")
 
         # const string& GetType() const
     property left:
         def __get__(self):
-            assert self.is_functor
+            assert self.is_functor, \
+                "Error {} is not functor type.".format(str(self))
             return PyCat.from_ptr(self.cat_.GetLeft())
 
     property right:
         def __get__(self):
-            assert self.is_functor
+            assert self.is_functor, \
+                "Error {} is not functor type.".format(str(self))
             return PyCat.from_ptr(self.cat_.GetRight())
 
         # const string WithBrackets()
@@ -359,6 +362,14 @@ cdef class Parse:
         def __get__(self):
             return PyCat.from_ptr(deref(self.node).GetCategory())
 
+    property op_string:
+        def __get__(self):
+            assert not self.is_leaf, \
+                "This node is leaf and does not have combinator!"
+            cdef const Node* c_node = &deref(self.node)
+            cdef string res = (<const Tree*>c_node).GetRule().ToStr()
+            return res.decode("utf-8")
+
     def __len__(self):
         return deref(self.node).GetLength()
 
@@ -384,7 +395,8 @@ cdef class Parse:
 
     property word:
         def __get__(self):
-            return deref(self.node).GetWord()
+            cdef string res = deref(self.node).GetWord()
+            return res.decode("utf-8")
 
     property head_id:
         def __get__(self):
