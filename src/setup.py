@@ -48,6 +48,7 @@ ext_modules = [
                   sources,
                   include_dirs=[numpy.get_include(), "."],
                   extra_compile_args=compile_options.split(" "),
+                  extra_link_args=["-fopenmp"],
                   language='c++'
                   ),
         # Extension("chainer_tagger",
