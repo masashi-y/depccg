@@ -144,7 +144,7 @@ cdef extern from "tree.h" namespace "myccg" nogil:
 
 cdef extern from "chainer_tagger.h" namespace "myccg" nogil:
     cdef cppclass Tagger:
-        Tagger(const string& model)
+        Tagger(const string& model) except +
 
 
 cdef extern from "grammar.h" namespace "myccg" nogil:
@@ -531,7 +531,7 @@ cdef class PyAStarParser:
         if not type_check:
             os.environ["CHAINER_TYPE_CHECK"] = "0"
 
-    cdef Parser* load_parser(self):
+    cdef Parser* load_parser(self) except *:
         return <Parser*>new DepAStarParser[En](
                         self.tagger_,
                         self.path,
@@ -631,7 +631,8 @@ cdef class PyJaAStarParser(PyAStarParser):
                   beta, pruning_size, batchsize,
                   loglevel, type_check)
 
-    cdef Parser* load_parser(self):
+    # cdef Parser* load_parser(self):
+    cdef Parser* load_parser(self) except *:
         return <Parser*>new DepAStarParser[Ja](
                         self.tagger_,
                         self.path,

@@ -14,13 +14,36 @@ from chainer.functions.array import split_axis
 from chainer.functions.array import stack
 from chainer.functions.connection import linear
 from chainer.functions.noise import dropout
-from chainer.functions.connection.n_step_lstm import _split, get_random_state, NStepLSTM as NStepLSTMFunction, _stack_weight, PointerArray
+from chainer.functions.connection.n_step_lstm import get_random_state, NStepLSTM as NStepLSTMFunction
 
 
 if cuda.cudnn_enabled:
     cudnn = cuda.cudnn
     libcudnn = cuda.cudnn.cudnn
     _cudnn_version = libcudnn.getVersion()
+
+
+class PointerArray(object):
+
+    def __init__(self, lst, back_pointer):
+        self._value = numpy.array(lst, dtype=numpy.intp)
+        # Store back_pointer to prevent the GC removes the original variable
+        self._back_pointer = back_pointer
+
+    @property
+    def data(self):
+        return self._value.ctypes.data
+
+
+def _split(inputs, pos):
+    return inputs[:pos], inputs[pos:]
+
+
+def _stack_weight(ws):
+    # TODO(unno): Input of the current LSTM implementaiton is shuffled
+    w = stack.stack(ws, axis=1)
+    shape = w.shape
+    return reshape.reshape(w, (shape[0] * shape[1],) + shape[2:])
 
 
 class FixedLengthNStepLSTM(NStepLSTM):
