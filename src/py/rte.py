@@ -46,4 +46,4 @@ for i, (sent, tree) in enumerate(zip(sents, res)):
     sent.append(depccg2xml(tree, i))
 
 print(etree.tostring(xml_root,
-    pretty_print=True, encoding="utf-8").decode("utf-8"))
+    pretty_print=True).decode("utf-8"))
