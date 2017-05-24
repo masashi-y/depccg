@@ -1,5 +1,6 @@
 
 from __future__ import print_function, unicode_literals
+import codecs
 import sys
 import random
 import numpy as np
@@ -69,7 +70,7 @@ class TrainingDataCreator(object):
     def _write(dct, out, comment_out_value=False):
         print("writing to", out.name, file=sys.stderr)
         for key, value in dct.items():
-            out.write(key.encode("utf-8") + " ")
+            out.write(key + " ")
             if comment_out_value:
                 out.write("# ")
             out.write(str(value) + "\n")
@@ -98,7 +99,7 @@ class TrainingDataCreator(object):
         for sent, tags, (cats, deps) in self.samples:
             for i, (w, t, c, d) in enumerate(zip(sent.split(" "), tags, cats, deps), 1):
                 out.write("{0}\t{1}\t{1}\t{2}\t{2}\t_\t{4}\tnone\t_\t{3}\n"
-                        .format(i, w.encode("utf-8"), t, c, d))
+                        .format(i, w, t, c, d))
             out.write("\n")
 
     def _create_samples(self, trees):
@@ -144,17 +145,17 @@ class TrainingDataCreator(object):
             self._write(self.seen_rules, f, comment_out_value=True)
         with open(args.out + "/target.txt", "w") as f:
             self._write(self.cats, f, comment_out_value=False)
-        with open(args.out + "/words.txt", "w") as f:
+        with codecs.open(args.out + "/words.txt", "w", encoding="UTF-8") as f:
             self._write(self.words, f, comment_out_value=False)
-        with open(args.out + "/suffixes.txt", "w") as f:
+        with codecs.open(args.out + "/suffixes.txt", "w", encoding='UTF-8') as f:
             self._write(self.suffixes, f, comment_out_value=False)
-        with open(args.out + "/prefixes.txt", "w") as f:
+        with codecs.open(args.out + "/prefixes.txt", "w", encoding='UTF-8') as f:
             self._write(self.prefixes, f, comment_out_value=False)
         with open(args.out + "/traindata.json", "w") as f:
             json.dump([(s, t) for (s, _, t) in self.samples], f) # no need for tags
-        with open(args.out + "/trainsents.txt", "w") as f:
-            for sent in self.sents: f.write(sent.encode("utf-8") + "\n")
-        with open(args.out + "/trainsents.conll", "w") as f:
+        with codecs.open(args.out + "/trainsents.txt", "w", encoding="UTF-8") as f:
+            for sent in self.sents: f.write(sent + "\n")
+        with codecs.open(args.out + "/trainsents.conll", "w", encoding="UTF-8") as f:
             self._to_conll(f)
 
     @staticmethod
