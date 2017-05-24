@@ -80,7 +80,7 @@ class AutoLineReader(object):
         elif self.line[self.index+2] == "T":
             return self.parse_tree
         else:
-            raise RuntimeError()
+            raise RuntimeError("AUTO parse error: expected string starting with ' <L' or ' <T', but got this string: '" + self.line[self.index:] + ' in line: ' + self.line)
 
     def parse_leaf(self):
         self.word_id += 1
