@@ -28,6 +28,18 @@ cdef extern from "<iostream>" namespace "std":
         ostream& operator<< (const CoNLL& deriv)
     ostream cout
 
+cdef extern from "feat.h" namespace "myccg" nogil:
+    ctypedef const Feature* Feat
+    cdef cppclass Feature:
+        # static Feat Parse(const std::string& string);
+        string ToStr() const
+        bint IsEmpty() const
+        bint Matches(Feat other) const
+        bint ContainsWildcard() const
+        string SubstituteWildcard(const string& string) const
+        bint ContainsKeyValue(const string& key, const string& value) const
+        Feat ToMultiValue() const
+
 
 cdef extern from "cat.h" namespace "myccg" nogil:
     ctypedef const Category* Cat
@@ -38,14 +50,14 @@ cdef extern from "cat.h" namespace "myccg" nogil:
         string ToStrWithoutFeat()
 
         # ctypedef const string& Str
-        # Cat StripFeat() const
+        Cat StripFeat() const
         # Cat StripFeat(Str f1) const
         # Cat StripFeat(Str f1, Str f2) const
         # Cat StripFeat(Str f1, Str f2, Str f3) const
         # Cat StripFeat(Str f1, Str f2, Str f3, Str f4) const
 
         const string& GetType() const
-        # Feat GetFeat() const = 0;
+        Feat GetFeat() const
         Cat GetLeft() const
         Cat GetRight() const
 
@@ -231,6 +243,27 @@ cdef extern from "dep.h" namespace "myccg" nogil:
                     LogLevel loglevel) except +
 
 
+cdef JaResolveCmobinatorName(const Node* tree):
+    cdef Cat child
+    cdef Feat ch_feat
+    cdef string res
+    if tree.IsUnary():
+        child = deref(tree.GetLeftChild()).GetCategory()
+        ch_feat = child.Arg(0).GetFeat()
+        if ch_feat.ContainsKeyValue(b"mod", b"adn"):
+            if child.StripFeat().ToStr() == b"S":
+                res = b"ADNext"
+            else:
+                res = b"ADNint"
+        elif ch_feat.ContainsKeyValue(b"mod", b"adv"):
+            if tree.GetCategory().StripFeat().ToStr() == b"(S\\NP)/(S\\NP)":
+                res = b"ADV1"
+            else:
+                res = b"ADV0"
+    else:
+        res = (<const Tree*>tree).GetRule().ToStr()
+    return res.decode("utf-8")
+
 #######################################################
 ####################### Category ######################
 #######################################################
@@ -367,8 +400,9 @@ cdef class Parse:
             assert not self.is_leaf, \
                 "This node is leaf and does not have combinator!"
             cdef const Node* c_node = &deref(self.node)
-            cdef string res = (<const Tree*>c_node).GetRule().ToStr()
-            return res.decode("utf-8")
+            return JaResolveCmobinatorName(c_node)
+            # cdef string res = (<const Tree*>c_node).GetRule().ToStr()
+            # return res.decode("utf-8")
 
     def __len__(self):
         return deref(self.node).GetLength()
