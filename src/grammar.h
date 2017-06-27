@@ -96,6 +96,8 @@ public:
 
 };
 
+static std::string ResolveCombinatorName(const Node* parse);
+
 static bool IsAcceptableUnary(Cat result, NodeType parse);
 
 static bool IsAcceptableBinary(RuleType rule_type, NodeType left, NodeType right);
@@ -188,6 +190,9 @@ public:
     const std::string ToStr() const { return string_; }
     std::string string_;
 };
+
+static std::string ResolveCombinatorName(const Node* parse);
+
 static bool IsAcceptableUnary(Cat result, NodeType parse);
 
 static bool IsAcceptableBinary(RuleType rule_type, NodeType left, NodeType right);

@@ -10,6 +10,7 @@
 #include "cat.h"
 #include "cat_loader.h"
 #include "logger.h"
+#include "chart.h"
 
 namespace myccg {
 
@@ -21,6 +22,7 @@ public:
            const std::unordered_set<Cat>& possible_root_cats,
            Comparator comparator,
            std::vector<Op> binary_rules,
+           unsigned nbest,
            float beta,
            int pruning_size,
            LogLevel loglevel)
@@ -31,6 +33,7 @@ public:
       possible_root_cats_(possible_root_cats),
       comparator_(comparator),
       binary_rules_(binary_rules),
+      nbest_(nbest),
       beta_(beta),
       pruning_size_(pruning_size),
       logger_(loglevel) {}
@@ -44,13 +47,13 @@ public:
     void SetUseBeta(bool use_beta) { use_beta_ = use_beta; }
     void SetPruningSize(int prune) { pruning_size_ = prune; }
     ParserLogger& GetLogger() { return logger_; }
-    NodeType Failed(const std::string& sent, const std::string& message);
+    std::vector<ScoredNode> Failed(const std::string& sent, const std::string& message);
 
-    virtual NodeType Parse(int id, const std::string& sent, float* scores) NO_IMPLEMENTATION
-    virtual NodeType Parse(int id, const std::string& sent, float* tag_scores, float* dep_scores) NO_IMPLEMENTATION
-    virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc) NO_IMPLEMENTATION
-    virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc, float** scores) NO_IMPLEMENTATION
-    virtual std::vector<NodeType> Parse(const std::vector<std::string>& doc, float** tag_scores, float** dep_scores) NO_IMPLEMENTATION
+    virtual std::vector<ScoredNode> Parse(int id, const std::string& sent, float* scores) NO_IMPLEMENTATION
+    virtual std::vector<ScoredNode> Parse(int id, const std::string& sent, float* tag_scores, float* dep_scores) NO_IMPLEMENTATION
+    virtual std::vector<std::vector<ScoredNode>> Parse(const std::vector<std::string>& doc) NO_IMPLEMENTATION
+    virtual std::vector<std::vector<ScoredNode>> Parse(const std::vector<std::string>& doc, float** scores) NO_IMPLEMENTATION
+    virtual std::vector<std::vector<ScoredNode>> Parse(const std::vector<std::string>& doc, float** tag_scores, float** dep_scores) NO_IMPLEMENTATION
 
     // to capture SIGINT or SIGTERM
     static bool keep_going;
@@ -66,6 +69,7 @@ protected:
     std::unordered_set<Cat> possible_root_cats_;
     Comparator comparator_;
     std::vector<Op> binary_rules_;
+    unsigned nbest_;
     float beta_;
     int pruning_size_;
     ParserLogger logger_;
@@ -82,18 +86,19 @@ public:
             const std::unordered_set<Cat>& possible_root_cats,
             Comparator comparator,
             std::vector<Op> binary_rules,
+            unsigned nbest,
             float beta,
             int pruning_size,
             LogLevel loglevel)
     : Parser(tagger, model, possible_root_cats,
-            comparator, binary_rules, beta, pruning_size, loglevel),
+            comparator, binary_rules, nbest, beta, pruning_size, loglevel),
       use_seen_rules_(false),
       use_category_dict_(false),
       rule_cache_(binary_rules_) {}
 
-    std::vector<NodeType> Parse(const std::vector<std::string>& doc);
-    std::vector<NodeType> Parse(const std::vector<std::string>& doc, float** scores);
-    NodeType Parse(int id, const std::string& sent, float* scores);
+    std::vector<std::vector<ScoredNode>> Parse(const std::vector<std::string>& doc);
+    std::vector<std::vector<ScoredNode>> Parse(const std::vector<std::string>& doc, float** scores);
+    std::vector<ScoredNode> Parse(int id, const std::string& sent, float* scores);
 
 
 protected:

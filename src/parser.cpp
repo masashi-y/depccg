@@ -14,7 +14,6 @@
 #include "configure.h"
 #include "debug.h"
 #include "matrix.h"
-#include "chart.h"
 #include "grammar.h"
 
 namespace myccg {
@@ -48,12 +47,12 @@ void AStarParser<Lang>::LoadCategoryDict() {
     logger_(Info) << "done";
 }
 
-NodeType Parser::Failed(const std::string& sent, const std::string& message) {
-    static NodeType failure_node =
-        std::make_shared<Leaf>("fail", Category::Parse("NP"), 0);
+std::vector<ScoredNode> Parser::Failed(const std::string& sent, const std::string& message) {
+    static ScoredNode failure_node = std::make_pair(
+        std::make_shared<Leaf>("fail", Category::Parse("NP"), 0), 0);
     logger_(Info) << "failed to parse: " << sent
                   << " : " << message << std::endl;
-    return failure_node;
+    return std::vector<ScoredNode>({failure_node});
 }
 
 template<typename Lang>
@@ -85,22 +84,22 @@ std::vector<RuleCache>& AStarParser<Lang>::GetRules(Cat left, Cat right) {
 }
 
 template<typename Lang>
-std::vector<NodeType> AStarParser<Lang>::Parse(const std::vector<std::string>& doc) {
+std::vector<std::vector<ScoredNode>> AStarParser<Lang>::Parse(const std::vector<std::string>& doc) {
     logger_.InitStatistics(doc.size());
 
     logger_.RecordTimeStartRunning();
     std::unique_ptr<float*[]> scores = tagger_->PredictTags(doc);
     logger_.RecordTimeEndOfTagging();
-    std::vector<NodeType> res = Parse(doc, scores.get());
+    std::vector<std::vector<ScoredNode>> res = Parse(doc, scores.get());
     logger_.RecordTimeEndOfParsing();
     logger_.Report();
     return res;
 }
 
 template<typename Lang>
-std::vector<NodeType> AStarParser<Lang>::Parse(const std::vector<std::string>& doc,
+std::vector<std::vector<ScoredNode>> AStarParser<Lang>::Parse(const std::vector<std::string>& doc,
                                                float** scores) {
-    std::vector<NodeType> res(doc.size());
+    std::vector<std::vector<ScoredNode>> res(doc.size());
     #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
     for (unsigned i = 0; i < doc.size(); i++) {
         if ( keep_going )
@@ -117,7 +116,7 @@ float GetLengthPenalty(NodeType left, NodeType right) {
 }
 
 template<typename Lang>
-NodeType AStarParser<Lang>::Parse(int id, const std::string& sent, float* scores) {
+std::vector<ScoredNode> AStarParser<Lang>::Parse(int id, const std::string& sent, float* scores) {
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     int sent_size = (int)tokens.size();
     if (sent_size >= MAX_LENGTH)
@@ -248,8 +247,8 @@ NodeType AStarParser<Lang>::Parse(int id, const std::string& sent, float* scores
     if (chart.IsEmpty())
         return Failed(sent, "no candidate parse found");
 
-    auto res = chart(1,  -1)->GetBestParse();
-    logger_.CalculateNumOneBestTags(id, tagger_, scores, res);
+    auto res = chart(1,  -1)->GetNBestParses();
+    logger_.CalculateNumOneBestTags(id, tagger_, scores, res[0].first);
     return res;
 }
 

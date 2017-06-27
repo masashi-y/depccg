@@ -49,6 +49,8 @@ if __name__ == "__main__":
             help="a file with tokenized sentences in each line")
     parser.add_argument("--batchsize", type=int, default=32,
             help="batchsize in supertagger")
+    parser.add_argument("--nbest", type=int, default=1,
+            help="output N best parses")
     parser.add_argument("--input-format", default="raw",
             choices=["raw", "POSandNERtagged"],
             help="input format")
@@ -70,6 +72,7 @@ if __name__ == "__main__":
 
     parser = Parsers[args.lang](args.model,
                                batchsize=args.batchsize,
+                               nbest=args.nbest,
                                loglevel=1 if args.verbose else 3)
 
 
@@ -77,7 +80,11 @@ if __name__ == "__main__":
     if args.format == "xml":
         to_xml(res, tagged_doc)
     else:
-        for i, r in enumerate(res):
+        for i, parsed in enumerate(res):
             print("ID={}".format(i))
-            r.suppress_feat = True
-            print(getattr(r, args.format))
+            if args.nbest > 1:
+                for (tree, score) in parsed:
+                    print("score=", score)
+                    print(getattr(tree, args.format))
+            else:
+                print(getattr(parsed, args.format))

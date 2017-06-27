@@ -1,7 +1,34 @@
 
+#include <memory>
 #include "grammar.h"
 
 namespace myccg {
+
+std::string Ja::ResolveCombinatorName(const Node* parse) {
+   const Tree* tree;
+   if ( (tree = dynamic_cast<const Tree*>(parse)) == nullptr )
+       throw std::runtime_error("This node is leaf and does not have combinator!");
+    Cat child;
+    Feat ch_feat;
+    if ( tree->IsUnary() ) {
+        child = tree->GetLeftChild()->GetCategory();
+        ch_feat = child->Arg(0)->GetFeat();
+        if ( ch_feat->ContainsKeyValue("mod", "adn") ) {
+            if ( child->StripFeat()->ToStr() == "S" ) {
+                return "ADNext";
+            } else {
+                return "ADNint";
+            }
+        } else if ( ch_feat->ContainsKeyValue("mod", "adv") ) {
+            if ( tree->GetCategory()->StripFeat()->ToStr() == "(S\\NP)/(S\\NP)" ) {
+                return "ADV1";
+            } else {
+                return "ADV0";
+            }
+        }
+    }
+    return tree->GetRule()->ToStr();
+}
 
 bool Ja::IsModifier(Cat cat) {
     return (cat->IsFunctor() &&

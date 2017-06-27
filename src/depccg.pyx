@@ -7,6 +7,7 @@ from libc.stdlib cimport malloc, free
 from libcpp.memory cimport make_shared, shared_ptr
 from libcpp.vector cimport vector
 from libcpp.string cimport string
+from libcpp.pair cimport pair
 from libcpp.unordered_set cimport unordered_set
 from cython.operator cimport dereference as deref
 
@@ -161,14 +162,18 @@ cdef extern from "chainer_tagger.h" namespace "myccg" nogil:
 
 cdef extern from "grammar.h" namespace "myccg" nogil:
     cdef cppclass En:
-        pass
+        @staticmethod
+        string ResolveCombinatorName(const Node*)
+
     cdef const unordered_set[Cat] en_possible_root_cats     "myccg::En::possible_root_cats"
     cdef const vector[Op]         en_headfirst_binary_rules "myccg::En::headfirst_binary_rules"
     cdef const vector[Op]         en_binary_rules           "myccg::En::binary_rules"
     cdef const vector[Op]         en_dep_binary_rules       "myccg::En::dep_binary_rules"
 
     cdef cppclass Ja:
-        pass
+        @staticmethod
+        string ResolveCombinatorName(const Node*)
+
     cdef const unordered_set[Cat] ja_possible_root_cats     "myccg::Ja::possible_root_cats"
     cdef const vector[Op]         ja_binary_rules           "myccg::Ja::binary_rules"
     cdef const vector[Op]         ja_headfinal_binary_rules "myccg::Ja::headfinal_binary_rules"
@@ -191,6 +196,8 @@ cdef extern from "logger.h" namespace "myccg" nogil:
         void CompleteOne()
         void CompleteOne(int id, int agenda_size)
 
+cdef extern from "chart.h" namespace "myccg" nogil:
+    ctypedef pair[NodeType, float] ScoredNode
 
 cdef extern from "parser_tools.h" namespace "myccg" nogil:
     cdef cppclass AgendaItem:
@@ -204,11 +211,11 @@ cdef extern from "parser_tools.h" namespace "myccg" nogil:
 
 cdef extern from "parser.h" namespace "myccg" nogil:
     cdef cppclass Parser:
-        NodeType Parse(int id, const string& sent, float* scores)
-        NodeType Parse(int id, const string& sent, float* tag_scores, float* dep_scores)
-        vector[NodeType] Parse(const vector[string]& doc)
-        vector[NodeType] Parse(const vector[string]& doc, float** scores)
-        vector[NodeType] Parse(const vector[string]& doc, float** tag_scores, float** dep_scores)
+        vector[ScoredNode] Parse(int id, const string& sent, float* scores)
+        vector[ScoredNode] Parse(int id, const string& sent, float* tag_scores, float* dep_scores)
+        vector[vector[ScoredNode]] Parse(const vector[string]& doc)
+        vector[vector[ScoredNode]] Parse(const vector[string]& doc, float** scores)
+        vector[vector[ScoredNode]] Parse(const vector[string]& doc, float** tag_scores, float** dep_scores)
         void LoadSeenRules()
         void LoadCategoryDict()
         void SetComparator(Comparator comp)
@@ -224,6 +231,7 @@ cdef extern from "parser.h" namespace "myccg" nogil:
                 const unordered_set[Cat]& possible_root_cats,
                 Comparator comparator,
                 vector[Op] binary_rules,
+                unsigned nbest,
                 float beta,
                 int pruning_size,
                 LogLevel loglevel) except +
@@ -238,30 +246,21 @@ cdef extern from "dep.h" namespace "myccg" nogil:
                     const unordered_set[Cat]& possible_root_cats,
                     Comparator comparator,
                     vector[Op] binary_rules,
+                    unsigned nbest,
                     float beta,
                     int pruning_size,
                     LogLevel loglevel) except +
 
 
-cdef JaResolveCmobinatorName(const Node* tree):
-    cdef Cat child
-    cdef Feat ch_feat
-    cdef string res
-    if tree.IsUnary():
-        child = deref(tree.GetLeftChild()).GetCategory()
-        ch_feat = child.Arg(0).GetFeat()
-        if ch_feat.ContainsKeyValue(b"mod", b"adn"):
-            if child.StripFeat().ToStr() == b"S":
-                res = b"ADNext"
-            else:
-                res = b"ADNint"
-        elif ch_feat.ContainsKeyValue(b"mod", b"adv"):
-            if tree.GetCategory().StripFeat().ToStr() == b"(S\\NP)/(S\\NP)":
-                res = b"ADV1"
-            else:
-                res = b"ADV0"
+## TODO: ugly code
+cdef ResolveCmobinatorName(const Node* tree, bytes lang):
+    cdef string res;
+    if lang == b"en":
+        res = En.ResolveCombinatorName(tree);
+    elif lang == b"ja":
+        res = Ja.ResolveCombinatorName(tree);
     else:
-        res = (<const Tree*>tree).GetRule().ToStr()
+        res = b"error: " + lang
     return res.decode("utf-8")
 
 #######################################################
@@ -296,6 +295,10 @@ cdef class PyCat:
         c.cat_ = cat
         return c
 
+    property multi_valued:
+        def __get__(self):
+            return PyCat.from_ptr(self.cat_.ToMultiValue())
+
     property without_feat:
         def __get__(self):
             cdef string res = self.cat_.ToStrWithoutFeat()
@@ -313,8 +316,6 @@ cdef class PyCat:
             assert self.is_functor, \
                 "Error {} is not functor type.".format(str(self))
             return PyCat.from_ptr(self.cat_.GetRight())
-
-        # const string WithBrackets()
 
     property is_modifier:
         def __get__(self):
@@ -380,16 +381,17 @@ cdef class PyCat:
 cdef class Parse:
     cdef NodeType node
     cdef public bint suppress_feat
+    cdef bytes lang
 
     @staticmethod
-    cdef Parse from_ptr(NodeType node):
+    cdef Parse from_ptr(NodeType node, lang):
         p = Parse()
         p.node = node
+        p.lang = lang
         return p
 
     def __cinit__(self):
         self.suppress_feat = False
-        # self.node.reset(<const Node*>new const Leaf("fail", Category.Parse("NP"), 0))
 
     property cat:
         def __get__(self):
@@ -400,20 +402,33 @@ cdef class Parse:
             assert not self.is_leaf, \
                 "This node is leaf and does not have combinator!"
             cdef const Node* c_node = &deref(self.node)
-            return JaResolveCmobinatorName(c_node)
+            return ResolveCmobinatorName(c_node, self.lang)
             # cdef string res = (<const Tree*>c_node).GetRule().ToStr()
             # return res.decode("utf-8")
 
     def __len__(self):
         return deref(self.node).GetLength()
 
+    property children:
+        def __get__(self):
+            res = [self.left_child]
+            if not self.is_unary:
+                res.append(self.right_child)
+            return res
+
     property left_child:
         def __get__(self):
-            return Parse.from_ptr(<NodeType>deref(self.node).GetLeftChild())
+            assert not self.is_leaf, \
+                "This node is leaf and does not have any child!"
+            return Parse.from_ptr(<NodeType>deref(self.node).GetLeftChild(), self.lang)
 
     property right_child:
         def __get__(self):
-            return Parse.from_ptr(<NodeType>deref(self.node).GetRightChild())
+            assert not self.is_leaf, \
+                "This node is leaf and does not have any child!"
+            assert not self.is_unary, \
+                "This node does not have right child!"
+            return Parse.from_ptr(<NodeType>deref(self.node).GetRightChild(), self.lang)
 
     property is_leaf:
         def __get__(self):
@@ -519,15 +534,18 @@ cdef class PyAStarParser:
     cdef object use_seen_rules
     cdef object use_cat_dict
     cdef object use_beta
+    cdef object nbest
     cdef object beta
     cdef object pruning_size
     cdef object batchsize
     cdef object loglevel
+    cdef bytes  lang
 
     def __init__(self, path,
                   use_seen_rules=True,
                   use_cat_dict=True,
                   use_beta=True,
+                  nbest=1,
                   beta=0.00001,
                   pruning_size=50,
                   batchsize=16,
@@ -538,10 +556,12 @@ cdef class PyAStarParser:
         self.use_seen_rules = use_seen_rules
         self.use_cat_dict   = use_cat_dict
         self.use_beta       = use_beta
+        self.nbest          = nbest
         self.beta           = beta
         self.pruning_size   = pruning_size
         self.batchsize      = batchsize
         self.loglevel       = loglevel
+        self.lang           = b"en"
 
         self.tagger_ = new Tagger(self.path)
         self.parser_ = self.load_parser()
@@ -572,6 +592,7 @@ cdef class PyAStarParser:
                         en_possible_root_cats,
                         NormalComparator,
                         en_headfirst_binary_rules,
+                        self.nbest,
                         self.beta,
                         self.pruning_size,
                         self.loglevel)
@@ -615,17 +636,17 @@ cdef class PyAStarParser:
 
     cdef Parse _parse_tag(self, bytes sent, np.ndarray[float, ndim=2, mode="c"] mat):
         cdef string csent = sent
-        cdef NodeType res = self.parser_.Parse(0, csent, &mat[0, 0])
-        return Parse.from_ptr(res)
+        cdef vector[ScoredNode] res = self.parser_.Parse(0, csent, &mat[0, 0])
+        return Parse.from_ptr(res[0].first, self.lang)
 
     cdef Parse _parse_tag_and_dep(self, bytes sent,
                                   np.ndarray[float, ndim=2, mode="c"] tag,
                                   np.ndarray[float, ndim=2, mode="c"] dep):
-        cdef NodeType res = self.parser_.Parse(0, sent, &tag[0, 0], &dep[0, 0])
-        return Parse.from_ptr(res)
+        cdef vector[ScoredNode] res = self.parser_.Parse(0, sent, &tag[0, 0], &dep[0, 0])
+        return Parse.from_ptr(res[0].first, self.lang)
 
     cdef list _parse_doc_tag_and_dep(self, list sents, list probs):
-        cdef int doc_size = len(sents), i
+        cdef int doc_size = len(sents), i, j
         cdef np.ndarray[float, ndim=2, mode="c"] cat_scores, dep_scores
         cdef vector[string] csents = sents
         cdef float **tags = <float**>malloc(doc_size * sizeof(float*))
@@ -634,12 +655,19 @@ cdef class PyAStarParser:
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
         if self.loglevel < 3: print("start parsing", sys.stderr)
-        cdef vector[NodeType] cres = self.parser_.Parse(csents, tags, deps)
-        cdef list res = []
+        cdef vector[vector[ScoredNode]] cres = self.parser_.Parse(csents, tags, deps)
+        cdef list tmp, res = []
         cdef Parse parse
         for i in range(len(sents)):
-            parse = Parse.from_ptr(cres[i])
-            res.append(parse)
+            if self.nbest == 1:
+                parse = Parse.from_ptr(cres[i][0].first, self.lang)
+                res.append(parse)
+            else:
+                tmp = []
+                for j in range(min(self.nbest, cres[i].size())):
+                    tmp.append((Parse.from_ptr(cres[i][j].first, self.lang),
+                                    cres[i][j].second))
+                res.append(tmp)
         free(tags)
         free(deps)
         return res
@@ -654,6 +682,7 @@ cdef class PyJaAStarParser(PyAStarParser):
                   use_seen_rules=True,
                   use_cat_dict=False,
                   use_beta=False,
+                  nbest=1,
                   beta=0.00001,
                   pruning_size=50,
                   batchsize=16,
@@ -662,8 +691,10 @@ cdef class PyJaAStarParser(PyAStarParser):
 
         super(PyJaAStarParser, self).__init__(path,
                   use_seen_rules, use_cat_dict, use_beta,
-                  beta, pruning_size, batchsize,
+                  nbest, beta, pruning_size, batchsize,
                   loglevel, type_check)
+
+        self.lang = b"ja"
 
     # cdef Parser* load_parser(self):
     cdef Parser* load_parser(self) except *:
@@ -673,6 +704,7 @@ cdef class PyJaAStarParser(PyAStarParser):
                         ja_possible_root_cats,
                         NormalComparator,
                         ja_headfinal_binary_rules,
+                        self.nbest,
                         self.beta,
                         self.pruning_size,
                         self.loglevel)

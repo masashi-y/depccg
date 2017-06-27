@@ -26,18 +26,19 @@ public:
             const std::string& model,
             const std::unordered_set<Cat>& possible_root_cats,
             Comparator comparator,
-           std::vector<Op> binary_rules,
+            std::vector<Op> binary_rules,
+            unsigned nbest,
             float beta,
             int pruning_size,
             LogLevel loglevel)
     : AStarParser<Lang>(tagger, model, possible_root_cats,
-                comparator, binary_rules, beta, pruning_size, loglevel) {}
+                comparator, binary_rules, nbest, beta, pruning_size, loglevel) {}
 
-    std::vector<NodeType> Parse(const std::vector<std::string>& doc);
-    std::vector<NodeType> Parse(const std::vector<std::string>& doc,
+    std::vector<std::vector<ScoredNode>> Parse(const std::vector<std::string>& doc);
+    std::vector<std::vector<ScoredNode>> Parse(const std::vector<std::string>& doc,
                                 float** tag_scores, float** dep_scores);
-    NodeType Parse(int id, const std::string& sent, float* tag_scores, float* dep_scores);
-    NodeType Parse(int id, const std::string& sent, float* tag_scores) {
+    std::vector<ScoredNode> Parse(int id, const std::string& sent, float* tag_scores, float* dep_scores);
+    std::vector<ScoredNode> Parse(int id, const std::string& sent, float* tag_scores) {
         return Base::Parse(id, sent, tag_scores);
     }
 };

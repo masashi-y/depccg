@@ -1,14 +1,26 @@
 
 #include <limits>
 #include <string.h>
+#include <algorithm>
 #include "chart.h"
 
 namespace myccg {
 
 ChartCell::ChartCell()
-    : items(std::unordered_map<Cat, ChartItem>()),
+    : items(std::unordered_map<Cat, ScoredNode>()),
       best_prob(std::numeric_limits<float>::lowest()), best(NULL) {}
 
+bool comp(ScoredNode& s1, ScoredNode s2) {
+    return s1.second > s2.second;
+}
+
+std::vector<ScoredNode> ChartCell::GetNBestParses() {
+    std::vector<ScoredNode> res;
+    for (auto&& p: items)
+        res.push_back(p.second);
+    std::sort(res.begin(), res.end(), comp);
+    return res;
+}
 
 bool ChartCell::update(NodeType parse, float prob) {
     Cat cat = parse->GetCategory();
@@ -40,6 +52,11 @@ Chart::~Chart() {
     delete[] chart_;
     delete[] ending_cells_;
     delete[] starting_cells_;
+}
+
+unsigned Chart::Size() const {
+    ChartCell* final_ = chart_[sent_size_ - 1];
+    return final_ ? final_->items.size() : 0;
 }
 
 bool Chart::IsEmpty() const {

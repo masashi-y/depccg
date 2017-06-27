@@ -8,7 +8,7 @@
 namespace myccg {
 
 
-typedef std::pair<NodeType, float> ChartItem;
+typedef std::pair<NodeType, float> ScoredNode;
 
 struct ChartCell
 {
@@ -17,9 +17,13 @@ struct ChartCell
     ~ChartCell() {}
 
     bool IsEmpty() const { return items.size() == 0; }
-    NodeType GetBestParse() { return best; }
+    std::vector<ScoredNode> GetBestParse() {
+        return std::vector<ScoredNode>(
+                {std::make_pair(best, best_prob)});
+    }
+    std::vector<ScoredNode> GetNBestParses();
     bool update(NodeType parse, float prob);
-    std::unordered_map<Cat, ChartItem> items;
+    std::unordered_map<Cat, ScoredNode> items;
     float best_prob;
     NodeType best;
 };
@@ -34,6 +38,7 @@ public:
 
     ChartCell* operator() (int row, int column);
 
+    unsigned Size() const;
     bool IsEmpty() const;
 
     std::vector<ChartCell*>& GetCellsStartingAt(int idx) {

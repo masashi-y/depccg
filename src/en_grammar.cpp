@@ -3,6 +3,39 @@
 
 namespace myccg {
 
+std::string En::ResolveCombinatorName(const Node* parse) {
+    const Tree* tree;
+    if ( (tree = dynamic_cast<const Tree*>(parse)) == nullptr )
+        throw std::runtime_error("This node is leaf and does not have combinator!");
+    if (tree->IsUnary()) {
+        Cat init = tree->GetLeftChild()->GetCategory();
+        if ((init->Matches(Category::Parse("NP")) ||
+                init->Matches(Category::Parse("PP")))
+                && tree->GetCategory()->IsTypeRaised())
+            return "tr";
+        else
+            return "lex";
+    }
+    switch (tree->GetRule()->GetRuleType()) {
+        case FA: return "fa";
+        case BA: return "ba";
+        case FC: return "fc";
+        case BC: return "bx";
+        case GFC: return "gfc";
+        case GBC: return "gbx";
+        case FX: return "fx";
+        case BX: return "bx";
+        case CONJ: return "conj";
+        case CONJ2: return "conj";
+        case COORD: return "ba";
+        case RP: return "rp";
+        case LP: return "lp";
+        case NOISE: return "lp";
+        default:
+            return "other";
+    }
+}
+
 bool En::IsAcceptableUnary(Cat result, NodeType parse) {
     bool is_not_punct = parse->GetRuleType() != LP && parse->GetRuleType() != RP;
     return is_not_punct || result->IsTypeRaised();
