@@ -5,20 +5,37 @@ from chainer import cuda
 from chainer.functions.connection import linear
 from chainer import link
 from chainer import functions as F
+from chainer import initializer
+from chainer.initializers.normal import HeNormal
+from chainer.initializers.constant import Constant
+from chainer.initializers.constant import Identity
 
 
 def _get_initializer(initializer, scale=1.0):
     if initializer is None:
-        return HeNormal(scale / numpy.sqrt(2))
-    if numpy.isscalar(initializer):
+        return HeNormal(scale / np.sqrt(2))
+    if np.isscalar(initializer):
         return Constant(initializer * scale)
-    if isinstance(initializer, numpy.ndarray):
+    if isinstance(initializer, np.ndarray):
         return Constant(initializer * scale)
 
     assert callable(initializer)
     if scale == 1.0:
         return initializer
     return _ScaledInitializer(initializer, scale)
+
+
+class _ScaledInitializer(initializer.Initializer):
+
+    def __init__(self, initializer, scale=1.0):
+        self.initializer = initializer
+        self.scale = scale
+        dtype = getattr(initializer, 'dtype', None)
+        super(Identity, self).__init__(dtype)
+
+    def __call__(self, array):
+        self.initializer(array)
+        array *= self.scale
 
 
 class Biaffine(link.Link):
