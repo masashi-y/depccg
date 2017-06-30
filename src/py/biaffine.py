@@ -3,9 +3,22 @@ import numpy as np
 
 from chainer import cuda
 from chainer.functions.connection import linear
-from chainer import initializers
 from chainer import link
 from chainer import functions as F
+
+
+def _get_initializer(initializer, scale=1.0):
+    if initializer is None:
+        return HeNormal(scale / numpy.sqrt(2))
+    if numpy.isscalar(initializer):
+        return Constant(initializer * scale)
+    if isinstance(initializer, numpy.ndarray):
+        return Constant(initializer * scale)
+
+    assert callable(initializer)
+    if scale == 1.0:
+        return initializer
+    return _ScaledInitializer(initializer, scale)
 
 
 class Biaffine(link.Link):
@@ -15,7 +28,7 @@ class Biaffine(link.Link):
                  initialW=None, initial_bias=None):
         super(Biaffine, self).__init__()
 
-        self._W_initializer = initializers._get_initializer(
+        self._W_initializer = _get_initializer(
             initialW, math.sqrt(wscale))
 
         self._initialize_params(in_size)
@@ -58,11 +71,11 @@ class Bilinear(link.Link):
                  initialW=None, initial_bias=None, bias=0):
         super(Bilinear, self).__init__()
 
-        self._W_initializer = initializers._get_initializer(
+        self._W_initializer = _get_initializer(
             initialW, math.sqrt(wscale))
         if initial_bias is None:
             initial_bias = bias
-        self.bias_initializer = initializers._get_initializer(initial_bias)
+        self.bias_initializer = _get_initializer(initial_bias)
 
         ## same parameters as chainer.links.Bilinear
         ## so that both can use serialized parameters of the other
