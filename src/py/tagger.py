@@ -15,6 +15,9 @@ import chainer.links as L
 from chainer import training, Variable
 from chainer.training import extensions
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
 
 lpad = "LPAD", "PAD", "PAD"
 rpad = "RPAD", "PAD", "PAD"

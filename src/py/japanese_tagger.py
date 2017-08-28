@@ -16,6 +16,10 @@ from collections import defaultdict
 from py.japanese_ccg import JaCCGReader
 from py.tree import Leaf, Tree, get_leaves
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
+
 WINDOW_SIZE = 7
 CONTEXT = (WINDOW_SIZE - 1) / 2
 IGNORE = -1

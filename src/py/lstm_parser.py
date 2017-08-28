@@ -22,6 +22,10 @@ from py.param import Param
 from py.lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
 from py.lstm_tagger import log, get_suffix, get_prefix, normalize
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
+
 class TrainingDataCreator(object):
     """
     create train & validation data

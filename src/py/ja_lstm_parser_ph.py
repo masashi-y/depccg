@@ -24,6 +24,10 @@ from py.ja_lstm_parser import UNK, START, END, IGNORE, log
 from py.ja_lstm_parser import TrainingDataCreator, FeatureExtractor
 
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
+
 class LSTMParserDataset(chainer.dataset.DatasetMixin):
     def __init__(self, model_path, samples_path):
         self.model_path = model_path

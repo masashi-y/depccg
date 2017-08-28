@@ -20,10 +20,47 @@ from py.biaffine import Biaffine, Bilinear
 from py.param import Param
 from py.my_updater import MyUpdater, MyEvaluator
 
-from py.lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
-from py.lstm_tagger import log, get_suffix, get_prefix, normalize
-from py.lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
-from py.lstm_parser import LSTMParser, LSTMParserTriTrainDataset
+
+UNK = "*UNKNOWN*"
+OOR2 = "OOR2"
+OOR3 = "OOR3"
+OOR4 = "OOR4"
+START = "*START*"
+END = "*END*"
+IGNORE = -1
+MISS = -2
+
+
+def log(args, out):
+    for k, v in vars(args).items():
+        out.write("{}: {}\n".format(k, v))
+
+
+def get_suffix(word):
+    return [word[-1],
+           word[-2:] if len(word) > 1 else OOR2,
+           word[-3:] if len(word) > 2 else OOR3,
+           word[-4:] if len(word) > 3 else OOR4]
+
+
+def get_prefix(word):
+    return [word[0],
+            word[:2] if len(word) > 1 else OOR2,
+            word[:3] if len(word) > 2 else OOR3,
+            word[:4] if len(word) > 3 else OOR4]
+
+
+def normalize(word):
+    if word == "-LRB-":
+        return "("
+    elif word == "-RRB-":
+        return ")"
+    elif word == "-LCB-":
+        return "("
+    elif word == "-RCB-":
+        return ")"
+    else:
+        return word
 
 def scanl(f, base, l):
     res = [base]
@@ -32,6 +69,251 @@ def scanl(f, base, l):
         acc = f(acc, x)
         res += [acc]
     return res
+
+
+class TrainingDataCreator(object):
+    """
+    create train & validation data
+    """
+    def __init__(self, filepath, word_freq_cut, cat_freq_cut, afix_freq_cut):
+        self.filepath = filepath
+         # those categories whose frequency < freq_cut are discarded.
+        self.word_freq_cut = word_freq_cut
+        self.cat_freq_cut  = cat_freq_cut
+        self.afix_freq_cut = afix_freq_cut
+        self.seen_rules = defaultdict(int) # seen binary rules
+        self.unary_rules = defaultdict(int) # seen unary rules
+        self.cats = defaultdict(int) # all cats
+        self.words = defaultdict(int,
+                {UNK: word_freq_cut, START: word_freq_cut, END: word_freq_cut})
+        afix_defaults = {UNK: afix_freq_cut, START: afix_freq_cut, END: afix_freq_cut,
+                            OOR2: afix_freq_cut, OOR3: afix_freq_cut, OOR4: afix_freq_cut}
+        self.prefixes = defaultdict(int, afix_defaults)
+        self.suffixes = defaultdict(int, afix_defaults)
+        self.samples = []
+        self.sents = []
+
+    def _traverse(self, tree):
+        if isinstance(tree, Leaf):
+            self.cats[str(tree.cat)] += 1
+            w = normalize(tree.word)
+            self.words[w.lower()] += 1
+            for f in get_suffix(w):
+                self.suffixes[f] += 1
+            for f in get_prefix(w):
+                self.prefixes[f] += 1
+        else:
+            children = tree.children
+            if len(children) == 1:
+                rule = str(tree.cat), str(children[0].cat)
+                self.unary_rules[rule] += 1
+                self._traverse(children[0])
+            else:
+                rule = str(children[0].cat), str(children[1].cat)
+                self.seen_rules[rule] += 1
+                self._traverse(children[0])
+                self._traverse(children[1])
+
+    @staticmethod
+    def _write(dct, out, comment_out_value=False):
+        print("writing to", out.name, file=sys.stderr)
+        for key, value in dct.items():
+            out.write(key.encode("utf-8") + " ")
+            if comment_out_value:
+                out.write("# ")
+            out.write(str(value) + "\n")
+
+    def _get_dependencies(self, tree, sent_len):
+        def rec(subtree):
+            if isinstance(subtree, Tree):
+                children = subtree.children
+                if len(children) == 2:
+                    head = rec(children[0 if subtree.left_is_head else 1])
+                    dep  = rec(children[1 if subtree.left_is_head else 0])
+                    res[dep] = head
+                else:
+                    head = rec(children[0])
+                return head
+            else:
+                return subtree.pos
+
+        res = [-1 for _ in range(sent_len)]
+        rec(tree)
+        res = [i + 1 for i in res]
+        assert len(filter(lambda i:i == 0, res)) == 1
+        return res
+
+    def _to_conll(self, out):
+        for sent, tags, (cats, deps) in self.samples:
+            for i, (w, t, c, d) in enumerate(zip(sent.split(" "), tags, cats, deps), 1):
+                out.write("{0}\t{1}\t{1}\t{2}\t{2}\t_\t{4}\tnone\t_\t{3}\n"
+                        .format(i, w.encode("utf-8"), t, c, d))
+            out.write("\n")
+
+    def _create_samples(self, trees):
+        for tree in trees:
+            tokens = get_leaves(tree)
+            words = [normalize(token.word) for token in tokens]
+            tags = [token.tag for token in tokens]
+            cats = [str(token.cat) for token in tokens]
+            deps = self._get_dependencies(tree, len(tokens))
+            sent = " ".join(words)
+            self.sents.append(sent)
+            self.samples.append((sent, tags, (cats, deps)))
+
+    @staticmethod
+    def create_traindata(args):
+        self = TrainingDataCreator(args.path,
+                args.word_freq_cut, args.cat_freq_cut, args.afix_freq_cut)
+        with open(args.out + "/log_create_traindata", "w") as f:
+            log(args, f)
+
+        trees = walk_autodir(self.filepath, args.subset)
+        for tree in trees:
+            self._traverse(tree)
+        self._create_samples(trees)
+
+        self.cats = {k: v for (k, v) in self.cats.items() \
+                        if v >= self.cat_freq_cut}
+        self.words = {k: v for (k, v) in self.words.items() \
+                        if v >= self.word_freq_cut}
+        self.suffixes = {k: v for (k, v) in self.suffixes.items() \
+                        if v >= self.afix_freq_cut}
+        self.prefixes = {k: v for (k, v) in self.prefixes.items() \
+                        if v >= self.afix_freq_cut}
+        self.seen_rules = {c1 + " " + c2: v
+                for (c1, c2), v in self.seen_rules.items()
+                    if c1 in self.cats and c2 in self.cats}
+        self.unary_rules = {c1 + " " + c2: v
+                for (c1, c2), v in self.unary_rules.items()
+                    if c1 in self.cats and c2 in self.cats}
+        with open(args.out + "/unary_rules.txt", "w") as f:
+            self._write(self.unary_rules, f, comment_out_value=True)
+        with open(args.out + "/seen_rules.txt", "w") as f:
+            self._write(self.seen_rules, f, comment_out_value=True)
+        with open(args.out + "/target.txt", "w") as f:
+            self._write(self.cats, f, comment_out_value=False)
+        with open(args.out + "/words.txt", "w") as f:
+            self._write(self.words, f, comment_out_value=False)
+        with open(args.out + "/suffixes.txt", "w") as f:
+            self._write(self.suffixes, f, comment_out_value=False)
+        with open(args.out + "/prefixes.txt", "w") as f:
+            self._write(self.prefixes, f, comment_out_value=False)
+        with open(args.out + "/traindata.json", "w") as f:
+            json.dump([(s, t) for (s, _, t) in self.samples], f) # no need for tags
+        with open(args.out + "/trainsents.txt", "w") as f:
+            for sent in self.sents: f.write(sent.encode("utf-8") + "\n")
+        with open(args.out + "/trainsents.conll", "w") as f:
+            self._to_conll(f)
+
+    @staticmethod
+    def create_testdata(args):
+        self = TrainingDataCreator(args.path,
+                args.word_freq_cut, args.cat_freq_cut, args.afix_freq_cut)
+        with open(args.out + "/log_create_{}data".format(args.subset), "w") as f:
+            log(args, f)
+        trees = walk_autodir(self.filepath, args.subset)
+        self._create_samples(trees)
+        with open(args.out + "/{}data.json".format(args.subset), "w") as f:
+            json.dump([(s, t) for (s, _, t) in self.samples], f)
+        with open(args.out + "/{}sents.txt".format(args.subset), "w") as f:
+            for sent in self.sents: f.write(sent.encode("utf-8") + "\n")
+        with open(args.out + "/{}sents.conll".format(args.subset), "w") as f:
+            self._to_conll(f)
+
+
+class FeatureExtractor(object):
+    def __init__(self, model_path, length=False):
+        self.words = read_model_defs(model_path + "/words.txt")
+        self.suffixes = read_model_defs(model_path + "/suffixes.txt")
+        self.prefixes = read_model_defs(model_path + "/prefixes.txt")
+        self.unk_word = self.words[UNK]
+        self.start_word = self.words[START]
+        self.end_word = self.words[END]
+        self.unk_suf = self.suffixes[UNK]
+        self.unk_prf = self.prefixes[UNK]
+        self.start_pre = [[self.prefixes[START]] + [IGNORE] * 3]
+        self.start_suf = [[self.suffixes[START]] + [IGNORE] * 3]
+        self.end_pre = [[self.prefixes[END]] + [IGNORE] * 3]
+        self.end_suf = [[self.suffixes[END]] + [IGNORE] * 3]
+        self.length = length
+
+    def process(self, words):
+        """
+        words: list of unicode tokens
+        """
+        words = list(map(normalize, words))
+        w = np.array([self.start_word] + [self.words.get(
+            x.lower(), self.unk_word) for x in words] + [self.end_word], 'i')
+        s = np.asarray(self.start_suf + [[self.suffixes.get(
+            f, self.unk_suf) for f in get_suffix(x)] for x in words] + self.end_suf, 'i')
+        p = np.asarray(self.start_pre + [[self.prefixes.get(
+            f, self.unk_prf) for f in get_prefix(x)] for x in words] + self.end_pre, 'i')
+        if not self.length:
+            return w, s, p
+        else:
+            return w, s, p, w.shape[0]
+
+
+class LSTMParserDataset(chainer.dataset.DatasetMixin):
+    def __init__(self, model_path, samples_path, length=False):
+        self.model_path = model_path
+        self.targets = read_model_defs(model_path + "/target.txt")
+        self.extractor = FeatureExtractor(model_path, length)
+        with open(samples_path) as f:
+            self.samples = json.load(f)
+
+    def __len__(self):
+        return len(self.samples)
+
+    def get_example(self, i):
+        words, [cats, deps] = self.samples[i]
+        feat = self.extractor.process(words.split(" "))
+        cats = np.array([IGNORE] + [self.targets.get(x, IGNORE) for x in cats] + [IGNORE], 'i')
+        deps = np.array([IGNORE] + deps + [IGNORE], 'i')
+        return feat + (cats, deps)
+
+
+class LSTMParserTriTrainDataset(chainer.dataset.DatasetMixin):
+    def __init__(self, model_path, ccgbank_path, tritrain_path, weight, length=False):
+        self.model_path = model_path
+        self.targets = read_model_defs(model_path + "/target.txt")
+        self.extractor = FeatureExtractor(model_path, length)
+        self.weight = weight
+        self.ncopies = 15
+        with open(ccgbank_path) as f:
+            self.ccgbank_samples = json.load(f)
+            self.ccgbank_size = len(self.ccgbank_samples)
+        with open(tritrain_path) as f:
+            self.tritrain_samples = json.load(f)
+            self.tritrain_size = len(self.tritrain_samples)
+
+        print("len(ccgbank):", self.ccgbank_size, file=sys.stderr)
+        print("len(ccgbank) * # copies:", self.ccgbank_size * self.ncopies, file=sys.stderr)
+        print("len(tritrain):", self.tritrain_size, file=sys.stderr)
+
+    def __len__(self):
+        # some copies of ccgbank corpus plus tritrain dataset
+        return self.ccgbank_size * self.ncopies + self.tritrain_size
+
+    def get_example(self, i):
+        if i < self.tritrain_size:
+            sent, [cats, deps] = self.tritrain_samples[i]
+            words = sent.split(" ")
+            # tri-train dataset is noisy and contains unwanted zero-length word ...
+            if any(len(w) == 0 for w in words):
+                print("ignore sentence:", sent, file=sys.stderr)
+                return self.get_example(random.randint(0, len(self)))
+            weight = np.array(self.weight, 'f')
+        else:
+            words, [cats, deps] = self.ccgbank_samples[(i - self.tritrain_size) % self.ccgbank_size]
+            words = words.split(" ")
+            weight = np.array(1., 'f')
+
+        feat = self.extractor.process(words)
+        cats = np.array([IGNORE] + [self.targets.get(x, IGNORE) for x in cats] + [IGNORE], 'i')
+        deps = np.array([IGNORE] + deps + [IGNORE], 'i')
+        return feat + (cats, deps, weight)
 
 
 class FastBiaffineLSTMParser(chainer.Chain):

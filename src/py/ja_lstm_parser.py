@@ -16,6 +16,10 @@ from py.py_utils import read_pretrained_embeddings, read_model_defs
 from py.tree import Leaf, Tree, get_leaves
 from py.biaffine import Biaffine
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
+
 UNK = "*UNKNOWN*"
 START = "*START*"
 END = "*END*"

@@ -23,6 +23,10 @@ from py.precomputed_parser import PrecomputedParser
 from py.lstm_parser_bi_fast import FastBiaffineLSTMParser
 from py.ja_lstm_parser_bi import BiaffineJaLSTMParser
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
+
 cdef public void tag(const char* model_path, const char* c_str, int length, float* out):
 
     cdef list py_str = c_str[:length].decode("utf-8").split(" ")

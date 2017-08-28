@@ -21,10 +21,8 @@ from py.biaffine import Biaffine, Bilinear
 from py.param import Param
 from py.fixed_length_n_step_lstm import FixedLengthNStepLSTM
 
-from py.lstm_tagger import UNK, OOR2, OOR3, OOR4, START, END, IGNORE, MISS
-from py.lstm_tagger import log, get_suffix, get_prefix, normalize
-from py.lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
-from py.lstm_parser import LSTMParserTriTrainDataset
+from py.lstm_parser_bi import IGNORE, log, TrainingDataCreator, \
+        FeatureExtractor, LSTMParserDataset, LSTMParserTriTrainDataset
 
 
 class Linear(L.Linear):
@@ -225,160 +223,160 @@ class FastBiaffineLSTMParser(chainer.Chain):
         return zip(*sorted(self.targets.items(), key=lambda x: x[1]))[0]
 
 
-def converter(xs, device):
-    if device is None:
-        return xs
-    elif device < 0:
-        return map(lambda x: map(lambda m: cuda.to_cpu(m), x), xs)
-    else:
-        return map(lambda x: map(
-            lambda m: cuda.to_gpu(m, device, cuda.Stream.null), x), xs)
-
-
-def train(args):
-    model = FastBiaffineLSTMParser(
-            args.model, args.word_emb_size, args.afix_emb_size, args.nlayers,
-            args.hidden_dim, args.dep_dim, args.dropout_ratio)
-    with open(args.model + "/params", "w") as f: log(args, f)
-
-    if args.initmodel:
-        print('Load model from', args.initmodel)
-        chainer.serializers.load_npz(args.initmodel, model)
-
-    if args.pretrained:
-        print('Load pretrained word embeddings from', args.pretrained)
-        model.load_pretrained_embeddings(args.pretrained)
-
-    if args.gpu >= 0:
-        chainer.cuda.get_device(args.gpu).use()
-        model.to_gpu()
-
-    if args.tritrain is not None:
-        train = LSTMParserTriTrainDataset(
-                args.model, args.train, args.tritrain, args.tri_weight)
-    else:
-        train = LSTMParserDataset(args.model, args.train)
-
-    train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    val = LSTMParserDataset(args.model, args.val)
-    val_iter = chainer.iterators.SerialIterator(
-            val, args.batchsize, repeat=False, shuffle=False)
-    optimizer = chainer.optimizers.Adam(beta2=0.9)
-    # optimizer = chainer.optimizers.MomentumSGD(momentum=0.7)
-    optimizer.setup(model)
-    optimizer.add_hook(WeightDecay(2e-6))
-    optimizer.add_hook(GradientClipping(15.))
-    updater = training.StandardUpdater(train_iter, optimizer,
-            device=args.gpu, converter=converter)
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)
-
-    val_interval = 1000, 'iteration'
-    log_interval = 200, 'iteration'
-
-    eval_model = model.copy()
-    eval_model.train = False
-
-    trainer.extend(extensions.ExponentialShift(
-                    "eps", .75, init=2e-3, optimizer=optimizer), trigger=(2500, 'iteration'))
-    trainer.extend(extensions.Evaluator(val_iter, eval_model,
-                    converter, device=args.gpu), trigger=val_interval)
-    trainer.extend(extensions.snapshot_object(
-        model, 'model_iter_{.updater.iteration}'), trigger=val_interval)
-    trainer.extend(extensions.LogReport(trigger=log_interval))
-    trainer.extend(extensions.observe_lr(observation_key="eps"), trigger=log_interval)
-    trainer.extend(extensions.PrintReport([
-        'epoch', 'iteration',
-        'main/tagging_accuracy', 'main/tagging_loss',
-        'main/parsing_accuracy', 'main/parsing_loss',
-        'validation/main/tagging_accuracy',
-        'validation/main/parsing_accuracy',
-        'eps'
-    ]), trigger=log_interval)
-    trainer.extend(extensions.ProgressBar(update_interval=10))
-
-    trainer.run()
-
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(
-                "CCG parser's LSTM supertag tagger")
-    subparsers = parser.add_subparsers()
-
-    # Creating training data
-    parser_c = subparsers.add_parser(
-            "create", help="create tagger input data")
-    parser_c.add_argument("path",
-            help="path to ccgbank data file")
-    parser_c.add_argument("out",
-            help="output directory path")
-    parser_c.add_argument("--cat-freq-cut",
-            type=int, default=10,
-            help="only allow categories which appear >= freq-cut")
-    parser_c.add_argument("--word-freq-cut",
-            type=int, default=5,
-            help="only allow words which appear >= freq-cut")
-    parser_c.add_argument("--afix-freq-cut",
-            type=int, default=5,
-            help="only allow afixes which appear >= freq-cut")
-    parser_c.add_argument("--subset",
-            choices=["train", "test", "dev", "all"],
-            default="train")
-    parser_c.add_argument("--mode",
-            choices=["train", "test"],
-            default="train")
-
-    parser_c.set_defaults(func=
-            (lambda args:
-                TrainingDataCreator.create_traindata(args)
-                    if args.mode == "train"
-                else  TrainingDataCreator.create_testdata(args)))
-
-            #TODO updater
-    # Do training using training data created through `create`
-    parser_t = subparsers.add_parser(
-            "train", help="train supertagger model")
-    parser_t.add_argument("model",
-            help="path to model directory")
-    parser_t.add_argument("--gpu", type=int, default=-1,
-            help="path to model directory")
-    parser_t.add_argument("train",
-            help="training data file path")
-    parser_t.add_argument("--tritrain",
-            help="tri-training data file path")
-    parser_t.add_argument("--tri-weight",
-            type=float, default=0.4,
-            help="multiply tri-training sample losses")
-    parser_t.add_argument("val",
-            help="validation data file path")
-    parser_t.add_argument("--batchsize",
-            type=int, default=16, help="batch size")
-    parser_t.add_argument("--epoch",
-            type=int, default=20, help="epoch")
-    parser_t.add_argument("--word-emb-size",
-            type=int, default=50,
-            help="word embedding size")
-    parser_t.add_argument("--afix-emb-size",
-            type=int, default=32,
-            help="character embedding size")
-    parser_t.add_argument("--nlayers",
-            type=int, default=1,
-            help="number of layers for each LSTM")
-    parser_t.add_argument("--hidden-dim",
-            type=int, default=128,
-            help="dimensionality of hidden layer")
-    parser_t.add_argument("--dep-dim",
-            type=int, default=100,
-            help="dim")
-    parser_t.add_argument("--dropout-ratio",
-            type=float, default=0.5,
-            help="dropout ratio")
-    parser_t.add_argument("--initmodel",
-            help="initialize model with `initmodel`")
-    parser_t.add_argument("--pretrained",
-            help="pretrained word embeddings")
-    parser_t.set_defaults(func=train)
-
-    args = parser.parse_args()
-
-    args.func(args)
+# def converter(xs, device):
+#     if device is None:
+#         return xs
+#     elif device < 0:
+#         return map(lambda x: map(lambda m: cuda.to_cpu(m), x), xs)
+#     else:
+#         return map(lambda x: map(
+#             lambda m: cuda.to_gpu(m, device, cuda.Stream.null), x), xs)
+#
+#
+# def train(args):
+#     model = FastBiaffineLSTMParser(
+#             args.model, args.word_emb_size, args.afix_emb_size, args.nlayers,
+#             args.hidden_dim, args.dep_dim, args.dropout_ratio)
+#     with open(args.model + "/params", "w") as f: log(args, f)
+#
+#     if args.initmodel:
+#         print('Load model from', args.initmodel)
+#         chainer.serializers.load_npz(args.initmodel, model)
+#
+#     if args.pretrained:
+#         print('Load pretrained word embeddings from', args.pretrained)
+#         model.load_pretrained_embeddings(args.pretrained)
+#
+#     if args.gpu >= 0:
+#         chainer.cuda.get_device(args.gpu).use()
+#         model.to_gpu()
+#
+#     if args.tritrain is not None:
+#         train = LSTMParserTriTrainDataset(
+#                 args.model, args.train, args.tritrain, args.tri_weight)
+#     else:
+#         train = LSTMParserDataset(args.model, args.train)
+#
+#     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
+#     val = LSTMParserDataset(args.model, args.val)
+#     val_iter = chainer.iterators.SerialIterator(
+#             val, args.batchsize, repeat=False, shuffle=False)
+#     optimizer = chainer.optimizers.Adam(beta2=0.9)
+#     # optimizer = chainer.optimizers.MomentumSGD(momentum=0.7)
+#     optimizer.setup(model)
+#     optimizer.add_hook(WeightDecay(2e-6))
+#     optimizer.add_hook(GradientClipping(15.))
+#     updater = training.StandardUpdater(train_iter, optimizer,
+#             device=args.gpu, converter=converter)
+#     trainer = training.Trainer(updater, (args.epoch, 'epoch'), args.model)
+#
+#     val_interval = 1000, 'iteration'
+#     log_interval = 200, 'iteration'
+#
+#     eval_model = model.copy()
+#     eval_model.train = False
+#
+#     trainer.extend(extensions.ExponentialShift(
+#                     "eps", .75, init=2e-3, optimizer=optimizer), trigger=(2500, 'iteration'))
+#     trainer.extend(extensions.Evaluator(val_iter, eval_model,
+#                     converter, device=args.gpu), trigger=val_interval)
+#     trainer.extend(extensions.snapshot_object(
+#         model, 'model_iter_{.updater.iteration}'), trigger=val_interval)
+#     trainer.extend(extensions.LogReport(trigger=log_interval))
+#     trainer.extend(extensions.observe_lr(observation_key="eps"), trigger=log_interval)
+#     trainer.extend(extensions.PrintReport([
+#         'epoch', 'iteration',
+#         'main/tagging_accuracy', 'main/tagging_loss',
+#         'main/parsing_accuracy', 'main/parsing_loss',
+#         'validation/main/tagging_accuracy',
+#         'validation/main/parsing_accuracy',
+#         'eps'
+#     ]), trigger=log_interval)
+#     trainer.extend(extensions.ProgressBar(update_interval=10))
+#
+#     trainer.run()
+#
+#
+# if __name__ == "__main__":
+#     import argparse
+#     parser = argparse.ArgumentParser(
+#                 "CCG parser's LSTM supertag tagger")
+#     subparsers = parser.add_subparsers()
+#
+#     # Creating training data
+#     parser_c = subparsers.add_parser(
+#             "create", help="create tagger input data")
+#     parser_c.add_argument("path",
+#             help="path to ccgbank data file")
+#     parser_c.add_argument("out",
+#             help="output directory path")
+#     parser_c.add_argument("--cat-freq-cut",
+#             type=int, default=10,
+#             help="only allow categories which appear >= freq-cut")
+#     parser_c.add_argument("--word-freq-cut",
+#             type=int, default=5,
+#             help="only allow words which appear >= freq-cut")
+#     parser_c.add_argument("--afix-freq-cut",
+#             type=int, default=5,
+#             help="only allow afixes which appear >= freq-cut")
+#     parser_c.add_argument("--subset",
+#             choices=["train", "test", "dev", "all"],
+#             default="train")
+#     parser_c.add_argument("--mode",
+#             choices=["train", "test"],
+#             default="train")
+#
+#     parser_c.set_defaults(func=
+#             (lambda args:
+#                 TrainingDataCreator.create_traindata(args)
+#                     if args.mode == "train"
+#                 else  TrainingDataCreator.create_testdata(args)))
+#
+#             #TODO updater
+#     # Do training using training data created through `create`
+#     parser_t = subparsers.add_parser(
+#             "train", help="train supertagger model")
+#     parser_t.add_argument("model",
+#             help="path to model directory")
+#     parser_t.add_argument("--gpu", type=int, default=-1,
+#             help="path to model directory")
+#     parser_t.add_argument("train",
+#             help="training data file path")
+#     parser_t.add_argument("--tritrain",
+#             help="tri-training data file path")
+#     parser_t.add_argument("--tri-weight",
+#             type=float, default=0.4,
+#             help="multiply tri-training sample losses")
+#     parser_t.add_argument("val",
+#             help="validation data file path")
+#     parser_t.add_argument("--batchsize",
+#             type=int, default=16, help="batch size")
+#     parser_t.add_argument("--epoch",
+#             type=int, default=20, help="epoch")
+#     parser_t.add_argument("--word-emb-size",
+#             type=int, default=50,
+#             help="word embedding size")
+#     parser_t.add_argument("--afix-emb-size",
+#             type=int, default=32,
+#             help="character embedding size")
+#     parser_t.add_argument("--nlayers",
+#             type=int, default=1,
+#             help="number of layers for each LSTM")
+#     parser_t.add_argument("--hidden-dim",
+#             type=int, default=128,
+#             help="dimensionality of hidden layer")
+#     parser_t.add_argument("--dep-dim",
+#             type=int, default=100,
+#             help="dim")
+#     parser_t.add_argument("--dropout-ratio",
+#             type=float, default=0.5,
+#             help="dropout ratio")
+#     parser_t.add_argument("--initmodel",
+#             help="initialize model with `initmodel`")
+#     parser_t.add_argument("--pretrained",
+#             help="pretrained word embeddings")
+#     parser_t.set_defaults(func=train)
+#
+#     args = parser.parse_args()
+#
+#     args.func(args)

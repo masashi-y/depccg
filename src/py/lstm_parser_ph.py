@@ -25,6 +25,11 @@ from lstm_tagger import log, get_suffix, get_prefix, normalize
 from lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
 
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
+
+
 class PeepHoleLSTMParser(chainer.Chain):
     def __init__(self, model_path, word_dim=None, afix_dim=None, nlayers=2,
             hidden_dim=128, elu_dim=64, dep_dim=100, dropout_ratio=0.5, use_cudnn=False):

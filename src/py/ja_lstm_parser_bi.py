@@ -18,8 +18,208 @@ from py.tree import Leaf, Tree, get_leaves
 from py.biaffine import Biaffine
 from py.param import Param
 
-from py.ja_lstm_parser import UNK, START, END, IGNORE, log
-from py.ja_lstm_parser import TrainingDataCreator, FeatureExtractor, LSTMParserDataset
+UNK = "*UNKNOWN*"
+START = "*START*"
+END = "*END*"
+IGNORE = -1
+
+def log(args, out):
+    for k, v in vars(args).items():
+        out.write("{}: {}\n".format(k, v))
+
+class TrainingDataCreator(object):
+    """
+    create train & validation data
+    """
+    def __init__(self, filepath, word_freq_cut, char_freq_cut, cat_freq_cut):
+        self.filepath = filepath
+         # those categories whose frequency < freq_cut are discarded.
+        self.word_freq_cut = word_freq_cut
+        self.char_freq_cut = char_freq_cut
+        self.cat_freq_cut  = cat_freq_cut
+        self.seen_rules = defaultdict(int) # seen binary rules
+        self.unary_rules = defaultdict(int) # seen unary rules
+        self.cats = defaultdict(int) # all cats
+        self.words = defaultdict(int)
+        self.chars = defaultdict(int)
+        self.samples = OrderedDict()
+        self.sents = []
+
+        self.words[UNK]      = 10000
+        self.words[START]    = 10000
+        self.words[END]      = 10000
+        self.chars[UNK]      = 10000
+        self.chars[START]    = 10000
+        self.chars[END]      = 10000
+        self.cats[START]     = 10000
+        self.cats[END]       = 10000
+
+    def _traverse(self, tree):
+        if isinstance(tree, Leaf):
+            self.cats[tree.cat.without_semantics] += 1
+            w = tree.word
+            self.words[w] += 1
+            for c in w:
+                self.chars[c] += 1
+        else:
+            children = tree.children
+            if len(children) == 1:
+                rule = tree.cat.without_semantics + \
+                        " " + children[0].cat.without_semantics
+                self.unary_rules[rule] += 1
+                self._traverse(children[0])
+            else:
+                rule = children[0].cat.without_semantics + \
+                        " " + children[1].cat.without_semantics
+                self.seen_rules[rule] += 1
+                self._traverse(children[0])
+                self._traverse(children[1])
+
+    @staticmethod
+    def _write(dct, out, comment_out_value=False):
+        print("writing to", out.name, file=sys.stderr)
+        for key, value in dct.items():
+            out.write(key.encode("utf-8") + " ")
+            if comment_out_value:
+                out.write("# ")
+            out.write(str(value) + "\n")
+
+    def _get_dependencies(self, tree, sent_len):
+        def rec(subtree):
+            if isinstance(subtree, Tree):
+                children = subtree.children
+                if len(children) == 2:
+                    head = rec(children[0 if subtree.left_is_head else 1])
+                    dep  = rec(children[1 if subtree.left_is_head else 0])
+                    res[dep] = head
+                else:
+                    head = rec(children[0])
+                return head
+            else:
+                return subtree.pos
+
+        res = [-1 for _ in range(sent_len)]
+        rec(tree)
+        res = [i + 1 for i in res]
+        assert len(filter(lambda i:i == 0, res)) == 1
+        return res
+
+    def _to_conll(self, out):
+        for sent, (cats, deps) in self.samples.items():
+            for i, (w, c, d) in enumerate(zip(sent.split(" "), cats, deps), 1):
+                out.write("{}\t{}\t{}\t{}\n".format(i, w.encode("utf-8"), c, d))
+            out.write("\n")
+
+    def _create_samples(self, trees):
+        for tree in trees:
+            tokens = get_leaves(tree)
+            words = [token.word for token in tokens]
+            cats = [token.cat.without_semantics for token in tokens]
+            deps = self._get_dependencies(tree, len(tokens))
+            sent = " ".join(words)
+            self.sents.append(sent)
+            self.samples[sent] = cats, deps
+
+    @staticmethod
+    def create_traindata(args):
+        self = TrainingDataCreator(args.path,
+                args.word_freq_cut, args.char_freq_cut, args.cat_freq_cut)
+        with open(args.out + "/log_create_traindata", "w") as f:
+            log(args, f)
+
+        trees = JaCCGReader(self.filepath).readall()
+        for tree in trees:
+            self._traverse(tree)
+        self._create_samples(trees)
+
+        self.cats = {k: v for (k, v) in self.cats.items() \
+                        if v >= self.cat_freq_cut}
+        self.words = {k: v for (k, v) in self.words.items() \
+                        if v >= self.word_freq_cut}
+        self.chars = {k: v for (k, v) in self.chars.items() \
+                        if v >= self.char_freq_cut}
+        with open(args.out + "/unary_rules.txt", "w") as f:
+            self._write(self.unary_rules, f, comment_out_value=True)
+        with open(args.out + "/seen_rules.txt", "w") as f:
+            self._write(self.seen_rules, f, comment_out_value=True)
+        with open(args.out + "/target.txt", "w") as f:
+            self._write(self.cats, f, comment_out_value=False)
+        with open(args.out + "/words.txt", "w") as f:
+            self._write(self.words, f, comment_out_value=False)
+        with open(args.out + "/chars.txt", "w") as f:
+            self._write(self.chars, f, comment_out_value=False)
+        with open(args.out + "/traindata.json", "w") as f:
+            json.dump(self.samples, f)
+        with open(args.out + "/trainsents.txt", "w") as f:
+            for sent in self.sents:
+                f.write(sent.encode("utf-8") + "\n")
+        with open(args.out + "/trainsents.conll", "w") as f:
+            self._to_conll(f)
+
+    @staticmethod
+    def create_testdata(args):
+        self = TrainingDataCreator(args.path,
+                args.word_freq_cut, args.char_freq_cut, args.cat_freq_cut)
+        with open(args.out + "/log_create_testdata", "w") as f:
+            log(args, f)
+        trees = JaCCGReader(self.filepath).readall()
+        self._create_samples(trees)
+        with open(args.out + "/testdata.json", "w") as f:
+            json.dump(self.samples, f)
+        with open(args.out + "/testsents.conll", "w") as f:
+            self._to_conll(f)
+        with open(args.out + "/testsents.txt", "w") as f:
+            for sent in self.sents:
+                f.write(sent.encode("utf-8") + "\n")
+
+
+class FeatureExtractor(object):
+    def __init__(self, model_path):
+        self.model_path = model_path
+        self.words = read_model_defs(model_path + "/words.txt")
+        self.chars = read_model_defs(model_path + "/chars.txt")
+        self.unk_word = self.words[UNK]
+        self.start_word = self.words[START]
+        self.end_word = self.words[END]
+        self.unk_char = self.chars[UNK]
+        self.start_char = self.chars[START]
+        self.end_char = self.chars[END]
+
+    def process(self, words):
+        """
+        words: list of unicode tokens
+        """
+        w = np.array([self.start_word] + [self.words.get(
+            x, self.unk_word) for x in words] + [self.end_word], 'i')
+        l = max(len(x) for x in words)
+        c = -np.ones((len(words) + 2, l), 'i')
+        c[0, 0] = self.start_char
+        c[-1, 0] = self.end_char
+        for i, word in enumerate(words, 1):
+            for j in range(len(word)):
+                c[i, j] = self.chars.get(word[j], self.unk_char)
+        return w, c, np.array([l], 'i')
+
+
+class LSTMParserDataset(chainer.dataset.DatasetMixin):
+    def __init__(self, model_path, samples_path):
+        self.model_path = model_path
+        self.extractor = FeatureExtractor(model_path)
+        self.targets = read_model_defs(model_path + "/target.txt")
+        with open(samples_path) as f:
+            self.samples = json.load(f).items()
+
+    def __len__(self):
+        return len(self.samples)
+
+    def get_example(self, i):
+        words, [cats, deps] = self.samples[i]
+        words = words.split(" ")
+        w, c, l = self.extractor.process(words)
+        cats = np.array([self.targets.get(x, IGNORE) \
+                for x in [START] + cats + [END]], 'i')
+        deps = np.array([-1] + deps + [-1], 'i')
+        return w, c, l, cats, deps
 
 
 class BiaffineJaLSTMParser(chainer.Chain):
