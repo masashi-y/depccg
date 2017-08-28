@@ -16,6 +16,10 @@ from py_utils import read_pretrained_embeddings, read_model_defs
 from tree import Leaf, Tree, get_leaves
 from param import Param
 
+##############################################################
+################# DEPRECATED NOT MAINTAINED ##################
+##############################################################
+
 UNK = "*UNKNOWN*"
 OOR2 = "OOR2"
 OOR3 = "OOR3"
