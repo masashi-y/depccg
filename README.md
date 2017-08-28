@@ -5,62 +5,70 @@ Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](htt
 * Python (Either 2 or 3)
 * [Chainer](http://chainer.org/) (newer versions)
 * [Cython](http://cython.org/)
-* A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11)
-* OpenMP (optional)
-* CMake
+* A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11) (in case of gcc, must be >= 4.9)
+* OpenMP (optional, for faster batch parsing)
 
 #### Build
-if you have not installed Chainer or Cython, do `pip install chainer cython`. Then,
 
 ```
-mkdir build
-cd build
-cmake ..
-# In pyenv environment, you may need to pass the path to libpython.so explicitly.
-# cmake -DPYTHON_LIBRARY=$HOME/.pyenv/versions/3.6.1/lib/libpython3.so ..
-make
+pip install chainer cython
+git clone https://github.com/masashi-y/depccg.git
+cd depccg/src
+python setup.py build_ext --inplace
 ```
 
+Having successfully built the sources, you'll see `depccg.so` in the `src` directory.
+
+`cmake` based build option is also available.  
+This is convenient when you build the program many times.  
 #### Pretrained models
 Pretrained models are available:
 * [English](http://cl.naist.jp/~masashi-y/resources/depccg/en_hf_tri.tar.gz) (189M)
 * [Japanese](http://cl.naist.jp/~masashi-y/resources/depccg/ja_hf_ccgbank.tar.gz) (56M)
 
+Please unpack these before passing to the parser.
+
 #### Running parser
-Having successfully built the sources, you'll see `depccg.so` in `build/src` directory.
-In python,
+`src/run.py` implements a main parser program.  
+Several options are available (N best parsing, input/output formats, etc.). Please do `python run.py -h` for the detail.
+
+```
+$ echo "this is a test sentence ." | python run.py ../models/tri_headfirst en --format deriv
+ID=0
+ this        is           a      test  sentence  .
+  NP   (S[dcl]\NP)/NP  NP[nb]/N  N/N      N      .
+                                ---------------->
+                                      N ->
+                      -------------------------->
+                                NP ->
+      ------------------------------------------>
+                     S[dcl]\NP ->
+------------------------------------------------<
+                   S[dcl] ->
+---------------------------------------------------<rp>
+                     S[dcl] ->
+```
+
+In Python,
 ```python
 from depccg import PyAStarParser
 model = "/path/to/model/directory"
 parser = PyAStarParser(model)
 res = parser.parse("this is a test sentence .")
-# print res.deriv
-#  this      is         a     test   sentence  . 
-#   NP   ((S\NP)/NP)  (NP/N)  (N/N)     N      . 
-#                            ----------------->
-#                                  N ->
-#                    ------------------------->
-#                              NP ->
-#       -------------------------------------->
-#                     (S\NP) ->
-# --------------------------------------------<
-#                     S ->
-# -----------------------------------------------<rp>
-#                      S ->
 
-# parser.parse_doc performs A* search in threads (using OpenMP), which is highly efficient. 
+# parser.parse_doc performs A* search in threads (using OpenMP), which is highly efficient.
 res = praser.parse_doc(sents) # sents: list of (python2: unicode, 3: str)
 for tree in res:
     print tree.deriv
 ```
+
 For Japanese CCG parsing, use `depccg.PyJaAStarParser`,
 which has the exactly same interface.  
 Note that the Japanese parser accepts pre-tokenized sentences as input.
 
-`src/run.py` implements example running code. Please refer to it for
-the detailed usage of the parser.
 #### Training model
-TODO
+
+For training, please use `src/py/lstm_parser_bi` for English and `src/py/ja_lstm_parser_bi` for Japanese.  
 
 ```
 $ python -m py.lstm_parser_bi create
@@ -97,7 +105,7 @@ We make tri-training dataset publicly available:
 #### Evaluation
 You can evaluate the performance of a supertagger with `src/py/eval_tagger.py`:
 ```
-$ python eval_tagger.py 
+$ python eval_tagger.py
 usage: evaluate lstm tagger [-h] [--save SAVE] model defs_dir test_data
 ```
 
@@ -126,4 +134,3 @@ For questions and usage issues, please contact yoshikawa.masashi.yh8@is.naist.jp
 In creating the parser, I owe very much to:
 - [EasyCCG](https://github.com/mikelewis0/easyccg): from which I learned everything
 - [NLTK](http://www.nltk.org/): for nice pretty printing for parse derivation
-
