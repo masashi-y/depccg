@@ -434,6 +434,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
                 "CCG parser's LSTM supertag tagger")
+    parser.set_defaults(func=lambda _: parser.print_help())
     subparsers = parser.add_subparsers()
 
     # Creating training data
