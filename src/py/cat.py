@@ -111,8 +111,9 @@ class Functor(Cat):
 
     @property
     def without_semantics(self):
-        return self.left.without_semantics + \
+        base = self.left.without_semantics + \
                 str(self.slash) + self.right.without_semantics
+        return base if self.semantics is None else "({})".format(base)
 
     @property
     def with_brackets(self):
