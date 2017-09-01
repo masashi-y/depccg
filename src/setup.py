@@ -11,6 +11,7 @@ import shutil
 import sys
 import os
 import distutils
+import platform
 
 def check_for_openmp():
     """Check  whether the default compiler supports OpenMP.
@@ -55,7 +56,7 @@ def check_for_openmp():
     if exit_code == 0:
         return True
     else:
-        import multiprocessing, platform
+        import multiprocessing
         cpus = multiprocessing.cpu_count()
         if cpus>1:
             print ("""WARNING
@@ -99,6 +100,9 @@ sources = ["depccg.pyx",
 
 compile_options = "-std=c++11 -O3 -g -fpic -march=native"
 
+if platform.uname()[0]=='Darwin':
+    compile_options += " -stdlib=libc++"
+
 extra_link_args = ["-fopenmp" if check_for_openmp() else ""]
 
 ext_modules = [
@@ -108,13 +112,7 @@ ext_modules = [
                   extra_compile_args=compile_options.split(" "),
                   extra_link_args=extra_link_args,
                   language='c++'
-                  ),
-        # Extension("chainer_tagger",
-        #           ["py/tagger.pyx"],
-        #           include_dirs=[numpy.get_include()],
-        #           extra_compile_args=["-O3"],
-        #           language='c++'
-        #           ),
+                  )
         ]
 
 setup(
