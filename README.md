@@ -2,7 +2,7 @@
 Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](https://arxiv.org/abs/1704.06936)
 
 #### Requirements
-* Python (Either 2 or 3)
+* Python 2
 * [Chainer](http://chainer.org/) (newer versions)
 * [Cython](http://cython.org/)
 * A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11) (in case of gcc, must be >= 4.9)

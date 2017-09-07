@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+import codecs
 import re
 import os
 import py.cat
@@ -25,7 +26,7 @@ def walk_autodir(path, subset="train"):
 
 class AutoReader(object):
     def __init__(self, filename):
-        self.lines = open(filename).readlines()
+        self.lines = codecs.open(filename, encoding='UTF-8').readlines()
 
     def readall(self, suppress_error=False):
         # Inputs:
@@ -52,7 +53,7 @@ class AutoReader(object):
 
 class AutoLineReader(object):
     def __init__(self, line):
-        self.line = line.encode("utf-8")
+        self.line = line
         self.index = 0
         self.word_id = -1
 
@@ -80,7 +81,7 @@ class AutoLineReader(object):
         elif self.line[self.index+2] == "T":
             return self.parse_tree
         else:
-            raise RuntimeError()
+            raise RuntimeError("AUTO parse error: expected string starting with ' <L' or ' <T', but got this string: '" + self.line[self.index:] + ' in line: ' + self.line)
 
     def parse_leaf(self):
         self.word_id += 1
