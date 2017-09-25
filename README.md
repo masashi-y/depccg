@@ -3,7 +3,7 @@ Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](htt
 
 #### Requirements
 * Python (Either 2 or 3)
-* [Chainer](http://chainer.org/) (newer versions)
+* [Chainer](http://chainer.org/) (version 1.x)
 * [Cython](http://cython.org/)
 * A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11) (in case of gcc, must be >= 4.9)
 * OpenMP (optional, for faster batch parsing)
@@ -11,7 +11,7 @@ Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](htt
 #### Build
 
 ```
-pip install chainer cython
+pip install cython chainer==1.23
 git clone https://github.com/masashi-y/depccg.git
 cd depccg/src
 python setup.py build_ext --inplace
