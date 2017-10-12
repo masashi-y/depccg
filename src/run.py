@@ -88,6 +88,6 @@ if __name__ == "__main__":
                         i, prob, tree.conll))
     else: # "auto", "deriv", "ja"
         for i, parsed in enumerate(res, 1):
-            print("ID={}".format(i))
             for tree, _ in parsed:
+                print("ID={}".format(i))
                 print(getattr(tree, args.format))
