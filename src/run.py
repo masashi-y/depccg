@@ -7,7 +7,7 @@ import sys
 if sys.version_info.major == 2:
     sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 
-from depccg import PyAStarParser, PyJaAStarParser
+from depccg import PyAStarParser, PyJaAStarParser, to_mathml
 
 Parsers = {"en": PyAStarParser, "ja": PyJaAStarParser}
 
@@ -30,15 +30,15 @@ class Token:
             w, p, n = items
             return Token(w, "XX", p, "XX", n)
 
-def to_xml(trees, tagged_doc):
+def to_xml(trees, tagged_doc, file=sys.stdout):
     print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
     print("<?xml-stylesheet type=\"text/xsl\" href=\"candc.xml\"?>")
     print("<candc>")
-    for tree, tagged in zip(trees, tagged_doc):
-        assert len(tree) == len(tagged)
-        print("<ccg>")
-        print(tree.xml.format(*tagged))
-        print("</ccg>")
+    for i, (tree, tagged) in enumerate(zip(trees, tagged_doc)):
+        for j, (t, _) in enumerate(tree):
+            print("<ccg sentence=\"{}\" id=\"{}\">".format(i, j))
+            print(t.xml.format(*tagged))
+            print("</ccg>")
     print("</candc>")
 
 if __name__ == "__main__":
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             choices=["raw", "POSandNERtagged"],
             help="input format")
     parser.add_argument("--format", default="auto",
-            choices=["auto", "deriv", "xml", "ja", "conll"],
+            choices=["auto", "deriv", "xml", "ja", "conll", "html"],
             help="output format")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
@@ -79,12 +79,15 @@ if __name__ == "__main__":
     res = parser.parse_doc(doc)
     if args.format == "xml":
         to_xml(res, tagged_doc)
-    else:
+    elif args.format == "html":
+        to_mathml(res)
+    elif args.format == "conll":
+        for i, parsed in enumerate(res):
+            for tree, prob in parsed:
+                print("# ID={}\n# log probability={:.4e}\n{}".format(
+                        i, prob, tree.conll))
+    else: # "auto", "deriv", "ja"
         for i, parsed in enumerate(res):
             print("ID={}".format(i))
-            if args.nbest > 1:
-                for (tree, score) in parsed:
-                    print("score=", score)
-                    print(getattr(tree, args.format))
-            else:
-                print(getattr(parsed, args.format))
+            for tree, _ in parsed:
+                print(getattr(tree, args.format))

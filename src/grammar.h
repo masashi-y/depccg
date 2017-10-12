@@ -222,6 +222,7 @@ static bool IsPeriod(Cat cat);
 static const std::unordered_set<Cat> possible_root_cats;
 static const std::vector<Op> binary_rules;
 static const std::vector<Op> headfinal_binary_rules;
+static const std::vector<Op> cg_binary_rules;
 
 };
 

@@ -220,7 +220,7 @@ class FastBiaffineLSTMParser(chainer.Chain):
 
     @property
     def cats(self):
-        return zip(*sorted(self.targets.items(), key=lambda x: x[1]))[0]
+        return list(zip(*sorted(self.targets.items(), key=lambda x: x[1])))[0]
 
 
 # def converter(xs, device):

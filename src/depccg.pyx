@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 cimport numpy as np
 import numpy as np
-import sys
+import sys, re
 from libc.stdlib cimport malloc, free
 from libcpp.memory cimport make_shared, shared_ptr
 from libcpp.vector cimport vector
@@ -43,6 +43,11 @@ cdef extern from "feat.h" namespace "myccg" nogil:
 
 
 cdef extern from "cat.h" namespace "myccg" nogil:
+    cdef cppclass Slash:
+        bint IsForward() const
+        bint IsBackward() const
+        string ToStr() const
+
     ctypedef const Category* Cat
     cdef cppclass Category:
         @staticmethod
@@ -66,7 +71,7 @@ cdef extern from "cat.h" namespace "myccg" nogil:
         # template<int i> Cat GetRight() const;
         # template<int i> bool HasFunctorAtLeft() const;
         # template<int i> bool HasFunctorAtRight() const;
-        # virtual Slash GetSlash() const = 0;
+        Slash GetSlash() const
 
         const string WithBrackets() const
         bint IsModifier() const
@@ -177,6 +182,7 @@ cdef extern from "grammar.h" namespace "myccg" nogil:
     cdef const unordered_set[Cat] ja_possible_root_cats     "myccg::Ja::possible_root_cats"
     cdef const vector[Op]         ja_binary_rules           "myccg::Ja::binary_rules"
     cdef const vector[Op]         ja_headfinal_binary_rules "myccg::Ja::headfinal_binary_rules"
+    cdef const vector[Op]         ja_cg_binary_rules "myccg::Ja::cg_binary_rules"
 
 
 cdef extern from "logger.h" namespace "myccg" nogil:
@@ -262,6 +268,91 @@ cdef ResolveCmobinatorName(const Node* tree, bytes lang):
     else:
         res = b"error: " + lang
     return res.decode("utf-8")
+
+
+def __show_mathml(tree):
+    if not tree.is_leaf:
+        return """\
+<mrow>
+  <mfrac linethickness='2px'>
+    <mrow>{}</mrow>
+    <mstyle mathcolor='Red'>{}</mstyle>
+  </mfrac>
+  <mtext mathsize='0.8' mathcolor='Black'>{}</mtext>
+</mrow>""".format(
+                "".join(map(__show_mathml, tree.children)),
+                __show_mathml_cat(str(tree.cat)),
+                tree.op_string)
+    else:
+        return """\
+<mrow>
+  <mfrac linethickness='2px'>
+    <mtext mathsize='1.0' mathcolor='Black'>{}</mtext>
+    <mstyle mathcolor='Red'>{}</mstyle>
+  </mfrac>
+  <mtext mathsize='0.8' mathcolor='Black'>lex</mtext>
+</mrow>""".format(
+                tree.word,
+                __show_mathml_cat(str(tree.cat)))
+
+
+def __show_mathml_cat(cat):
+    cats_feats = re.findall(r'([\w\\/()]+)(\[.+?\])*', cat)
+    mathml_str = ''
+    for cat, feat in cats_feats:
+        cat_mathml = """\
+<mi mathvariant='italic'
+  mathsize='1.0' mathcolor='Red'>{}</mi>
+    """.format(cat)
+
+        if feat != '':
+            mathml_str += """\
+<msub>{}
+  <mrow>
+  <mi mathvariant='italic'
+    mathsize='0.8' mathcolor='Purple'>{}</mi>
+  </mrow>
+</msub>""".format(cat_mathml, feat)
+
+        else:
+            mathml_str += cat_mathml
+    return mathml_str
+
+
+def to_mathml(trees, file=sys.stdout):
+    def __show(tree):
+        res = ""
+        for t in tree:
+            if isinstance(t, tuple):
+                t, prob = t
+                res += "<p>Log prob={:.5e}</p>".format(prob)
+            res += "<math xmlns='http://www.w3.org/1998/Math/MathML'>{}</math>".format(
+                __show_mathml(t))
+        return res
+
+    string = ""
+    for i, tree in enumerate(trees):
+        words = tree[0][0].word if isinstance(tree[0], tuple) else tree[0].word
+        string += "<p>ID={}: {}</p>{}".format(
+                i, words, __show(tree))
+
+    print("""\
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <style>
+    body {{
+      font-size: 1em;
+    }}
+  </style>
+  <script type="text/javascript"
+     src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+</head>
+<body>{}
+</body></html>""".format(string), file=file)
+
 
 #######################################################
 ####################### Category ######################
@@ -372,6 +463,13 @@ cdef class PyCat:
 
     def arg(self, i):
         return PyCat.from_ptr(self.cat_.Arg(i))
+
+    property slash:
+        def __get__(self):
+            assert self.is_functor, \
+                "Error {} is not functor type.".format(str(self))
+            cdef string res = self.cat_.GetSlash().ToStr()
+            return res.decode("utf-8")
 
 
 #######################################################
@@ -612,7 +710,7 @@ cdef class PyAStarParser:
         else:
             return self._parse_tag(sent, mat)
 
-    def parse_doc(self, sents):
+    def parse_doc(self, sents, probs=None):
         cdef list res
         cdef ParserLogger* logger = &self.parser_.GetLogger()
 
@@ -627,7 +725,8 @@ cdef class PyAStarParser:
 
         logger.InitStatistics(len(sents))
         logger.RecordTimeStartRunning()
-        probs = self.py_tagger.predict_doc(splitted, batchsize=self.batchsize)
+        if probs is None:
+            probs = self.py_tagger.predict_doc(splitted, batchsize=self.batchsize)
         logger.RecordTimeEndOfTagging()
         res = self._parse_doc_tag_and_dep(sents, probs)
         logger.RecordTimeEndOfParsing()
@@ -659,15 +758,11 @@ cdef class PyAStarParser:
         cdef list tmp, res = []
         cdef Parse parse
         for i in range(len(sents)):
-            if self.nbest == 1:
-                parse = Parse.from_ptr(cres[i][0].first, self.lang)
-                res.append(parse)
-            else:
-                tmp = []
-                for j in range(min(self.nbest, cres[i].size())):
-                    tmp.append((Parse.from_ptr(cres[i][j].first, self.lang),
-                                    cres[i][j].second))
-                res.append(tmp)
+            tmp = []
+            for j in range(min(self.nbest, cres[i].size())):
+                tmp.append((Parse.from_ptr(cres[i][j].first, self.lang),
+                                cres[i][j].second))
+            res.append(tmp)
         free(tags)
         free(deps)
         return res
@@ -704,6 +799,7 @@ cdef class PyJaAStarParser(PyAStarParser):
                         ja_possible_root_cats,
                         NormalComparator,
                         ja_headfinal_binary_rules,
+                        # ja_cg_binary_rules,
                         self.nbest,
                         self.beta,
                         self.pruning_size,

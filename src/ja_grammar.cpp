@@ -235,4 +235,10 @@ const std::vector<Op> Ja::headfinal_binary_rules = {
     HeadFinal(JAGeneralizedForwardComposition<1, FX>(F, B, B, ">Bx2")),
     HeadFinal(JAGeneralizedForwardComposition<2, FX>(F, B, B, ">Bx3")),
 };
+
+const std::vector<Op> Ja::cg_binary_rules = {
+    HeadFinal(JAForwardApplication()),
+    HeadFinal(JABackwardApplication()),
+};
+
 }
