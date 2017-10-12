@@ -753,7 +753,7 @@ cdef class PyAStarParser:
         for i, _, (cat_scores, dep_scores) in probs:
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
-        if self.loglevel < 3: print("start parsing", sys.stderr)
+        if self.loglevel < 3: print("start parsing", file=sys.stderr)
         cdef vector[vector[ScoredNode]] cres = self.parser_.Parse(csents, tags, deps)
         cdef list tmp, res = []
         cdef Parse parse

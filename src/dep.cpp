@@ -120,11 +120,17 @@ std::vector<ScoredNode> DepAStarParser<Lang>::Parse(
     }
 
     Chart chart(sent_size);
+    Chart goal(1);
+    ChartCell* goal_cell = goal(0, 0);
 
-    while (Base::keep_going && Base::nbest_ > chart.Size() && agenda.size() > 0) {
+    while (Base::keep_going && Base::nbest_ > goal.Size() && agenda.size() > 0) {
 
         const AgendaItem item = agenda.top();
-        if (item.fin) break;
+        if (item.fin) {
+            goal_cell->update(item.parse, item.in_prob);
+            agenda.pop();
+            continue;
+        }
         agenda.pop();
         NodeType parse = item.parse;
         Base::logger_.RecordAgendaItem("POPPED", item);
@@ -137,11 +143,11 @@ std::vector<ScoredNode> DepAStarParser<Lang>::Parse(
                     Base::possible_root_cats_.count(parse->GetCategory()) ) {
                 float dep_score = dep_in_probs(parse->GetHeadId(), 0);
                 float in_prob = item.in_prob +  dep_score;
-                agenda.emplace(agenda_id++, parse, in_prob, 0.0,
+                agenda.emplace(true, agenda_id++, parse, in_prob, 0.0,
                                     item.start_of_span, item.span_length);
             }
 
-            if (item.span_length != sent_size) {
+            if (sent_size == 1 || item.span_length != sent_size) {
                 for (Cat unary: Base::unary_rules_[parse->GetCategory()]) {
                     if (Lang::IsAcceptableUnary(unary, parse)) {
                         NodeType subtree = std::make_shared<const Tree>(unary, parse);
@@ -172,7 +178,7 @@ std::vector<ScoredNode> DepAStarParser<Lang>::Parse(
                                             item.start_of_span + span_length)
                                            + dep_out_probs(item.start_of_span,
                                             item.start_of_span + span_length)
-                                           + best_dep_probs[head->GetHeadId()];
+                                           - best_dep_probs[head->GetHeadId()];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 item.start_of_span, span_length);
                             Base::logger_.RecordTree("ACCEPTED", subtree);
@@ -201,7 +207,7 @@ std::vector<ScoredNode> DepAStarParser<Lang>::Parse(
                                             start_of_span + span_length)
                                            + dep_out_probs(start_of_span,
                                             start_of_span + span_length)
-                                           + best_dep_probs[head->GetHeadId()];
+                                           - best_dep_probs[head->GetHeadId()];
                             agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
                                                 start_of_span, span_length);
                             Base::logger_.RecordTree("ACCEPTED", subtree);
@@ -213,10 +219,10 @@ std::vector<ScoredNode> DepAStarParser<Lang>::Parse(
     }
     Base::logger_.CompleteOne(id, agenda_id);
 
-    if (chart.IsEmpty())
+    if (goal.IsEmpty())
         return Base::Failed(sent, "no candidate parse found");
 
-    auto res = chart(1,  -1)->GetNBestParses();
+    auto res = goal_cell->GetNBestParses();
     Base::logger_.CalculateNumOneBestTags(
             id, Base::tagger_, tag_scores, res[0].first);
     return res;
