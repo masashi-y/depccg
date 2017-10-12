@@ -34,8 +34,8 @@ def to_xml(trees, tagged_doc, file=sys.stdout):
     print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
     print("<?xml-stylesheet type=\"text/xsl\" href=\"candc.xml\"?>")
     print("<candc>")
-    for i, (tree, tagged) in enumerate(zip(trees, tagged_doc)):
-        for j, (t, _) in enumerate(tree):
+    for i, (tree, tagged) in enumerate(zip(trees, tagged_doc), 1):
+        for j, (t, _) in enumerate(tree, 1):
             print("<ccg sentence=\"{}\" id=\"{}\">".format(i, j))
             print(t.xml.format(*tagged))
             print("</ccg>")
@@ -87,7 +87,7 @@ if __name__ == "__main__":
                 print("# ID={}\n# log probability={:.4e}\n{}".format(
                         i, prob, tree.conll))
     else: # "auto", "deriv", "ja"
-        for i, parsed in enumerate(res):
+        for i, parsed in enumerate(res, 1):
             print("ID={}".format(i))
             for tree, _ in parsed:
                 print(getattr(tree, args.format))
