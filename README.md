@@ -58,8 +58,9 @@ res = parser.parse("this is a test sentence .")
 
 # parser.parse_doc performs A* search in threads (using OpenMP), which is highly efficient.
 res = praser.parse_doc(sents) # sents: list of (python2: unicode, 3: str)
-for tree in res:
-    print tree.deriv
+for nbests in res:
+    for tree, log_prob in nbests:
+        print tree.deriv
 ```
 
 For Japanese CCG parsing, use `depccg.PyJaAStarParser`,
