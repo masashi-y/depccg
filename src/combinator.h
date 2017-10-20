@@ -83,9 +83,9 @@ public:
             return false;
         return (puncts_.count(left) > 0 &&
                 !right->IsPunct() &&
-                !right->IsTypeRaised() &&
-                ! (!right->IsFunctor() &&
-                        right->GetType() == "N"));
+                !right->IsTypeRaised()); // &&
+                // ! (!right->IsFunctor() &&
+                        // right->GetType() == "N"));
     }
 
     Cat Apply(Cat left, Cat right) const {
@@ -136,9 +136,9 @@ public:
             return false;
         return (puncts_.count(left) > 0 &&
                 !right->IsPunct() &&
-                !right->IsTypeRaised() &&
-                ! (!right->IsFunctor() &&
-                        right->GetType() == "N"));
+                !right->IsTypeRaised()); // &&
+                // ! (!right->IsFunctor() &&
+                        // right->GetType() == "N"));
     }
 
     Cat Apply(Cat left, Cat right) const {

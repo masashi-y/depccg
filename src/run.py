@@ -57,6 +57,9 @@ if __name__ == "__main__":
     parser.add_argument("--format", default="auto",
             choices=["auto", "deriv", "xml", "ja", "conll", "html"],
             help="output format")
+    parser.add_argument("--root-cats", default=None,
+            help="allow only these categories to be at the root of a tree. If None, use default setting.")
+
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -69,14 +72,17 @@ if __name__ == "__main__":
                 "XML output format is supported only with --input-format POSandNERtagged."
         doc = [l.strip() for l in fin]
 
+    if args.root_cats is not None:
+        args.root_cats = args.root_cats.split(",")
 
     parser = Parsers[args.lang](args.model,
                                batchsize=args.batchsize,
                                nbest=args.nbest,
+                               possible_root_cats=args.root_cats,
                                loglevel=1 if args.verbose else 3)
-
-
     res = parser.parse_doc(doc)
+
+
     if args.format == "xml":
         to_xml(res, tagged_doc)
     elif args.format == "html":
@@ -91,3 +97,5 @@ if __name__ == "__main__":
             for tree, _ in parsed:
                 print("ID={}".format(i))
                 print(getattr(tree, args.format))
+
+

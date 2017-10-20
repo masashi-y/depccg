@@ -7,6 +7,7 @@ from libc.stdlib cimport malloc, free
 from libcpp.memory cimport make_shared, shared_ptr
 from libcpp.vector cimport vector
 from libcpp.string cimport string
+from libcpp.unordered_set cimport unordered_set
 from libcpp.pair cimport pair
 from libcpp.unordered_set cimport unordered_set
 from cython.operator cimport dereference as deref
@@ -256,6 +257,15 @@ cdef extern from "dep.h" namespace "myccg" nogil:
                     float beta,
                     int pruning_size,
                     LogLevel loglevel) except +
+
+
+cdef unordered_set[Cat] read_possible_root_categories(list cats):
+    cdef unordered_set[Cat] res
+    cdef string tmp
+    for cat in cats:
+        tmp = cat.encode("utf-8")
+        res.insert(Category.Parse(tmp))
+    return res
 
 
 ## TODO: ugly code
@@ -635,6 +645,7 @@ cdef class PyAStarParser:
     cdef object nbest
     cdef object beta
     cdef object pruning_size
+    cdef object possible_root_cats
     cdef object batchsize
     cdef object loglevel
     cdef bytes  lang
@@ -647,6 +658,7 @@ cdef class PyAStarParser:
                   beta=0.00001,
                   pruning_size=50,
                   batchsize=16,
+                  possible_root_cats=None,
                   loglevel=3,
                   type_check=False):
 
@@ -658,6 +670,7 @@ cdef class PyAStarParser:
         self.beta           = beta
         self.pruning_size   = pruning_size
         self.batchsize      = batchsize
+        self.possible_root_cats = possible_root_cats
         self.loglevel       = loglevel
         self.lang           = b"en"
 
@@ -684,10 +697,16 @@ cdef class PyAStarParser:
             os.environ["CHAINER_TYPE_CHECK"] = "0"
 
     cdef Parser* load_parser(self) except *:
+        cdef unordered_set[Cat] c_possible_root_cats
+        if self.possible_root_cats is None:
+            c_possible_root_cats = en_possible_root_cats
+        else:
+            c_possible_root_cats = read_possible_root_categories(
+                    self.possible_root_cats)
         return <Parser*>new DepAStarParser[En](
                         self.tagger_,
                         self.path,
-                        en_possible_root_cats,
+                        c_possible_root_cats,
                         NormalComparator,
                         en_headfirst_binary_rules,
                         self.nbest,
@@ -781,6 +800,7 @@ cdef class PyJaAStarParser(PyAStarParser):
                   beta=0.00001,
                   pruning_size=50,
                   batchsize=16,
+                  possible_root_cats=None,
                   loglevel=3,
                   type_check=False):
 
