@@ -807,16 +807,22 @@ cdef class PyJaAStarParser(PyAStarParser):
         super(PyJaAStarParser, self).__init__(path,
                   use_seen_rules, use_cat_dict, use_beta,
                   nbest, beta, pruning_size, batchsize,
-                  loglevel, type_check)
+                  possible_root_cats, loglevel, type_check)
 
         self.lang = b"ja"
 
     # cdef Parser* load_parser(self):
     cdef Parser* load_parser(self) except *:
+        cdef unordered_set[Cat] c_possible_root_cats
+        if self.possible_root_cats is None:
+            c_possible_root_cats = ja_possible_root_cats
+        else:
+            c_possible_root_cats = read_possible_root_categories(
+                    self.possible_root_cats)
         return <Parser*>new DepAStarParser[Ja](
                         self.tagger_,
                         self.path,
-                        ja_possible_root_cats,
+                        c_possible_root_cats,
                         NormalComparator,
                         ja_headfinal_binary_rules,
                         # ja_cg_binary_rules,
