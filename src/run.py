@@ -6,6 +6,7 @@ import sys
 
 if sys.version_info.major == 2:
     sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 from depccg import PyAStarParser, PyJaAStarParser, to_mathml
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     if args.format == "xml":
         to_xml(res, tagged_doc)
     elif args.format == "html":
-        to_mathml(res)
+        to_mathml(res, file=sys.stdout)
     elif args.format == "conll":
         for i, parsed in enumerate(res):
             for tree, prob in parsed:
