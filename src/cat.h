@@ -237,8 +237,8 @@ public:
     }
 
     Cat ToMultiValue() const {
-        return Category::Parse("(" + left_->ToMultiValue()->ToStr() +
-                slash_.ToStr() + right_->ToMultiValue()->ToStr() + ")");
+        return Category::Parse("(" + left_->ToMultiValue()->ToStr() + ")" +
+                        slash_.ToStr() + "(" + right_->ToMultiValue()->ToStr() + ")");
     }
 
     Functor(Cat left, const Slash& slash, Cat right, std::string& semantics)
