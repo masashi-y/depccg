@@ -44,6 +44,15 @@ private:
     char slash_;
 };
 
+class AtomicCategory;
+class Functor;
+
+class CatVisitor {
+public:
+    virtual int Visit(const AtomicCategory* leaf) = 0;
+    virtual int Visit(const Functor* leaf) = 0;
+};
+
 class Category: public Cacheable<Category>
 {
 public:
@@ -116,6 +125,7 @@ public:
     virtual Cat ToMultiValue() const = 0;
 
     Cat Substitute(Feat feat) const;
+    virtual int Accept(CatVisitor& visitor) const = 0;
 
 protected:
     Category(const std::string& str, const std::string& semantics)
@@ -241,6 +251,8 @@ public:
                         slash_.ToStr() + "(" + right_->ToMultiValue()->ToStr() + ")");
     }
 
+    int Accept(CatVisitor& visitor) const { return visitor.Visit(this); }
+
     Functor(Cat left, const Slash& slash, Cat right, std::string& semantics)
     : Category(left->WithBrackets() + slash.ToStr() + right->WithBrackets(),
             semantics), left_(left), right_(right), slash_(slash) {}
@@ -321,6 +333,8 @@ public:
                 type_ + feat_->ToMultiValue()->ToStr());
     }
 
+    int Accept(CatVisitor& visitor) const { return visitor.Visit(this); }
+
     AtomicCategory(const std::string& type, Feat feat, const std::string& semantics)
         : Category(type + feat->ToStr(), semantics), type_(type), feat_(feat) {}
 
@@ -328,6 +342,7 @@ private:
     std::string type_;
     Feat feat_;
 };
+
 
 } // namespace myccg
 

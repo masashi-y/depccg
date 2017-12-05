@@ -115,7 +115,7 @@ const std::vector<Op> En::headfirst_binary_rules = {
     HeadFirst(GeneralizedForwardComposition<0, FC>(F, F, F)),
     HeadFirst(GeneralizedBackwardComposition<0, BC>(F, B, F)),
     HeadFirst(GeneralizedForwardComposition<1, GFC>(F, F, F)),
-    HeadFirst(GeneralizedBackwardComposition<1, GBC>(F, B, F)),
+    HeadFirst(GeneralizedBackwardComposition<1, GBC>(F, F, F)),
     HeadFirst(Conjunction()),
     HeadFirst(Conjunction2()),
     HeadFirst(Coordinate()),

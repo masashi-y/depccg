@@ -23,8 +23,12 @@ class Token:
     @staticmethod
     def from_piped(string):
         # WORD|POS|NER or WORD|LEMMA|POS|NER
+        # or WORD|LEMMA|POS|NER|CHUCK
         items = string.split("|")
-        if len(items) == 4:
+        if len(items) == 5:
+            w, l, p, n, c = items
+            return Token(w, l, p, c, n)
+        elif len(items) == 4:
             w, l, p, n = items
             return Token(w, l, p, "XX", n)
         else:
@@ -42,6 +46,15 @@ def to_xml(trees, tagged_doc, file=sys.stdout):
             print("</ccg>")
     print("</candc>")
 
+def to_prolog(trees, tagged_doc, file=sys.stdout):
+    print(":- op(601, xfx, (/)).")
+    print(":- op(601, xfx, (\)).")
+    print(":- multifile ccg/2, id/2.")
+    print(":- discontiguous ccg/2, id/2.\n")
+    for i, (tree, tagged) in enumerate(zip(trees, tagged_doc), 1):
+        for t, _ in tree:
+            print(t.prolog.format(i, *tagged))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("A* CCG parser")
     parser.add_argument("model", help="model directory")
@@ -56,7 +69,7 @@ if __name__ == "__main__":
             choices=["raw", "POSandNERtagged"],
             help="input format")
     parser.add_argument("--format", default="auto",
-            choices=["auto", "deriv", "xml", "ja", "conll", "html"],
+            choices=["auto", "deriv", "xml", "ja", "conll", "html", "prolog"],
             help="output format")
     parser.add_argument("--root-cats", default=None,
             help="allow only these categories to be at the root of a tree. If None, use default setting.")
@@ -69,8 +82,8 @@ if __name__ == "__main__":
         tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(" ")]for sent in fin]
         doc = [" ".join([token.word for token in sent]) for sent in tagged_doc]
     else:
-        assert args.format != "xml", \
-                "XML output format is supported only with --input-format POSandNERtagged."
+        assert args.format not in ["xml", "prolog"], \
+                "XML and Prolog output format is supported only with --input-format POSandNERtagged."
         doc = [l.strip() for l in fin]
 
     if args.root_cats is not None:
@@ -86,6 +99,8 @@ if __name__ == "__main__":
 
     if args.format == "xml":
         to_xml(res, tagged_doc)
+    if args.format == "prolog":
+        to_prolog(res, tagged_doc)
     elif args.format == "html":
         to_mathml(res, file=sys.stdout)
     elif args.format == "conll":

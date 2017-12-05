@@ -3,6 +3,9 @@
 #include "cat.h"
 #include "utils.h"
 #include "grammar.h"
+#include <stack>
+#include <algorithm>
+#include <string>
 
 #define REPEAT(out, size, string) for (int __sp__ = 0; __sp__ < (size); __sp__++) \
                                                     (out) << (string)
@@ -251,6 +254,97 @@ int PyXML::Visit(const Tree* tree) {
     return 0;
 }
 
+class PrologCatStr: public CatVisitor {
+public:
+    PrologCatStr(Cat cat) { cat->Accept(*this); }
+    friend std::ostream& operator<<(std::ostream& ost, const PrologCatStr& p) {
+        ost << p.stack.top();
+        return ost;
+    }
+
+    int Visit(const AtomicCategory* cat) {
+        std::string cstr = cat->ToStrWithoutFeat();
+        std::transform(cstr.begin(), cstr.end(), cstr.begin(), ::tolower);
+        if (cat->GetFeat()->IsEmpty()) {
+            stack.push(cstr);
+        } else {
+            std::string feat = cat->GetFeat()->ToStr();
+            stack.push(
+                cstr + ":" + feat.substr(1, feat.size() - 2));
+        }
+        return 0;
+    }
+
+    int Visit(const Functor* cat) {
+        std::string left, right;
+        cat->GetLeft()->Accept(*this);
+        cat->GetRight()->Accept(*this);
+        right = stack.top();
+        stack.pop();
+        left = stack.top();
+        stack.pop();
+        stack.push(
+            "(" + left + cat->GetSlash().ToStr() + right + ")");
+        return 0;
+    }
+
+    std::stack<std::string> stack;
+};
+int Prolog::Visit(const Leaf* leaf) {
+    Cat c = leaf->GetCategory();
+    int position = 1 + leaf->GetPosition();
+    Indent();
+    out_ << "t(" << PrologCatStr(c)
+         << ", \'" << leaf->GetWord()
+         << "\', \'{" << position << ".lemma}"
+         << "\', \'{" << position << ".pos}"
+         << "\', \'{" << position << ".chunk}"
+         << "\', \'{" << position << ".entity}\')";
+   return 0;
+}
+
+int Prolog::Visit(const Tree* tree) {
+    bool child = false;
+    Indent();
+    if (tree->IsUnary()) {
+        out_ << "lx(";
+        child = true;
+    } else {
+        switch (tree->GetRule()->GetRuleType()) {
+            case FA: out_ << "fa("; break;
+            case COORD:
+            case BA: out_ << "ba("; break;
+            case FX:
+            case FC: out_ << "fc("; break;
+            case BX:
+            case BC: out_ << "bx("; break;
+            case GFC: out_ << "gfc("; break;
+            case GBC: out_ << "gbx("; break;
+            case RP: out_ << "rp("; break;
+            case LP:
+            case NOISE: out_ << "lp("; break;
+            case CONJ:
+            case CONJ2: out_ << "conj(";
+                        child = true;
+                        break;
+            default:
+                out_ << "other(";
+        }
+    }
+    out_ << PrologCatStr(tree->GetCategory()) << ", ";
+    if (child)
+        out_ << PrologCatStr(tree->GetLeftChild()->GetCategory()) << ", ";
+    out_ << std::endl;
+    depth++;
+    tree->GetLeftChild()->Accept(*this);
+    if (! tree->IsUnary()) {
+        out_ << "," << std::endl;
+        tree->GetRightChild()->Accept(*this);
+    }
+    out_ << ")";
+    depth--;
+    return 0;
+}
 void ToXML(std::vector<std::shared_ptr<const Node>>& trees, bool feat, std::ostream& out) {
     std::vector<const Node*> v(trees.size());
     for (unsigned i = 0; i < trees.size(); i++) {

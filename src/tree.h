@@ -320,6 +320,32 @@ private:
     std::stringstream out_;
 };
 
+class Prolog: public FormatVisitor {
+
+public:
+    Prolog(const Node* tree): tree_(tree), depth(1) { Process(); }
+    Prolog(NodeType tree): tree_(tree.get()), depth(1) { Process(); }
+
+    void Process() {
+        out_ << "ccg({0}," << std::endl;
+        tree_->Accept(*this);
+        out_ << ")." << std::endl;
+    }
+    std::string Get() const { return out_.str(); }
+    friend std::ostream& operator<<(std::ostream& ost, const Prolog& pro) {
+        return ost << pro.out_.str();
+    }
+
+    void Indent() { for (int i = 0; i < depth; i++) out_ << " "; };
+    int Visit(const Tree* tree);
+    int Visit(const Leaf* leaf);
+
+private:
+    const Node* tree_;
+    std::stringstream out_;
+    int depth;
+};
+
 class CoNLL: public FormatVisitor {
 
 public:

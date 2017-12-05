@@ -100,8 +100,8 @@ sources = ["depccg.pyx",
 
 compile_options = "-std=c++11 -O3 -g -fpic -march=native"
 
-if platform.uname()[0]=='Darwin':
-    compile_options += " -stdlib=libc++"
+# if platform.uname()[0]=='Darwin':
+#     compile_options += " -stdlib=libc++"
 
 extra_link_args = ["-fopenmp" if check_for_openmp() else ""]
 
