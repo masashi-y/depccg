@@ -169,7 +169,7 @@ std::vector<ScoredNode> AStarParser<Lang>::Parse(int id, const std::string& sent
         }
     }
 
-    Chart chart(sent_size);
+    Chart chart(sent_size, nbest_ > 1);
 
     while (keep_going && chart.IsEmpty() && agenda.size() > 0) {
 

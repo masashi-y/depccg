@@ -6,8 +6,9 @@
 
 namespace myccg {
 
-ChartCell::ChartCell()
-    : items(std::unordered_map<Cat, ScoredNode>()),
+ChartCell::ChartCell(bool nbest)
+    : nbest(nbest),
+      items(std::unordered_multimap<Cat, ScoredNode>()),
       best_prob(std::numeric_limits<float>::lowest()), best(NULL) {}
 
 bool comp(ScoredNode& s1, ScoredNode s2) {
@@ -24,7 +25,7 @@ std::vector<ScoredNode> ChartCell::GetNBestParses() {
 
 bool ChartCell::update(NodeType parse, float prob) {
     Cat cat = parse->GetCategory();
-    if (items.count(cat) > 0)
+    if (! nbest && items.count(cat) > 0)
         return false;
     items.emplace(cat, std::make_pair(parse, prob));
     if (best_prob < prob) {
@@ -34,9 +35,10 @@ bool ChartCell::update(NodeType parse, float prob) {
     return true;
 }
 
-Chart::Chart(int sent_size)
+Chart::Chart(int sent_size, bool nbest)
     : sent_size_(sent_size),
       chart_size_(sent_size * sent_size),
+      nbest_(nbest),
       chart_(new ChartCell*[chart_size_]),
       ending_cells_(new std::vector<ChartCell*>[sent_size + 1]),
       starting_cells_(new std::vector<ChartCell*>[sent_size + 1]) {
@@ -67,7 +69,7 @@ bool Chart::IsEmpty() const {
 ChartCell* Chart::operator() (int row, int column) {
     ChartCell* cell = chart_[row * sent_size_ + column];
     if (! cell) {
-        cell = new ChartCell();
+        cell = new ChartCell(nbest_);
         chart_[row * sent_size_ + column] = cell;
         ending_cells_[row + column + 1].push_back(cell);
         starting_cells_[row].push_back(cell);

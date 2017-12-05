@@ -12,7 +12,7 @@ typedef std::pair<NodeType, float> ScoredNode;
 
 struct ChartCell
 {
-    ChartCell();
+    ChartCell(bool nbest);
 
     ~ChartCell() {}
 
@@ -23,7 +23,9 @@ struct ChartCell
     }
     std::vector<ScoredNode> GetNBestParses();
     bool update(NodeType parse, float prob);
-    std::unordered_map<Cat, ScoredNode> items;
+
+    bool nbest;
+    std::unordered_multimap<Cat, ScoredNode> items;
     float best_prob;
     NodeType best;
 };
@@ -32,7 +34,7 @@ struct ChartCell
 class Chart
 {
 public:
-    Chart(int sent_size);
+    Chart(int sent_size, bool nbest);
 
     ~Chart();
 
@@ -52,6 +54,7 @@ public:
 private:
     int sent_size_;
     int chart_size_;
+    bool nbest_;
     ChartCell** chart_;
     std::vector<ChartCell*>* ending_cells_;
     std::vector<ChartCell*>* starting_cells_;

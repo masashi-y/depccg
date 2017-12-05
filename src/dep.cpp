@@ -119,8 +119,8 @@ std::vector<ScoredNode> DepAStarParser<Lang>::Parse(
         }
     }
 
-    Chart chart(sent_size);
-    Chart goal(1);
+    Chart chart(sent_size, Base::nbest_ > 1);
+    Chart goal(1, Base::nbest_ > 1);
     ChartCell* goal_cell = goal(0, 0);
 
     while (Base::keep_going && Base::nbest_ > goal.Size() && agenda.size() > 0) {

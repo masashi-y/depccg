@@ -79,11 +79,12 @@ public:
         if (*left == *Category::Parse("conj")
                 && *right == *Category::Parse("NP\\NP"))
             return true;
-        if (Category::Parse("NP\\NP")->Matches(right))
-            return false;
-        return (puncts_.count(left) > 0 &&
-                !right->IsPunct() &&
-                !right->IsTypeRaised()); // &&
+        return false;
+        // if (Category::Parse("NP\\NP")->Matches(right))
+        //     return false;
+        // return (puncts_.count(left) > 0 &&
+        //         !right->IsPunct() &&
+        //         !right->IsTypeRaised()); // &&
                 // ! (!right->IsFunctor() &&
                         // right->GetType() == "N"));
     }
