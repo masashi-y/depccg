@@ -262,10 +262,21 @@ public:
         return ost;
     }
 
+    std::string Get() { return stack.top(); }
+
     int Visit(const AtomicCategory* cat) {
         std::string cstr = cat->ToStrWithoutFeat();
         std::transform(cstr.begin(), cstr.end(), cstr.begin(), ::tolower);
-        if (cat->GetFeat()->IsEmpty()) {
+        if (false) {
+        } else if (*cat == *Category::Parse(".")) {
+            stack.push("period");
+        } else if (*cat == *Category::Parse(",")) {
+            stack.push("comma");
+        } else if (*cat == *Category::Parse(":")) {
+            stack.push("colon");
+        } else if (*cat == *Category::Parse(";")) {
+            stack.push("semicolon");
+        } else if (cat->GetFeat()->IsEmpty()) {
             stack.push(cstr);
         } else {
             std::string feat = cat->GetFeat()->ToStr();
@@ -290,12 +301,19 @@ public:
 
     std::stack<std::string> stack;
 };
+
+std::string escapeProlog(std::string in) {
+    if (in.find("'") != std::string::npos)
+        utils::ReplaceAll(&in, "'", "\\'");
+    return in;
+}
+
 int Prolog::Visit(const Leaf* leaf) {
     Cat c = leaf->GetCategory();
     int position = 1 + leaf->GetPosition();
     Indent();
     out_ << "t(" << PrologCatStr(c)
-         << ", \'" << leaf->GetWord()
+         << ", \'" << escapeProlog(leaf->GetWord())
          << "\', \'{" << position << ".lemma}"
          << "\', \'{" << position << ".pos}"
          << "\', \'{" << position << ".chunk}"
@@ -303,8 +321,9 @@ int Prolog::Visit(const Leaf* leaf) {
    return 0;
 }
 
+// TODO: Fix this
 int Prolog::Visit(const Tree* tree) {
-    bool child = false;
+    bool child = false, arg = false, noise = false, conj2 = false;
     Indent();
     if (tree->IsUnary()) {
         out_ << "lx(";
@@ -317,23 +336,45 @@ int Prolog::Visit(const Tree* tree) {
             case FX:
             case FC: out_ << "fc("; break;
             case BX:
-            case BC: out_ << "bx("; break;
+            case BC: out_ << "bxc("; break;
             case GFC: out_ << "gfc("; break;
             case GBC: out_ << "gbx("; break;
             case RP: out_ << "rp("; break;
             case LP:
-            case NOISE: out_ << "lp("; break;
-            case CONJ:
-            case CONJ2: out_ << "conj(";
-                        child = true;
+            case NOISE: out_ << "lx(";
+                        noise = true;
+                        break;
+            case CONJ: out_ << "conj(";
+                        arg = true;
+                        break;
+            case CONJ2: out_ << "lx(";
+                        conj2 = true;
                         break;
             default:
                 out_ << "other(";
         }
     }
     out_ << PrologCatStr(tree->GetCategory()) << ", ";
+    if (conj2) {
+        std::string c = PrologCatStr(tree->GetRightChild()->GetCategory()).Get();
+        out_ << c << "\\" << c << ", ";
+        out_ << std::endl;
+        depth++;
+        Indent();
+        out_ << "conj(" << c << "\\" << c << ", " << c << ", ";
+    }
+    if (noise) {
+        out_ << PrologCatStr(tree->GetRightChild()->GetCategory()) << ", ";
+        out_ << std::endl;
+        depth++;
+        Indent();
+        out_ << "lp("
+             << PrologCatStr(tree->GetRightChild()->GetCategory()) << ", ";
+    }
     if (child)
         out_ << PrologCatStr(tree->GetLeftChild()->GetCategory()) << ", ";
+    if (arg)
+        out_ << PrologCatStr(tree->GetCategory()->GetLeft()) << ", ";
     out_ << std::endl;
     depth++;
     tree->GetLeftChild()->Accept(*this);
@@ -343,6 +384,10 @@ int Prolog::Visit(const Tree* tree) {
     }
     out_ << ")";
     depth--;
+    if (conj2 || noise) {
+        out_ << ")";
+        depth--;
+    }
     return 0;
 }
 void ToXML(std::vector<std::shared_ptr<const Node>>& trees, bool feat, std::ostream& out) {

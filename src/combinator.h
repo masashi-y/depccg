@@ -71,7 +71,7 @@ public:
 class Conjunction2: public Combinator
 {
 public:
-    Conjunction2(): Combinator(CONJ),
+    Conjunction2(): Combinator(CONJ2),
       puncts_({Category::Parse(",")}) {}
                // Category::Parse(";")}) {}
 

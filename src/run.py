@@ -52,6 +52,9 @@ def to_prolog(trees, tagged_doc, file=sys.stdout):
     print(":- multifile ccg/2, id/2.")
     print(":- discontiguous ccg/2, id/2.\n")
     for i, (tree, tagged) in enumerate(zip(trees, tagged_doc), 1):
+        for tok in tagged:
+            if "'" in tok.lemma:
+                tok.lemma = tok.lemma.replace("'", "\\'")
         for t, _ in tree:
             print(t.prolog.format(i, *tagged))
 
