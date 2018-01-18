@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     if args.format == "xml":
         to_xml(res, tagged_doc)
-    if args.format == "prolog":
+    elif args.format == "prolog":
         to_prolog(res, tagged_doc)
     elif args.format == "html":
         to_mathml(res, file=sys.stdout)
