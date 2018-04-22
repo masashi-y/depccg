@@ -1,6 +1,8 @@
 # depccg
 Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](https://arxiv.org/abs/1704.06936)
 
+__More stable and easier to use ocaml version is also available__: [depccg.ml](https://github.com/masashi-y/depccg.ml)
+
 #### Requirements
 * Python (Either 2 or 3)
 * [Chainer](http://chainer.org/) (version 1.x)
