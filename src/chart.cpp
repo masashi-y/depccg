@@ -11,7 +11,7 @@ ChartCell::ChartCell(bool nbest)
       items(std::unordered_multimap<Cat, ScoredNode>()),
       best_prob(std::numeric_limits<float>::lowest()), best(NULL) {}
 
-bool comp(ScoredNode& s1, ScoredNode s2) {
+bool comp(const ScoredNode& s1, const ScoredNode& s2) {
     return s1.second > s2.second;
 }
 
