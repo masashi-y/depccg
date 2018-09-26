@@ -5,7 +5,7 @@ __More stable and easier to use ocaml version is also available__: [depccg.ml](h
 
 #### Requirements
 * Python (Either 2 or 3)
-* [Chainer](http://chainer.org/) (version 1.x)
+* [Chainer](http://chainer.org/) (newer than or equal to  2.0)
 * [Cython](http://cython.org/)
 * A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11) (in case of gcc, must be >= 4.9)
 * OpenMP (optional, for faster batch parsing)

@@ -56,7 +56,7 @@ class FixedLengthNStepLSTM(NStepLSTM):
 
         hy, cy, ys = fixed_length_n_step_lstm(
             self.n_layers, self.dropout, hx, cx, ws, bs, xs,
-            train=train, use_cudnn=self.use_cudnn)
+            train=train)
 
         return hy, cy, ys
 
@@ -285,11 +285,11 @@ class FixedLengthNStepLSTMFunction(NStepLSTMFunction):
 
 def fixed_length_n_step_lstm(
         n_layers, dropout_ratio, hx, cx, ws, bs, xs, train=True,
-        use_cudnn=True):
+        ):
 
     xp = cuda.get_array_module(hx, hx.data)
 
-    if use_cudnn and xp is not numpy and cuda.cudnn_enabled and _cudnn_version >= 5000:
+    if xp is not numpy and cuda.cudnn_enabled and _cudnn_version >= 5000:
         states = get_random_state().create_dropout_states(dropout_ratio)
         # flatten all input variables
         inputs = tuple(itertools.chain(
@@ -329,8 +329,8 @@ def fixed_length_n_step_lstm(
                 else:
                     h_rest = None
 
-                x = dropout.dropout(x, ratio=dropout_ratio, train=train)
-                h = dropout.dropout(h, ratio=dropout_ratio, train=train)
+                x = dropout.dropout(x, ratio=dropout_ratio)
+                h = dropout.dropout(h, ratio=dropout_ratio)
                 lstm_in = linear.linear(x, xws[layer], xbs[layer]) + \
                           linear.linear(h, hws[layer], hbs[layer])
 

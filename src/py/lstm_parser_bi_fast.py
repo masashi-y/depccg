@@ -154,7 +154,7 @@ class FastBiaffineLSTMParser(chainer.Chain):
         wss = self.emb_word(ws)
         sss = F.reshape(self.emb_suf(ss), (batchsize, slen, 4 * self.afix_dim))
         pss = F.reshape(self.emb_prf(ps), (batchsize, slen, 4 * self.afix_dim))
-        ins = F.dropout(F.concat([wss, sss, pss], 2), self.dropout_ratio, train=self.train)
+        ins = F.dropout(F.concat([wss, sss, pss], 2), self.dropout_ratio)
         xs_f = F.transpose(ins, (1, 0, 2))
         xs_b = xs_f[::-1]
 
@@ -166,8 +166,8 @@ class FastBiaffineLSTMParser(chainer.Chain):
         hs = F.transpose(F.concat([hs_f, hs_b[::-1]], 2), (1, 0, 2))
 
         dep_ys = self.biaffine_arc(
-            F.elu(F.dropout(self.arc_dep(hs), 0.32, train=self.train)),
-            F.elu(F.dropout(self.arc_head(hs), 0.32, train=self.train)))
+            F.elu(F.dropout(self.arc_dep(hs), 0.32)),
+            F.elu(F.dropout(self.arc_head(hs), 0.32)))
 
         if dep_ts is not None and random.random >= 0.5:
             heads = dep_ts
@@ -178,9 +178,9 @@ class FastBiaffineLSTMParser(chainer.Chain):
         hs = F.reshape(hs, (batchsize * slen, -1))
         heads = F.permutate(
                     F.elu(F.dropout(
-                        self.rel_head(hs), 0.32, train=self.train)), heads)
+                        self.rel_head(hs), 0.32)), heads)
 
-        childs = F.elu(F.dropout(self.rel_dep(hs), 0.32, train=self.train))
+        childs = F.elu(F.dropout(self.rel_dep(hs), 0.32))
         cat_ys = self.biaffine_tag(childs, heads)
 
         dep_ys = F.split_axis(dep_ys, batchsize, 0) if batchsize > 1 else [dep_ys]
