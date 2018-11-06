@@ -307,18 +307,18 @@ class BiaffineJaLSTMParser(chainer.Chain):
                         self.emb_char(c), 1)), (int(l[0]), 1)))
                     for c, l in zip(cs, ls)]
         xs_f = [F.dropout(F.concat([w, c]),
-            self.dropout_ratio, train=self.train) for w, c in zip(ws, cs)]
+            self.dropout_ratio) for w, c in zip(ws, cs)]
         xs_b = [x[::-1] for x in xs_f]
         cx_f, hx_f, cx_b, hx_b = self._init_state(xp, batchsize)
-        _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f, train=self.train)
-        _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b, train=self.train)
+        _, _, hs_f = self.lstm_f(hx_f, cx_f, xs_f)
+        _, _, hs_b = self.lstm_b(hx_b, cx_b, xs_b)
         hs_b = [x[::-1] for x in hs_b]
         hs = [F.concat([h_f, h_b]) for h_f, h_b in zip(hs_f, hs_b)]
 
 
         dep_ys = [self.biaffine_arc(
-            F.elu(F.dropout(self.arc_dep(h), 0.32, train=self.train)),
-            F.elu(F.dropout(self.arc_head(h), 0.32, train=self.train))) for h in hs]
+            F.elu(F.dropout(self.arc_dep(h), 0.32)),
+            F.elu(F.dropout(self.arc_head(h), 0.32))) for h in hs]
 
         if dep_ts is not None:
             heads = dep_ts
@@ -327,9 +327,9 @@ class BiaffineJaLSTMParser(chainer.Chain):
 
         cat_ys = [
                 self.biaffine_tag(
-            F.elu(F.dropout(self.rel_dep(h), 0.32, train=self.train)),
+            F.elu(F.dropout(self.rel_dep(h), 0.32)),
             F.elu(F.dropout(self.rel_head(
-                F.embed_id(t, h, ignore_label=IGNORE)), 0.32, train=self.train))) \
+                F.embed_id(t, h, ignore_label=IGNORE)), 0.32))) \
                         for h, t in zip(hs, heads)]
 
         return cat_ys, dep_ys
@@ -340,7 +340,8 @@ class BiaffineJaLSTMParser(chainer.Chain):
         """
         xs = [self.extractor.process(x) for x in xs]
         ws, ss, ps = zip(*xs)
-        cat_ys, dep_ys = self.forward(ws, ss, ps)
+        with chainer.no_backprop_mode(), chainer.using_config('train', False):
+            cat_ys, dep_ys = self.forward(ws, ss, ps)
         return zip([F.log_softmax(y[1:-1]).data for y in cat_ys],
                 [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
 
