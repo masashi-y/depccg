@@ -21,21 +21,3 @@ class Param:
         obj.__dict__.update(params)
         return p
 
-
-# class A:
-#     def __init__(self, i, train=True):
-#         if train:
-#             params = Param(self)
-#             params.i = i
-#             params.dump("params.txt")
-#             self.params = params
-#         else:
-#             self.params = Param.load(self, "params.txt")
-#
-#
-# a = A(10)
-# b = A(20, train=False)
-#
-# print b.i
-#
-#

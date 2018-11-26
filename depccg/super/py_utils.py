@@ -1,6 +1,5 @@
 
 import numpy as np
-import py.cat
 import re
 
 def drop_brackets(cat):
@@ -93,22 +92,4 @@ def read_model_defs(filepath):
         res[word] = i
     return res
 
-
-def load_unary(filename):
-    for line in open(filename):
-        comment = line.find("#")
-        if comment > -1:
-            line = line[:comment]
-        line = line.strip()
-        if len(line) == 0:
-            continue
-        items = line.split()
-        assert len(items) == 2
-        inp = cat.parse(items[0])
-        out = cat.parse(items[1])
-        if res.has_key(inp):
-            res[inp].append(out)
-        else:
-            res[inp] = [out]
-    return res
 

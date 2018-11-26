@@ -82,8 +82,7 @@ python setup.py build
         return False
 
 
-sources = ["depccg.pyx",
-          "cat.cpp",
+sources = ["cat.cpp",
           "cat_loader.cpp",
           "logger.cpp",
           "parser.cpp",
@@ -107,8 +106,8 @@ extra_link_args = ["-fopenmp" if check_for_openmp() else ""]
 
 ext_modules = [
         Extension("depccg",
-                  sources,
-                  include_dirs=[numpy.get_include(), "."],
+                  ['depccg.pyx'] + [os.path.join('cpp', cpp) for cpp in sources],
+                  include_dirs=[numpy.get_include(), "cpp"],
                   extra_compile_args=compile_options.split(" "),
                   extra_link_args=extra_link_args,
                   language='c++'
