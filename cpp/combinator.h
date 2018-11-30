@@ -72,12 +72,12 @@ class Conjunction2: public Combinator
 {
 public:
     Conjunction2(): Combinator(CONJ2),
-      puncts_({Category::Parse(",")}) {}
-               // Category::Parse(";")}) {}
+      puncts_({CCategory::Parse(",")}) {}
+               // CCategory::Parse(";")}) {}
 
     bool CanApply(Cat left, Cat right) const {
-        if (*left == *Category::Parse("conj")
-                && *right == *Category::Parse("NP\\NP"))
+        if (*left == *CCategory::Parse("conj")
+                && *right == *CCategory::Parse("NP\\NP"))
             return true;
         return false;
     }
@@ -97,8 +97,8 @@ public:
     Coordinate(): Combinator(COORD) {}
 
     bool CanApply(Cat left, Cat right) const {
-        if (*left == *Category::Parse("NP")
-                && *right == *Category::Parse("NP\\NP"))
+        if (*left == *CCategory::Parse("NP")
+                && *right == *CCategory::Parse("NP\\NP"))
             return true;
         return false;
     }
@@ -114,12 +114,12 @@ class Conjunction: public Combinator
 {
 public:
     Conjunction(): Combinator(CONJ),
-      puncts_({Category::Parse(","),
-               Category::Parse(";"),
-               Category::Parse("conj")}) {}
+      puncts_({CCategory::Parse(","),
+               CCategory::Parse(";"),
+               CCategory::Parse("conj")}) {}
 
     bool CanApply(Cat left, Cat right) const {
-        if (Category::Parse("NP\\NP")->Matches(right))
+        if (CCategory::Parse("NP\\NP")->Matches(right))
             return false;
         return (puncts_.count(left) > 0 &&
                 !right->IsPunct() &&
@@ -129,7 +129,7 @@ public:
     }
 
     Cat Apply(Cat left, Cat right) const {
-        return Category::Make(right, Slash::Bwd(), right);
+        return CCategory::Make(right, Slash::Bwd(), right);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
@@ -147,9 +147,9 @@ class CommaAndVerbPhraseToAdverb: public Combinator
 public:
     CommaAndVerbPhraseToAdverb()
         : Combinator(NOISE),
-          ngVP_(Category::Parse("S[ng]\\NP")),
-          pssVP_(Category::Parse("S[pss]\\NP")),
-          result_(Category::Parse("(S\\NP)\\(S\\NP)")) {}
+          ngVP_(CCategory::Parse("S[ng]\\NP")),
+          pssVP_(CCategory::Parse("S[pss]\\NP")),
+          result_(CCategory::Parse("(S\\NP)\\(S\\NP)")) {}
 
     bool CanApply(Cat left, Cat right) const {
         return (!left->IsFunctor() &&
@@ -177,8 +177,8 @@ class ParentheticalDirectSpeech: public Combinator
 public:
     ParentheticalDirectSpeech()
         : Combinator(NOISE),
-          SdclSdcl_(Category::Parse("S[dcl]/S[dcl]")),
-          result_(Category::Parse("(S\\NP)/(S\\NP)")) {}
+          SdclSdcl_(CCategory::Parse("S[dcl]/S[dcl]")),
+          result_(CCategory::Parse("(S\\NP)/(S\\NP)")) {}
 
     bool CanApply(Cat left, Cat right) const {
         return (!left->IsFunctor() &&
@@ -224,8 +224,8 @@ class RemovePunctuationLeft: public Combinator
 {
 public:
     RemovePunctuationLeft(): Combinator(LP),
-      puncts_({Category::Parse("LQU"),
-               Category::Parse("LRB"),}) {}
+      puncts_({CCategory::Parse("LQU"),
+               CCategory::Parse("LRB"),}) {}
 
     bool CanApply(Cat left, Cat right) const {
         return puncts_.count(left) > 0;
@@ -271,7 +271,7 @@ class ForwardApplication: public Combinator
     Cat Apply(Cat left, Cat right) const {
         if (left->IsModifier()) return right;
         Cat result = left->GetLeft();
-        return Category::CorrectWildcardFeatures(result, left->GetRight(), right);
+        return CCategory::CorrectWildcardFeatures(result, left->GetRight(), right);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
@@ -293,7 +293,7 @@ class BackwardApplication: public Combinator
 
     Cat Apply(Cat left, Cat right) const {
         Cat res = right->IsModifier() ? left : right->GetLeft();
-        return Category::CorrectWildcardFeatures(res, right->GetRight(), left);
+        return CCategory::CorrectWildcardFeatures(res, right->GetRight(), left);
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
@@ -319,8 +319,8 @@ class GeneralizedForwardComposition: public Combinator
 
     Cat Apply(Cat left, Cat right) const {
         Cat res = left->IsModifier() ? right :
-            Category::Compose<Order>(left->GetLeft(), result_, right);
-        return Category::CorrectWildcardFeatures(res,
+            CCategory::Compose<Order>(left->GetLeft(), result_, right);
+        return CCategory::CorrectWildcardFeatures(res,
                 right->GetLeft<Order+1>(), left->GetRight());
     }
 
@@ -353,8 +353,8 @@ class GeneralizedBackwardComposition: public Combinator
 
     Cat Apply(Cat left, Cat right) const {
         Cat res = right->IsModifier() ? left :
-            Category::Compose<Order>(right->GetLeft(), result_, left);
-        return Category::CorrectWildcardFeatures(
+            CCategory::Compose<Order>(right->GetLeft(), result_, left);
+        return CCategory::CorrectWildcardFeatures(
                 res, left->GetLeft<Order+1>(), right->GetRight());
     }
     bool HeadIsLeft(Cat left, Cat right) const {

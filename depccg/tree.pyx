@@ -2,65 +2,7 @@ from libcpp.string cimport string
 from cython.operator cimport dereference as deref
 from libcpp.pair cimport pair
 from libcpp.memory cimport shared_ptr
-
-include "cat.pyx"
-
-cdef extern from "combinator.h" namespace "myccg" nogil:
-    cdef cppclass Combinator:
-        const string ToStr() const
-    ctypedef const Combinator* Op
-
-
-cdef extern from "tree.h" namespace "myccg" nogil:
-    cdef cppclass Leaf:
-        Leaf(const string& word, Cat cat, int position)
-
-    cdef cppclass Tree:
-        Op GetRule() const
-
-    cdef cppclass Node:
-        Cat GetCategory() const
-        const int GetLength() const
-        shared_ptr[const Node] GetLeftChild() const
-        shared_ptr[const Node] GetRightChild() const
-        bint IsLeaf() const
-        const Leaf* GetHeadLeaf() const
-        int GetStartOfSpan() const
-        string GetWord() const
-        int GetHeadId() const
-        int GetDependencyLength() const
-        bint HeadIsLeft() const
-        bint IsUnary() const
-        int NumDescendants() const
-        int RightNumDescendants() const
-        int LeftNumDescendants() const
-
-    ctypedef shared_ptr[const Node] NodeType
-    ctypedef pair[NodeType, float] ScoredNode
-
-    cdef cppclass AUTO:
-        AUTO(NodeType tree)
-        string Get()
-
-    cdef cppclass Derivation:
-        Derivation(NodeType tree, bint feat)
-        string Get()
-
-    cdef cppclass JaCCG:
-        JaCCG(NodeType tree)
-        string Get()
-
-    cdef cppclass PyXML:
-        PyXML(NodeType tree, bint feat)
-        string Get()
-
-    cdef cppclass Prolog:
-        Prolog(NodeType tree)
-        string Get()
-
-    cdef cppclass CoNLL:
-        CoNLL(NodeType tree)
-        string Get()
+from .cat cimport Cat, Category
 
 
 cdef extern from "grammar.h" namespace "myccg" nogil:
@@ -85,15 +27,11 @@ cdef ResolveCombinatorName(const Node* tree, bytes lang):
     return res.decode("utf-8")
 
 
-cdef class Parse:
-    cdef NodeType node
-    cdef public bint suppress_feat
-    cdef bytes lang
-
+cdef class Tree:
     @staticmethod
-    cdef Parse from_ptr(NodeType node, lang):
-        p = Parse()
-        p.node = node
+    cdef Tree from_ptr(NodeType node, lang):
+        p = Tree()
+        p.node_ = node
         p.lang = lang
         return p
 
@@ -102,16 +40,16 @@ cdef class Parse:
 
     property cat:
         def __get__(self):
-            return PyCat.from_ptr(deref(self.node).GetCategory())
+            return Category.from_ptr(deref(self.node_).GetCategory())
 
     property op_string:
         def __get__(self):
             assert not self.is_leaf, "This node is leaf and does not have combinator!"
-            cdef const Node* c_node = &deref(self.node)
+            cdef const Node* c_node = &deref(self.node_)
             return ResolveCombinatorName(c_node, self.lang)
 
     def __len__(self):
-        return deref(self.node).GetLength()
+        return deref(self.node_).GetLength()
 
     property children:
         def __get__(self):
@@ -123,54 +61,54 @@ cdef class Parse:
     property left_child:
         def __get__(self):
             assert not self.is_leaf, "This node is leaf and does not have any child!"
-            return Parse.from_ptr(<NodeType>deref(self.node).GetLeftChild(), self.lang)
+            return Tree.from_ptr(<NodeType>deref(self.node_).GetLeftChild(), self.lang)
 
     property right_child:
         def __get__(self):
             assert not self.is_leaf, "This node is leaf and does not have any child!"
             assert not self.is_unary, "This node does not have right child!"
-            return Parse.from_ptr(<NodeType>deref(self.node).GetRightChild(), self.lang)
+            return Tree.from_ptr(<NodeType>deref(self.node_).GetRightChild(), self.lang)
 
     property is_leaf:
         def __get__(self):
-            return deref(self.node).IsLeaf()
+            return deref(self.node_).IsLeaf()
 
     property start_of_span:
         def __get__(self):
-            return deref(self.node).GetStartOfSpan()
+            return deref(self.node_).GetStartOfSpan()
 
     property word:
         def __get__(self):
-            cdef string res = deref(self.node).GetWord()
+            cdef string res = deref(self.node_).GetWord()
             return res.decode("utf-8")
 
     property head_id:
         def __get__(self):
-            return deref(self.node).GetHeadId()
+            return deref(self.node_).GetHeadId()
 
     property dependency_length:
         def __get__(self):
-            return deref(self.node).GetDependencyLength()
+            return deref(self.node_).GetDependencyLength()
 
     property head_is_left:
         def __get__(self):
-            return deref(self.node).HeadIsLeft()
+            return deref(self.node_).HeadIsLeft()
 
     property is_unary:
         def __get__(self):
-            return deref(self.node).IsUnary()
+            return deref(self.node_).IsUnary()
 
     property num_descendants:
         def __get__(self):
-            return deref(self.node).NumDescendants()
+            return deref(self.node_).NumDescendants()
 
     property right_num_descendants:
         def __get__(self):
-            return deref(self.node).RightNumDescendants()
+            return deref(self.node_).RightNumDescendants()
 
     property left_num_descendants:
         def __get__(self):
-            return deref(self.node).LeftNumDescendants()
+            return deref(self.node_).LeftNumDescendants()
 
     def __str__(self):
         return self.auto
@@ -180,31 +118,31 @@ cdef class Parse:
 
     property auto:
         def __get__(self):
-            cdef string res = AUTO(self.node).Get()
+            cdef string res = AUTO(self.node_).Get()
             return res.decode("utf-8")
 
     property deriv:
         def __get__(self):
-            cdef string res = Derivation(self.node, not self.suppress_feat).Get()
+            cdef string res = Derivation(self.node_, not self.suppress_feat).Get()
             return res.decode("utf-8")
 
     property xml:
         def __get__(self):
-            cdef string res = PyXML(self.node, not self.suppress_feat).Get()
+            cdef string res = PyXML(self.node_, not self.suppress_feat).Get()
             return res.decode("utf-8")
 
     property prolog:
         def __get__(self):
-            cdef string res = Prolog(self.node).Get()
+            cdef string res = Prolog(self.node_).Get()
             return res.decode("utf-8")
 
     property ja:
         def __get__(self):
-            cdef string res = JaCCG(self.node).Get()
+            cdef string res = JaCCG(self.node_).Get()
             return res.decode("utf-8")
 
     property conll:
         def __get__(self):
-            cdef string res = CoNLL(self.node).Get()
+            cdef string res = CoNLL(self.node_).Get()
             return res.decode("utf-8")
 

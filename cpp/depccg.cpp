@@ -9,14 +9,14 @@
 #include <omp.h>
 #endif
 
-// #include "dep.h"
 #include "depccg.h"
 #include "debug.h"
-// #include "grammar.h"
 #include "matrix.h"
 #include "chart.h"
 
 namespace myccg {
+
+
 
 std::vector<Cat> EnApplyUnaryRules(
         const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
@@ -96,25 +96,23 @@ std::vector<RuleCache>& JaGetRules(
     }
 }
 
-const unsigned MAX_LENGTH = 250;
 
-
-// struct CompareFloatCat {
-//     bool operator() (const std::pair<float, Cat>& left, const std::pair<float, Cat>& right) const {
-//         return left.first < right.first;
-//     }
-// };
+struct CompareFloatCat {
+    bool operator() (const std::pair<float, Cat>& left, const std::pair<float, Cat>& right) const {
+        return left.first < right.first;
+    }
+};
 
 std::vector<ScoredNode> Failed() {
     static ScoredNode failure_node = std::make_pair(
-        std::make_shared<Leaf>("fail", Category::Parse("NP"), 0), 0);
+        std::make_shared<Leaf>("fail", CCategory::Parse("NP"), 0), 0);
     return std::vector<ScoredNode>({failure_node});
 }
 
 
-// bool NormalComparator(const AgendaItem& left, const AgendaItem& right) {
-//     return left.prob < right.prob;
-// }
+bool NormalComparator(const AgendaItem& left, const AgendaItem& right) {
+    return left.prob < right.prob;
+}
 
 
 void ComputeOutsideProbs(
@@ -170,7 +168,8 @@ std::vector<ScoredNode> ParseSentence(
     Matrix<float> tag_in_probs(tag_scores, sent_size, tag_size);
     Matrix<float> dep_in_probs(dep_scores, sent_size, sent_size + 1);
 
-    AgendaType agenda(NormalComparator);
+    std::priority_queue<AgendaItem, std::vector<AgendaItem>,
+                bool (*)(const AgendaItem&, const AgendaItem&)> agenda(NormalComparator);
     unsigned agenda_id = 0;
 
     std::vector<std::priority_queue<std::pair<float, Cat>,
@@ -208,7 +207,7 @@ std::vector<ScoredNode> ParseSentence(
             scored_cats[i].pop();
             if (std::exp(prob_and_cat.first) > threshold) {
                 float in_prob = prob_and_cat.first;
-                agenda.emplace(agenda_id++, std::make_shared<const Leaf>(
+                agenda.emplace(false, agenda_id++, std::make_shared<const Leaf>(
                             tokens[i], prob_and_cat.second, i), in_prob, out_prob, i, 1);
             } else
                 break;
@@ -229,7 +228,6 @@ std::vector<ScoredNode> ParseSentence(
         }
         agenda.pop();
         NodeType parse = item.parse;
-        // Base::logger_.RecordAgendaItem("POPPED", item);
 
         ChartCell* cell = chart(item.start_of_span, item.span_length - 1);
 
@@ -247,9 +245,8 @@ std::vector<ScoredNode> ParseSentence(
                     && unary_rules.count(parse->GetCategory()) > 0) {
                 for (Cat unary: apply_unary_rules(unary_rules, parse)) {
                     NodeType subtree = std::make_shared<const Tree>(unary, parse);
-                    agenda.emplace(agenda_id++, subtree, item.in_prob - 0.1, item.out_prob,
+                    agenda.emplace(false, agenda_id++, subtree, item.in_prob - 0.1, item.out_prob,
                                         item.start_of_span, item.span_length);
-                    // Base::logger_.RecordTree("UNARY", subtree);
                 }
             }
             for (auto&& other: chart.GetCellsStartingAt(item.start_of_span + item.span_length)) {
@@ -257,9 +254,6 @@ std::vector<ScoredNode> ParseSentence(
                     NodeType right = pair.second.first;
                     float prob = pair.second.second;
                     int span_length = parse->GetLength() + right->GetLength();
-                    // Base::logger_.RecordTree("RIGHT", right);
-
-                    // if (! Base::IsSeen(parse->GetCategory(), right->GetCategory())) continue;
 
                     for (auto&& rule: apply_binary_rules(
                                 cache, binary_rules, seen_rules,
@@ -275,9 +269,8 @@ std::vector<ScoredNode> ParseSentence(
                                        + dep_out_probs(item.start_of_span,
                                         item.start_of_span + span_length)
                                        - best_dep_probs[head->GetHeadId()];
-                        agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
+                        agenda.emplace(false, agenda_id++, subtree, in_prob, out_prob,
                                             item.start_of_span, span_length);
-                        // Base::logger_.RecordTree("ACCEPTED", subtree);
                     }
                 }
             }
@@ -287,9 +280,7 @@ std::vector<ScoredNode> ParseSentence(
                     float prob = pair.second.second;
                     int span_length = parse->GetLength() + left->GetLength();
                     int start_of_span = left->GetStartOfSpan();
-                    // Base::logger_.RecordTree("LEFT", left);
 
-                    // if (! Base::IsSeen(left->GetCategory(), parse->GetCategory())) continue;
                     for (auto&& rule: apply_binary_rules(
                                 cache, binary_rules, seen_rules,
                                 left->GetCategory(), parse->GetCategory())) {
@@ -304,22 +295,18 @@ std::vector<ScoredNode> ParseSentence(
                                        + dep_out_probs(start_of_span,
                                         start_of_span + span_length)
                                        - best_dep_probs[head->GetHeadId()];
-                        agenda.emplace(agenda_id++, subtree, in_prob, out_prob,
+                        agenda.emplace(false, agenda_id++, subtree, in_prob, out_prob,
                                             start_of_span, span_length);
-                        // Base::logger_.RecordTree("ACCEPTED", subtree);
                     }
                 }
             }
         }
     }
-    // Base::logger_.CompleteOne(id, agenda_id);
 
     if (goal.IsEmpty())
         return Failed();
 
     auto res = goal_cell->GetNBestParses();
-    // Base::logger_.CalculateNumOneBestTags(
-    //         id, Base::tagger_, tag_scores, res[0].first);
     return res;
 }
 

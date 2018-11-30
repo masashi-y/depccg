@@ -69,8 +69,8 @@ public:
     ENBackwardApplication(): BackwardApplication() {}
 
     bool CanApply(Cat left, Cat right) const {
-        if (*right == *Category::Parse("S[em]\\S[em]") &&
-                *left == *Category::Parse("S[dcl]"))
+        if (*right == *CCategory::Parse("S[em]\\S[em]") &&
+                *left == *CCategory::Parse("S[dcl]"))
             return true;
         return (right->IsFunctor() &&
                 right->GetSlash().IsBackward() &&
@@ -78,7 +78,7 @@ public:
     }
     bool HeadIsLeft(Cat left, Cat right) const {
         return (right->IsModifier() || right->IsTypeRaised()) &&
-            !(*right == *Category::Parse("S[dcl]\\S[dcl]"));
+            !(*right == *CCategory::Parse("S[dcl]\\S[dcl]"));
     }
 };
 
@@ -91,8 +91,8 @@ public:
     bool HeadIsLeft(Cat left, Cat right) const {
         return !(left->IsModifier() ||
                 left->IsTypeRaised() ||
-                *left == *Category::Parse("NP[nb]/N") ||
-                *left == *Category::Parse("NP/N"));}
+                *left == *CCategory::Parse("NP[nb]/N") ||
+                *left == *CCategory::Parse("NP/N"));}
 
 };
 

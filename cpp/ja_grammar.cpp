@@ -55,15 +55,15 @@ bool Ja::IsVerb(NodeType tree) {
 
 // std::cerr << cat << " " << (res ? "yes" : "no") << std::endl;
 bool Ja::IsAdjective(Cat cat) {
-    return cat->StripFeat() == Category::Parse("NP/NP");
+    return cat->StripFeat() == CCategory::Parse("NP/NP");
 }
 
 bool Ja::IsAdverb(Cat cat) {
-    return cat->StripFeat() == Category::Parse("S/S");
+    return cat->StripFeat() == CCategory::Parse("S/S");
 }
 
 bool Ja::IsAuxiliary(Cat cat) {
-    return cat->StripFeat() == Category::Parse("S\\S");
+    return cat->StripFeat() == CCategory::Parse("S\\S");
 }
 
 bool Ja::IsPunct(NodeType tree) {
@@ -190,22 +190,22 @@ bool Ja::IsAcceptableBinary(RuleType rule_type, NodeType left, NodeType right) {
 }
 
 const std::unordered_set<Cat> Ja::possible_root_cats = {
-    Category::Parse("NP[case=nc,mod=nm,fin=f]"),    // 170
-    Category::Parse("NP[case=nc,mod=nm,fin=t]"),    // 2972
-    Category::Parse("S[mod=nm,form=attr,fin=t]"),   // 2
-    Category::Parse("S[mod=nm,form=base,fin=f]"),   // 68
-    Category::Parse("S[mod=nm,form=base,fin=t]"),   // 19312
-    Category::Parse("S[mod=nm,form=cont,fin=f]"),   // 3
-    Category::Parse("S[mod=nm,form=cont,fin=t]"),   // 36
-    Category::Parse("S[mod=nm,form=da,fin=f]"),     // 1
-    Category::Parse("S[mod=nm,form=da,fin=t]"),     // 68
-    Category::Parse("S[mod=nm,form=hyp,fin=t]"),    // 1
-    Category::Parse("S[mod=nm,form=imp,fin=f]"),    // 3
-    Category::Parse("S[mod=nm,form=imp,fin=t]"),    // 15
-    Category::Parse("S[mod=nm,form=r,fin=t]"),      // 2
-    Category::Parse("S[mod=nm,form=s,fin=t]"),      // 1
-    Category::Parse("S[mod=nm,form=stem,fin=f]"),   // 11
-    Category::Parse("S[mod=nm,form=stem,fin=t]")    // 710
+    CCategory::Parse("NP[case=nc,mod=nm,fin=f]"),    // 170
+    CCategory::Parse("NP[case=nc,mod=nm,fin=t]"),    // 2972
+    CCategory::Parse("S[mod=nm,form=attr,fin=t]"),   // 2
+    CCategory::Parse("S[mod=nm,form=base,fin=f]"),   // 68
+    CCategory::Parse("S[mod=nm,form=base,fin=t]"),   // 19312
+    CCategory::Parse("S[mod=nm,form=cont,fin=f]"),   // 3
+    CCategory::Parse("S[mod=nm,form=cont,fin=t]"),   // 36
+    CCategory::Parse("S[mod=nm,form=da,fin=f]"),     // 1
+    CCategory::Parse("S[mod=nm,form=da,fin=t]"),     // 68
+    CCategory::Parse("S[mod=nm,form=hyp,fin=t]"),    // 1
+    CCategory::Parse("S[mod=nm,form=imp,fin=f]"),    // 3
+    CCategory::Parse("S[mod=nm,form=imp,fin=t]"),    // 15
+    CCategory::Parse("S[mod=nm,form=r,fin=t]"),      // 2
+    CCategory::Parse("S[mod=nm,form=s,fin=t]"),      // 1
+    CCategory::Parse("S[mod=nm,form=stem,fin=f]"),   // 11
+    CCategory::Parse("S[mod=nm,form=stem,fin=t]")    // 710
 };
 
 const std::vector<Op> Ja::binary_rules = {

@@ -1,14 +1,14 @@
 #! -*- coding: utf-8 -*-
 
 from __future__ import print_function
-from distutils.core import setup
-from distutils.extension import Extension
 from Cython.Distutils import build_ext
+from setuptools import Extension, setup, find_packages
 import numpy
 import tempfile
 import subprocess
 import shutil
 import sys
+import subprocess
 import os
 import distutils
 import platform
@@ -45,7 +45,7 @@ int main() {
         with open(os.devnull, 'w') as fnull:
             exit_code = subprocess.call([compiler, '-fopenmp', filename],
                                         stdout=fnull, stderr=fnull)
-    except OSError :
+    except OSError:
         exit_code = 1
 
     # Clean up
@@ -81,23 +81,26 @@ python setup.py build
         return False
 
 
-cpp_sources = ["depccg.cpp",
-               "cat.cpp",
-               "cat_loader.cpp",
-               "logger.cpp",
-               "parser.cpp",
-               "parser_tools.cpp",
-               "chainer_tagger.cpp",
-               "chart.cpp",
-               "combinator.cpp",
-               "dep.cpp",
-               "en_grammar.cpp",
-               "feat.cpp",
-               "tree.cpp",
-               "ja_grammar.cpp",
-               "utils.cpp"]
+def generate_cython(root, source):
+    print('Cythonizing sources')
+    p = subprocess.call([sys.executable,
+                         os.path.join(root, 'bin', 'cythonize.py'),
+                         source], env=os.environ)
+    if p != 0:
+        raise RuntimeError('Running cythonize failed')
 
-pyx_sources = ["depccg_lib.pyx"]
+
+cpp_sources = ['depccg.cpp',
+               'cat.cpp',
+               'chart.cpp',
+               'combinator.cpp',
+               'en_grammar.cpp',
+               'feat.cpp',
+               'tree.cpp',
+               'ja_grammar.cpp',
+               'utils.cpp']
+
+pyx_modules = ['depccg.parser', 'depccg.tree', 'depccg.cat', 'depccg.combinator']
 
 compile_options = "-std=c++11 -O3 -g -fpic -march=native"
 
@@ -107,19 +110,23 @@ compile_options = "-std=c++11 -O3 -g -fpic -march=native"
 extra_link_args = ["-fopenmp" if check_for_openmp() else ""]
 
 ext_modules = [
-        Extension("depccg_lib",
-                  [os.path.join('depccg', pyx) for pyx in pyx_sources] +
+        Extension(pyx.split('.')[0],
+                  [pyx.replace('.', '/') + '.cpp'] +
                   [os.path.join('cpp', cpp) for cpp in cpp_sources],
-                  include_dirs=[numpy.get_include(), "cpp"],
-                  extra_compile_args=compile_options.split(" "),
+                  include_dirs=['.', numpy.get_include(), 'cpp'],
+                  extra_compile_args=compile_options.split(' '),
                   extra_link_args=extra_link_args,
-                  language='c++'
-                  )
-        ]
+                  language='c++')
+        for pyx in pyx_modules]
+
+root = os.path.abspath(os.path.dirname(__file__))
+generate_cython(root, 'depccg')
 
 setup(
     name="depccg",
-    cmdclass={"build_ext": build_ext},
+    packages=find_packages(),
+    package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
     ext_modules=ext_modules,
-
+    cmdclass={"build_ext": build_ext},
+    zip_safe=False,
 )

@@ -11,9 +11,9 @@
 
 namespace myccg {
 
-class Category;
+class CCategory;
 
-typedef const Category* Cat;
+typedef const CCategory* Cat;
 typedef std::pair<Cat, Cat> CatPair;
 
 extern Feat kNONE;
@@ -53,7 +53,7 @@ public:
     virtual int Visit(const Functor* leaf) = 0;
 };
 
-class Category: public Cacheable<Category>
+class CCategory: public Cacheable<CCategory>
 {
 public:
     static Cat Parse(const std::string& cat);
@@ -128,7 +128,7 @@ public:
     virtual int Accept(CatVisitor& visitor) const = 0;
 
 protected:
-    Category(const std::string& str, const std::string& semantics)
+    CCategory(const std::string& str, const std::string& semantics)
         : str_(semantics.empty() ? str : str + "{" + semantics + "}") {}
 
 private:
@@ -145,35 +145,35 @@ private:
 //   --> (((A/C)/D)/E)
 
 template<int Order>
-Cat Category::Compose(Cat head, const Slash& op, Cat tail) {
+Cat CCategory::Compose(Cat head, const Slash& op, Cat tail) {
     Cat target = tail->GetLeft<Order>();
     target = target->GetRight();
-    return Category::Compose<Order-1>(Make(head, op, target),
+    return CCategory::Compose<Order-1>(Make(head, op, target),
             tail->GetLeft<Order-1>()->GetSlash(), tail);
 }
 
-template<> Cat Category::Compose<0>(Cat head, const Slash& op, Cat tail);
+template<> Cat CCategory::Compose<0>(Cat head, const Slash& op, Cat tail);
 
-template<int i> bool Category::HasFunctorAtLeft() const {
+template<int i> bool CCategory::HasFunctorAtLeft() const {
     return this->IsFunctor() ? GetLeft()->HasFunctorAtLeft<i-1>() : false; }
 
-template<int i> bool Category::HasFunctorAtRight() const {
+template<int i> bool CCategory::HasFunctorAtRight() const {
     return this->IsFunctor() ? GetRight()->HasFunctorAtRight<i-1>() : false; }
 
-template<> bool Category::HasFunctorAtLeft<0>() const;
-template<> bool Category::HasFunctorAtRight<0>() const;
+template<> bool CCategory::HasFunctorAtLeft<0>() const;
+template<> bool CCategory::HasFunctorAtRight<0>() const;
 
-template<int i> Cat Category::GetLeft() const {
+template<int i> Cat CCategory::GetLeft() const {
     return GetLeft()->GetLeft<i-1>(); }
 
-template<int i> Cat Category::GetRight() const {
+template<int i> Cat CCategory::GetRight() const {
     return GetRight()->GetRight<i-1>(); }
 
-template<> Cat Category::GetLeft<0>() const;
-template<> Cat Category::GetRight<0>() const;
+template<> Cat CCategory::GetLeft<0>() const;
+template<> Cat CCategory::GetRight<0>() const;
 
 
-class Functor: public Category
+class Functor: public CCategory
 {
 public:
     std::string ToStrWithoutFeat() const {
@@ -247,14 +247,14 @@ public:
     }
 
     Cat ToMultiValue() const {
-        return Category::Parse("(" + left_->ToMultiValue()->ToStr() + ")" +
+        return CCategory::Parse("(" + left_->ToMultiValue()->ToStr() + ")" +
                         slash_.ToStr() + "(" + right_->ToMultiValue()->ToStr() + ")");
     }
 
     int Accept(CatVisitor& visitor) const { return visitor.Visit(this); }
 
     Functor(Cat left, const Slash& slash, Cat right, std::string& semantics)
-    : Category(left->WithBrackets() + slash.ToStr() + right->WithBrackets(),
+    : CCategory(left->WithBrackets() + slash.ToStr() + right->WithBrackets(),
             semantics), left_(left), right_(right), slash_(slash) {}
 
 private:
@@ -263,7 +263,7 @@ private:
     Slash slash_;
 };
 
-class AtomicCategory: public Category
+class AtomicCategory: public CCategory
 {
 public:
     std::string ToStrWithoutFeat() const { return type_; }
@@ -329,14 +329,14 @@ public:
     }
 
     Cat ToMultiValue() const {
-        return Category::Parse(
+        return CCategory::Parse(
                 type_ + feat_->ToMultiValue()->ToStr());
     }
 
     int Accept(CatVisitor& visitor) const { return visitor.Visit(this); }
 
     AtomicCategory(const std::string& type, Feat feat, const std::string& semantics)
-        : Category(type + feat->ToStr(), semantics), type_(type), feat_(feat) {}
+        : CCategory(type + feat->ToStr(), semantics), type_(type), feat_(feat) {}
 
 private:
     std::string type_;

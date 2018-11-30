@@ -200,8 +200,8 @@ int PyXML::Visit(const Leaf* leaf) {
 std::string ToCAndCStr(const Tree* tree) {
     if (tree->IsUnary()) {
         Cat init = tree->GetLeftChild()->GetCategory();
-        if ((init->Matches(Category::Parse("NP")) ||
-                init->Matches(Category::Parse("PP")))
+        if ((init->Matches(CCategory::Parse("NP")) ||
+                init->Matches(CCategory::Parse("PP")))
                 && tree->GetCategory()->IsTypeRaised())
             return "tr";
         else
@@ -266,13 +266,13 @@ public:
         std::string cstr = cat->ToStrWithoutFeat();
         std::transform(cstr.begin(), cstr.end(), cstr.begin(), ::tolower);
         if (false) {
-        } else if (*cat == *Category::Parse(".")) {
+        } else if (*cat == *CCategory::Parse(".")) {
             stack.push("period");
-        } else if (*cat == *Category::Parse(",")) {
+        } else if (*cat == *CCategory::Parse(",")) {
             stack.push("comma");
-        } else if (*cat == *Category::Parse(":")) {
+        } else if (*cat == *CCategory::Parse(":")) {
             stack.push("colon");
-        } else if (*cat == *Category::Parse(";")) {
+        } else if (*cat == *CCategory::Parse(";")) {
             stack.push("semicolon");
         } else if (cat->GetFeat()->IsEmpty()) {
             stack.push(cstr);

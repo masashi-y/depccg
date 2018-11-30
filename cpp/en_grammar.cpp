@@ -9,8 +9,8 @@ std::string En::ResolveCombinatorName(const Node* parse) {
         throw std::runtime_error("This node is leaf and does not have combinator!");
     if (tree->IsUnary()) {
         Cat init = tree->GetLeftChild()->GetCategory();
-        if ((init->Matches(Category::Parse("NP")) ||
-                init->Matches(Category::Parse("PP")))
+        if ((init->Matches(CCategory::Parse("NP")) ||
+                init->Matches(CCategory::Parse("PP")))
                 && tree->GetCategory()->IsTypeRaised())
             return "tr";
         else
@@ -71,11 +71,11 @@ bool En::IsAcceptableBinary(RuleType rule_type, NodeType left, NodeType right) {
 }
 
 const std::unordered_set<Cat> En::possible_root_cats = {
-    Category::Parse("S[dcl]"),
-    Category::Parse("S[wq]"),
-    Category::Parse("S[q]"),
-    Category::Parse("S[qem]"),
-    Category::Parse("NP")
+    CCategory::Parse("S[dcl]"),
+    CCategory::Parse("S[wq]"),
+    CCategory::Parse("S[q]"),
+    CCategory::Parse("S[qem]"),
+    CCategory::Parse("NP")
 };
 
 const std::vector<Op> En::binary_rules = {

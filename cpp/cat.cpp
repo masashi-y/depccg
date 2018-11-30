@@ -11,22 +11,22 @@ Feat kNONE      = Feature::Parse("");
 Feat kNB        = Feature::Parse("nb");
 
 
-template<> Cat Category::Compose<0>(Cat head, const Slash& op, Cat tail) {
-    return Category::Make(head, op, tail->GetRight());
+template<> Cat CCategory::Compose<0>(Cat head, const Slash& op, Cat tail) {
+    return CCategory::Make(head, op, tail->GetRight());
 }
 
-template<> bool Category::HasFunctorAtLeft<0>() const {
+template<> bool CCategory::HasFunctorAtLeft<0>() const {
     return this->IsFunctor();
 }
 
-template<> bool Category::HasFunctorAtRight<0>() const {
+template<> bool CCategory::HasFunctorAtRight<0>() const {
     return this->IsFunctor();
 }
 
-template<> Cat Category::GetLeft<0>() const { return this; }
-template<> Cat Category::GetRight<0>() const { return this; }
+template<> Cat CCategory::GetLeft<0>() const { return this; }
+template<> Cat CCategory::GetRight<0>() const { return this; }
 
-Cat Category::Parse(const std::string& cat) {
+Cat CCategory::Parse(const std::string& cat) {
     Cat res;
     if (Cacheable::Count(cat) > 0) {
         return Cacheable::Get(cat);
@@ -46,7 +46,7 @@ Cat Category::Parse(const std::string& cat) {
 }
 
 
-Cat Category::ParseUncached(const std::string& cat) {
+Cat CCategory::ParseUncached(const std::string& cat) {
     std::string new_cat(cat);
     std::string semantics;
     if (new_cat.back() == '}') {
@@ -71,57 +71,57 @@ Cat Category::ParseUncached(const std::string& cat) {
         }
         return new AtomicCategory(new_cat, kNONE, semantics);
     } else {
-        Cat left = Category::Parse(new_cat.substr(0, op_idx));
+        Cat left = CCategory::Parse(new_cat.substr(0, op_idx));
         Slash slash = Slash(new_cat[op_idx]);
-        Cat right = Category::Parse(new_cat.substr(op_idx + 1));
+        Cat right = CCategory::Parse(new_cat.substr(op_idx + 1));
         return new Functor(left, slash, right, semantics);
     }
 }
 
-Cat Category::Substitute(Feat feat) const {
+Cat CCategory::Substitute(Feat feat) const {
     if (feat->IsEmpty()) return this;
-    return Category::Parse(std::move(feat->SubstituteWildcard(str_)));
+    return CCategory::Parse(std::move(feat->SubstituteWildcard(str_)));
 }
 
-Cat Category::Make(Cat left, const Slash& op, Cat right) {
-    return Category::Parse(left->WithBrackets() + op.ToStr() + right->WithBrackets());
+Cat CCategory::Make(Cat left, const Slash& op, Cat right) {
+    return CCategory::Parse(left->WithBrackets() + op.ToStr() + right->WithBrackets());
 }
 
-Cat Category::CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
+Cat CCategory::CorrectWildcardFeatures(Cat to_correct, Cat match1, Cat match2) {
     return to_correct->Substitute(match1->GetSubstitution(match2));
 }
 
-Cat Category::StripFeat() const {
-    return Category::Parse(this->ToStrWithoutFeat());
+Cat CCategory::StripFeat() const {
+    return CCategory::Parse(this->ToStrWithoutFeat());
 }
-Cat Category::StripFeat(Str f1) const {
+Cat CCategory::StripFeat(Str f1) const {
     std::string res(ToStr());
     utils::ReplaceAll(&res, f1, "");
-    return Category::Parse(res);
+    return CCategory::Parse(res);
 }
 
-Cat Category::StripFeat(Str f1, Str f2) const {
+Cat CCategory::StripFeat(Str f1, Str f2) const {
     std::string res(ToStr());
     utils::ReplaceAll(&res, f1, "");
     utils::ReplaceAll(&res, f2, "");
-    return Category::Parse(res);
+    return CCategory::Parse(res);
 }
 
-Cat Category::StripFeat(Str f1, Str f2, Str f3) const {
+Cat CCategory::StripFeat(Str f1, Str f2, Str f3) const {
     std::string res(ToStr());
     utils::ReplaceAll(&res, f1, "");
     utils::ReplaceAll(&res, f2, "");
     utils::ReplaceAll(&res, f3, "");
-    return Category::Parse(res);
+    return CCategory::Parse(res);
 }
 
-Cat Category::StripFeat(Str f1, Str f2, Str f3, Str f4) const {
+Cat CCategory::StripFeat(Str f1, Str f2, Str f3, Str f4) const {
     std::string res(ToStr());
     utils::ReplaceAll(&res, f1, "");
     utils::ReplaceAll(&res, f2, "");
     utils::ReplaceAll(&res, f3, "");
     utils::ReplaceAll(&res, f4, "");
-    return Category::Parse(res);
+    return CCategory::Parse(res);
 }
 
 

@@ -12,7 +12,9 @@ from libcpp.pair cimport pair
 from libcpp.unordered_set cimport unordered_set
 from libcpp.unordered_map cimport unordered_map
 from cython.operator cimport dereference as deref
-# from depccg.cat cimport Category, Cat, PyCat
+from .cat cimport Category, Cat, CatPair
+from .tree cimport Tree, ScoredNode
+from .combinator cimport en_headfirst_binary_rules, ja_headfinal_binary_rules, Op
 import os
 import json
 import chainer
@@ -24,30 +26,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# include "cat.pyx"
-include "tree.pyx"
-
-
-cdef extern from "grammar.h" namespace "myccg" nogil:
-    cdef const unordered_set[Cat] en_possible_root_cats     "myccg::En::possible_root_cats"
-    cdef const vector[Op]         en_headfirst_binary_rules "myccg::En::headfirst_binary_rules"
-    cdef const vector[Op]         en_binary_rules           "myccg::En::binary_rules"
-    cdef const vector[Op]         en_dep_binary_rules       "myccg::En::dep_binary_rules"
-
-    cdef const unordered_set[Cat] ja_possible_root_cats     "myccg::Ja::possible_root_cats"
-    cdef const vector[Op]         ja_binary_rules           "myccg::Ja::binary_rules"
-    cdef const vector[Op]         ja_headfinal_binary_rules "myccg::Ja::headfinal_binary_rules"
-    cdef const vector[Op]         ja_cg_binary_rules "myccg::Ja::cg_binary_rules"
-
-
-cdef extern from "parser_tools.h" namespace "myccg" nogil:
-    cdef cppclass RuleCache:
-        pass
-
-    cdef cppclass AgendaItem:
-        pass
-
 cdef extern from "depccg.h" namespace "myccg" nogil:
+    cdef cppclass RuleCache
+
+    cdef cppclass AgendaItem
+
     ctypedef vector[RuleCache]& (*ApplyBinaryRules)(
             unordered_map[CatPair, vector[RuleCache]]&,
             const vector[Op]&, const unordered_set[CatPair]&, Cat, Cat)
@@ -55,23 +38,13 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
     ctypedef vector[Cat] (*ApplyUnaryRules)(
             const unordered_map[Cat, vector[Cat]]&, NodeType)
 
+    ApplyUnaryRules EnApplyUnaryRules
 
-    vector[Cat] EnApplyUnaryRules(const unordered_map[Cat, vector[Cat]]& unary_rules, NodeType parse)
+    ApplyUnaryRules JaApplyUnaryRules
 
-    vector[Cat] JaApplyUnaryRules(const unordered_map[Cat, vector[Cat]]& unary_rules, NodeType parse)
+    ApplyBinaryRules EnGetRules
 
-    vector[RuleCache]& EnGetRules(
-            unordered_map[CatPair, vector[RuleCache]]& rule_cache,
-            const vector[Op]& binary_rules,
-            const unordered_set[CatPair]& seen_rules,
-            Cat left1, Cat right1)
-
-    vector[RuleCache]& JaGetRules(
-            unordered_map[CatPair, vector[RuleCache]]& rule_cache,
-            const vector[Op]& binary_rules,
-            const unordered_set[CatPair]& seen_rules,
-            Cat left1, Cat right1)
-
+    ApplyBinaryRules JaGetRules
 
     vector[vector[ScoredNode]] ParseSentences(
             vector[string]& sents,
@@ -95,7 +68,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
 
 cdef vector[Cat] cat_list_to_vector(list cats):
     cdef vector[Cat] results
-    cdef PyCat cat
+    cdef Category cat
     for cat in cats:
         results.push_back(cat.cat_)
     return results
@@ -103,7 +76,7 @@ cdef vector[Cat] cat_list_to_vector(list cats):
 
 cdef unordered_set[Cat] cat_list_to_unordered_set(list cats):
     cdef unordered_set[Cat] results
-    cdef PyCat cat
+    cdef Category cat
     for cat in cats:
         results.insert(cat.cat_)
     return results
@@ -128,7 +101,7 @@ cdef unordered_map[string, vector[bool]] convert_cat_dict(dict cat_dict, list ca
 cdef unordered_map[Cat, vector[Cat]] convert_unary_rules(list unary_rules):
     cdef unordered_map[Cat, vector[Cat]] results
     cdef vector[Cat] tmp
-    cdef PyCat cat1, cat2
+    cdef Category cat1, cat2
     for cat1, cat2 in unary_rules:
         if results.count(cat1.cat_) == 0:
             results[cat1.cat_] = vector[Cat]()
@@ -150,8 +123,8 @@ cpdef read_unary_rules(filename):
         if len(line) == 0:
             continue
         cat1, cat2 = line.split()
-        cat1 = PyCat.parse(cat1)
-        cat2 = PyCat.parse(cat2)
+        cat1 = Category.parse(cat1)
+        cat2 = Category.parse(cat2)
         results.append((cat1, cat2))
     logger.info(f'load {len(results)} unary rules')
     return results
@@ -164,7 +137,7 @@ cpdef read_cat_dict(filename):
         if len(line) == 0:
             continue
         word, *cats = line.split()
-        results[word] = [PyCat.parse(cat) for cat in cats]
+        results[word] = [Category.parse(cat) for cat in cats]
     logger.info(f'load {len(results)} cat dictionary entries')
     return results
 
@@ -176,21 +149,21 @@ cpdef read_cat_list(filename):
         if len(line) == 0:
             continue
         cat = line.split()[0]
-        results.append(PyCat.parse(cat))
+        results.append(Category.parse(cat))
     logger.info(f'load {len(results)} categories')
     return results
 
 
 cpdef read_seen_rules(filename, preprocess):
     cdef list results = []
-    cdef PyCat cat1, cat2
+    cdef Category cat1, cat2
     for line in open(filename):
         line = remove_comment(line.strip())
         if len(line) == 0:
             continue
         tmp1, tmp2 = line.split()
-        cat1 = preprocess(PyCat.parse(tmp1))
-        cat2 = preprocess(PyCat.parse(tmp2))
+        cat1 = preprocess(Category.parse(tmp1))
+        cat2 = preprocess(Category.parse(tmp2))
         results.append((cat1, cat2))
     logger.info(f'load {len(results)} seen rules')
     return results
@@ -198,7 +171,7 @@ cpdef read_seen_rules(filename, preprocess):
 
 cdef unordered_set[CatPair] convert_seen_rules(seen_rule_list):
     cdef unordered_set[CatPair] results
-    cdef PyCat cat1, cat2
+    cdef Category cat1, cat2
     for cat1, cat2 in seen_rule_list:
         results.insert(CatPair(cat1.cat_, cat2.cat_))
     return results
@@ -206,9 +179,9 @@ cdef unordered_set[CatPair] convert_seen_rules(seen_rule_list):
 
 cdef unordered_set[Cat] read_possible_root_categories(list cats):
     cdef unordered_set[Cat] res
-    cdef PyCat tmp
+    cdef Category tmp
     for cat in cats:
-        tmp = PyCat.parse(cat)
+        tmp = Category.parse(cat)
         res.insert(tmp.cat_)
     return res
 
@@ -309,7 +282,7 @@ def to_mathml(trees, file=sys.stdout):
     print(results, file=file)
 
 
-cdef class PyAStarParser__:
+cdef class EnglishCCGParser:
     cdef unordered_map[string, vector[bool]] category_dict_
     cdef vector[Cat] tag_list_
     cdef float beta_
@@ -347,7 +320,8 @@ cdef class PyAStarParser__:
 
         if possible_root_cats is None:
             possible_root_cats = ['S[dcl]', 'S[wq]', 'S[q]', 'S[qem]', 'NP']
-        possible_root_cats = [PyCat.parse(cat) if not isinstance(cat, PyCat) else cat for cat in possible_root_cats]
+        possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
+                              for cat in possible_root_cats]
 
         self.category_dict_ = convert_cat_dict(category_dict, tag_list)
         self.tag_list_ = cat_list_to_vector(tag_list)
@@ -358,7 +332,6 @@ cdef class PyAStarParser__:
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
         self.unary_rules_ = convert_unary_rules(unary_rules)
         self.binary_rules_ = en_headfirst_binary_rules
-        # self.cache_
         self.seen_rules_ = convert_seen_rules(seen_rules)
         self.apply_binary_rules_ = EnGetRules
         self.apply_unary_rules_ = EnApplyUnaryRules
@@ -388,7 +361,7 @@ cdef class PyAStarParser__:
         args = [os.path.join(dirname, file)
                 for file in ['unary_rules.txt', 'cat_dict.txt', 'target.txt', 'seen_rules.txt']]
         if load_tagger:
-            kwargs = {'tagger_model_dir': dirname}
+            kwargs['tagger_model_dir'] = dirname
         return cls.from_files(*args, **kwargs)
 
     @classmethod
@@ -400,7 +373,7 @@ cdef class PyAStarParser__:
         category_dict = read_cat_dict(category_dict)
         tag_list = read_cat_list(categories)
         seen_rules = read_seen_rules(seen_rules, lambda cat: cat.strip_feat('X').strip_feat('nb'))
-        parser = PyAStarParser__(category_dict, tag_list, unary_rules, seen_rules, **kwargs)
+        parser = cls(category_dict, tag_list, unary_rules, seen_rules, **kwargs)
         if tagger_model_dir:
             parser.load_default_tagger(tagger_model_dir)
         return parser
@@ -470,18 +443,18 @@ cdef class PyAStarParser__:
                         self.max_length_)
         logger.info('finished parsing sentences')
         cdef list tmp, res = []
-        cdef Parse parse
+        cdef Tree parse
         for i in range(len(sents)):
             tmp = []
             for j in range(min(self.nbest_, cres[i].size())):
-                tmp.append((Parse.from_ptr(cres[i][j].first, self.lang), cres[i][j].second))
+                tmp.append((Tree.from_ptr(cres[i][j].first, self.lang), cres[i][j].second))
             res.append(tmp)
         free(tags)
         free(deps)
         return res
 
 
-cdef class PyJaAStarParser__(PyAStarParser__):
+cdef class JapaneseCCGParser(EnglishCCGParser):
     def __init__(self,
                  category_dict,
                  tag_list,
@@ -516,7 +489,8 @@ cdef class PyJaAStarParser__(PyAStarParser__):
                 'S[mod=nm,form=stem,fin=f]',
                 'S[mod=nm,form=stem,fin=t]'
             ]
-        possible_root_cats = [PyCat.parse(cat) if not isinstance(cat, PyCat) else cat for cat in possible_root_cats]
+        possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
+                              for cat in possible_root_cats]
 
         self.category_dict_ = convert_cat_dict(category_dict, tag_list)
         self.tag_list_ = cat_list_to_vector(tag_list)
