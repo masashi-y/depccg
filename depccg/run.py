@@ -8,7 +8,7 @@ if sys.version_info.major == 2:
     sys.stdin = codecs.getreader('utf-8')(sys.stdin)
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
-from depccg import PyAStarParser, PyJaAStarParser, to_mathml
+from depccg_lib import PyAStarParser, PyJaAStarParser, to_mathml
 
 Parsers = {"en": PyAStarParser, "ja": PyJaAStarParser}
 

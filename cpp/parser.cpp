@@ -11,13 +11,13 @@
 #endif
 
 #include "parser.h"
-#include "configure.h"
 #include "debug.h"
 #include "matrix.h"
 #include "grammar.h"
 
 namespace myccg {
 
+const unsigned MAX_LENGTH = 250;
 bool Parser::keep_going = true;
 
 template<typename Lang>
@@ -100,7 +100,7 @@ template<typename Lang>
 std::vector<std::vector<ScoredNode>> AStarParser<Lang>::Parse(const std::vector<std::string>& doc,
                                                float** scores) {
     std::vector<std::vector<ScoredNode>> res(doc.size());
-    #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
+    #pragma omp parallel for schedule(dynamic, 1)
     for (unsigned i = 0; i < doc.size(); i++) {
         if ( keep_going )
             res[i] = Parse(i, doc[i], scores[i]);

@@ -19,7 +19,7 @@ class Matrix
 public:
     Matrix(T* data, int row, int column)
         : data_(data), row_(row), column_(column),
-          size_(row * column) {}
+          size_(row * column), own_(false) {}
 
     Matrix(T* begin, T* end)
         : data_(begin), column_(1) {
@@ -31,12 +31,14 @@ public:
 
     Matrix(int row, int column)
         : data_(new T[row * column]), row_(row), column_(column),
-          size_(row * column) {
+          size_(row * column), own_(true) {
               for (int i = 0; i < size_; i++)
                   data_[i] = T(0);
           }
 
-    ~Matrix() {}
+    ~Matrix() {
+        if (own_) delete[] data_;
+    }
 
     friend std::ostream& operator<<(std::ostream& out, Matrix<T> m) {
         for (int i = 0; i < m.row_; i++) {
@@ -59,7 +61,7 @@ public:
         return data_;
     }
 
-    T operator() (int row, int column) const {
+    T& operator() (int row, int column) const {
         return data_[row * column_ + column];
     }
 
@@ -91,6 +93,7 @@ private:
     int row_;
     int column_;
     int size_;
+    bool own_;
 };
 
 } // namespace myccg

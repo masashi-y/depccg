@@ -80,18 +80,9 @@ public:
                 && *right == *Category::Parse("NP\\NP"))
             return true;
         return false;
-        // if (Category::Parse("NP\\NP")->Matches(right))
-        //     return false;
-        // return (puncts_.count(left) > 0 &&
-        //         !right->IsPunct() &&
-        //         !right->IsTypeRaised()); // &&
-                // ! (!right->IsFunctor() &&
-                        // right->GetType() == "N"));
     }
 
-    Cat Apply(Cat left, Cat right) const {
-        return right;
-    }
+    Cat Apply(Cat left, Cat right) const { return right; }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     const std::string ToStr() const { return "<Φ>"; }
@@ -109,15 +100,10 @@ public:
         if (*left == *Category::Parse("NP")
                 && *right == *Category::Parse("NP\\NP"))
             return true;
-        // if (*left == *Category::Parse("N")
-        //         && *right == *Category::Parse("N\\N"))
-        //     return true;
         return false;
     }
 
-    Cat Apply(Cat left, Cat right) const {
-        return left;
-    }
+    Cat Apply(Cat left, Cat right) const { return left; }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     const std::string ToStr() const { return "<Φ>"; }

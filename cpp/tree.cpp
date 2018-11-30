@@ -42,8 +42,6 @@ int Derivation::Visit(const Tree* tree) {
 
     std::string str_res = feat_ ? tree->GetCategory()->ToStr()
                                     : tree->GetCategory()->ToStrWithoutFeat();
-    if ( !tree->IsUnary() )
-        str_res += tree->HeadIsLeft() ? " ->" : " <-";
     int respadlen = (rwidth - lwidth - str_res.size()) / 2 + lwidth;
 
     SPACE(out_, lwidth);

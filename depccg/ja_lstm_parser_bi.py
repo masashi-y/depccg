@@ -1,26 +1,20 @@
 
-from __future__ import print_function
-import sys
 import os
 import numpy as np
-import json
 import chainer
 import chainer.links as L
 import chainer.functions as F
-from chainer import cuda
-from chainer import training, Variable
-from chainer.training import extensions
-from chainer.optimizer import WeightDecay, GradientClipping
-from collections import defaultdict, OrderedDict
 
-from py_utils import read_pretrained_embeddings, read_model_defs
-from biaffine import Biaffine
-from param import Param
+from depccg.utils import read_model_defs
+from depccg.biaffine import Biaffine
+from depccg.param import Param
+
 
 UNK = "*UNKNOWN*"
 START = "*START*"
 END = "*END*"
 IGNORE = -1
+
 
 class FeatureExtractor(object):
     def __init__(self, model_path):
@@ -50,7 +44,6 @@ class FeatureExtractor(object):
         return w, c, np.array([l], 'i')
 
 
-
 class BiaffineJaLSTMParser(chainer.Chain):
     def __init__(self, model_path):
         Param.load(self, os.path.join(model_path, 'tagger_defs.txt'))
@@ -70,8 +63,6 @@ class BiaffineJaLSTMParser(chainer.Chain):
                 biaffine_tag=L.Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
 
     def forward(self, ws, cs, ls, dep_ts=None):
-        batchsize = len(ws)
-        xp = chainer.cuda.get_array_module(ws[0])
         ws = map(self.emb_word, ws)
         cs = [F.squeeze(
             F.max_pooling_2d(
@@ -96,12 +87,11 @@ class BiaffineJaLSTMParser(chainer.Chain):
         else:
             heads = [F.argmax(y, axis=1) for y in dep_ys]
 
-        cat_ys = [
-                self.biaffine_tag(
-            F.elu(F.dropout(self.rel_dep(h), 0.32)),
-            F.elu(F.dropout(self.rel_head(
-                F.embed_id(t, h, ignore_label=IGNORE)), 0.32))) \
-                        for h, t in zip(hs, heads)]
+        cat_ys = [self.biaffine_tag(
+                    F.elu(F.dropout(self.rel_dep(h), 0.32)),
+                    F.elu(F.dropout(self.rel_head(
+                        F.embed_id(t, h, ignore_label=IGNORE)), 0.32)))
+                  for h, t in zip(hs, heads)]
 
         return cat_ys, dep_ys
 
@@ -111,13 +101,12 @@ class BiaffineJaLSTMParser(chainer.Chain):
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             cat_ys, dep_ys = self.forward(ws, ss, ps)
         return zip([F.log_softmax(y[1:-1]).data for y in cat_ys],
-                [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
+                   [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
 
     def predict_doc(self, doc, batchsize=16):
         res = []
         for i in range(0, len(doc), batchsize):
-            res.extend([(i + j, 0, y)
-                for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
+            res.extend(self.predict(doc[i:i + batchsize]))
         return res
 
     @property

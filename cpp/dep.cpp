@@ -10,7 +10,6 @@
 #endif
 
 #include "dep.h"
-#include "configure.h"
 #include "debug.h"
 #include "parser_tools.h"
 #include "grammar.h"
@@ -20,6 +19,7 @@
 namespace myccg {
 
 
+const unsigned MAX_LENGTH = 250;
 
 template <typename Lang>
 std::vector<std::vector<ScoredNode>>
@@ -42,7 +42,7 @@ std::vector<std::vector<ScoredNode>>
 DepAStarParser<Lang>::Parse(const std::vector<std::string>& doc,
                             float** tag_scores, float** dep_scores) {
     std::vector<std::vector<ScoredNode>> res(doc.size());
-    #pragma omp parallel for schedule(PARALLEL_SCHEDULE)
+    #pragma omp parallel for schedule(dynamic, 1)
     for (unsigned i = 0; i < doc.size(); i++) {
         if ( Base::keep_going )
             res[i] = Parse(i, doc[i], tag_scores[i], dep_scores[i]);

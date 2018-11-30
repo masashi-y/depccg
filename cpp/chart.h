@@ -8,8 +8,6 @@
 namespace myccg {
 
 
-typedef std::pair<NodeType, float> ScoredNode;
-
 struct ChartCell
 {
     ChartCell(bool nbest);

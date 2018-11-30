@@ -18,6 +18,8 @@ class Tree;
 typedef std::shared_ptr<const Node> NodeType;
 typedef std::shared_ptr<const Tree> TreeType;
 typedef std::shared_ptr<const Leaf> LeafType;
+typedef std::pair<NodeType, float> ScoredNode;
+
 
 class FormatVisitor {
 public:

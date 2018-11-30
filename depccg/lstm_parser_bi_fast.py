@@ -1,22 +1,14 @@
 
-import sys
 import os
 import numpy as np
-import json
-import random
 import chainer
 import chainer.links as L
 import chainer.functions as F
 from chainer import cuda
-from chainer import training, Variable
-from chainer.training import extensions
-from chainer.optimizer import WeightDecay, GradientClipping
-from chainer.dataset.convert import _concat_arrays
-from collections import defaultdict, OrderedDict
 
-from py_utils import read_pretrained_embeddings, read_model_defs
-from biaffine import Biaffine, Bilinear
-from param import Param
+from depccg.utils import read_model_defs
+from depccg.biaffine import Biaffine, Bilinear
+from depccg.param import Param
 
 UNK = "*UNKNOWN*"
 OOR2 = "OOR2"
@@ -27,11 +19,12 @@ END = "*END*"
 IGNORE = -1
 MISS = -2
 
+
 def get_suffix(word):
     return [word[-1],
-           word[-2:] if len(word) > 1 else OOR2,
-           word[-3:] if len(word) > 2 else OOR3,
-           word[-4:] if len(word) > 3 else OOR4]
+            word[-2:] if len(word) > 1 else OOR2,
+            word[-3:] if len(word) > 2 else OOR3,
+            word[-4:] if len(word) > 3 else OOR4]
 
 
 def get_prefix(word):
@@ -118,12 +111,6 @@ def concat_examples(xs, device=None):
 
 
 class FastBiaffineLSTMParser(chainer.Chain):
-    """
-    chainer.links.Bilinear may have some problem with GPU
-    and results in nan with batches with big size
-    this implementation uses different implementation of bilinear
-    and does not run into nan.
-    """
     def __init__(self, model_path):
         Param.load(self, os.path.join(model_path, 'tagger_defs.txt'))
         self.extractor = FeatureExtractor(model_path, length=True)
@@ -142,7 +129,6 @@ class FastBiaffineLSTMParser(chainer.Chain):
                 biaffine_tag=Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
 
     def forward(self, ws, ss, ps, ls, dep_ts=None):
-        batchsize = len(ws)
         split = scanl(lambda x,y: x+y, 0, [w.shape[0] for w in ws])[1:-1]
 
         wss = self.emb_word(F.hstack(ws))
@@ -156,14 +142,12 @@ class FastBiaffineLSTMParser(chainer.Chain):
         _, _, hs_b = self.lstm_b(None, None, xs_b)
 
         hs_b = [x[::-1] for x in hs_b]
-        # ys: [(sentence length, number of category)]
         hs = [F.concat([h_f, h_b]) for h_f, h_b in zip(hs_f, hs_b)]
 
         dep_ys = [self.biaffine_arc(
             F.elu(F.dropout(self.arc_dep(h), 0.32)),
             F.elu(F.dropout(self.arc_head(h), 0.32))) for h in hs]
 
-        # if dep_ts is not None and random.random >= 0.5:
         if dep_ts is not None:
             heads = dep_ts
         else:
@@ -171,8 +155,8 @@ class FastBiaffineLSTMParser(chainer.Chain):
 
         heads = F.elu(F.dropout(
             self.rel_head(
-                F.vstack([F.embed_id(t, h, ignore_label=IGNORE) \
-                        for h, t in zip(hs, heads)])), 0.32))
+                F.vstack([F.embed_id(t, h, ignore_label=IGNORE)
+                          for h, t in zip(hs, heads)])), 0.32))
 
         childs = F.elu(F.dropout(self.rel_dep(F.vstack(hs)), 0.32))
         cat_ys = self.biaffine_tag(childs, heads)
@@ -186,13 +170,12 @@ class FastBiaffineLSTMParser(chainer.Chain):
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             cat_ys, dep_ys = self.forward(ws, ss, ps, ls)
         return zip([F.log_softmax(y[1:-1]).data for y in cat_ys],
-                [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
+                   [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
 
     def predict_doc(self, doc, batchsize=32):
         res = []
         for i in range(0, len(doc), batchsize):
-            res.extend([(i + j, 0, y)
-                for j, y in enumerate(self.predict(doc[i:i + batchsize]))])
+            res.extend(self.predict(doc[i:i + batchsize]))
         return res
 
     @property

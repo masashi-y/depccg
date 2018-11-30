@@ -1,6 +1,7 @@
 
 import json
 
+
 class Param:
     def __init__(self, obj):
         self.__dict__["ps"] = {"model": obj.__class__.__name__}

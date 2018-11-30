@@ -79,11 +79,10 @@ void ReplaceAll(std::string* target, const std::string& from, const std::string&
 unsigned int utf8_strlen(std::string str) {
 
     unsigned int len = 0;
-    int pos;
     unsigned char lead; 
-    int char_size = 0;
+    unsigned char_size = 0;
 
-    for (pos = 0; pos < str.size(); pos += char_size) {
+    for (unsigned pos = 0; pos < str.size(); pos += char_size) {
 
         lead = str[pos];
 

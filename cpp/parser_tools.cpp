@@ -1,10 +1,11 @@
 
 #include <cmath>
 #include "parser_tools.h"
-#include "configure.h"
 #include "grammar.h"
 
 namespace myccg {
+
+const unsigned MAX_LENGTH = 250;
 
 bool JapaneseComparator(const AgendaItem& left, const AgendaItem& right) {
     if ( fabs(left.prob - right.prob) > 0.00001 )
