@@ -1,26 +1,28 @@
 
 from __future__ import print_function
-cimport numpy as np
-import numpy as np
-import sys, re
-import tarfile
-from libc.stdlib cimport malloc, free
-from libcpp.memory cimport make_shared, shared_ptr
+
 from libcpp.vector cimport vector
 from libcpp.string cimport string
-from libcpp.pair cimport pair
 from libcpp.unordered_set cimport unordered_set
 from libcpp.unordered_map cimport unordered_map
-from cython.operator cimport dereference as deref
-from .cat cimport Category, Cat, CatPair
-from .tree cimport Tree, ScoredNode
-from .combinator cimport en_headfirst_binary_rules, ja_headfinal_binary_rules, Op
+from libcpp cimport bool
+from libc.stdlib cimport malloc, free
+
+cimport numpy as np
+import numpy as np
+import sys
+import re
+import tarfile
 import os
 import json
 import chainer
-from libc.string cimport memcpy
-from libcpp cimport bool
 import logging
+
+from .cat cimport Category, Cat, CatPair
+from .tree cimport Tree, ScoredNode
+from .combinator cimport en_headfirst_binary_rules, ja_headfinal_binary_rules, Op
+from .utils cimport *
+from .utils import maybe_split_and_join
 
 
 logger = logging.getLogger(__name__)
@@ -66,222 +68,6 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             unsigned max_length)
 
 
-cdef vector[Cat] cat_list_to_vector(list cats):
-    cdef vector[Cat] results
-    cdef Category cat
-    for cat in cats:
-        results.push_back(cat.cat_)
-    return results
-
-
-cdef unordered_set[Cat] cat_list_to_unordered_set(list cats):
-    cdef unordered_set[Cat] results
-    cdef Category cat
-    for cat in cats:
-        results.insert(cat.cat_)
-    return results
-
-
-cdef unordered_map[string, vector[bool]] convert_cat_dict(dict cat_dict, list cat_list):
-    cdef unordered_map[string, vector[bool]] results
-    cdef vector[bool] tmp
-    cdef str py_word
-    cdef string c_word
-    cdef list cats
-    cat_to_index = {str(cat): i for i, cat in enumerate(cat_list)}
-    for py_word, cats in cat_dict.items():
-        c_word = py_word.encode('utf-8')
-        tmp = vector[bool](len(cat_list), False)
-        for cat in cats:
-            tmp[cat_to_index[str(cat)]] = True
-        results[c_word] = tmp
-    return results
-
-
-cdef unordered_map[Cat, vector[Cat]] convert_unary_rules(list unary_rules):
-    cdef unordered_map[Cat, vector[Cat]] results
-    cdef vector[Cat] tmp
-    cdef Category cat1, cat2
-    for cat1, cat2 in unary_rules:
-        if results.count(cat1.cat_) == 0:
-            results[cat1.cat_] = vector[Cat]()
-        results[cat1.cat_].push_back(cat2.cat_)
-    return results
-
-
-cpdef remove_comment(line):
-    comment = line.find('#')
-    if comment != -1:
-        line = line[:comment]
-    return line.strip()
-
-
-cpdef read_unary_rules(filename):
-    results = []
-    for line in open(filename):
-        line = remove_comment(line.strip())
-        if len(line) == 0:
-            continue
-        cat1, cat2 = line.split()
-        cat1 = Category.parse(cat1)
-        cat2 = Category.parse(cat2)
-        results.append((cat1, cat2))
-    logger.info(f'load {len(results)} unary rules')
-    return results
-
-
-cpdef read_cat_dict(filename):
-    results = {}
-    for line in open(filename):
-        line = remove_comment(line.strip())
-        if len(line) == 0:
-            continue
-        word, *cats = line.split()
-        results[word] = [Category.parse(cat) for cat in cats]
-    logger.info(f'load {len(results)} cat dictionary entries')
-    return results
-
-
-cpdef read_cat_list(filename):
-    results = []
-    for line in open(filename):
-        line = remove_comment(line.strip())
-        if len(line) == 0:
-            continue
-        cat = line.split()[0]
-        results.append(Category.parse(cat))
-    logger.info(f'load {len(results)} categories')
-    return results
-
-
-cpdef read_seen_rules(filename, preprocess):
-    cdef list results = []
-    cdef Category cat1, cat2
-    for line in open(filename):
-        line = remove_comment(line.strip())
-        if len(line) == 0:
-            continue
-        tmp1, tmp2 = line.split()
-        cat1 = preprocess(Category.parse(tmp1))
-        cat2 = preprocess(Category.parse(tmp2))
-        results.append((cat1, cat2))
-    logger.info(f'load {len(results)} seen rules')
-    return results
-
-
-cdef unordered_set[CatPair] convert_seen_rules(seen_rule_list):
-    cdef unordered_set[CatPair] results
-    cdef Category cat1, cat2
-    for cat1, cat2 in seen_rule_list:
-        results.insert(CatPair(cat1.cat_, cat2.cat_))
-    return results
-
-
-cdef unordered_set[Cat] read_possible_root_categories(list cats):
-    cdef unordered_set[Cat] res
-    cdef Category tmp
-    for cat in cats:
-        tmp = Category.parse(cat)
-        res.insert(tmp.cat_)
-    return res
-
-
-def maybe_split_and_join(string):
-    if isinstance(string, list):
-        split = string
-        join = ' '.join(string)
-    else:
-        assert isinstance(string, str)
-        split = ' '.split(string)
-        join = string
-    return split, join
-
-
-def __show_mathml(tree):
-    if not tree.is_leaf:
-        return """\
-<mrow>
-  <mfrac linethickness='2px'>
-    <mrow>{}</mrow>
-    <mstyle mathcolor='Red'>{}</mstyle>
-  </mfrac>
-  <mtext mathsize='0.8' mathcolor='Black'>{}</mtext>
-</mrow>""".format(
-                "".join(map(__show_mathml, tree.children)),
-                __show_mathml_cat(str(tree.cat)),
-                tree.op_string)
-    else:
-        return """\
-<mrow>
-  <mfrac linethickness='2px'>
-    <mtext mathsize='1.0' mathcolor='Black'>{}</mtext>
-    <mstyle mathcolor='Red'>{}</mstyle>
-  </mfrac>
-  <mtext mathsize='0.8' mathcolor='Black'>lex</mtext>
-</mrow>""".format(
-                tree.word,
-                __show_mathml_cat(str(tree.cat)))
-
-
-def __show_mathml_cat(cat):
-    cats_feats = re.findall(r'([\w\\/()]+)(\[.+?\])*', cat)
-    mathml_str = ''
-    for cat, feat in cats_feats:
-        cat_mathml = """\
-<mi mathvariant='italic'
-  mathsize='1.0' mathcolor='Red'>{}</mi>
-    """.format(cat)
-
-        if feat != '':
-            mathml_str += """\
-<msub>{}
-  <mrow>
-  <mi mathvariant='italic'
-    mathsize='0.8' mathcolor='Purple'>{}</mi>
-  </mrow>
-</msub>""".format(cat_mathml, feat)
-
-        else:
-            mathml_str += cat_mathml
-    return mathml_str
-
-
-def to_mathml(trees, file=sys.stdout):
-    def __show(tree):
-        res = ""
-        for t in tree:
-            if isinstance(t, tuple):
-                t, prob = t
-                res += "<p>Log prob={:.5e}</p>".format(prob)
-            res += "<math xmlns='http://www.w3.org/1998/Math/MathML'>{}</math>".format(
-                __show_mathml(t))
-        return res
-
-    string = ""
-    for i, tree in enumerate(trees):
-        words = tree[0][0].word if isinstance(tree[0], tuple) else tree[0].word
-        string += "<p>ID={}: {}</p>{}".format(
-                i, words, __show(tree))
-
-    results = """\
-<!doctype html>
-<html lang='en'>
-<head>
-  <meta charset='UTF-8'>
-  <style>
-    body {{
-      font-size: 1em;
-    }}
-  </style>
-  <script type="text/javascript"
-     src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
-</head>
-<body>{}
-</body></html>""".format(string)
-    print(results, file=file)
-
-
 cdef class EnglishCCGParser:
     cdef unordered_map[string, vector[bool]] category_dict_
     cdef vector[Cat] tag_list_
@@ -298,7 +84,6 @@ cdef class EnglishCCGParser:
     cdef ApplyUnaryRules apply_unary_rules_
     cdef unsigned max_length_
     cdef unsigned loglevel
-    cdef object type_check
     cdef object tagger
     cdef bytes lang
 
@@ -314,14 +99,18 @@ cdef class EnglishCCGParser:
                  nbest=1,
                  possible_root_cats=None,
                  max_length=250,
-                 batchsize=16,
-                 loglevel=3,
-                 type_check=False):
+                 loglevel=3):
 
         if possible_root_cats is None:
             possible_root_cats = ['S[dcl]', 'S[wq]', 'S[q]', 'S[qem]', 'NP']
         possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
                               for cat in possible_root_cats]
+
+        logger.info(f'beta value = {beta} (use beta = {use_beta})')
+        logger.info(f'pruning size = {pruning_size}')
+        logger.info(f'N best = {nbest}')
+        logger.info(f'allow at the root of atree only categories in {possible_root_cats}'),
+        logger.info(f'give up sentences that contain > {max_length} words')
 
         self.category_dict_ = convert_cat_dict(category_dict, tag_list)
         self.tag_list_ = cat_list_to_vector(tag_list)
@@ -337,7 +126,6 @@ cdef class EnglishCCGParser:
         self.apply_unary_rules_ = EnApplyUnaryRules
         self.max_length_ = max_length
         self.loglevel = loglevel
-        self.type_check = type_check
         self.tagger = None
         self.lang = b'en'
 
@@ -466,9 +254,7 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
                  nbest=1,
                  possible_root_cats=None,
                  max_length=250,
-                 batchsize=16,
-                 loglevel=3,
-                 type_check=False):
+                 loglevel=3):
 
         if possible_root_cats is None:
             possible_root_cats = [
@@ -506,6 +292,5 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.apply_unary_rules_ = JaApplyUnaryRules
         self.max_length_ = max_length
         self.loglevel = loglevel
-        self.type_check = type_check
         self.tagger = None
         self.lang = b'ja'

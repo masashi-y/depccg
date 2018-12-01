@@ -2,7 +2,6 @@ from libcpp.string cimport string
 from libcpp.pair cimport pair
 
 
-
 cdef class Category:
     def __cinit__(self):
         pass

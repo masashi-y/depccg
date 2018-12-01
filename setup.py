@@ -12,6 +12,19 @@ import subprocess
 import os
 import distutils
 import platform
+import contextlib
+
+
+@contextlib.contextmanager
+def chdir(new_dir):
+    old_dir = os.getcwd()
+    try:
+        os.chdir(new_dir)
+        sys.path.insert(0, new_dir)
+        yield
+    finally:
+        del sys.path[0]
+        os.chdir(old_dir)
 
 
 def check_for_openmp():
@@ -100,7 +113,7 @@ cpp_sources = ['depccg.cpp',
                'ja_grammar.cpp',
                'utils.cpp']
 
-pyx_modules = ['depccg.parser', 'depccg.tree', 'depccg.cat', 'depccg.combinator']
+pyx_modules = ['depccg.parser', 'depccg.tree', 'depccg.cat', 'depccg.combinator', 'depccg.utils']
 
 compile_options = "-std=c++11 -O3 -g -fpic -march=native"
 
@@ -110,7 +123,7 @@ compile_options = "-std=c++11 -O3 -g -fpic -march=native"
 extra_link_args = ["-fopenmp" if check_for_openmp() else ""]
 
 ext_modules = [
-        Extension(pyx.split('.')[0],
+        Extension(pyx,
                   [pyx.replace('.', '/') + '.cpp'] +
                   [os.path.join('cpp', cpp) for cpp in cpp_sources],
                   include_dirs=['.', numpy.get_include(), 'cpp'],
@@ -120,13 +133,15 @@ ext_modules = [
         for pyx in pyx_modules]
 
 root = os.path.abspath(os.path.dirname(__file__))
+# with chdir(root):
 generate_cython(root, 'depccg')
 
 setup(
     name="depccg",
     packages=find_packages(),
-    package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
+    # package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
+    scripts=['bin/depccg'],
     zip_safe=False,
 )

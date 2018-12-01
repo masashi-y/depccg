@@ -1,13 +1,6 @@
 from libcpp.string cimport string
 from libcpp.pair cimport pair
 
-# cdef extern from "cat.h" namespace "myccg" nogil:
-#     ctypedef const CCategory* Cat
-#     ctypedef pair[Cat, Cat] CatPair
-#     cdef cppclass CCategory:
-#         @staticmethod
-#         Cat Parse(const string& cat)
-
 cdef extern from "feat.h" namespace "myccg" nogil:
     ctypedef const Feature* Feat
     cdef cppclass Feature:
@@ -59,6 +52,7 @@ cdef extern from "cat.h" namespace "myccg" nogil:
         Cat LeftMostArg() const
         bint IsFunctionInto(Cat cat) const
         Cat ToMultiValue() const
+
 
 cdef class Category:
     cdef Cat cat_
