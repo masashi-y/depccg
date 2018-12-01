@@ -27,7 +27,7 @@ def read_pretrained_embeddings(filepath: str) -> np.ndarray:
 
 def read_model_defs(filepath: str) -> Dict[str, int]:
     res = {}
-    for i, line in enumerate(open(filepath)):
+    for i, line in enumerate(open(filepath, encoding='utf-8')):
         word, _ = line.strip().split(' ')
         res[word] = i
     return res
@@ -85,7 +85,7 @@ cdef unordered_map[Cat, vector[Cat]] convert_unary_rules(list unary_rules):
 
 cpdef read_unary_rules(filename):
     results = []
-    for line in open(filename):
+    for line in open(filename, encoding='utf-8'):
         line = remove_comment(line.strip())
         if len(line) == 0:
             continue
@@ -99,7 +99,7 @@ cpdef read_unary_rules(filename):
 
 cpdef read_cat_dict(filename):
     results = {}
-    for line in open(filename):
+    for line in open(filename, encoding='utf-8'):
         line = remove_comment(line.strip())
         if len(line) == 0:
             continue
@@ -111,7 +111,7 @@ cpdef read_cat_dict(filename):
 
 cpdef read_cat_list(filename):
     results = []
-    for line in open(filename):
+    for line in open(filename, encoding='utf-8'):
         line = remove_comment(line.strip())
         if len(line) == 0:
             continue
@@ -124,7 +124,7 @@ cpdef read_cat_list(filename):
 cpdef read_seen_rules(filename, preprocess):
     cdef list results = []
     cdef Category cat1, cat2
-    for line in open(filename):
+    for line in open(filename, encoding='utf-8'):
         line = remove_comment(line.strip())
         if len(line) == 0:
             continue
