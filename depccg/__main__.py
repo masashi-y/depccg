@@ -6,8 +6,8 @@ import logging
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, Token
 
-
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+                    level=logging.DEBUG)
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
