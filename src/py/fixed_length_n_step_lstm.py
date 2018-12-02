@@ -3,6 +3,8 @@ import itertools
 import numpy
 import six
 import binascii
+import time
+import os
 
 from chainer.links import NStepLSTM
 import chainer.functions as F
