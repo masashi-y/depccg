@@ -32,8 +32,8 @@ public:
     Matrix(int row, int column)
         : data_(new T[row * column]), row_(row), column_(column),
           size_(row * column), own_(true) {
-              for (int i = 0; i < size_; i++)
-                  data_[i] = T(0);
+              // for (int i = 0; i < size_; i++)
+              //     data_[i] = T(0);
           }
 
     ~Matrix() {

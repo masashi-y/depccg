@@ -115,7 +115,7 @@ cpp_sources = ['depccg.cpp',
 
 pyx_modules = ['depccg.parser', 'depccg.tree', 'depccg.cat', 'depccg.combinator', 'depccg.utils']
 
-compile_options = "-std=c++11 -O3 -g -fpic -march=native"
+compile_options = "-std=c++11 -O3 -g -fopenmp -fpic -march=native"
 
 # if platform.uname()[0]=='Darwin':
 #     compile_options += " -stdlib=libc++"
@@ -142,6 +142,6 @@ setup(
     # package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
-    scripts=['bin/depccg'],
+    scripts=['bin/depccg_en', 'bin/depccg_ja'],
     zip_safe=False,
 )

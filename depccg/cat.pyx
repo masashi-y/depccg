@@ -107,7 +107,8 @@ cdef class Category:
             return self.cat_.GetSlash().ToStr()
 
     cpdef strip_feat(self, feat):
-        # assert len(feats) <= 4, 'Pycat.strip_feat does not stripping more than 4 features.'
+        assert feat.startswith('[') and feat.endswith(']'), \
+            'please enclose a feature with [] as in Category.parse(\'S[dcl]\\NP\').strip_feat(\'[dcl]\')'
         cdef string c_feat = feat.encode('utf-8')
         return Category.from_ptr(self.cat_.StripFeat(c_feat))
 

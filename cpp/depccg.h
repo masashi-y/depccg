@@ -12,6 +12,7 @@ namespace myccg {
 
 struct RuleCache
 {
+    RuleCache() {}
     RuleCache(Cat result, bool left_is_head, Op combinator)
     : result(result), left_is_head(left_is_head), combinator(combinator) {}
 
@@ -23,7 +24,7 @@ struct RuleCache
 struct AgendaItem
 {
     AgendaItem(bool fin, int id, NodeType parse_, float in_prob_, float out_prob_,
-            int start_of_span_, int span_length_)
+            unsigned start_of_span_, unsigned span_length_)
     : fin(fin), id(id), parse(parse_), in_prob(in_prob_), out_prob(out_prob_),
     prob(in_prob_ + out_prob_), start_of_span(start_of_span_), span_length(span_length_) {}
     ~AgendaItem() {}
@@ -34,8 +35,8 @@ struct AgendaItem
     float in_prob;
     float out_prob;
     float prob;
-    int start_of_span;
-    int span_length;
+    unsigned start_of_span;
+    unsigned span_length;
 
 };
 

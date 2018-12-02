@@ -19,11 +19,9 @@ namespace myccg {
 
 
 std::vector<Cat> EnApplyUnaryRules(
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
-        NodeType parse) {
+        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules, NodeType parse) {
     std::vector<Cat> results;
-    for (Cat unary: unary_rules.at(parse->GetCategory())) {
-        Cat result = parse->GetCategory();
+    for (Cat result: unary_rules.at(parse->GetCategory())) {
         bool is_not_punct = parse->GetRuleType() != LP && parse->GetRuleType() != RP;
         if (is_not_punct || result->IsTypeRaised())
             results.push_back(result);
@@ -33,8 +31,7 @@ std::vector<Cat> EnApplyUnaryRules(
 
 
 std::vector<Cat> JaApplyUnaryRules(
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
-        NodeType parse) {
+        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules, NodeType parse) {
     return unary_rules.at(parse->GetCategory());
 }
 
@@ -42,9 +39,7 @@ std::vector<Cat> JaApplyUnaryRules(
 std::vector<RuleCache>& EnGetRules(
         std::unordered_map<CatPair, std::vector<RuleCache>>& rule_cache,
         const std::vector<Op>& binary_rules,
-        const std::unordered_set<CatPair>& seen_rules,
-        Cat left1,
-        Cat right1) {
+        const std::unordered_set<CatPair>& seen_rules, Cat left1, Cat right1) {
     Cat left = left1->StripFeat("[nb]");
     Cat right = right1->StripFeat("[nb]");
     auto key = std::make_pair(left, right);
@@ -52,7 +47,7 @@ std::vector<RuleCache>& EnGetRules(
         return rule_cache[key];
     } else {
         std::vector<RuleCache> tmp;
-        bool is_seen = seen_rules.size() > 0 &&
+        bool is_seen = seen_rules.size() == 0 ||
             seen_rules.count(
                 std::make_pair(left1->StripFeat("[X]", "[nb]"),
                                right1->StripFeat("[X]", "[nb]"))) > 0;
@@ -73,15 +68,14 @@ std::vector<RuleCache>& EnGetRules(
 std::vector<RuleCache>& JaGetRules(
         std::unordered_map<CatPair, std::vector<RuleCache>>& rule_cache,
         const std::vector<Op>& binary_rules,
-        const std::unordered_set<CatPair>& seen_rules,
-        Cat left,
-        Cat right) {
+        const std::unordered_set<CatPair>& seen_rules, Cat left, Cat right) {
     auto key = std::make_pair(left, right);
     if (rule_cache.count(key) > 0) {
         return rule_cache[key];
     } else {
         std::vector<RuleCache> tmp;
-        bool is_seen = seen_rules.count(std::make_pair(left, right)) > 0;
+        bool is_seen = seen_rules.size() == 0 ||
+            seen_rules.count(std::make_pair(left, right)) > 0;
         if (is_seen) {
             for (auto rule: binary_rules) {
                 if (rule->CanApply(left, right)) {
@@ -105,7 +99,7 @@ struct CompareFloatCat {
 
 std::vector<ScoredNode> Failed() {
     static ScoredNode failure_node = std::make_pair(
-        std::make_shared<Leaf>("fail", CCategory::Parse("NP"), 0), 0);
+        std::make_shared<Leaf>("FAILED", CCategory::Parse("NP"), 0), 0);
     return std::vector<ScoredNode>({failure_node});
 }
 
@@ -160,6 +154,8 @@ std::vector<ScoredNode> ParseSentence(
     if (sent_size >= max_length)
         return Failed();
 
+     std::cerr << '.';
+
     std::vector<float> best_tag_probs(sent_size, 0);
     std::vector<float> best_dep_probs(sent_size, 0);
 
@@ -178,11 +174,9 @@ std::vector<ScoredNode> ParseSentence(
 
     float dep_leaf_out_prob = 0.0;
     for (unsigned i = 0; i < sent_size; i++) {
-        bool do_pruning = ! category_dict.empty() &&
-                            category_dict.count(tokens[i]) > 0;
+        bool do_pruning = category_dict.count(tokens[i]) > 0;
         for (unsigned j = 0; j < tag_size; j++) {
-            if ( ! do_pruning ||
-                    (do_pruning && category_dict.at(tokens[i])[j])) {
+            if ( ! do_pruning || (do_pruning && category_dict.at(tokens[i])[j])) {
                 float score = tag_in_probs(i, j);
                 scored_cats[i].emplace(score, tag_list[j]);
             }
@@ -197,8 +191,7 @@ std::vector<ScoredNode> ParseSentence(
     ComputeOutsideProbs(best_dep_probs, sent_size, dep_out_probs);
 
     for (unsigned i = 0; i < sent_size; i++) {
-        float threshold = use_beta ?
-            scored_cats[i].top().first * beta : std::numeric_limits<float>::lowest();
+        float threshold = use_beta ? scored_cats[i].top().first * beta : std::numeric_limits<float>::lowest();
         float out_prob = tag_out_probs(i, i + 1) + dep_leaf_out_prob;
 
         unsigned j = 0;
@@ -237,8 +230,7 @@ std::vector<ScoredNode> ParseSentence(
                     possible_root_cats.count(parse->GetCategory()) ) {
                 float dep_score = dep_in_probs(parse->GetHeadId(), 0);
                 float in_prob = item.in_prob +  dep_score;
-                agenda.emplace(true, agenda_id++, parse, in_prob, 0.0,
-                                    item.start_of_span, item.span_length);
+                agenda.emplace(true, agenda_id++, parse, in_prob, 0.0, item.start_of_span, item.span_length);
             }
 
             if ((sent_size == 1 || item.span_length != sent_size)

@@ -7,6 +7,7 @@ from libcpp.unordered_set cimport unordered_set
 from libcpp.unordered_map cimport unordered_map
 from libcpp cimport bool
 from libc.stdlib cimport malloc, free
+from cython.parallel cimport prange
 
 cimport numpy as np
 import numpy as np
@@ -48,11 +49,31 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
 
     ApplyBinaryRules JaGetRules
 
+    vector[ScoredNode] ParseSentence(
+            unsigned id,
+            const string& sent,
+            float* tag_scores,
+            float* dep_scores,
+            const unordered_map[string, vector[bool]]& category_dict,
+            const vector[Cat]& tag_list,
+            float beta,
+            bool use_beta,
+            unsigned pruning_size,
+            unsigned nbest,
+            const unordered_set[Cat]& possible_root_cats,
+            const unordered_map[Cat, vector[Cat]]& unary_rules,
+            const vector[Op]& binary_rules,
+            unordered_map[CatPair, vector[RuleCache]]& cache,
+            const unordered_set[CatPair]& seen_rules,
+            ApplyBinaryRules apply_binary_rules,
+            ApplyUnaryRules apply_unary_rules,
+            unsigned max_length) nogil
+
     vector[vector[ScoredNode]] ParseSentences(
             vector[string]& sents,
             float** tag_scores,
             float** dep_scores,
-            const unordered_map[string, vector[bint]]& category_dict,
+            const unordered_map[string, vector[bool]]& category_dict,
             const vector[Cat]& tag_list,
             float beta,
             bint use_beta,
@@ -160,7 +181,7 @@ cdef class EnglishCCGParser:
         unary_rules = read_unary_rules(unary_rules)
         category_dict = read_cat_dict(category_dict)
         tag_list = read_cat_list(categories)
-        seen_rules = read_seen_rules(seen_rules, lambda cat: cat.strip_feat('X').strip_feat('nb'))
+        seen_rules = read_seen_rules(seen_rules, lambda cat: cat.strip_feat('[X]').strip_feat('[nb]'))
         parser = cls(category_dict, tag_list, unary_rules, seen_rules, **kwargs)
         if tagger_model_dir:
             parser.load_default_tagger(tagger_model_dir)
@@ -171,11 +192,13 @@ cdef class EnglishCCGParser:
         tf = tarfile.open(filename, 'r')
 
     def parse_doc(self, sents, probs=None, batchsize=16):
-        assert self.tagger is not None, 'default supertagger is not loaded.'
         splitted, sents = zip(*map(maybe_split_and_join, sents))
         sents = [sent.encode('utf-8') for sent in sents]
+        logger.info('start tagging sentences')
         if probs is None:
+            assert self.tagger is not None, 'default supertagger is not loaded.'
             probs = self.tagger.predict_doc(splitted, batchsize=batchsize)
+        logger.info('done tagging sentences')
         res = self._parse_doc_tag_and_dep(list(sents), list(probs))
         return res
 
@@ -210,26 +233,48 @@ cdef class EnglishCCGParser:
         for i, (cat_scores, dep_scores) in enumerate(probs):
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
-        logger.info('start parsing sentences')
+
+        logger.info('start A* parsing')
         cdef vector[vector[ScoredNode]] cres = ParseSentences(
-                        csents,
-                        tags,
-                        deps,
-                        self.category_dict_,
-                        c_tag_list,
-                        self.beta_,
-                        self.use_beta_,
-                        self.pruning_size_,
-                        self.nbest_,
-                        self.possible_root_cats_,
-                        self.unary_rules_,
-                        self.binary_rules_,
-                        self.cache_,
-                        self.seen_rules_,
-                        self.apply_binary_rules_,
-                        self.apply_unary_rules_,
-                        self.max_length_)
-        logger.info('finished parsing sentences')
+                    csents,
+                    tags,
+                    deps,
+                    self.category_dict_,
+                    c_tag_list,
+                    self.beta_,
+                    self.use_beta_,
+                    self.pruning_size_,
+                    self.nbest_,
+                    self.possible_root_cats_,
+                    self.unary_rules_,
+                    self.binary_rules_,
+                    self.cache_,
+                    self.seen_rules_,
+                    self.apply_binary_rules_,
+                    self.apply_unary_rules_,
+                    self.max_length_)
+        cdef int num_sents = len(sents)
+        # for i in prange(num_sents, nogil=True, schedule='dynamic'):
+        #     cres[i] = ParseSentence(
+        #                 i,
+        #                 csents[i],
+        #                 tags[i],
+        #                 deps[i],
+        #                 self.category_dict_,
+        #                 c_tag_list,
+        #                 self.beta_,
+        #                 self.use_beta_,
+        #                 self.pruning_size_,
+        #                 self.nbest_,
+        #                 self.possible_root_cats_,
+        #                 self.unary_rules_,
+        #                 self.binary_rules_,
+        #                 self.cache_,
+        #                 self.seen_rules_,
+        #                 self.apply_binary_rules_,
+        #                 self.apply_unary_rules_,
+        #                 self.max_length_)
+        logger.info('done A* parsing')
         cdef list tmp, res = []
         cdef Tree parse
         for i in range(len(sents)):

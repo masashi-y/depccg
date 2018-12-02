@@ -2,9 +2,11 @@
 import argparse
 import sys
 import logging
+import json
 
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, Token
+from .download import download, load_model_directory
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                     level=logging.DEBUG)
@@ -12,61 +14,38 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser('A* CCG parser')
-    parser.add_argument('lang',
-                        help='language',
-                        choices=['en', 'ja'])
-    parser.add_argument('--model',
-                        help='path to model directory')
-    parser.add_argument('--input',
-                        default=None,
-                        help='a file with tokenized sentences in each line')
-    parser.add_argument('--batchsize',
-                        type=int,
-                        default=32,
-                        help='batchsize in supertagger')
-    parser.add_argument('--nbest',
-                        type=int,
-                        default=1,
-                        help='output N best parses')
-    parser.add_argument('--input-format',
-                        default='raw',
-                        choices=['raw', 'POSandNERtagged', 'json'],
-                        help='input format')
-    parser.add_argument('--format',
-                        default='auto',
-                        choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'prolog'],
-                        help='output format')
-    parser.add_argument('--root-cats',
-                        default=None,
-                        help='allow only these categories to be at the root of a tree. If None, use default setting.')
-    parser.add_argument('--verbose',
-                        action='store_true')
-    args = parser.parse_args()
-
+def main(args):
     fin = sys.stdin if args.input is None else open(args.input)
 
     if args.input_format == 'POSandNERtagged':
         tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
         doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
+    elif args.input_format == 'json':
+        doc = [json.loads(line) for line in fin]
+        tagged_doc = None
     else:
         assert args.format not in ['xml', 'prolog'], \
-                'XML and Prolog output format is supported only with --input-format POSandNERtagged.'
+            'XML and Prolog output format is supported only with --input-format POSandNERtagged.'
         doc = [l.strip() for l in fin]
         tagged_doc = None
 
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
 
-    load_tagger = args.model is not None
+    load_tagger = args.input_format != 'json'
 
-    parser = Parsers[args.lang].from_dir(args.model,
+    model = args.model or load_model_directory(args.lang)
+
+    parser = Parsers[args.lang].from_dir(model,
                                          load_tagger=load_tagger,
                                          nbest=args.nbest,
                                          possible_root_cats=args.root_cats,
                                          loglevel=1 if args.verbose else 3)
-    res = parser.parse_doc(doc, batchsize=args.batchsize)
+
+    if args.input_format == 'json':
+        res = parser.parse_json(doc)
+    else:
+        res = parser.parse_doc(doc, batchsize=args.batchsize)
 
     if args.format == 'xml':
         print(to_xml(res, tagged_doc))
@@ -83,5 +62,47 @@ if __name__ == '__main__':
             for tree, _ in parsed:
                 print(f'ID={i}')
                 print(getattr(tree, args.format))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('A* CCG parser')
+    parser.add_argument('lang',
+                        help='language',
+                        choices=['en', 'ja'])
+    parser.add_argument('-m', '--model',
+                        help='path to model directory')
+    parser.add_argument('-i', '--input',
+                        default=None,
+                        help='a file with tokenized sentences in each line')
+    parser.add_argument('--batchsize',
+                        type=int,
+                        default=32,
+                        help='batchsize in supertagger')
+    parser.add_argument('--nbest',
+                        type=int,
+                        default=1,
+                        help='output N best parses')
+    parser.add_argument('-I', '--input-format',
+                        default='raw',
+                        choices=['raw', 'POSandNERtagged', 'json'],
+                        help='input format')
+    parser.add_argument('-f', '--format',
+                        default='auto',
+                        choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'prolog'],
+                        help='output format')
+    parser.add_argument('--root-cats',
+                        default=None,
+                        help='allow only these categories to be at the root of a tree. If None, use default setting.')
+    parser.add_argument('--verbose',
+                        action='store_true')
+    parser.set_defaults(func=main)
+
+    subparsers = parser.add_subparsers()
+    download_parser = subparsers.add_parser('download')
+    download_parser.add_argument('lang', choices=['en', 'ja'])
+    download_parser.set_defaults(func=lambda args: download(args.lang))
+    args = parser.parse_args()
+    args.func(args)
+
 
 

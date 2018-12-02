@@ -30,15 +30,15 @@ public:
 class Node
 {
 public:
-    Node(Cat cat, const RuleType rule_type, int length)
+    Node(Cat cat, const RuleType rule_type, unsigned length)
     : cat_(cat), rule_type_(rule_type), length_(length) {}
 
     virtual ~Node() {}
 
     Cat GetCategory() { return cat_; }
     Cat GetCategory() const { return cat_; }
-    const int GetLength() { return length_; }
-    const int GetLength() const { return length_; }
+    const unsigned GetLength() { return length_; }
+    const unsigned GetLength() const { return length_; }
     const std::string ToStr() const;
     virtual NodeType GetLeftChild() const = 0;
     virtual NodeType GetRightChild() const = 0;
@@ -46,15 +46,15 @@ public:
     virtual RuleType GetRuleType() { return rule_type_; }
     virtual RuleType GetRuleType() const { return rule_type_; }
     virtual const Leaf* GetHeadLeaf() const = 0;
-    virtual int GetStartOfSpan() const = 0;
+    virtual unsigned GetStartOfSpan() const = 0;
     virtual std::string GetWord() const = 0;
-    virtual int GetHeadId() const = 0;
-    virtual int GetDependencyLength() const = 0;
+    virtual unsigned GetHeadId() const = 0;
+    virtual unsigned GetDependencyLength() const = 0;
     virtual bool HeadIsLeft() const = 0;
     virtual bool IsUnary() const = 0;
-    virtual int NumDescendants() const = 0;
-    virtual int RightNumDescendants() const = 0;
-    virtual int LeftNumDescendants() const = 0;
+    virtual unsigned NumDescendants() const = 0;
+    virtual unsigned RightNumDescendants() const = 0;
+    virtual unsigned LeftNumDescendants() const = 0;
     virtual int Accept(FormatVisitor& visitor) const = 0;
     virtual const Node* GetLeftMostChild() const = 0;
 
@@ -67,28 +67,28 @@ public:
 protected:
     Cat cat_;
     RuleType rule_type_;
-    int length_;
+    unsigned length_;
 };
         
 class Leaf: public Node
 {
 public:
-    Leaf(const std::string& word, Cat cat, int position)
+    Leaf(const std::string& word, Cat cat, unsigned position)
     : Node(cat, LEXICON, 1), word_(word), position_(position) {}
 
     ~Leaf() {}
     std::string GetWord() const { return word_; }
     const Leaf* GetHeadLeaf() const { return this; }
     bool IsLeaf() const { return true; }
-    int GetPosition() const { return position_; }
-    int GetHeadId() const { return position_; }
-    int GetDependencyLength() const { return 0; }
-    int GetStartOfSpan() const { return position_; }
+    unsigned GetPosition() const { return position_; }
+    unsigned GetHeadId() const { return position_; }
+    unsigned GetDependencyLength() const { return 0; }
+    unsigned GetStartOfSpan() const { return position_; }
     bool HeadIsLeft() const { return false; }
     bool IsUnary() const { return false; }
-    int NumDescendants() const { return 0; }
-    int RightNumDescendants() const { return 0; }
-    int LeftNumDescendants() const { return 0; }
+    unsigned NumDescendants() const { return 0; }
+    unsigned RightNumDescendants() const { return 0; }
+    unsigned LeftNumDescendants() const { return 0; }
     NodeType GetLeftChild() const NO_IMPLEMENTATION;
     NodeType GetRightChild() const NO_IMPLEMENTATION;
     int Accept(FormatVisitor& visitor) const { return visitor.Visit(this); }
@@ -96,7 +96,7 @@ public:
 
 private:
     const std::string word_;
-    const int position_;
+    const unsigned position_;
 };
 
 RuleType GetUnaryRuleType(Cat cat);
@@ -137,7 +137,7 @@ public:
 
     ~Tree() {}
 
-    int GetHeadId() const { return headid_; }
+    unsigned GetHeadId() const { return headid_; }
 
     RuleType GetRuleType() const {
         if (rule_type_ == FA && *rchild_->GetCategory() == *GetCategory())
@@ -150,7 +150,7 @@ public:
 
     RuleType GetRuleTypeOld() const { return rule_type_; }
 
-    int GetStartOfSpan() const {
+    unsigned GetStartOfSpan() const {
         return lchild_->GetStartOfSpan();
     }
 
@@ -160,10 +160,10 @@ public:
             lchild_->GetHeadLeaf() : rchild_->GetHeadLeaf();
     }
 
-    int GetDependencyLength() const { return dependency_length_; }
+    unsigned GetDependencyLength() const { return dependency_length_; }
     bool HeadIsLeft() const { return left_is_head_; }
     bool IsUnary() const { return NULL == rchild_; }
-    int NumDescendants() const {
+    unsigned NumDescendants() const {
         return ( rchild_ == NULL ? 0 : RightNumDescendants() ) + LeftNumDescendants();
     }
     std::string GetWord() const {
@@ -172,8 +172,8 @@ public:
         return lchild_->GetWord() + " " + rchild_->GetWord();
     }
 
-    int LeftNumDescendants() const { return lchild_->NumDescendants() + 1; }
-    int RightNumDescendants() const { return rchild_->NumDescendants() + 1; }
+    unsigned LeftNumDescendants() const { return lchild_->NumDescendants() + 1; }
+    unsigned RightNumDescendants() const { return rchild_->NumDescendants() + 1; }
     NodeType GetLeftChild() const { return lchild_; }
     NodeType GetRightChild() const { return rchild_; }
     Op GetRule() const { return rule_; }
@@ -185,8 +185,8 @@ private:
     NodeType lchild_;
     NodeType rchild_;
     Op rule_;
-    int dependency_length_;
-    int headid_;
+    unsigned dependency_length_;
+    unsigned headid_;
 };
 
 void ToXML(std::vector<std::shared_ptr<const Node>>&

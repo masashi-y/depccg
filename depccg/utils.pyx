@@ -3,6 +3,7 @@ import numpy as np
 cimport numpy as np
 import logging
 from .cat cimport Category
+from libcpp.pair cimport pair
 
 
 logger = logging.getLogger(__name__)
@@ -69,6 +70,7 @@ cdef unordered_map[string, vector[bool]] convert_cat_dict(dict cat_dict, list ca
         for cat in cats:
             tmp[cat_to_index[str(cat)]] = True
         results[c_word] = tmp
+    logger.info(f'convert_cat_dict: {results.size()}')
     return results
 
 
@@ -100,10 +102,7 @@ cpdef read_unary_rules(filename):
 cpdef read_cat_dict(filename):
     results = {}
     for line in open(filename, encoding='utf-8'):
-        line = remove_comment(line.strip())
-        if len(line) == 0:
-            continue
-        word, *cats = line.split()
+        word, *cats = line.strip().split()
         results[word] = [Category.parse(cat) for cat in cats]
     logger.info(f'load {len(results)} cat dictionary entries')
     return results
