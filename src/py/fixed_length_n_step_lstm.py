@@ -2,6 +2,7 @@ import itertools
 
 import numpy
 import six
+import binascii
 
 from chainer.links import NStepLSTM
 import chainer.functions as F
@@ -14,13 +15,52 @@ from chainer.functions.array import split_axis
 from chainer.functions.array import stack
 from chainer.functions.connection import linear
 from chainer.functions.noise import dropout
-from chainer.functions.connection.n_step_lstm import get_random_state, NStepLSTM as NStepLSTMFunction
+from chainer.functions.connection.n_step_lstm import NStepLSTM as NStepLSTMFunction
 
 
 if cuda.cudnn_enabled:
     cudnn = cuda.cudnn
     libcudnn = cuda.cudnn.cudnn
     _cudnn_version = libcudnn.getVersion()
+
+
+class DropoutRandomStates(object):
+
+    def __init__(self, seed):
+        self._states = None
+
+        if seed is None:
+            try:
+                seed_str = binascii.hexlify(os.urandom(8))
+                seed = numpy.uint64(int(seed_str, 16))
+            except NotImplementedError:
+                seed = numpy.uint64(time.clock() * 1000000)
+        else:
+            seed = numpy.uint64(seed)
+
+        self._seed = seed
+
+    def create_dropout_states(self, dropout):
+        handle = cudnn.get_handle()
+        if self._states is None:
+            self._states = cudnn.DropoutStates(handle, self._seed)
+        # TODO(unno): Make a method to set dropout instead of calling API
+        cudnn.set_dropout_descriptor(self._states._desc, handle, dropout)
+
+        return self._states
+
+
+_random_states = {}
+
+
+def get_random_state():
+    global _random_states
+    dev = cuda.Device()
+    rs = _random_states.get(dev.id, None)
+    if rs is None:
+        rs = DropoutRandomStates(os.getenv('CHAINER_SEED'))
+        _random_states[dev.id] = rs
+    return rs
 
 
 class PointerArray(object):

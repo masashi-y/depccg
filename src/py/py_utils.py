@@ -1,6 +1,6 @@
 
 import numpy as np
-import py.cat
+# import py.cat
 import re
 
 def drop_brackets(cat):
