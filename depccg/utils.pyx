@@ -57,19 +57,14 @@ cdef unordered_set[Cat] cat_list_to_unordered_set(list cats):
     return results
 
 
-cdef unordered_map[string, vector[bool]] convert_cat_dict(dict cat_dict, list cat_list):
-    cdef unordered_map[string, vector[bool]] results
-    cdef vector[bool] tmp
+cdef unordered_map[string, unordered_set[Cat]] convert_cat_dict(dict cat_dict):
+    cdef unordered_map[string, unordered_set[Cat]] results
     cdef str py_word
     cdef string c_word
     cdef list cats
-    cat_to_index = {str(cat): i for i, cat in enumerate(cat_list)}
     for py_word, cats in cat_dict.items():
         c_word = py_word.encode('utf-8')
-        tmp = vector[bool](len(cat_list), False)
-        for cat in cats:
-            tmp[cat_to_index[str(cat)]] = True
-        results[c_word] = tmp
+        results[c_word] = cat_list_to_unordered_set(cats)
     return results
 
 

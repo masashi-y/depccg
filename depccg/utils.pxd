@@ -10,7 +10,7 @@ cdef vector[Cat] cat_list_to_vector(list cats)
 
 cdef unordered_set[Cat] cat_list_to_unordered_set(list cats)
 
-cdef unordered_map[string, vector[bool]] convert_cat_dict(dict cat_dict, list cat_list)
+cdef unordered_map[string, unordered_set[Cat]] convert_cat_dict(dict cat_dict)
 
 cdef unordered_map[Cat, vector[Cat]] convert_unary_rules(list unary_rules)
 

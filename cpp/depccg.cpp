@@ -134,7 +134,7 @@ std::vector<ScoredNode> ParseSentence(
         const std::string& sent,
         float* tag_scores,
         float* dep_scores,
-        const std::unordered_map<std::string, std::vector<bool>>& category_dict,
+        const std::unordered_map<std::string, std::unordered_set<Cat>>& category_dict,
         const std::vector<Cat>& tag_list,
         float beta,
         bool use_beta,
@@ -176,7 +176,7 @@ std::vector<ScoredNode> ParseSentence(
     for (unsigned i = 0; i < sent_size; i++) {
         bool do_pruning = category_dict.count(tokens[i]) > 0;
         for (unsigned j = 0; j < tag_size; j++) {
-            if ( ! do_pruning || (do_pruning && category_dict.at(tokens[i])[j])) {
+            if ( ! do_pruning || (do_pruning && category_dict.at(tokens[i]).count(tag_list[j]))) {
                 float score = tag_in_probs(i, j);
                 scored_cats[i].emplace(score, tag_list[j]);
             }
@@ -306,7 +306,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         std::vector<std::string>& sents,
         float** tag_scores,
         float** dep_scores,
-        const std::unordered_map<std::string, std::vector<bool>>& category_dict,
+        const std::unordered_map<std::string, std::unordered_set<Cat>>& category_dict,
         const std::vector<Cat>& tag_list,
         float beta,
         bool use_beta,

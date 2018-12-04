@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 cdef class EnglishCCGParser:
-    cdef unordered_map[string, vector[bool]] category_dict_
+    cdef unordered_map[string, unordered_set[Cat]] category_dict_
     cdef object py_category_dict
     cdef vector[Cat] tag_list_
     cdef float beta_
@@ -68,7 +68,7 @@ cdef class EnglishCCGParser:
         logger.info(f'give up sentences that contain > {max_length} words')
 
         self.py_category_dict = category_dict
-        self.category_dict_ = convert_cat_dict(category_dict, tag_list)
+        self.category_dict_ = convert_cat_dict(category_dict)
         self.tag_list_ = cat_list_to_vector(tag_list)
         self.beta_ = beta
         self.use_beta_ = use_beta
@@ -163,11 +163,6 @@ cdef class EnglishCCGParser:
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
 
         cdef vector[Cat] c_tag_list = cat_list_to_vector(tag_list) if tag_list else self.tag_list_
-        cdef unordered_map[string, vector[bool]] c_category_dict
-        if tag_list:
-            c_category_dict = convert_cat_dict(self.py_category_dict, tag_list)
-        else:
-            c_category_dict = self.category_dict_
 
         for i, (cat_scores, dep_scores) in enumerate(probs):
             tags[i] = &cat_scores[0, 0]
@@ -178,7 +173,7 @@ cdef class EnglishCCGParser:
                     csents,
                     tags,
                     deps,
-                    c_category_dict,
+                    self.category_dict_,
                     c_tag_list,
                     self.beta_,
                     self.use_beta_,
@@ -262,7 +257,7 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
                               for cat in possible_root_cats]
 
-        self.category_dict_ = convert_cat_dict(category_dict, tag_list)
+        self.category_dict_ = convert_cat_dict(category_dict)
         self.tag_list_ = cat_list_to_vector(tag_list)
         self.beta_ = beta
         self.use_beta_ = use_beta
