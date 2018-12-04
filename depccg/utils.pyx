@@ -9,6 +9,33 @@ from libcpp.pair cimport pair
 logger = logging.getLogger(__name__)
 
 
+def normalize(word):
+    if word == "-LRB-":
+        return "("
+    elif word == "-RRB-":
+        return ")"
+    elif word == "-LCB-":
+        return "("
+    elif word == "-RCB-":
+        return ")"
+    else:
+        return word
+
+
+def denormalize(word):
+    if word == "(":
+        return "-LRB-"
+    elif word == ")":
+        return "-RRB-"
+    elif word == "{":
+        return "-LCB-"
+    elif word == "}":
+        return "-RCB-"
+    word = word.replace(">", "-RAB-")
+    word = word.replace("<", "-LAB-")
+    return word
+
+
 def read_pretrained_embeddings(filepath: str) -> np.ndarray:
     nvocab = 0
     io = open(filepath)

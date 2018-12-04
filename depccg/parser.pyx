@@ -15,7 +15,7 @@ import logging
 
 from .combinator cimport en_headfirst_binary_rules, ja_headfinal_binary_rules
 from .utils cimport *
-from .utils import maybe_split_and_join
+from .utils import maybe_split_and_join, denormalize
 from .cat cimport Category
 
 
@@ -147,7 +147,7 @@ cdef class EnglishCCGParser:
             if categories is None:
                 categories = [Category.parse(cat) for cat in json_dict['categories']]
 
-            sent = json_dict['words'].encode('utf-8')
+            sent = ' '.join(denormalize(word) for word in json_dict['words'].split(' ')).encode('utf-8')
             dep = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
             tag = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
             sents.append(sent)

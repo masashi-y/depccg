@@ -12,6 +12,7 @@ from .utils import read_pretrained_embeddings, read_model_defs
 from .biaffine import Biaffine, Bilinear
 from .param import Param
 from .fixed_length_n_step_lstm import FixedLengthNStepLSTM
+from .utils import normalize
 
 
 UNK = "*UNKNOWN*"
@@ -36,19 +37,6 @@ def get_prefix(word):
             word[:2] if len(word) > 1 else OOR2,
             word[:3] if len(word) > 2 else OOR3,
             word[:4] if len(word) > 3 else OOR4]
-
-
-def normalize(word):
-    if word == "-LRB-":
-        return "("
-    elif word == "-RRB-":
-        return ")"
-    elif word == "-LCB-":
-        return "("
-    elif word == "-RCB-":
-        return ")"
-    else:
-        return word
 
 
 class FeatureExtractor(object):
