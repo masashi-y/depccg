@@ -16,6 +16,7 @@ import logging
 from .combinator cimport en_headfirst_binary_rules, ja_headfinal_binary_rules
 from .utils cimport *
 from .utils import maybe_split_and_join
+from .cat cimport Category
 
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 cdef class EnglishCCGParser:
     cdef unordered_map[string, vector[bool]] category_dict_
+    cdef object py_category_dict
     cdef vector[Cat] tag_list_
     cdef float beta_
     cdef bint use_beta_
@@ -62,9 +64,10 @@ cdef class EnglishCCGParser:
         logger.info(f'beta value = {beta} (use beta = {use_beta})')
         logger.info(f'pruning size = {pruning_size}')
         logger.info(f'N best = {nbest}')
-        logger.info(f'allow at the root of atree only categories in {possible_root_cats}'),
+        logger.info(f'allow at the root of a tree only categories in {possible_root_cats}'),
         logger.info(f'give up sentences that contain > {max_length} words')
 
+        self.py_category_dict = category_dict
         self.category_dict_ = convert_cat_dict(category_dict, tag_list)
         self.tag_list_ = cat_list_to_vector(tag_list)
         self.beta_ = beta
@@ -136,20 +139,19 @@ cdef class EnglishCCGParser:
 
     def parse_json(self, json_input):
         if isinstance(json_input, str):
-            json_input = [line.strip() for line in open(json_input)]
+            json_input = [json.loads(line.strip()) for line in open(json_input)]
         categories = None
         sents = []
         probs = []
-        for line in json_input:
-            json_dict = json.load(line)
+        for json_dict in json_input:
             if categories is None:
-                categories = json_dict['categories']
+                categories = [Category.parse(cat) for cat in json_dict['categories']]
 
-            words = [word for word in json_dict['words'].split(' ')]
-            heads = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
-            head_tags = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
-            sents.append(words)
-            probs.append((head_tags, heads))
+            sent = json_dict['words'].encode('utf-8')
+            dep = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
+            tag = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
+            sents.append(sent)
+            probs.append((tag, dep))
         res = self._parse_doc_tag_and_dep(sents, probs, tag_list=categories)
         return res
 
@@ -161,6 +163,11 @@ cdef class EnglishCCGParser:
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
 
         cdef vector[Cat] c_tag_list = cat_list_to_vector(tag_list) if tag_list else self.tag_list_
+        cdef unordered_map[string, vector[bool]] c_category_dict
+        if tag_list:
+            c_category_dict = convert_cat_dict(self.py_category_dict, tag_list)
+        else:
+            c_category_dict = self.category_dict_
 
         for i, (cat_scores, dep_scores) in enumerate(probs):
             tags[i] = &cat_scores[0, 0]
@@ -171,7 +178,7 @@ cdef class EnglishCCGParser:
                     csents,
                     tags,
                     deps,
-                    self.category_dict_,
+                    c_category_dict,
                     c_tag_list,
                     self.beta_,
                     self.use_beta_,

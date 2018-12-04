@@ -70,7 +70,6 @@ cdef unordered_map[string, vector[bool]] convert_cat_dict(dict cat_dict, list ca
         for cat in cats:
             tmp[cat_to_index[str(cat)]] = True
         results[c_word] = tmp
-    logger.info(f'convert_cat_dict: {results.size()}')
     return results
 
 

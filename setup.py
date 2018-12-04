@@ -105,6 +105,7 @@ def generate_cython(root, source):
 
 cpp_sources = ['depccg.cpp',
                'cat.cpp',
+               'cacheable.cpp',
                'chart.cpp',
                'combinator.cpp',
                'en_grammar.cpp',
