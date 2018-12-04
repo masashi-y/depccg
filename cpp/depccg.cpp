@@ -154,8 +154,6 @@ std::vector<ScoredNode> ParseSentence(
     if (sent_size >= max_length)
         return Failed();
 
-     std::cerr << '.';
-
     std::vector<float> best_tag_probs(sent_size, 0);
     std::vector<float> best_dep_probs(sent_size, 0);
 
@@ -320,7 +318,10 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         ApplyBinaryRules apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
         unsigned max_length) {
-    std::vector<std::vector<ScoredNode>> res(sents.size());
+    unsigned total_size = sents.size();
+    unsigned block_size = std::max(1, (int)(total_size / 10));
+    unsigned nprocessed = 0;
+    std::vector<std::vector<ScoredNode>> res(total_size);
 #pragma omp parallel for schedule(dynamic, 1)
     for (unsigned i = 0; i < sents.size(); i++) {
         res[i] = ParseSentence(i,
@@ -341,7 +342,10 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
                     apply_binary_rules,
                     apply_unary_rules,
                     max_length);
+        if ( ( nprocessed++ % block_size ) == block_size - 1 )
+            std::cerr << nprocessed << ".. " << std::flush;
     }
+    std::cerr << std::endl;
     return res;
 }
 
