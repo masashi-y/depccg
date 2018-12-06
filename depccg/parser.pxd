@@ -3,8 +3,9 @@ from libcpp.string cimport string
 from libcpp.unordered_set cimport unordered_set
 from libcpp.unordered_map cimport unordered_map
 from libcpp cimport bool
+# from libcpp.functional cimport function
 from .cat cimport Category, Cat, CatPair
-from .tree cimport Tree, ScoredNode
+from .tree cimport Tree, ScoredNode, NodeType
 from .combinator cimport Op
 
 
@@ -13,20 +14,32 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
 
     cdef cppclass AgendaItem
 
-    ctypedef vector[RuleCache]& (*ApplyBinaryRules)(
-            unordered_map[CatPair, vector[RuleCache]]&,
-            const vector[Op]&, const unordered_set[CatPair]&, Cat, Cat)
+    cdef cppclass PartialConstraints:
+        PartialConstraints()
+        PartialConstraints(const unordered_map[Cat, vector[Cat]]& unary_rules)
+        void Add(Cat, unsigned, unsigned)
+
+    ctypedef vector[NodeType] (*ApplyBinaryRules)(
+            const unordered_set[CatPair]&, NodeType, NodeType, unsigned, unsigned)
 
     ctypedef vector[Cat] (*ApplyUnaryRules)(
             const unordered_map[Cat, vector[Cat]]&, NodeType)
+
+    # ctypedef function[vector[NodeType](
+    #     const unordered_set[CatPair]&, NodeType, NodeType, unsigned, unsigned)] ApplyBinaryRules
+
+    # ctypedef function[vector[Cat](
+    #     const unordered_map[Cat, vector[Cat]]&, NodeType)] ApplyUnaryRules
 
     ApplyUnaryRules EnApplyUnaryRules
 
     ApplyUnaryRules JaApplyUnaryRules
 
-    ApplyBinaryRules EnGetRules
+    ApplyBinaryRules EnApplyBinaryRules
 
-    ApplyBinaryRules JaGetRules
+    ApplyBinaryRules JaApplyBinaryRules
+
+    ApplyBinaryRules MakeConstrainedBinaryRules(const PartialConstraints& constraints)
 
     vector[ScoredNode] ParseSentence(
             unsigned id,
@@ -41,8 +54,6 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             unsigned nbest,
             const unordered_set[Cat]& possible_root_cats,
             const unordered_map[Cat, vector[Cat]]& unary_rules,
-            const vector[Op]& binary_rules,
-            unordered_map[CatPair, vector[RuleCache]]& cache,
             const unordered_set[CatPair]& seen_rules,
             ApplyBinaryRules apply_binary_rules,
             ApplyUnaryRules apply_unary_rules,
@@ -60,8 +71,6 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             unsigned nbest,
             const unordered_set[Cat]& possible_root_cats,
             const unordered_map[Cat, vector[Cat]]& unary_rules,
-            const vector[Op]& binary_rules,
-            unordered_map[CatPair, vector[RuleCache]]& cache,
             const unordered_set[CatPair]& seen_rules,
             ApplyBinaryRules apply_binary_rules,
             ApplyUnaryRules apply_unary_rules,

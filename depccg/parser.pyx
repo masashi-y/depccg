@@ -12,7 +12,8 @@ import os
 import json
 import chainer
 import logging
-
+from cython.parallel cimport prange
+from libc.stdio cimport fprintf, stderr
 from .combinator cimport en_headfirst_binary_rules, ja_headfinal_binary_rules
 from .utils cimport *
 from .utils import maybe_split_and_join, denormalize
@@ -20,6 +21,16 @@ from .cat cimport Category
 
 
 logger = logging.getLogger(__name__)
+
+
+cdef PartialConstraints convert_partial_constraints(
+        list py_constraints, const unordered_map[Cat, vector[Cat]]& unary_rules):
+    cdef PartialConstraints c_constraints = PartialConstraints(unary_rules)
+    cdef Category cat
+    cdef int start_of_span, span_length
+    for cat, start_of_span, span_length in py_constraints:
+        c_constraints.Add(cat.cat_, start_of_span, span_length)
+    return c_constraints
 
 
 cdef class EnglishCCGParser:
@@ -32,8 +43,6 @@ cdef class EnglishCCGParser:
     cdef unsigned nbest_
     cdef unordered_set[Cat] possible_root_cats_
     cdef unordered_map[Cat, vector[Cat]] unary_rules_
-    cdef vector[Op] binary_rules_
-    cdef unordered_map[CatPair, vector[RuleCache]] cache_
     cdef unordered_set[CatPair] seen_rules_
     cdef ApplyBinaryRules apply_binary_rules_
     cdef ApplyUnaryRules apply_unary_rules_
@@ -76,9 +85,8 @@ cdef class EnglishCCGParser:
         self.nbest_ = nbest
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
         self.unary_rules_ = convert_unary_rules(unary_rules)
-        self.binary_rules_ = en_headfirst_binary_rules
         self.seen_rules_ = convert_seen_rules(seen_rules)
-        self.apply_binary_rules_ = EnGetRules
+        self.apply_binary_rules_ = EnApplyBinaryRules
         self.apply_unary_rules_ = EnApplyUnaryRules
         self.max_length_ = max_length
         self.loglevel = loglevel
@@ -126,7 +134,7 @@ cdef class EnglishCCGParser:
     def from_gzip(cls, filename):
         tf = tarfile.open(filename, 'r')
 
-    def parse_doc(self, sents, probs=None, batchsize=16):
+    def parse_doc(self, sents, probs=None, tag_list=None, constraints=None, batchsize=16):
         splitted, sents = zip(*map(maybe_split_and_join, sents))
         sents = [sent.encode('utf-8') for sent in sents]
         logger.info('start tagging sentences')
@@ -134,7 +142,10 @@ cdef class EnglishCCGParser:
             assert self.tagger is not None, 'default supertagger is not loaded.'
             probs = self.tagger.predict_doc(splitted, batchsize=batchsize)
         logger.info('done tagging sentences')
-        res = self._parse_doc_tag_and_dep(list(sents), list(probs))
+        res = self._parse_doc_tag_and_dep(list(sents),
+                                          list(probs),
+                                          tag_list=tag_list,
+                                          constraints=constraints)
         return res
 
     def parse_json(self, json_input):
@@ -143,6 +154,7 @@ cdef class EnglishCCGParser:
         categories = None
         sents = []
         probs = []
+        constraints = []
         for json_dict in json_input:
             if categories is None:
                 categories = [Category.parse(cat) for cat in json_dict['categories']]
@@ -150,12 +162,23 @@ cdef class EnglishCCGParser:
             sent = ' '.join(denormalize(word) for word in json_dict['words'].split(' ')).encode('utf-8')
             dep = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
             tag = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
+            constraints.append(json_dict.get('constraints', []))
             sents.append(sent)
             probs.append((tag, dep))
-        res = self._parse_doc_tag_and_dep(sents, probs, tag_list=categories)
+
+        if all(len(constraint) == 0 for constraint in constraints):
+            constraints = None
+        res = self._parse_doc_tag_and_dep(sents,
+                                          probs,
+                                          tag_list=categories,
+                                          constraints=constraints)
         return res
 
-    cdef list _parse_doc_tag_and_dep(self, list sents, list probs, tag_list=None):
+    cdef list _parse_doc_tag_and_dep(self,
+                                     list sents,
+                                     list probs,
+                                     tag_list=None,
+                                     constraints=None):
         cdef int doc_size = len(sents), i, j
         cdef np.ndarray[float, ndim=2, mode='c'] cat_scores, dep_scores
         cdef vector[string] csents = sents
@@ -164,50 +187,66 @@ cdef class EnglishCCGParser:
 
         cdef vector[Cat] c_tag_list = cat_list_to_vector(tag_list) if tag_list else self.tag_list_
 
+        cdef vector[ApplyBinaryRules] binary_rules
+        cdef ApplyBinaryRules constrained_binary_rules
+
+        if constraints is not None:
+            assert len(constraints) == doc_size
+            for constraint in constraints:
+                logger.info('loading partial constraints')
+                constrained_binary_rule = MakeConstrainedBinaryRules(
+                    convert_partial_constraints(constraint, self.unary_rules_))
+                binary_rules.push_back(constrained_binary_rule)
+        else:
+            binary_rules = vector[ApplyBinaryRules](doc_size, self.apply_binary_rules_)
+
         for i, (cat_scores, dep_scores) in enumerate(probs):
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
 
+        cdef unsigned block_size = max(1, int(doc_size / 10))
+        cdef unsigned nproccessed = 0
         logger.info('start A* parsing')
-        cdef vector[vector[ScoredNode]] cres = ParseSentences(
-                    csents,
-                    tags,
-                    deps,
-                    self.category_dict_,
-                    c_tag_list,
-                    self.beta_,
-                    self.use_beta_,
-                    self.pruning_size_,
-                    self.nbest_,
-                    self.possible_root_cats_,
-                    self.unary_rules_,
-                    self.binary_rules_,
-                    self.cache_,
-                    self.seen_rules_,
-                    self.apply_binary_rules_,
-                    self.apply_unary_rules_,
-                    self.max_length_)
-        cdef int num_sents = len(sents)
-        # for i in prange(num_sents, nogil=True, schedule='dynamic'):
-        #     cres[i] = ParseSentence(
-        #                 i,
-        #                 csents[i],
-        #                 tags[i],
-        #                 deps[i],
-        #                 self.category_dict_,
-        #                 c_tag_list,
-        #                 self.beta_,
-        #                 self.use_beta_,
-        #                 self.pruning_size_,
-        #                 self.nbest_,
-        #                 self.possible_root_cats_,
-        #                 self.unary_rules_,
-        #                 self.binary_rules_,
-        #                 self.cache_,
-        #                 self.seen_rules_,
-        #                 self.apply_binary_rules_,
-        #                 self.apply_unary_rules_,
-        #                 self.max_length_)
+        cdef vector[vector[ScoredNode]] cres = vector[vector[ScoredNode]](doc_size)
+        #    ParseSentences(
+        #            csents,
+        #            tags,
+        #            deps,
+        #            self.category_dict_,
+        #            c_tag_list,
+        #            self.beta_,
+        #            self.use_beta_,
+        #            self.pruning_size_,
+        #            self.nbest_,
+        #            self.possible_root_cats_,
+        #            self.unary_rules_,
+        #            self.seen_rules_,
+        #            self.apply_binary_rules_,
+        #            self.apply_unary_rules_,
+        #            self.max_length_)
+        for i in prange(doc_size, nogil=True, schedule='dynamic'):
+            cres[i] = ParseSentence(
+                        i,
+                        csents[i],
+                        tags[i],
+                        deps[i],
+                        self.category_dict_,
+                        c_tag_list,
+                        self.beta_,
+                        self.use_beta_,
+                        self.pruning_size_,
+                        self.nbest_,
+                        self.possible_root_cats_,
+                        self.unary_rules_,
+                        self.seen_rules_,
+                        binary_rules[i],
+                        self.apply_unary_rules_,
+                        self.max_length_)
+            # nproccessed += 1
+            # if (nproccessed % block_size)  == block_size - 1:
+            #     fprintf(stderr, "%d.. ", nproccessed)
+        fprintf(stderr, "done.\n")
+
         logger.info('done A* parsing')
         cdef list tmp, res = []
         cdef Tree parse
@@ -265,9 +304,8 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.nbest_ = nbest
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
         self.unary_rules_ = convert_unary_rules(unary_rules)
-        self.binary_rules_ = ja_headfinal_binary_rules
         self.seen_rules_ = convert_seen_rules(seen_rules)
-        self.apply_binary_rules_ = JaGetRules
+        self.apply_binary_rules_ = JaApplyBinaryRules
         self.apply_unary_rules_ = JaApplyUnaryRules
         self.max_length_ = max_length
         self.loglevel = loglevel

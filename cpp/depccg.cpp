@@ -13,6 +13,7 @@
 #include "debug.h"
 #include "matrix.h"
 #include "chart.h"
+#include "grammar.h"
 
 namespace myccg {
 
@@ -37,9 +38,8 @@ std::vector<Cat> JaApplyUnaryRules(
 
 
 std::vector<RuleCache>& EnGetRules(
-        std::unordered_map<CatPair, std::vector<RuleCache>>& rule_cache,
-        const std::vector<Op>& binary_rules,
         const std::unordered_set<CatPair>& seen_rules, Cat left1, Cat right1) {
+    static auto rule_cache = std::unordered_map<CatPair, std::vector<RuleCache>>();
     Cat left = left1->StripFeat("[nb]");
     Cat right = right1->StripFeat("[nb]");
     auto key = std::make_pair(left, right);
@@ -52,7 +52,7 @@ std::vector<RuleCache>& EnGetRules(
                 std::make_pair(left1->StripFeat("[X]", "[nb]"),
                                right1->StripFeat("[X]", "[nb]"))) > 0;
         if (is_seen) {
-            for (auto rule: binary_rules) {
+            for (auto rule: En::headfirst_binary_rules) {
                 if (rule->CanApply(left, right)) {
                     tmp.emplace_back(rule->Apply(left, right),
                                 rule->HeadIsLeft(left, right), rule);
@@ -65,10 +65,38 @@ std::vector<RuleCache>& EnGetRules(
     }
 }
 
+std::vector<NodeType> EnApplyBinaryRules(
+        const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
+        unsigned start_of_span, unsigned span_length) {
+    std::vector <NodeType> results;
+    for (auto&& rule: EnGetRules(seen_rules, left->GetCategory(), right->GetCategory())) {
+            NodeType subtree = std::make_shared<const Tree>(
+                    rule.result, rule.left_is_head, left, right, rule.combinator);
+            results.push_back(subtree);
+    }
+    return results;
+}
+
+ApplyBinaryRules MakeConstrainedBinaryRules(const PartialConstraints& constraints) {
+    return [=] (const std::unordered_set<CatPair>& seen_rules,
+            NodeType left, NodeType right, unsigned start_of_span, unsigned span_length) {
+        std::vector <NodeType> results;
+        for (auto&& rule: EnGetRules(seen_rules, left->GetCategory(), right->GetCategory())) {
+                if (! constraints.Violates(rule.result, start_of_span, span_length)) {
+                    NodeType subtree = std::make_shared<const Tree>(
+                        rule.result, rule.left_is_head, left, right, rule.combinator);
+                    std::cerr << Derivation(subtree) << std::endl;
+                    results.push_back(subtree);
+                }
+        }
+        return results;
+    };
+}
+
 std::vector<RuleCache>& JaGetRules(
-        std::unordered_map<CatPair, std::vector<RuleCache>>& rule_cache,
-        const std::vector<Op>& binary_rules,
         const std::unordered_set<CatPair>& seen_rules, Cat left, Cat right) {
+    static auto rule_cache = std::unordered_map<CatPair, std::vector<RuleCache>>();
+
     auto key = std::make_pair(left, right);
     if (rule_cache.count(key) > 0) {
         return rule_cache[key];
@@ -77,7 +105,7 @@ std::vector<RuleCache>& JaGetRules(
         bool is_seen = seen_rules.size() == 0 ||
             seen_rules.count(std::make_pair(left, right)) > 0;
         if (is_seen) {
-            for (auto rule: binary_rules) {
+            for (auto rule: Ja::headfinal_binary_rules) {
                 if (rule->CanApply(left, right)) {
                     tmp.emplace_back(rule->Apply(left, right),
                                 rule->HeadIsLeft(left, right), rule);
@@ -88,6 +116,18 @@ std::vector<RuleCache>& JaGetRules(
         rule_cache.emplace(key, tmp);
         return rule_cache[key];
     }
+}
+
+std::vector<NodeType> JaApplyBinaryRules(
+        const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
+        unsigned start_of_span, unsigned span_length) {
+    std::vector <NodeType> results;
+    for (auto&& rule: JaGetRules(seen_rules, left->GetCategory(), right->GetCategory())) {
+            NodeType subtree = std::make_shared<const Tree>(
+                    rule.result, rule.left_is_head, left, right, rule.combinator);
+            results.push_back(subtree);
+    }
+    return results;
 }
 
 
@@ -101,11 +141,6 @@ std::vector<ScoredNode> Failed() {
     static ScoredNode failure_node = std::make_pair(
         std::make_shared<Leaf>("FAILED", CCategory::Parse("NP"), 0), 0);
     return std::vector<ScoredNode>({failure_node});
-}
-
-
-bool NormalComparator(const AgendaItem& left, const AgendaItem& right) {
-    return left.prob < right.prob;
 }
 
 
@@ -142,8 +177,6 @@ std::vector<ScoredNode> ParseSentence(
         unsigned nbest,
         const std::unordered_set<Cat>& possible_root_cats,
         const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
-        const std::vector<Op>& binary_rules,
-        std::unordered_map<CatPair, std::vector<RuleCache>>& cache,
         const std::unordered_set<CatPair>& seen_rules,
         ApplyBinaryRules apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
@@ -163,7 +196,10 @@ std::vector<ScoredNode> ParseSentence(
     Matrix<float> dep_in_probs(dep_scores, sent_size, sent_size + 1);
 
     std::priority_queue<AgendaItem, std::vector<AgendaItem>,
-                bool (*)(const AgendaItem&, const AgendaItem&)> agenda(NormalComparator);
+                bool (*)(const AgendaItem&, const AgendaItem&)> agenda(
+        [] (const AgendaItem& left, const AgendaItem& right) {
+                return left.prob < right.prob; });
+
     unsigned agenda_id = 0;
 
     std::vector<std::priority_queue<std::pair<float, Cat>,
@@ -243,15 +279,13 @@ std::vector<ScoredNode> ParseSentence(
                 for (auto&& pair: other->items) {
                     NodeType right = pair.second.first;
                     float prob = pair.second.second;
-                    int span_length = parse->GetLength() + right->GetLength();
+                    unsigned start_of_span = parse->GetStartOfSpan();
+                    unsigned span_length = parse->GetLength() + right->GetLength();
 
-                    for (auto&& rule: apply_binary_rules(
-                                cache, binary_rules, seen_rules,
-                                parse->GetCategory(), right->GetCategory())) {
-                        NodeType subtree = std::make_shared<const Tree>(
-                                rule.result, rule.left_is_head, parse, right, rule.combinator);
-                        NodeType head = rule.left_is_head ? parse : right;
-                        NodeType dep  = rule.left_is_head ? right : parse;
+                    for (auto subtree: apply_binary_rules(
+                                seen_rules, parse, right, start_of_span, span_length)) {
+                        NodeType head = subtree->HeadIsLeft() ? parse : right;
+                        NodeType dep  = subtree->HeadIsLeft() ? right : parse;
                         float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
                         float in_prob = item.in_prob + prob + dep_score;
                         float out_prob = tag_out_probs(item.start_of_span,
@@ -268,16 +302,13 @@ std::vector<ScoredNode> ParseSentence(
                 for (auto&& pair: other->items) {
                     NodeType left = pair.second.first;
                     float prob = pair.second.second;
-                    int span_length = parse->GetLength() + left->GetLength();
-                    int start_of_span = left->GetStartOfSpan();
+                    unsigned span_length = parse->GetLength() + left->GetLength();
+                    unsigned start_of_span = left->GetStartOfSpan();
 
-                    for (auto&& rule: apply_binary_rules(
-                                cache, binary_rules, seen_rules,
-                                left->GetCategory(), parse->GetCategory())) {
-                        NodeType subtree = std::make_shared<const Tree>(
-                                rule.result, rule.left_is_head, left, parse, rule.combinator);
-                        NodeType head  = rule.left_is_head ? left : parse;
-                        NodeType dep   = rule.left_is_head ? parse : left;
+                    for (auto subtree: apply_binary_rules(
+                                seen_rules, left, parse, start_of_span, span_length)) {
+                        NodeType head  = subtree->HeadIsLeft() ? left : parse;
+                        NodeType dep   = subtree->HeadIsLeft() ? parse : left;
                         float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
                         float in_prob = item.in_prob + prob + dep_score;
                         float out_prob = tag_out_probs(start_of_span,
@@ -312,8 +343,6 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         unsigned nbest,
         const std::unordered_set<Cat>& possible_root_cats,
         const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
-        const std::vector<Op>& binary_rules,
-        std::unordered_map<CatPair, std::vector<RuleCache>>& cache,
         const std::unordered_set<CatPair>& seen_rules,
         ApplyBinaryRules apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
@@ -336,8 +365,6 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
                     nbest,
                     possible_root_cats,
                     unary_rules,
-                    binary_rules,
-                    cache,
                     seen_rules,
                     apply_binary_rules,
                     apply_unary_rules,
