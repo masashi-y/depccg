@@ -173,6 +173,28 @@ cdef unordered_set[Cat] read_possible_root_categories(list cats):
     return res
 
 
+def read_partial_tree(string):
+    stack = []
+    spans = []
+    words = []
+    buf = reversed(string.split())
+    counter = 0
+    while buf:
+        item = buf.pop()
+        if item.startswith('<'):
+            cat = Category.parse(item[1:])
+            stack.append(cat)
+            stack.append(counter + 1)
+        elif item == '>':
+            start = stack.pop()
+            cat = stack.pop()
+            spans.append((cat, start, counter))
+        else:
+            items = item.split('|')
+            if len(items) == 1:
+
+
+
 def maybe_split_and_join(string):
     if isinstance(string, list):
         split = string
