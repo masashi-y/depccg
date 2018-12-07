@@ -177,22 +177,29 @@ def read_partial_tree(string):
     stack = []
     spans = []
     words = []
-    buf = reversed(string.split())
+    buf = list(reversed(string.split()))
     counter = 0
     while buf:
         item = buf.pop()
         if item.startswith('<'):
-            cat = Category.parse(item[1:])
+            cat = item[1:]
+            cat = None if cat == 'X' else Category.parse(cat)
             stack.append(cat)
-            stack.append(counter + 1)
+            stack.append(counter)
         elif item == '>':
             start = stack.pop()
             cat = stack.pop()
-            spans.append((cat, start, counter))
+            spans.append((cat, start, counter - start))
         else:
             items = item.split('|')
             if len(items) == 1:
-
+                words.append(items[0])
+            elif len(items) == 2:
+                words.append(items[1])
+                spans.append((items[0], counter))
+            counter += 1
+    assert len(stack) == 0, 'failed to parse partially annotated sentence.'
+    return words, spans
 
 
 def maybe_split_and_join(string):

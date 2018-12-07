@@ -79,11 +79,9 @@ public:
                 || (start_of_span == start_of_span0
                     && span_length == span_length0
                     && ! cat->Matches(cat0));
-                //     && unary_rules.count(cat0) == 0);
             std::cerr << (result ? "OK" : "no") << std::endl;
             return result;
         }
-        std::cerr << "aaaaaaaaaaaaaaaaaaaaaa" << std::endl;
         return SpanOverlap(start_of_span0, span_length0);
     }
 
@@ -104,6 +102,10 @@ public:
 
     void Add(Cat cat0, unsigned start_of_span0, unsigned span_length0) {
         constraints.emplace_back(cat0, start_of_span0, span_length0);
+    }
+
+    void Add(unsigned start_of_span0, unsigned span_length0) {
+        constraints.emplace_back(start_of_span0, span_length0);
     }
 
     bool Violates(Cat cat0, unsigned start_of_span0, unsigned span_length0) const {
