@@ -343,7 +343,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         const std::unordered_set<Cat>& possible_root_cats,
         const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
         const std::unordered_set<CatPair>& seen_rules,
-        ApplyBinaryRules apply_binary_rules,
+        const std::vector<ApplyBinaryRules>& apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
         unsigned max_length) {
     unsigned total_size = sents.size();
@@ -365,7 +365,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
                     possible_root_cats,
                     unary_rules,
                     seen_rules,
-                    apply_binary_rules,
+                    apply_binary_rules[i],
                     apply_unary_rules,
                     max_length);
         if ( ( nprocessed++ % block_size ) == block_size - 1 )

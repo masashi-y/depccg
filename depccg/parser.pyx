@@ -238,44 +238,43 @@ cdef class EnglishCCGParser:
         cdef unsigned block_size = max(1, int(doc_size / 10))
         cdef unsigned nproccessed = 0
         logger.info('start A* parsing')
-        cdef vector[vector[ScoredNode]] cres = vector[vector[ScoredNode]](doc_size)
-        #    ParseSentences(
-        #            csents,
-        #            tags,
-        #            deps,
-        #            self.category_dict_,
-        #            c_tag_list,
-        #            self.beta_,
-        #            self.use_beta_,
-        #            self.pruning_size_,
-        #            self.nbest_,
-        #            self.possible_root_cats_,
-        #            self.unary_rules_,
-        #            self.seen_rules_,
-        #            self.apply_binary_rules_,
-        #            self.apply_unary_rules_,
-        #            self.max_length_)
-        for i in prange(doc_size, nogil=True, schedule='dynamic'):
-            cres[i] = ParseSentence(
-                        i,
-                        csents[i],
-                        tags[i],
-                        deps[i],
-                        self.category_dict_,
-                        c_tag_list,
-                        self.beta_,
-                        self.use_beta_,
-                        self.pruning_size_,
-                        self.nbest_,
-                        self.possible_root_cats_,
-                        self.unary_rules_,
-                        self.seen_rules_,
-                        binary_rules[i],
-                        self.apply_unary_rules_,
-                        self.max_length_)
-            # nproccessed += 1
-            # if (nproccessed % block_size)  == block_size - 1:
-            #     fprintf(stderr, "%d.. ", nproccessed)
+        cdef vector[vector[ScoredNode]] cres = ParseSentences(
+                   csents,
+                   tags,
+                   deps,
+                   self.category_dict_,
+                   c_tag_list,
+                   self.beta_,
+                   self.use_beta_,
+                   self.pruning_size_,
+                   self.nbest_,
+                   self.possible_root_cats_,
+                   self.unary_rules_,
+                   self.seen_rules_,
+                   binary_rules,
+                   self.apply_unary_rules_,
+                   self.max_length_)
+        # for i in prange(doc_size, nogil=True, schedule='dynamic'):
+        #     cres[i] = ParseSentence(
+        #                 i,
+        #                 csents[i],
+        #                 tags[i],
+        #                 deps[i],
+        #                 self.category_dict_,
+        #                 c_tag_list,
+        #                 self.beta_,
+        #                 self.use_beta_,
+        #                 self.pruning_size_,
+        #                 self.nbest_,
+        #                 self.possible_root_cats_,
+        #                 self.unary_rules_,
+        #                 self.seen_rules_,
+        #                 binary_rules[i],
+        #                 self.apply_unary_rules_,
+        #                 self.max_length_)
+        #     # nproccessed += 1
+        #     # if (nproccessed % block_size)  == block_size - 1:
+        #     #     fprintf(stderr, "%d.. ", nproccessed)
         fprintf(stderr, "done.\n")
 
         logger.info('done A* parsing')

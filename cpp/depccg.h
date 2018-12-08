@@ -180,7 +180,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         const std::unordered_set<Cat>& possible_root_cats,
         const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
         const std::unordered_set<CatPair>& seen_rules,
-        ApplyBinaryRules apply_binary_rules,
+        const std::vector<ApplyBinaryRules>& apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
         unsigned max_length);
 

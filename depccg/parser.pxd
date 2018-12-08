@@ -73,7 +73,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             const unordered_set[Cat]& possible_root_cats,
             const unordered_map[Cat, vector[Cat]]& unary_rules,
             const unordered_set[CatPair]& seen_rules,
-            ApplyBinaryRules apply_binary_rules,
+            const vector[ApplyBinaryRules]& apply_binary_rules,
             ApplyUnaryRules apply_unary_rules,
             unsigned max_length)
 
