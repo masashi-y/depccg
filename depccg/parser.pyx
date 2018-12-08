@@ -14,7 +14,7 @@ import chainer
 import logging
 from cython.parallel cimport prange
 from libc.stdio cimport fprintf, stderr
-from .combinator cimport en_headfirst_binary_rules, ja_headfinal_binary_rules
+from .combinator cimport en_binary_rules, ja_binary_rules
 from .utils cimport *
 from .utils import maybe_split_and_join, denormalize
 from .cat cimport Category
@@ -57,6 +57,7 @@ cdef class EnglishCCGParser:
     cdef float beta_
     cdef unsigned pruning_size_
     cdef unsigned nbest_
+    cdef vector[Op] binary_rules_
     cdef unordered_set[Cat] possible_root_cats_
     cdef unordered_map[Cat, vector[Cat]] unary_rules_
     cdef unordered_set[CatPair] seen_rules_
@@ -104,10 +105,11 @@ cdef class EnglishCCGParser:
         self.use_seen_rules = use_seen_rules
         self.pruning_size_ = pruning_size
         self.nbest_ = nbest
+        self.binary_rules_ = en_binary_rules
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
         self.unary_rules_ = convert_unary_rules(unary_rules)
         self.seen_rules_ = convert_seen_rules(seen_rules)
-        self.apply_binary_rules_ = EnApplyBinaryRules
+        self.apply_binary_rules_ = MakeEnApplyBinaryRules(self.binary_rules_)
         self.apply_unary_rules_ = EnApplyUnaryRules
         self.max_length_ = max_length
         self.tagger = None
@@ -221,7 +223,7 @@ cdef class EnglishCCGParser:
                 terminal_constraints = [cx for cx in constraint if len(cx) == 2]
                 logging.debug(f'non-terminal constraints: {nonterminal_constraints}')
                 logging.debug(f'terminal constraints: {terminal_constraints}')
-                constrained_binary_rule = MakeConstrainedBinaryRules(
+                constrained_binary_rule = MakeConstrainedBinaryRules(self.binary_rules_,
                     build_nonterminal_constraints(nonterminal_constraints, self.unary_rules_))
                 binary_rules.push_back(constrained_binary_rule)
                 py_cat_scores = build_terminal_constraints(terminal_constraints, py_cat_scores, self.py_tag_list)
@@ -343,6 +345,7 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.use_seen_rules = use_seen_rules
         self.pruning_size_ = pruning_size
         self.nbest_ = nbest
+        self.binary_rules_ = ja_binary_rules
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
         self.unary_rules_ = convert_unary_rules(unary_rules)
         self.seen_rules_ = convert_seen_rules(seen_rules)

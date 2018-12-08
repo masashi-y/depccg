@@ -70,10 +70,8 @@ cpp_sources = ['depccg.cpp',
                'cacheable.cpp',
                'chart.cpp',
                'combinator.cpp',
-               'en_grammar.cpp',
                'feat.cpp',
                'tree.cpp',
-               'ja_grammar.cpp',
                'utils.cpp']
 
 pyx_modules = ['depccg.parser',

@@ -47,6 +47,9 @@ cdef extern from "tree.h" namespace "myccg" nogil:
         CoNLL(NodeType tree)
         string Get()
 
+    string EnResolveCombinatorName(const Node*)
+    string JaResolveCombinatorName(const Node*)
+
 cdef class Tree:
     cdef NodeType node_
     cdef public bint suppress_feat

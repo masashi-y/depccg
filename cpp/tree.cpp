@@ -2,7 +2,6 @@
 #include "tree.h"
 #include "cat.h"
 #include "utils.h"
-#include "grammar.h"
 #include <stack>
 #include <algorithm>
 #include <string>
@@ -455,6 +454,66 @@ int CoNLL::Visit(const Tree* tree) {
 int CoNLL::Visit(const Leaf* leaf) {
     leaves_[id_++] = leaf;
     return leaf->GetHeadId();
+}
+
+std::string EnResolveCombinatorName(const Node* parse) {
+    const Tree* tree;
+    if ( (tree = dynamic_cast<const Tree*>(parse)) == nullptr )
+        throw std::runtime_error("This node is leaf and does not have combinator!");
+    if (tree->IsUnary()) {
+        Cat init = tree->GetLeftChild()->GetCategory();
+        if ((init->Matches(CCategory::Parse("NP")) ||
+                init->Matches(CCategory::Parse("PP")))
+                && tree->GetCategory()->IsTypeRaised())
+            return "tr";
+        else
+            return "lex";
+    }
+    switch (tree->GetRule()->GetRuleType()) {
+        case FA: return "fa";
+        case BA: return "ba";
+        case FC: return "fc";
+        case BC: return "bx";
+        case GFC: return "gfc";
+        case GBC: return "gbx";
+        case FX: return "fx";
+        case BX: return "bx";
+        case CONJ: return "conj";
+        case CONJ2: return "conj";
+        case COORD: return "ba";
+        case RP: return "rp";
+        case LP: return "lp";
+        case NOISE: return "lp";
+        default:
+            return "other";
+    }
+}
+
+
+std::string JaResolveCombinatorName(const Node* parse) {
+   const Tree* tree;
+   if ( (tree = dynamic_cast<const Tree*>(parse)) == nullptr )
+       throw std::runtime_error("This node is leaf and does not have combinator!");
+    Cat child;
+    Feat ch_feat;
+    if ( tree->IsUnary() ) {
+        child = tree->GetLeftChild()->GetCategory();
+        ch_feat = child->Arg(0)->GetFeat();
+        if ( ch_feat->ContainsKeyValue("mod", "adn") ) {
+            if ( child->StripFeat()->ToStr() == "S" ) {
+                return "ADNext";
+            } else {
+                return "ADNint";
+            }
+        } else if ( ch_feat->ContainsKeyValue("mod", "adv") ) {
+            if ( tree->GetCategory()->StripFeat()->ToStr() == "(S\\NP)/(S\\NP)" ) {
+                return "ADV1";
+            } else {
+                return "ADV0";
+            }
+        }
+    }
+    return tree->GetRule()->ToStr();
 }
 
 } // namespace myccg

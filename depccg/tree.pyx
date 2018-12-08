@@ -5,23 +5,13 @@ from libcpp.memory cimport shared_ptr
 from .cat cimport Cat, Category
 
 
-cdef extern from "grammar.h" namespace "myccg" nogil:
-    cdef cppclass En:
-        @staticmethod
-        string ResolveCombinatorName(const Node*)
-
-    cdef cppclass Ja:
-        @staticmethod
-        string ResolveCombinatorName(const Node*)
-
-
 ## TODO: ugly code
 cdef ResolveCombinatorName(const Node* tree, bytes lang):
     cdef string res;
     if lang == b"en":
-        res = En.ResolveCombinatorName(tree)
+        res = EnResolveCombinatorName(tree)
     elif lang == b"ja":
-        res = Ja.ResolveCombinatorName(tree)
+        res = JaResolveCombinatorName(tree)
     else:
         res = b"error: " + lang
     return res.decode("utf-8")

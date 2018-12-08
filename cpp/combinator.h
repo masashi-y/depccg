@@ -368,7 +368,159 @@ private:
     Slash result_;
 };
 
+template <typename T>
+class SimpleHeadCombinator: public Combinator
+{
+public:
+    SimpleHeadCombinator(T comb, bool head_is_left)
+    : Combinator(comb.GetRuleType()),
+      comb_(comb), head_is_left_(head_is_left) {};
+
+    bool CanApply(Cat left, Cat right) const {
+        return comb_.CanApply(left, right); }
+
+    Cat Apply(Cat left, Cat right) const {
+        return comb_.Apply(left, right); }
+
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return head_is_left_; }
+
+    const std::string ToStr() const {
+        return comb_.ToStr(); }
+
+private:
+    T comb_;
+    bool head_is_left_;
+};
+
+template <typename T>
+class HeadFirstCombinator: public SimpleHeadCombinator<T>
+{
+public:
+    HeadFirstCombinator(T comb): SimpleHeadCombinator<T>(comb, true) {};
+};
+
+template <typename T>
+class HeadFinalCombinator: public SimpleHeadCombinator<T>
+{
+public:
+    HeadFinalCombinator(T comb): SimpleHeadCombinator<T>(comb, false) {};
+};
+
+template <typename T>
+HeadFirstCombinator<T>* HeadFirst(T comb) { return new HeadFirstCombinator<T>(comb); }
+
+template <typename T>
+HeadFinalCombinator<T>* HeadFinal(T comb) { return new HeadFinalCombinator<T>(comb); }
+
+
+class ENBackwardApplication: public BackwardApplication
+{
+public:
+    ENBackwardApplication(): BackwardApplication() {}
+
+    bool CanApply(Cat left, Cat right) const {
+        if (*right == *CCategory::Parse("S[em]\\S[em]") &&
+                *left == *CCategory::Parse("S[dcl]"))
+            return true;
+        return (right->IsFunctor() &&
+                right->GetSlash().IsBackward() &&
+                right->GetRight()->Matches(left));
+    }
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return (right->IsModifier() || right->IsTypeRaised()) &&
+            !(*right == *CCategory::Parse("S[dcl]\\S[dcl]"));
+    }
+};
+
+class ENForwardApplication: public ForwardApplication
+{
+public:
+    ENForwardApplication(): ForwardApplication() {}
+
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return !(left->IsModifier() ||
+                left->IsTypeRaised() ||
+                *left == *CCategory::Parse("NP[nb]/N") ||
+                *left == *CCategory::Parse("NP/N"));}
+
+};
+
+
+class Conjoin: public Combinator
+{
+public:
+    Conjoin(): Combinator(SSEQ) {}
+    bool CanApply(Cat left, Cat right) const {
+        return (ja_possible_root_cats.count(left) > 0 &&
+                *left == *right &&
+                !left->IsFunctor());
+    }
+    Cat Apply(Cat left, Cat right) const { return right; }
+    bool HeadIsLeft(Cat left, Cat right) const { return false; }
+    const std::string ToStr() const { return "SSEQ"; };
+
+private:
+    static const std::unordered_set<Cat> ja_possible_root_cats;
+};
+
+class JAForwardApplication: public ForwardApplication
+{
+public:
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return !(left->IsModifier() || left->IsTypeRaised());
+    }
+};
+
+class JABackwardApplication: public BackwardApplication
+{
+public:
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return right->IsModifier() || right->IsTypeRaised();
+    }
+};
+
+template<int Order, RuleType Rule=FC>
+class JAGeneralizedForwardComposition
+    : public GeneralizedForwardComposition<Order, Rule>
+{
+public:
+    JAGeneralizedForwardComposition(
+            const Slash& left, const Slash& right,
+            const Slash& result, const std::string& string)
+        : GeneralizedForwardComposition<Order, Rule>(left, right, result),
+          string_(string) {}
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return ! (left->IsModifier() || left->IsTypeRaised());
+    }
+
+    const std::string ToStr() const { return string_; }
+    std::string string_;
+};
+
+template<int Order, RuleType Rule=BC>
+class JAGeneralizedBackwardComposition
+    : public GeneralizedBackwardComposition<Order, Rule>
+{
+public:
+    JAGeneralizedBackwardComposition(
+            const Slash& left, const Slash& right,
+            const Slash& result, const std::string& string)
+        : GeneralizedBackwardComposition<Order, Rule>(left, right, result),
+          string_(string) {}
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return right->IsModifier() || right->IsTypeRaised();
+    }
+
+    const std::string ToStr() const { return string_; }
+    std::string string_;
+};
+
+
 extern Combinator* unary_rule;
+
+extern const std::vector<Op> en_binary_rules;
+extern const std::vector<Op> ja_binary_rules;
 
 } // namespace myccg
 

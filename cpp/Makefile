@@ -1,4 +1,4 @@
-SRCS=utils.cpp cat.cpp tree.cpp combinator.cpp ja_grammar.cpp en_grammar.cpp feat.cpp depccg.cpp chart.cpp cacheable.cpp
+SRCS=utils.cpp cat.cpp tree.cpp combinator.cpp feat.cpp depccg.cpp chart.cpp cacheable.cpp
 OBJS=$(SRCS:.cpp=.o)
 DEPS=$(SRCS:.cpp=.d)
 CFLAGS=-std=c++11 -g -fpic $(OPTIONS) -Wall -march=native -O3

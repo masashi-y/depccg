@@ -26,12 +26,6 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
     ctypedef vector[Cat] (*ApplyUnaryRules)(
             const unordered_map[Cat, vector[Cat]]&, NodeType)
 
-    # ctypedef function[vector[NodeType](
-    #     const unordered_set[CatPair]&, NodeType, NodeType, unsigned, unsigned)] ApplyBinaryRules
-
-    # ctypedef function[vector[Cat](
-    #     const unordered_map[Cat, vector[Cat]]&, NodeType)] ApplyUnaryRules
-
     ApplyUnaryRules EnApplyUnaryRules
 
     ApplyUnaryRules JaApplyUnaryRules
@@ -40,7 +34,8 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
 
     ApplyBinaryRules JaApplyBinaryRules
 
-    ApplyBinaryRules MakeConstrainedBinaryRules(const PartialConstraints& constraints)
+    ApplyBinaryRules MakeEnApplyBinaryRules(const vector[Op]&)
+    ApplyBinaryRules MakeConstrainedBinaryRules(const vector[Op]&, const PartialConstraints&)
 
     vector[ScoredNode] ParseSentence(
             unsigned id,

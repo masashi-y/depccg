@@ -373,6 +373,9 @@ private:
     std::stringstream out_;
 };
 
+std::string EnResolveCombinatorName(const Node* parse);
+std::string JaResolveCombinatorName(const Node* parse);
+
 } // namespace myccg
 
 #endif

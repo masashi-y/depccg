@@ -5,6 +5,12 @@ from libcpp cimport bool
 cdef extern from "feat.h" namespace "myccg" nogil:
     ctypedef const Feature* Feat
     cdef cppclass Feature:
+        @staticmethod
+        Slash Fwd()
+
+        @staticmethod
+        Slash Bwd()
+
         string ToStr() const
         bint IsEmpty() const
         bint Matches(Feat other) const

@@ -13,7 +13,7 @@
 #include "debug.h"
 #include "matrix.h"
 #include "chart.h"
-#include "grammar.h"
+#include "combinator.h"
 
 namespace myccg {
 
@@ -38,6 +38,7 @@ std::vector<Cat> JaApplyUnaryRules(
 
 
 std::vector<RuleCache>& EnGetRules(
+        const std::vector<Op>& binary_rules,
         const std::unordered_set<CatPair>& seen_rules, Cat left1, Cat right1) {
     static auto rule_cache = std::unordered_map<CatPair, std::vector<RuleCache>>();
     Cat left = left1->StripFeat("[nb]");
@@ -52,7 +53,7 @@ std::vector<RuleCache>& EnGetRules(
                 std::make_pair(left1->StripFeat("[X]", "[nb]"),
                                right1->StripFeat("[X]", "[nb]"))) > 0;
         if (is_seen) {
-            for (auto rule: En::headfirst_binary_rules) {
+            for (auto rule: binary_rules) {
                 if (rule->CanApply(left, right)) {
                     tmp.emplace_back(rule->Apply(left, right),
                                 rule->HeadIsLeft(left, right), rule);
@@ -69,7 +70,7 @@ std::vector<NodeType> EnApplyBinaryRules(
         const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
         unsigned start_of_span, unsigned span_length) {
     std::vector <NodeType> results;
-    for (auto&& rule: EnGetRules(seen_rules, left->GetCategory(), right->GetCategory())) {
+    for (auto&& rule: EnGetRules(en_binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
             NodeType subtree = std::make_shared<const Tree>(
                     rule.result, rule.left_is_head, left, right, rule.combinator);
             results.push_back(subtree);
@@ -77,11 +78,25 @@ std::vector<NodeType> EnApplyBinaryRules(
     return results;
 }
 
-ApplyBinaryRules MakeConstrainedBinaryRules(const PartialConstraints& constraints) {
+ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules) {
+        return [&] (const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
+            unsigned start_of_span, unsigned span_length) {
+        std::vector <NodeType> results;
+        for (auto&& rule: EnGetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
+                NodeType subtree = std::make_shared<const Tree>(
+                        rule.result, rule.left_is_head, left, right, rule.combinator);
+                results.push_back(subtree);
+        }
+        return results;
+    };
+}
+
+ApplyBinaryRules MakeConstrainedBinaryRules(
+        const std::vector<Op>& binary_rules, const PartialConstraints& constraints) {
     return [=] (const std::unordered_set<CatPair>& seen_rules,
             NodeType left, NodeType right, unsigned start_of_span, unsigned span_length) {
         std::vector <NodeType> results;
-        for (auto&& rule: EnGetRules(seen_rules, left->GetCategory(), right->GetCategory())) {
+        for (auto&& rule: EnGetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
                 if (! constraints.Violates(rule.result, start_of_span, span_length)) {
                     NodeType subtree = std::make_shared<const Tree>(
                         rule.result, rule.left_is_head, left, right, rule.combinator);
@@ -104,7 +119,7 @@ std::vector<RuleCache>& JaGetRules(
         bool is_seen = seen_rules.size() == 0 ||
             seen_rules.count(std::make_pair(left, right)) > 0;
         if (is_seen) {
-            for (auto rule: Ja::headfinal_binary_rules) {
+            for (auto rule: ja_binary_rules) {
                 if (rule->CanApply(left, right)) {
                     tmp.emplace_back(rule->Apply(left, right),
                                 rule->HeadIsLeft(left, right), rule);

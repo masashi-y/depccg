@@ -147,7 +147,9 @@ std::vector<NodeType> JaApplyBinaryRules(
         const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
         unsigned start_of_span, unsigned span_length);
 
-ApplyBinaryRules MakeConstrainedBinaryRules(const PartialConstraints& constraints);
+ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules);
+ApplyBinaryRules MakeConstrainedBinaryRules(
+        const std::vector<Op>& binary_rules, const PartialConstraints& constraints);
 
 std::vector<ScoredNode> ParseSentence(
         unsigned id,
