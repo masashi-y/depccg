@@ -49,10 +49,12 @@ def build_terminal_constraints(list constraints, tag_probs, tag_list):
 cdef class EnglishCCGParser:
     cdef object py_category_dict
     cdef object py_tag_list
+    cdef object use_beta
+    cdef object use_category_dict
+    cdef object use_seen_rules
     cdef unordered_map[string, unordered_set[Cat]] category_dict_
     cdef vector[Cat] tag_list_
     cdef float beta_
-    cdef bint use_beta_
     cdef unsigned pruning_size_
     cdef unsigned nbest_
     cdef unordered_set[Cat] possible_root_cats_
@@ -61,7 +63,6 @@ cdef class EnglishCCGParser:
     cdef ApplyBinaryRules apply_binary_rules_
     cdef ApplyUnaryRules apply_unary_rules_
     cdef unsigned max_length_
-    cdef unsigned loglevel
     cdef object tagger
     cdef bytes lang
 
@@ -73,11 +74,12 @@ cdef class EnglishCCGParser:
                  seen_rules,
                  beta=0.00001,
                  use_beta=True,
+                 use_category_dict=True,
+                 use_seen_rules=True,
                  pruning_size=50,
                  nbest=1,
                  possible_root_cats=None,
-                 max_length=250,
-                 loglevel=3):
+                 max_length=250):
 
         if possible_root_cats is None:
             possible_root_cats = ['S[dcl]', 'S[wq]', 'S[q]', 'S[qem]', 'NP']
@@ -87,6 +89,8 @@ cdef class EnglishCCGParser:
         logger.info(f'beta value = {beta} (use beta = {use_beta})')
         logger.info(f'pruning size = {pruning_size}')
         logger.info(f'N best = {nbest}')
+        logger.info(f'use category dictionary = {use_category_dict}')
+        logger.info(f'use seen rules = {use_seen_rules}')
         logger.info(f'allow at the root of a tree only categories in {possible_root_cats}'),
         logger.info(f'give up sentences that contain > {max_length} words')
 
@@ -95,7 +99,9 @@ cdef class EnglishCCGParser:
         self.category_dict_ = convert_cat_dict(category_dict)
         self.tag_list_ = cat_list_to_vector(tag_list)
         self.beta_ = beta
-        self.use_beta_ = use_beta
+        self.use_beta = use_beta
+        self.use_category_dict = use_category_dict
+        self.use_seen_rules = use_seen_rules
         self.pruning_size_ = pruning_size
         self.nbest_ = nbest
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
@@ -104,7 +110,6 @@ cdef class EnglishCCGParser:
         self.apply_binary_rules_ = EnApplyBinaryRules
         self.apply_unary_rules_ = EnApplyUnaryRules
         self.max_length_ = max_length
-        self.loglevel = loglevel
         self.tagger = None
         self.lang = b'en'
 
@@ -200,6 +205,10 @@ cdef class EnglishCCGParser:
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
 
         cdef vector[Cat] c_tag_list = cat_list_to_vector(tag_list) if tag_list else self.tag_list_
+        cdef unordered_map[string, unordered_set[Cat]] category_dict = \
+            self.category_dict_ if self.use_category_dict else unordered_map[string, unordered_set[Cat]]()
+        cdef unordered_set[CatPair] seen_rules = \
+            self.seen_rules_ if self.use_seen_rules else unordered_set[CatPair]()
 
         cdef vector[ApplyBinaryRules] binary_rules
         cdef ApplyBinaryRules constrained_binary_rules
@@ -211,6 +220,8 @@ cdef class EnglishCCGParser:
             for constraint, (py_cat_scores, py_dep_scores) in zip(constraints, probs):
                 nonterminal_constraints = [cx for cx in constraint if len(cx) == 3]
                 terminal_constraints = [cx for cx in constraint if len(cx) == 2]
+                logging.debug(f'non-terminal constraints: {nonterminal_constraints}')
+                logging.debug(f'terminal constraints: {terminal_constraints}')
                 constrained_binary_rule = MakeConstrainedBinaryRules(
                     build_nonterminal_constraints(nonterminal_constraints, self.unary_rules_))
                 binary_rules.push_back(constrained_binary_rule)
@@ -235,22 +246,20 @@ cdef class EnglishCCGParser:
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
 
-        cdef unsigned block_size = max(1, int(doc_size / 10))
-        cdef unsigned nproccessed = 0
         logger.info('start A* parsing')
         cdef vector[vector[ScoredNode]] cres = ParseSentences(
                    csents,
                    tags,
                    deps,
-                   self.category_dict_,
+                   category_dict,
                    c_tag_list,
                    self.beta_,
-                   self.use_beta_,
+                   self.use_beta,
                    self.pruning_size_,
                    self.nbest_,
                    self.possible_root_cats_,
                    self.unary_rules_,
-                   self.seen_rules_,
+                   seen_rules,
                    binary_rules,
                    self.apply_unary_rules_,
                    self.max_length_)
@@ -263,7 +272,7 @@ cdef class EnglishCCGParser:
         #                 self.category_dict_,
         #                 c_tag_list,
         #                 self.beta_,
-        #                 self.use_beta_,
+        #                 self.use_beta,
         #                 self.pruning_size_,
         #                 self.nbest_,
         #                 self.possible_root_cats_,
@@ -298,11 +307,12 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
                  seen_rules,
                  beta=0.00001,
                  use_beta=True,
+                 use_category_dict=True,
+                 use_seen_rules=True,
                  pruning_size=50,
                  nbest=1,
                  possible_root_cats=None,
-                 max_length=250,
-                 loglevel=3):
+                 max_length=250):
 
         if possible_root_cats is None:
             possible_root_cats = [
@@ -329,7 +339,9 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.category_dict_ = convert_cat_dict(category_dict)
         self.tag_list_ = cat_list_to_vector(tag_list)
         self.beta_ = beta
-        self.use_beta_ = use_beta
+        self.use_beta = use_beta
+        self.use_category_dict = use_category_dict
+        self.use_seen_rules = use_seen_rules
         self.pruning_size_ = pruning_size
         self.nbest_ = nbest
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
@@ -338,6 +350,5 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.apply_binary_rules_ = JaApplyBinaryRules
         self.apply_unary_rules_ = JaApplyUnaryRules
         self.max_length_ = max_length
-        self.loglevel = loglevel
         self.tagger = None
         self.lang = b'ja'

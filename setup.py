@@ -27,7 +27,7 @@ def chdir(new_dir):
         os.chdir(old_dir)
 
 
-COMPILE_OPTIONS = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
+COMPILE_OPTIONS = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function', '-std=c++11']
 
 LINK_OPTIONS = []
 

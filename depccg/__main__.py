@@ -9,13 +9,13 @@ from .printer import to_mathml, to_prolog, to_xml, Token
 from .download import download, load_model_directory
 from .utils import read_partial_tree
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                    level=logging.DEBUG)
-
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
 
 def main(args):
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+                        level=logging.DEBUG if args.verbose else logging.INFO)
+
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
 
@@ -25,7 +25,11 @@ def main(args):
                                          load_tagger=load_tagger,
                                          nbest=args.nbest,
                                          possible_root_cats=args.root_cats,
-                                         loglevel=1 if args.verbose else 3)
+                                         pruning_size=args.pruning_size,
+                                         beta=args.beta,
+                                         use_beta=not args.disable_beta,
+                                         use_seen_rules=not args.disable_seen_rules,
+                                         use_category_dict=not args.disable_category_dictionary)
 
     fin = sys.stdin if args.input is None else open(args.input)
 
@@ -93,6 +97,23 @@ if __name__ == '__main__':
     parser.add_argument('--root-cats',
                         default=None,
                         help='allow only these categories to be at the root of a tree. If None, use default setting.')
+    parser.add_argument('--beta',
+                        default=0.00001,
+                        type=float,
+                        help='parameter used to filter categories with lower probabilities')
+    parser.add_argument('--pruning-size',
+                        default=50,
+                        type=int,
+                        help='use only the most probable supertags per word')
+    parser.add_argument('--disable-beta',
+                        action='store_true',
+                        help='disable the use of the beta value')
+    parser.add_argument('--disable-category-dictionary',
+                        action='store_true',
+                        help='disable a category dictionary that maps words to most likely supertags')
+    parser.add_argument('--disable-seen-rules',
+                        action='store_true',
+                        help='')
     parser.add_argument('--verbose',
                         action='store_true')
     parser.set_defaults(func=main)
