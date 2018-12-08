@@ -150,10 +150,6 @@ cdef class EnglishCCGParser:
             parser.load_default_tagger(tagger_model_dir)
         return parser
 
-    @classmethod
-    def from_gzip(cls, filename):
-        tf = tarfile.open(filename, 'r')
-
     def parse_doc(self, sents, probs=None, tag_list=None, constraints=None, batchsize=16):
         splitted, sents = zip(*map(maybe_split_and_join, sents))
         logger.info('start tagging sentences')
@@ -187,6 +183,9 @@ cdef class EnglishCCGParser:
 
         if all(len(constraint) == 0 for constraint in constraints):
             constraints = None
+        else:
+            constraints = [[(Category.parse(cat), i, j) for cat, i, j in cxs]
+                           for cxs in constraints]
         res = self._parse_doc_tag_and_dep(sents,
                                           probs,
                                           tag_list=categories,
