@@ -7,6 +7,7 @@ import json
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, Token
 from .download import download, load_model_directory
+from .utils import read_partial_tree
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                     level=logging.DEBUG)
@@ -15,37 +16,36 @@ Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
 
 def main(args):
-    fin = sys.stdin if args.input is None else open(args.input)
-
-    if args.input_format == 'POSandNERtagged':
-        tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
-        doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
-    elif args.input_format == 'json':
-        doc = [json.loads(line) for line in fin]
-        tagged_doc = None
-    else:
-        assert args.format not in ['xml', 'prolog'], \
-            'XML and Prolog output format is supported only with --input-format POSandNERtagged.'
-        doc = [l.strip() for l in fin]
-        tagged_doc = None
-
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
 
     load_tagger = args.input_format != 'json'
-
     model = args.model or load_model_directory(args.lang)
-
     parser = Parsers[args.lang].from_dir(model,
                                          load_tagger=load_tagger,
                                          nbest=args.nbest,
                                          possible_root_cats=args.root_cats,
                                          loglevel=1 if args.verbose else 3)
 
-    if args.input_format == 'json':
-        res = parser.parse_json(doc)
-    else:
+    fin = sys.stdin if args.input is None else open(args.input)
+
+    tagged_doc = None
+    if args.input_format == 'POSandNERtagged':
+        tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
+        doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
         res = parser.parse_doc(doc, batchsize=args.batchsize)
+    elif args.input_format == 'json':
+        res = parser.parse_json([json.loads(line) for line in fin])
+    elif args.input_format == 'partial':
+        doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
+        res = parser.parse_doc(doc,
+                               batchsize=args.batchsize,
+                               constraints=constraints)
+    else:
+        assert args.format not in ['xml', 'prolog'], \
+            'XML and Prolog output format is supported only with --input-format POSandNERtagged.'
+        res = parser.parse_doc([l.strip() for l in fin],
+                               batchsize=args.batchsize)
 
     if args.format == 'xml':
         print(to_xml(res, tagged_doc))
@@ -84,7 +84,7 @@ if __name__ == '__main__':
                         help='output N best parses')
     parser.add_argument('-I', '--input-format',
                         default='raw',
-                        choices=['raw', 'POSandNERtagged', 'json'],
+                        choices=['raw', 'POSandNERtagged', 'json', 'partial'],
                         help='input format')
     parser.add_argument('-f', '--format',
                         default='auto',

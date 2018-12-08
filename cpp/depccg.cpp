@@ -85,7 +85,6 @@ ApplyBinaryRules MakeConstrainedBinaryRules(const PartialConstraints& constraint
                 if (! constraints.Violates(rule.result, start_of_span, span_length)) {
                     NodeType subtree = std::make_shared<const Tree>(
                         rule.result, rule.left_is_head, left, right, rule.combinator);
-                    std::cerr << Derivation(subtree) << std::endl;
                     results.push_back(subtree);
                 }
         }

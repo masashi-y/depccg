@@ -1,5 +1,6 @@
 from libcpp.string cimport string
 from libcpp.pair cimport pair
+from cython.operator cimport dereference as deref
 
 
 cdef class Category:
@@ -25,6 +26,18 @@ cdef class Category:
         c = Category()
         c.cat_ = cat
         return c
+
+    cdef bool equals_to(self, Category other):
+        return deref(self.cat_) == deref(other.cat_)
+
+    def __eq__(self, other):
+       if isinstance(other, Category):
+           return self.equals_to(other)
+       else:
+           return False
+
+    def __hash__(self):
+        return self.cat_.GetId()
 
     property multi_valued:
         def __get__(self):

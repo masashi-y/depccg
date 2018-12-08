@@ -195,8 +195,9 @@ def read_partial_tree(string):
             if len(items) == 1:
                 words.append(items[0])
             elif len(items) == 2:
-                words.append(items[1])
-                spans.append((items[0], counter))
+                cat, word = items
+                words.append(word)
+                spans.append((Category.parse(cat), counter))
             counter += 1
     assert len(stack) == 0, 'failed to parse partially annotated sentence.'
     return words, spans
@@ -205,7 +206,7 @@ def read_partial_tree(string):
 def maybe_split_and_join(string):
     if isinstance(string, list):
         split = string
-        join = string.split(' ')
+        join = ' '.join(string)
     else:
         assert isinstance(string, str)
         split = string.split(' ')

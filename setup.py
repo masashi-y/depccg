@@ -27,71 +27,24 @@ def chdir(new_dir):
         os.chdir(old_dir)
 
 
-def check_for_openmp():
-    """Check  whether the default compiler supports OpenMP.
-    This routine is adapted from yt, thanks to Nathan
-    Goldbaum. See https://github.com/pynbody/pynbody/issues/124"""
-    # Create a temporary directory
-    tmpdir = tempfile.mkdtemp()
-    curdir = os.getcwd()
-    os.chdir(tmpdir)
+COMPILE_OPTIONS = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
 
-    # Get compiler invocation
-    compiler = os.environ.get('CC', distutils.sysconfig.get_config_var('CC'))
+LINK_OPTIONS = []
 
-    # make sure to use just the compiler name without flags
-    compiler = compiler.split()[0]
+CPP_OPTIONS = []
 
-    # Attempt to compile a test script.
-    # See http://openmp.org/wp/openmp-compilers/
-    filename = 'test.c'
-    with open(filename, 'w') as f:
-        f.write("""
-#include <omp.h>
-#include <stdio.h>
-int main() {
-#pragma omp parallel
-    printf(\"Hello from thread %d, nthreads %d\\n\", omp_get_thread_num(), omp_get_num_threads());
-}""")
+USE_OPENMP_DEFAULT = '0' if sys.platform != 'darwin' else None
+if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
+    COMPILE_OPTIONS.append('-fopenmp')
+    LINK_OPTIONS.append('-fopenmp')
+    CPP_OPTIONS.append('-fopenmp')
 
-    try:
-        with open(os.devnull, 'w') as fnull:
-            exit_code = subprocess.call([compiler, '-fopenmp', filename],
-                                        stdout=fnull, stderr=fnull)
-    except OSError:
-        exit_code = 1
-
-    # Clean up
-    os.chdir(curdir)
-    shutil.rmtree(tmpdir)
-
-    if exit_code == 0:
-        return True
-    else:
-        import multiprocessing
-        cpus = multiprocessing.cpu_count()
-        if cpus > 1:
-            print("""WARNING
-OpenMP support is not available in your default C compiler, even though
-your machine has more than one core available.
-Some routines in pynbody are parallelized using OpenMP and these will
-only run on one core with your current configuration.
-""")
-            if platform.uname()[0] == 'Darwin':
-                print("""Since you are running on Mac OS, it's likely that the problem here
-is Apple's Clang, which does not support OpenMP at all. The easiest
-way to get around this is to download the latest version of gcc from
-here: http://hpc.sourceforge.net. After downloading, just point the
-CC environment variable to the real gcc and OpenMP support should
-get enabled automatically. Something like this -
-sudo tar -xzf /path/to/download.tar.gz /
-export CC='/usr/local/bin/gcc'
-python setup.py clean
-python setup.py build
-""")
-            print("""Continuing your build without OpenMP...\n""")
-
-        return False
+if sys.platform == 'darwin':
+    COMPILE_OPTIONS.append('-stdlib=libc++')
+    LINK_OPTIONS.append('-lc++')
+    # g++ (used by unix compiler on mac) links to libstdc++ as a default lib.
+    # See: https://stackoverflow.com/questions/1653047/avoid-linking-to-libstdc
+    LINK_OPTIONS.append('-nodefaultlibs')
 
 
 def generate_cython(root, source):
@@ -101,6 +54,15 @@ def generate_cython(root, source):
                          source], env=os.environ)
     if p != 0:
         raise RuntimeError('Running cythonize failed')
+
+
+def generate_cpp(options):
+    options = ' '.join(options)
+    options = f'OPTIONS={options}'
+    with chdir('cpp'):
+        p = subprocess.call(["make", options], env=os.environ)
+        if p != 0:
+            raise RuntimeError('Running cythonize failed')
 
 
 cpp_sources = ['depccg.cpp',
@@ -114,33 +76,32 @@ cpp_sources = ['depccg.cpp',
                'ja_grammar.cpp',
                'utils.cpp']
 
-pyx_modules = ['depccg.parser', 'depccg.tree', 'depccg.cat', 'depccg.combinator', 'depccg.utils']
+pyx_modules = ['depccg.parser',
+               'depccg.tree',
+               'depccg.cat',
+               'depccg.combinator',
+               'depccg.utils']
 
-compile_options = "-std=c++11 -O3 -g -fopenmp -fpic -march=native"
 
-# if platform.uname()[0]=='Darwin':
-#     compile_options += " -stdlib=libc++"
+root = os.path.abspath(os.path.dirname(__file__))
+generate_cpp(CPP_OPTIONS)
+generate_cython(root, 'depccg')
 
-extra_link_args = ["-fopenmp" if check_for_openmp() else ""]
 
 ext_modules = [
         Extension(pyx,
-                  [pyx.replace('.', '/') + '.cpp'] +
-                  [os.path.join('cpp', cpp) for cpp in cpp_sources],
+                  [pyx.replace('.', '/') + '.cpp'],
                   include_dirs=['.', numpy.get_include(), 'cpp'],
-                  extra_compile_args=compile_options.split(' '),
-                  extra_link_args=extra_link_args,
+                  extra_compile_args=COMPILE_OPTIONS,
+                  extra_link_args=LINK_OPTIONS +
+                  [os.path.join('cpp', cpp.replace('cpp', 'o')) for cpp in cpp_sources],
                   language='c++')
         for pyx in pyx_modules]
 
-root = os.path.abspath(os.path.dirname(__file__))
-# with chdir(root):
-generate_cython(root, 'depccg')
 
 setup(
     name="depccg",
     packages=find_packages(),
-    # package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
     scripts=['bin/depccg_en', 'bin/depccg_ja'],

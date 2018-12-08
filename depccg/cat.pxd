@@ -1,5 +1,6 @@
 from libcpp.string cimport string
 from libcpp.pair cimport pair
+from libcpp cimport bool
 
 cdef extern from "feat.h" namespace "myccg" nogil:
     ctypedef const Feature* Feat
@@ -22,6 +23,8 @@ cdef extern from "cat.h" namespace "myccg" nogil:
     ctypedef const CCategory* Cat
     ctypedef pair[Cat, Cat] CatPair
     cdef cppclass CCategory:
+        bool operator==(const CCategory&)
+        int GetId() const
         @staticmethod
         Cat Parse(const string& cat)
         string ToStr()
@@ -54,11 +57,14 @@ cdef extern from "cat.h" namespace "myccg" nogil:
         Cat ToMultiValue() const
 
 
+
 cdef class Category:
     cdef Cat cat_
 
     @staticmethod
     cdef Category from_ptr(Cat cat)
+
+    cdef bool equals_to(self, Category other)
 
     cdef bint _matches(self, Category other)
 

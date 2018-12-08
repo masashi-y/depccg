@@ -73,14 +73,10 @@ public:
     bool Violates(Cat cat0, unsigned start_of_span0, unsigned span_length0,
            const std::unordered_map<Cat, std::vector<Cat>>& unary_rules) const {
         if (cat) {
-            std::cerr << cat->ToStr() << " " << start_of_span << " " << span_length << std::endl;
-            std::cerr << cat0->ToStr() << " " << start_of_span0 << " " << span_length0 << std::endl;
-            bool result = SpanOverlap(start_of_span0, span_length0)
+            return SpanOverlap(start_of_span0, span_length0)
                 || (start_of_span == start_of_span0
                     && span_length == span_length0
                     && ! cat->Matches(cat0));
-            std::cerr << (result ? "OK" : "no") << std::endl;
-            return result;
         }
         return SpanOverlap(start_of_span0, span_length0);
     }

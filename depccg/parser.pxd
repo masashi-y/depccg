@@ -18,6 +18,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
         PartialConstraints()
         PartialConstraints(const unordered_map[Cat, vector[Cat]]& unary_rules)
         void Add(Cat, unsigned, unsigned)
+        void Add(unsigned, unsigned)
 
     ctypedef vector[NodeType] (*ApplyBinaryRules)(
             const unordered_set[CatPair]&, NodeType, NodeType, unsigned, unsigned)

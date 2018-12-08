@@ -23,19 +23,33 @@ from .cat cimport Category
 logger = logging.getLogger(__name__)
 
 
-cdef PartialConstraints convert_partial_constraints(
+cdef PartialConstraints build_nonterminal_constraints(
         list py_constraints, const unordered_map[Cat, vector[Cat]]& unary_rules):
     cdef PartialConstraints c_constraints = PartialConstraints(unary_rules)
     cdef Category cat
     cdef int start_of_span, span_length
     for cat, start_of_span, span_length in py_constraints:
-        c_constraints.Add(cat.cat_, start_of_span, span_length)
+        if cat is not None:
+            c_constraints.Add(cat.cat_, start_of_span, span_length)
+        else:
+            c_constraints.Add(start_of_span, span_length)
     return c_constraints
 
 
+def build_terminal_constraints(list constraints, tag_probs, tag_list):
+    pseudo_neginf = -10e10
+    tag_dict = {tag: i for i, tag in enumerate(tag_list)}
+    for cat, i in constraints:
+        cat_index = tag_dict[cat]
+        tag_probs[i, :] = pseudo_neginf
+        tag_probs[i, cat_index] = 0
+    return tag_probs
+
+
 cdef class EnglishCCGParser:
-    cdef unordered_map[string, unordered_set[Cat]] category_dict_
     cdef object py_category_dict
+    cdef object py_tag_list
+    cdef unordered_map[string, unordered_set[Cat]] category_dict_
     cdef vector[Cat] tag_list_
     cdef float beta_
     cdef bint use_beta_
@@ -76,6 +90,7 @@ cdef class EnglishCCGParser:
         logger.info(f'allow at the root of a tree only categories in {possible_root_cats}'),
         logger.info(f'give up sentences that contain > {max_length} words')
 
+        self.py_tag_list = tag_list
         self.py_category_dict = category_dict
         self.category_dict_ = convert_cat_dict(category_dict)
         self.tag_list_ = cat_list_to_vector(tag_list)
@@ -136,7 +151,6 @@ cdef class EnglishCCGParser:
 
     def parse_doc(self, sents, probs=None, tag_list=None, constraints=None, batchsize=16):
         splitted, sents = zip(*map(maybe_split_and_join, sents))
-        sents = [sent.encode('utf-8') for sent in sents]
         logger.info('start tagging sentences')
         if probs is None:
             assert self.tagger is not None, 'default supertagger is not loaded.'
@@ -159,7 +173,7 @@ cdef class EnglishCCGParser:
             if categories is None:
                 categories = [Category.parse(cat) for cat in json_dict['categories']]
 
-            sent = ' '.join(denormalize(word) for word in json_dict['words'].split(' ')).encode('utf-8')
+            sent = ' '.join(denormalize(word) for word in json_dict['words'].split(' '))
             dep = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
             tag = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
             constraints.append(json_dict.get('constraints', []))
@@ -181,7 +195,7 @@ cdef class EnglishCCGParser:
                                      constraints=None):
         cdef int doc_size = len(sents), i, j
         cdef np.ndarray[float, ndim=2, mode='c'] cat_scores, dep_scores
-        cdef vector[string] csents = sents
+        cdef vector[string] csents = vector[string](doc_size)
         cdef float **tags = <float**>malloc(doc_size * sizeof(float*))
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
 
@@ -192,15 +206,32 @@ cdef class EnglishCCGParser:
 
         if constraints is not None:
             assert len(constraints) == doc_size
-            for constraint in constraints:
-                logger.info('loading partial constraints')
+            logger.info('loading partial constraints')
+            new_probs = []
+            for constraint, (py_cat_scores, py_dep_scores) in zip(constraints, probs):
+                nonterminal_constraints = [cx for cx in constraint if len(cx) == 3]
+                terminal_constraints = [cx for cx in constraint if len(cx) == 2]
                 constrained_binary_rule = MakeConstrainedBinaryRules(
-                    convert_partial_constraints(constraint, self.unary_rules_))
+                    build_nonterminal_constraints(nonterminal_constraints, self.unary_rules_))
                 binary_rules.push_back(constrained_binary_rule)
+                py_cat_scores = build_terminal_constraints(terminal_constraints, py_cat_scores, self.py_tag_list)
+                new_probs.append((py_cat_scores, py_dep_scores))
+            probs = new_probs
         else:
             binary_rules = vector[ApplyBinaryRules](doc_size, self.apply_binary_rules_)
 
-        for i, (cat_scores, dep_scores) in enumerate(probs):
+        tag_size = len(self.py_tag_list)
+        for i, (py_cat_scores, py_dep_scores) in enumerate(probs):
+            sent_size = len(sents[i].split(' '))
+            if (sent_size, tag_size) != py_cat_scores.shape or \
+                (sent_size, sent_size + 1) != py_dep_scores.shape:
+                raise RuntimeError(
+                    'invalid shape of input matrices:\n'
+                    f'Expected P_tag: ({sent_size}, {tag_size}), P_dep: ({sent_size}, {sent_size + 1})\n'
+                    f'Actual P_tag: {py_cat_scores.shape}, P_dep: {py_dep_scores.shape}')
+            cat_scores = py_cat_scores
+            dep_scores = py_dep_scores
+            csents[i] = sents[i].encode('utf-8')
             tags[i] = &cat_scores[0, 0]
             deps[i] = &dep_scores[0, 0]
 
