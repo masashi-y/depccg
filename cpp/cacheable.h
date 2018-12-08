@@ -6,6 +6,7 @@
 #include <omp.h>
 #endif
 #include <unordered_map>
+#include <iostream>
 
 namespace myccg {
 
@@ -16,7 +17,11 @@ public:
     typedef const T* Cached;
     Cacheable() {
     #pragma omp atomic capture
-        id_ = ids++;
+        id_ = ids_()++;
+    }
+    static int& ids_() {
+        static int ids = 0;
+        return ids;
     }
     static std::unordered_map<std::string, Cached>& cache_() {
         static std::unordered_map<std::string, Cached> cache;
@@ -37,12 +42,8 @@ public:
     }
 
 private:
-    static int ids;
     int id_;
 };
-
-template<typename T>
-int Cacheable<T>::ids = 0;
 
 } // namespace myccg
 
