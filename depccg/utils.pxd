@@ -12,7 +12,7 @@ cdef unordered_set[Cat] cat_list_to_unordered_set(list cats)
 
 cdef unordered_map[string, unordered_set[Cat]] convert_cat_dict(dict cat_dict)
 
-cdef unordered_map[Cat, vector[Cat]] convert_unary_rules(list unary_rules)
+cdef unordered_map[Cat, unordered_set[Cat]] convert_unary_rules(list unary_rules)
 
 cpdef read_unary_rules(filename)
 

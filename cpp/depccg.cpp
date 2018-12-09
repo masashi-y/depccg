@@ -19,20 +19,20 @@ namespace myccg {
 
 
 
-std::vector<Cat> EnApplyUnaryRules(
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules, NodeType parse) {
-    std::vector<Cat> results;
+std::unordered_set<Cat> EnApplyUnaryRules(
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules, NodeType parse) {
+    std::unordered_set<Cat> results;
     for (Cat result: unary_rules.at(parse->GetCategory())) {
         bool is_not_punct = parse->GetRuleType() != LP && parse->GetRuleType() != RP;
         if (is_not_punct || result->IsTypeRaised())
-            results.push_back(result);
+            results.insert(result);
     }
     return results;
 }
 
 
-std::vector<Cat> JaApplyUnaryRules(
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules, NodeType parse) {
+std::unordered_set<Cat> JaApplyUnaryRules(
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules, NodeType parse) {
     return unary_rules.at(parse->GetCategory());
 }
 
@@ -190,7 +190,7 @@ std::vector<ScoredNode> ParseSentence(
         unsigned pruning_size,
         unsigned nbest,
         const std::unordered_set<Cat>& possible_root_cats,
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
         const std::unordered_set<CatPair>& seen_rules,
         ApplyBinaryRules apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
@@ -356,7 +356,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         unsigned pruning_size,
         unsigned nbest,
         const std::unordered_set<Cat>& possible_root_cats,
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
         const std::unordered_set<CatPair>& seen_rules,
         const std::vector<ApplyBinaryRules>& apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,

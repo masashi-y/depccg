@@ -16,15 +16,15 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
 
     cdef cppclass PartialConstraints:
         PartialConstraints()
-        PartialConstraints(const unordered_map[Cat, vector[Cat]]& unary_rules)
+        PartialConstraints(const unordered_map[Cat, unordered_set[Cat]]& unary_rules)
         void Add(Cat, unsigned, unsigned)
         void Add(unsigned, unsigned)
 
     ctypedef vector[NodeType] (*ApplyBinaryRules)(
             const unordered_set[CatPair]&, NodeType, NodeType, unsigned, unsigned)
 
-    ctypedef vector[Cat] (*ApplyUnaryRules)(
-            const unordered_map[Cat, vector[Cat]]&, NodeType)
+    ctypedef unordered_set[Cat] (*ApplyUnaryRules)(
+            const unordered_map[Cat, unordered_set[Cat]]&, NodeType)
 
     ApplyUnaryRules EnApplyUnaryRules
 
@@ -49,7 +49,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             unsigned pruning_size,
             unsigned nbest,
             const unordered_set[Cat]& possible_root_cats,
-            const unordered_map[Cat, vector[Cat]]& unary_rules,
+            const unordered_map[Cat, unordered_set[Cat]]& unary_rules,
             const unordered_set[CatPair]& seen_rules,
             ApplyBinaryRules apply_binary_rules,
             ApplyUnaryRules apply_unary_rules,
@@ -66,7 +66,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             unsigned pruning_size,
             unsigned nbest,
             const unordered_set[Cat]& possible_root_cats,
-            const unordered_map[Cat, vector[Cat]]& unary_rules,
+            const unordered_map[Cat, unordered_set[Cat]]& unary_rules,
             const unordered_set[CatPair]& seen_rules,
             const vector[ApplyBinaryRules]& apply_binary_rules,
             ApplyUnaryRules apply_unary_rules,

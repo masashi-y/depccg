@@ -71,12 +71,17 @@ public:
     }
 
     bool Violates(Cat cat0, unsigned start_of_span0, unsigned span_length0,
-           const std::unordered_map<Cat, std::vector<Cat>>& unary_rules) const {
-        if (cat) {
-            return SpanOverlap(start_of_span0, span_length0)
-                || (start_of_span == start_of_span0
-                    && span_length == span_length0
-                    && ! cat->Matches(cat0));
+           const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules) const {
+        if (cat && start_of_span == start_of_span0 && span_length == span_length0) {
+            if (cat->Matches(cat0))
+                return false;
+            if (unary_rules.count(cat0) > 0) {
+               for (auto&& unary: unary_rules.at(cat0)) {
+                   if (unary->Matches(cat))
+                       return false;
+               }
+            }
+            return true;
         }
         return SpanOverlap(start_of_span0, span_length0);
     }
@@ -91,7 +96,7 @@ class PartialConstraints
 {
 public:
     PartialConstraints() {}
-    PartialConstraints(const std::unordered_map<Cat, std::vector<Cat>>& unary_rules)
+    PartialConstraints(const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules)
         : unary_rules(unary_rules) {}
 
     PartialConstraints(const PartialConstraints&) = default;
@@ -114,7 +119,7 @@ public:
     }
 
 private:
-    std::unordered_map<Cat, std::vector<Cat>> unary_rules;
+    std::unordered_map<Cat, std::unordered_set<Cat>> unary_rules;
     std::vector<PartialConstraint> constraints;
 };
 
@@ -123,20 +128,20 @@ private:
 //         NodeType);
 
 
-typedef std::function<std::vector<Cat>(
-        const std::unordered_map<Cat, std::vector<Cat>>&,
+typedef std::function<std::unordered_set<Cat>(
+        const std::unordered_map<Cat, std::unordered_set<Cat>>&,
         NodeType)> ApplyUnaryRules;
 
 typedef std::function<std::vector<NodeType>(
         const std::unordered_set<CatPair>&, NodeType, NodeType, unsigned, unsigned)>
         ApplyBinaryRules;
 
-std::vector<Cat> EnApplyUnaryRules(
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
+std::unordered_set<Cat> EnApplyUnaryRules(
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
         NodeType parse);
 
-std::vector<Cat> JaApplyUnaryRules(
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
+std::unordered_set<Cat> JaApplyUnaryRules(
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
         NodeType parse);
 
 std::vector<NodeType> EnApplyBinaryRules(
@@ -163,7 +168,7 @@ std::vector<ScoredNode> ParseSentence(
         unsigned pruning_size,
         unsigned nbest,
         const std::unordered_set<Cat>& possible_root_cats,
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
         const std::unordered_set<CatPair>& seen_rules,
         ApplyBinaryRules apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
@@ -180,7 +185,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         unsigned pruning_size,
         unsigned nbest,
         const std::unordered_set<Cat>& possible_root_cats,
-        const std::unordered_map<Cat, std::vector<Cat>>& unary_rules,
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
         const std::unordered_set<CatPair>& seen_rules,
         const std::vector<ApplyBinaryRules>& apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,

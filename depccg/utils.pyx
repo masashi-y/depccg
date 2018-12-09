@@ -95,14 +95,14 @@ cdef unordered_map[string, unordered_set[Cat]] convert_cat_dict(dict cat_dict):
     return results
 
 
-cdef unordered_map[Cat, vector[Cat]] convert_unary_rules(list unary_rules):
-    cdef unordered_map[Cat, vector[Cat]] results
-    cdef vector[Cat] tmp
+cdef unordered_map[Cat, unordered_set[Cat]] convert_unary_rules(list unary_rules):
+    cdef unordered_map[Cat, unordered_set[Cat]] results
+    cdef unordered_set[Cat] tmp
     cdef Category cat1, cat2
     for cat1, cat2 in unary_rules:
         if results.count(cat1.cat_) == 0:
-            results[cat1.cat_] = vector[Cat]()
-        results[cat1.cat_].push_back(cat2.cat_)
+            results[cat1.cat_] = unordered_set[Cat]()
+        results[cat1.cat_].insert(cat2.cat_)
     return results
 
 

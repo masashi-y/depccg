@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 cdef PartialConstraints build_nonterminal_constraints(
-        list py_constraints, const unordered_map[Cat, vector[Cat]]& unary_rules):
+        list py_constraints, const unordered_map[Cat, unordered_set[Cat]]& unary_rules):
     cdef PartialConstraints c_constraints = PartialConstraints(unary_rules)
     cdef Category cat
     cdef int start_of_span, span_length
@@ -59,7 +59,7 @@ cdef class EnglishCCGParser:
     cdef unsigned nbest_
     cdef vector[Op] binary_rules_
     cdef unordered_set[Cat] possible_root_cats_
-    cdef unordered_map[Cat, vector[Cat]] unary_rules_
+    cdef unordered_map[Cat, unordered_set[Cat]] unary_rules_
     cdef unordered_set[CatPair] seen_rules_
     cdef ApplyBinaryRules apply_binary_rules_
     cdef ApplyUnaryRules apply_unary_rules_
