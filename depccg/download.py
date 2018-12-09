@@ -1,7 +1,7 @@
 
 import sys
 import tarfile
-import urllib
+from urllib.request import urlretrieve
 import logging
 import time
 from pathlib import Path
@@ -35,7 +35,7 @@ def download(model_name):
     basename, url = MODELS[model_name]
     logging.info(f'start downloading from {url}')
     filename = (MODEL_DIRECTORY / basename).with_suffix('.tar.gz')
-    urllib.request.urlretrieve(url, filename, reporthook)
+    urlretrieve(url, filename, reporthook)
     logging.info(f'extracting files')
     tf = tarfile.open(filename)
     tf.extractall(MODEL_DIRECTORY)
