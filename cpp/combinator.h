@@ -34,18 +34,18 @@ enum RuleType {
     COORD = 21
 };
 
-class Combinator
+class CCombinator: public Cacheable<CCategory>
 {
 public:
-    Combinator(RuleType ruletype): ruletype_(ruletype) {}
+    CCombinator(RuleType ruletype): ruletype_(ruletype) {}
     virtual bool CanApply(Cat left, Cat right) const = 0;
     virtual Cat Apply(Cat left, Cat right) const = 0;
     virtual bool HeadIsLeft(Cat left, Cat right) const = 0;
-    virtual const std::string ToStr() const = 0;
+    virtual std::string ToStr() const = 0;
 
     RuleType GetRuleType() const { return ruletype_; }
 
-    friend std::ostream& operator<<(std::ostream& ost, const Combinator* comb) {
+    friend std::ostream& operator<<(std::ostream& ost, const CCombinator* comb) {
         ost << comb->ToStr();
         return ost;
     }
@@ -55,23 +55,23 @@ private:
 };
 
 
-using Op = const Combinator*;
+using Op = const CCombinator*;
 
-class UnaryRule: public Combinator
+class UnaryRule: public CCombinator
 {
 public:
-    UnaryRule(): Combinator(UNARY) {}
+    UnaryRule(): CCombinator(UNARY) {}
     bool CanApply(Cat left, Cat right) const { return false; }
     Cat Apply(Cat left, Cat right) const NO_IMPLEMENTATION
     bool HeadIsLeft(Cat left, Cat right) const NO_IMPLEMENTATION
 
-    const std::string ToStr() const { return "<un>"; };
+    std::string ToStr() const { return "<un>"; };
 };
 
-class Conjunction2: public Combinator
+class Conjunction2: public CCombinator
 {
 public:
-    Conjunction2(): Combinator(CONJ2),
+    Conjunction2(): CCombinator(CONJ2),
       puncts_({CCategory::Parse(",")}) {}
                // CCategory::Parse(";")}) {}
 
@@ -85,16 +85,16 @@ public:
     Cat Apply(Cat left, Cat right) const { return right; }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
-    const std::string ToStr() const { return "<Φ>"; }
+    std::string ToStr() const { return "<Φ>"; }
 
 private:
     std::unordered_set<Cat> puncts_;
 };
 
-class Coordinate: public Combinator
+class Coordinate: public CCombinator
 {
 public:
-    Coordinate(): Combinator(COORD) {}
+    Coordinate(): CCombinator(COORD) {}
 
     bool CanApply(Cat left, Cat right) const {
         if (*left == *CCategory::Parse("NP")
@@ -106,14 +106,14 @@ public:
     Cat Apply(Cat left, Cat right) const { return left; }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
-    const std::string ToStr() const { return "<Φ>"; }
+    std::string ToStr() const { return "<Φ>"; }
 
 };
 
-class Conjunction: public Combinator
+class Conjunction: public CCombinator
 {
 public:
-    Conjunction(): Combinator(CONJ),
+    Conjunction(): CCombinator(CONJ),
       puncts_({CCategory::Parse(","),
                CCategory::Parse(";"),
                CCategory::Parse("conj")}) {}
@@ -133,7 +133,7 @@ public:
     }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
-    const std::string ToStr() const { return "<Φ>"; }
+    std::string ToStr() const { return "<Φ>"; }
 
 private:
     std::unordered_set<Cat> puncts_;
@@ -142,11 +142,11 @@ private:
 //  ,  S[ng|pss]\NP
 // -----------------
 //   (S\NP)\(S\NP)
-class CommaAndVerbPhraseToAdverb: public Combinator
+class CommaAndVerbPhraseToAdverb: public CCombinator
 {
 public:
     CommaAndVerbPhraseToAdverb()
-        : Combinator(NOISE),
+        : CCombinator(NOISE),
           ngVP_(CCategory::Parse("S[ng]\\NP")),
           pssVP_(CCategory::Parse("S[pss]\\NP")),
           result_(CCategory::Parse("(S\\NP)\\(S\\NP)")) {}
@@ -161,7 +161,7 @@ public:
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
 
-    const std::string ToStr() const { return "<*>"; };
+    std::string ToStr() const { return "<*>"; };
 
 private:
     Cat ngVP_;
@@ -172,11 +172,11 @@ private:
 //  ,  S[dcl]/S[dcl]
 // -----------------
 //   (S\NP)\(S\NP)
-class ParentheticalDirectSpeech: public Combinator
+class ParentheticalDirectSpeech: public CCombinator
 {
 public:
     ParentheticalDirectSpeech()
-        : Combinator(NOISE),
+        : CCombinator(NOISE),
           SdclSdcl_(CCategory::Parse("S[dcl]/S[dcl]")),
           result_(CCategory::Parse("(S\\NP)/(S\\NP)")) {}
 
@@ -190,18 +190,18 @@ public:
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
 
-    const std::string ToStr() const { return "<*>"; };
+    std::string ToStr() const { return "<*>"; };
 
 private:
     Cat SdclSdcl_;
     Cat result_;
 };
 
-class RemovePunctuation: public Combinator
+class RemovePunctuation: public CCombinator
 {
 public:
     RemovePunctuation(bool punct_is_left)
-        : Combinator(punct_is_left ? LP : RP), punct_is_left_(punct_is_left) {}
+        : CCombinator(punct_is_left ? LP : RP), punct_is_left_(punct_is_left) {}
 
     bool CanApply(Cat left, Cat right) const {
         return punct_is_left_ ? left->IsPunct() : (right->IsPunct()); //&&
@@ -214,16 +214,16 @@ public:
     bool HeadIsLeft(Cat left, Cat right) const {
         return !punct_is_left_;
     }
-    const std::string ToStr() const { return "<rp>"; };
+    std::string ToStr() const { return "<rp>"; };
 
 private:
     bool punct_is_left_;
 };
 
-class RemovePunctuationLeft: public Combinator
+class RemovePunctuationLeft: public CCombinator
 {
 public:
-    RemovePunctuationLeft(): Combinator(LP),
+    RemovePunctuationLeft(): CCombinator(LP),
       puncts_({CCategory::Parse("LQU"),
                CCategory::Parse("LRB"),}) {}
 
@@ -233,24 +233,24 @@ public:
 
     Cat Apply(Cat left, Cat right) const { return right; }
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
-    const std::string ToStr() const { return "<rp>"; };
+    std::string ToStr() const { return "<rp>"; };
 
 private:
     std::unordered_set<Cat> puncts_;
 };
 
-class SpecialCombinator: public Combinator
+class SpecialCombinator: public CCombinator
 {
     public:
     SpecialCombinator(Cat left, Cat right, Cat result, bool head_is_left)
-    : Combinator(NOISE), left_(left), right_(right), result_(result), head_is_left_(head_is_left) {}
+    : CCombinator(NOISE), left_(left), right_(right), result_(result), head_is_left_(head_is_left) {}
 
     bool CanApply(Cat left, Cat right) const {
         return left_->Matches(left) && right_->Matches(right);
     }
     Cat Apply(Cat left, Cat right) const { return result_; }
     bool HeadIsLeft(Cat left, Cat right) const {return head_is_left_; }
-    const std::string ToStr() const {return "<sp>"; };
+    std::string ToStr() const {return "<sp>"; };
 
 private:
     Cat left_;
@@ -259,10 +259,10 @@ private:
     bool head_is_left_;
 };
 
-class ForwardApplication: public Combinator
+class ForwardApplication: public CCombinator
 {
     public:
-    ForwardApplication(): Combinator(FA) {}
+    ForwardApplication(): CCombinator(FA) {}
     bool CanApply(Cat left, Cat right) const {
         return (left->IsFunctor() &&
                 left->GetSlash().IsForward() &&
@@ -278,13 +278,13 @@ class ForwardApplication: public Combinator
         return !(left->IsModifier() || left->IsTypeRaised());
     }
 
-    const std::string ToStr() const { return ">"; };
+    std::string ToStr() const { return ">"; };
 };
 
-class BackwardApplication: public Combinator
+class BackwardApplication: public CCombinator
 {
     public:
-    BackwardApplication(): Combinator(BA) {}
+    BackwardApplication(): CCombinator(BA) {}
     bool CanApply(Cat left, Cat right) const {
         return (right->IsFunctor() &&
                 right->GetSlash().IsBackward() &&
@@ -300,15 +300,15 @@ class BackwardApplication: public Combinator
         return (right->IsModifier() || right->IsTypeRaised());
     }
 
-    const std::string ToStr() const { return "<"; }
+    std::string ToStr() const { return "<"; }
 };
 
 template<int Order, RuleType Rule=FC>
-class GeneralizedForwardComposition: public Combinator
+class GeneralizedForwardComposition: public CCombinator
 {
     public:
     GeneralizedForwardComposition(const Slash& left, const Slash& right, const Slash& result)
-        : Combinator(Rule), left_(left), right_(right), result_(result) {}
+        : CCombinator(Rule), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (left->IsFunctor() &&
                 right->HasFunctorAtLeft<Order>() &&
@@ -328,7 +328,7 @@ class GeneralizedForwardComposition: public Combinator
         return ! (left->IsModifier() || left->IsTypeRaised());
     }
 
-    const std::string ToStr() const { return ">B" + std::to_string(Order + 1); }
+    std::string ToStr() const { return ">B" + std::to_string(Order + 1); }
 
 private:
     Slash left_;
@@ -337,11 +337,11 @@ private:
 };
 
 template<int Order, RuleType Rule=BC>
-class GeneralizedBackwardComposition: public Combinator
+class GeneralizedBackwardComposition: public CCombinator
 {
     public:
     GeneralizedBackwardComposition(const Slash& left, const Slash& right, const Slash& result)
-        : Combinator(Rule), left_(left), right_(right), result_(result) {}
+        : CCombinator(Rule), left_(left), right_(right), result_(result) {}
     bool CanApply(Cat left, Cat right) const {
         return (right->IsFunctor() &&
                 left->HasFunctorAtLeft<Order>() &&
@@ -360,7 +360,7 @@ class GeneralizedBackwardComposition: public Combinator
     bool HeadIsLeft(Cat left, Cat right) const {
         return right->IsModifier() || right->IsTypeRaised();
     }
-    const std::string ToStr() const { return "<B" + std::to_string(Order + 1); }
+    std::string ToStr() const { return "<B" + std::to_string(Order + 1); }
 
 private:
     Slash left_;
@@ -368,51 +368,41 @@ private:
     Slash result_;
 };
 
-template <typename T>
-class SimpleHeadCombinator: public Combinator
+class SimpleHeadCombinator: public CCombinator
 {
 public:
-    SimpleHeadCombinator(T comb, bool head_is_left)
-    : Combinator(comb.GetRuleType()),
+    SimpleHeadCombinator(Op comb, bool head_is_left)
+    : CCombinator(comb->GetRuleType()),
       comb_(comb), head_is_left_(head_is_left) {};
 
     bool CanApply(Cat left, Cat right) const {
-        return comb_.CanApply(left, right); }
+        return comb_->CanApply(left, right); }
 
     Cat Apply(Cat left, Cat right) const {
-        return comb_.Apply(left, right); }
+        return comb_->Apply(left, right); }
 
     bool HeadIsLeft(Cat left, Cat right) const {
         return head_is_left_; }
 
-    const std::string ToStr() const {
-        return comb_.ToStr(); }
+    std::string ToStr() const {
+        return comb_->ToStr(); }
 
 private:
-    T comb_;
+    Op comb_;
     bool head_is_left_;
 };
 
-template <typename T>
-class HeadFirstCombinator: public SimpleHeadCombinator<T>
+class HeadFirstCombinator: public SimpleHeadCombinator
 {
 public:
-    HeadFirstCombinator(T comb): SimpleHeadCombinator<T>(comb, true) {};
+    HeadFirstCombinator(Op comb): SimpleHeadCombinator(comb, true) {};
 };
 
-template <typename T>
-class HeadFinalCombinator: public SimpleHeadCombinator<T>
+class HeadFinalCombinator: public SimpleHeadCombinator
 {
 public:
-    HeadFinalCombinator(T comb): SimpleHeadCombinator<T>(comb, false) {};
+    HeadFinalCombinator(Op comb): SimpleHeadCombinator(comb, false) {};
 };
-
-template <typename T>
-HeadFirstCombinator<T>* HeadFirst(T comb) { return new HeadFirstCombinator<T>(comb); }
-
-template <typename T>
-HeadFinalCombinator<T>* HeadFinal(T comb) { return new HeadFinalCombinator<T>(comb); }
-
 
 class ENBackwardApplication: public BackwardApplication
 {
@@ -447,10 +437,10 @@ public:
 };
 
 
-class Conjoin: public Combinator
+class Conjoin: public CCombinator
 {
 public:
-    Conjoin(): Combinator(SSEQ) {}
+    Conjoin(): CCombinator(SSEQ) {}
     bool CanApply(Cat left, Cat right) const {
         return (ja_possible_root_cats.count(left) > 0 &&
                 *left == *right &&
@@ -458,7 +448,7 @@ public:
     }
     Cat Apply(Cat left, Cat right) const { return right; }
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
-    const std::string ToStr() const { return "SSEQ"; };
+    std::string ToStr() const { return "SSEQ"; };
 
 private:
     static const std::unordered_set<Cat> ja_possible_root_cats;
@@ -494,7 +484,7 @@ public:
         return ! (left->IsModifier() || left->IsTypeRaised());
     }
 
-    const std::string ToStr() const { return string_; }
+    std::string ToStr() const { return string_; }
     std::string string_;
 };
 
@@ -512,12 +502,12 @@ public:
         return right->IsModifier() || right->IsTypeRaised();
     }
 
-    const std::string ToStr() const { return string_; }
+    std::string ToStr() const { return string_; }
     std::string string_;
 };
 
 
-extern Combinator* unary_rule;
+extern CCombinator* unary_rule;
 
 extern const std::vector<Op> en_binary_rules;
 extern const std::vector<Op> ja_binary_rules;

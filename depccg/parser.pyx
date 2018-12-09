@@ -14,7 +14,8 @@ import chainer
 import logging
 from cython.parallel cimport prange
 from libc.stdio cimport fprintf, stderr
-from .combinator cimport en_binary_rules, ja_binary_rules
+from .combinator cimport combinator_list_to_vector, en_binary_rules
+from .combinator import en_default_binary_rules, ja_default_binary_rules
 from .utils cimport *
 from .utils import maybe_split_and_join, denormalize
 from .cat cimport Category
@@ -57,6 +58,7 @@ cdef class EnglishCCGParser:
     cdef float beta_
     cdef unsigned pruning_size_
     cdef unsigned nbest_
+    cdef list py_binary_rules
     cdef vector[Op] binary_rules_
     cdef unordered_set[Cat] possible_root_cats_
     cdef unordered_map[Cat, unordered_set[Cat]] unary_rules_
@@ -71,8 +73,8 @@ cdef class EnglishCCGParser:
                  category_dict,
                  tag_list,
                  unary_rules,
-                 # binary_rules,
                  seen_rules,
+                 binary_rules=None,
                  beta=0.00001,
                  use_beta=True,
                  use_category_dict=True,
@@ -82,6 +84,8 @@ cdef class EnglishCCGParser:
                  possible_root_cats=None,
                  max_length=250):
 
+        if binary_rules is None:
+            binary_rules = en_default_binary_rules
         if possible_root_cats is None:
             possible_root_cats = ['S[dcl]', 'S[wq]', 'S[q]', 'S[qem]', 'NP']
         possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
@@ -94,6 +98,7 @@ cdef class EnglishCCGParser:
         logger.info(f'use seen rules = {use_seen_rules}')
         logger.info(f'allow at the root of a tree only categories in {possible_root_cats}'),
         logger.info(f'give up sentences that contain > {max_length} words')
+        logger.info(f'combinators: {binary_rules}')
 
         self.py_tag_list = tag_list
         self.py_category_dict = category_dict
@@ -105,7 +110,8 @@ cdef class EnglishCCGParser:
         self.use_seen_rules = use_seen_rules
         self.pruning_size_ = pruning_size
         self.nbest_ = nbest
-        self.binary_rules_ = en_binary_rules
+        self.py_binary_rules = binary_rules
+        self.binary_rules_ = combinator_list_to_vector(self.py_binary_rules)
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
         self.unary_rules_ = convert_unary_rules(unary_rules)
         self.seen_rules_ = convert_seen_rules(seen_rules)
@@ -211,7 +217,7 @@ cdef class EnglishCCGParser:
         cdef unordered_set[CatPair] seen_rules = \
             self.seen_rules_ if self.use_seen_rules else unordered_set[CatPair]()
 
-        cdef vector[ApplyBinaryRules] binary_rules
+        cdef vector[ApplyBinaryRules] apply_binary_rules
         cdef ApplyBinaryRules constrained_binary_rules
 
         if constraints is not None:
@@ -225,12 +231,12 @@ cdef class EnglishCCGParser:
                 logging.debug(f'terminal constraints: {terminal_constraints}')
                 constrained_binary_rule = MakeConstrainedBinaryRules(self.binary_rules_,
                     build_nonterminal_constraints(nonterminal_constraints, self.unary_rules_))
-                binary_rules.push_back(constrained_binary_rule)
+                apply_binary_rules.push_back(constrained_binary_rule)
                 py_cat_scores = build_terminal_constraints(terminal_constraints, py_cat_scores, self.py_tag_list)
                 new_probs.append((py_cat_scores, py_dep_scores))
             probs = new_probs
         else:
-            binary_rules = vector[ApplyBinaryRules](doc_size, self.apply_binary_rules_)
+            apply_binary_rules = vector[ApplyBinaryRules](doc_size, self.apply_binary_rules_)
 
         tag_size = len(self.py_tag_list)
         for i, (py_cat_scores, py_dep_scores) in enumerate(probs):
@@ -261,7 +267,7 @@ cdef class EnglishCCGParser:
                    self.possible_root_cats_,
                    self.unary_rules_,
                    seen_rules,
-                   binary_rules,
+                   apply_binary_rules,
                    self.apply_unary_rules_,
                    self.max_length_)
         # for i in prange(doc_size, nogil=True, schedule='dynamic'):
@@ -345,7 +351,8 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.use_seen_rules = use_seen_rules
         self.pruning_size_ = pruning_size
         self.nbest_ = nbest
-        self.binary_rules_ = ja_binary_rules
+        self.py_binary_rules_ = ja_default_binary_rules
+        self.binary_rules_ = combinator_list_to_vector(self.py_binary_rules)
         self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
         self.unary_rules_ = convert_unary_rules(unary_rules)
         self.seen_rules_ = convert_seen_rules(seen_rules)

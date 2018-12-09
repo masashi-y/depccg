@@ -22,6 +22,7 @@ cdef extern from "feat.h" namespace "myccg" nogil:
 
 cdef extern from "cat.h" namespace "myccg" nogil:
     cdef cppclass Slash:
+        Slash(char slash)
         bint IsForward() const
         bint IsBackward() const
         string ToStr() const
