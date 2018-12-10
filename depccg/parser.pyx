@@ -185,8 +185,8 @@ cdef class EnglishCCGParser:
 
             words = [denormalize(word) for word in json_dict['words'].split(' ')]
             sent = ' '.join(words)
-            dep = np.array(json_dict.get('heads', None)).reshape(json_dict['heads_shape']).astype(np.float32)
-            tag = np.array(json_dict.get('head_tags', None)).reshape(json_dict['head_tags_shape']).astype(np.float32)
+            dep = json_dict.get('heads', None)
+            tag = json_dict.get('head_tags', None)
 
             if dep is None and tag is None:
                 def process_fun(_, new_tag_and_dep):
@@ -197,15 +197,20 @@ cdef class EnglishCCGParser:
                     tag, _ = tag_and_dep
                     _, new_dep = new_tag_and_dep
                     return tag, new_dep
+                tag = np.array(tag).reshape(json_dict['head_tags_shape']).astype(np.float32)
                 tag_and_dep = (tag, None)
             elif tag is None:
-                def process_fun(tag_and_dep, new_tag_and_dep):
-                    _, dep = tag_and_dep
-                    new_tag, _ = new_tag_and_dep
-                    return new_tag, dep
-                tag_and_dep = (None, dep)
+                raise NotImplementedError('not supported.')
+                # def process_fun(tag_and_dep, new_tag_and_dep):
+                #   _, dep = tag_and_dep
+                #   new_tag, _ = new_tag_and_dep
+                #   return new_tag, dep
+                # p = np.array(dep).reshape(json_dict['heads_shape']).astype(np.float32)
+                # g_and_dep = (None, dep)
             else:
                 process_fun = None
+                dep = np.array(dep).reshape(json_dict['heads_shape']).astype(np.float32)
+                tag = np.array(tag).reshape(json_dict['head_tags_shape']).astype(np.float32)
                 tag_and_dep = (tag, dep)
 
             if process_fun is not None:
@@ -216,10 +221,12 @@ cdef class EnglishCCGParser:
             probs.append(tag_and_dep)
 
         if len(unprocessed) > 0:
+            logger.info('Detected that some examples lack either p_tag and p_dep. '
+                        'Assigning them using default tagger.')
             assert self.tagger is not None, 'default supertagger is not loaded.'
             _, splitted = zip(*unprocessed.values())
             unprocessed_probs = self.tagger.predict_doc(splitted, batchsize=batchsize)
-            for (i, (process_fun, _)), new_tag_and_dep in zip(unprocessed.items(), unprocessed_probs):
+            for (i, (process_fun, _)), new_tag_and_dep in zip(sorted(unprocessed.items()), unprocessed_probs):
                 probs[i] = process_fun(probs[i], new_tag_and_dep)
             assert all(tag is not None and dep is not None for tag, dep in probs)
 

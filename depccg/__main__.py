@@ -24,7 +24,7 @@ def main(args):
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
 
-    load_tagger = args.input_format != 'json'
+    load_tagger = True  # args.input_format != 'json'
     model = args.model or load_model_directory(args.lang)
     parser = Parsers[args.lang].from_dir(model,
                                          load_tagger=load_tagger,
