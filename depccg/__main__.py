@@ -136,7 +136,6 @@ if __name__ == '__main__':
 
     subparsers = parser.add_subparsers()
     download_parser = subparsers.add_parser('download')
-    download_parser.add_argument('lang', choices=['en', 'ja'])
     download_parser.set_defaults(func=lambda args: download(args.lang))
     args = parser.parse_args()
     args.func(args)
