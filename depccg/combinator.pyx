@@ -181,6 +181,9 @@ cpdef ja_generalized_forward_composition2(str left, str right, str result, str n
         <Op>new JAGeneralizedForwardComposition2(
             Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
 
+cpdef remove_disfluency():
+    return Combinator.from_ptr(<Op>new RemoveDisfluency())
+
 
 cdef vector[Op] combinator_list_to_vector(list combinators):
     cdef vector[Op] results

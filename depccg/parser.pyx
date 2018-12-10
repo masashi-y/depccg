@@ -14,7 +14,7 @@ import chainer
 import logging
 from cython.parallel cimport prange
 from libc.stdio cimport fprintf, stderr
-from .combinator cimport combinator_list_to_vector, en_binary_rules
+from .combinator cimport combinator_list_to_vector
 from .combinator import en_default_binary_rules, ja_default_binary_rules
 from .utils cimport *
 from .utils import maybe_split_and_join, denormalize

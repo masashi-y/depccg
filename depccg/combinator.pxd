@@ -119,10 +119,9 @@ cdef extern from "combinator.h" namespace "myccg" nogil:
     cdef cppclass JAGeneralizedBackwardComposition3 "myccg::JAGeneralizedBackwardComposition<3, myccg::BC>":
         JAGeneralizedBackwardComposition3(const Slash&, const Slash&, const Slash&, const string& string)
 
-    cdef const vector[Op] en_binary_rules
 
-    cdef const vector[Op] ja_binary_rules
-
+    cdef cppclass RemoveDisfluency:
+        RemoveDisfluency()
 
 cdef class Combinator:
     cdef Op op_

@@ -506,6 +506,28 @@ public:
     std::string string_;
 };
 
+class RemoveDisfluency: public CCombinator
+{
+    public:
+    RemoveDisfluency(): CCombinator(NOISE) {}
+    bool CanApply(Cat left, Cat right) const {
+        return left->Matches(CCategory::Parse("X"))
+                || right->Matches(CCategory::Parse("X"));
+    }
+
+    Cat Apply(Cat left, Cat right) const {
+        if (left->Matches(CCategory::Parse("X")))
+            return right;
+        return left;
+    }
+
+    bool HeadIsLeft(Cat left, Cat right) const {
+        return ! left->Matches(CCategory::Parse("X"));
+    }
+
+    std::string ToStr() const { return "<X>"; }
+};
+
 
 extern CCombinator* unary_rule;
 
