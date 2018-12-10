@@ -7,7 +7,7 @@ import json
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, Token
 from .download import download, load_model_directory
-from .utils import read_partial_tree
+from .utils import read_partial_tree, read_weights
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
@@ -15,6 +15,11 @@ Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 def main(args):
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         level=logging.DEBUG if args.verbose else logging.INFO)
+
+    if args.weights is not None:
+        probs, tag_list = read_weights(args.weights)
+    else:
+        probs, tag_list = None, None
 
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
@@ -37,18 +42,26 @@ def main(args):
     if args.input_format == 'POSandNERtagged':
         tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
         doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
-        res = parser.parse_doc(doc, batchsize=args.batchsize)
+        res = parser.parse_doc(doc,
+                               probs=probs,
+                               tag_list=tag_list,
+                               batchsize=args.batchsize)
     elif args.input_format == 'json':
         res = parser.parse_json([json.loads(line) for line in fin])
     elif args.input_format == 'partial':
         doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
         res = parser.parse_doc(doc,
+                               probs=probs,
+                               tag_list=tag_list,
                                batchsize=args.batchsize,
                                constraints=constraints)
     else:
         assert args.format not in ['xml', 'prolog'], \
             'XML and Prolog output format is supported only with --input-format POSandNERtagged.'
-        res = parser.parse_doc([l.strip() for l in fin],
+        doc = [l.strip() for l in fin]
+        res = parser.parse_doc(doc,
+                               probs=probs,
+                               tag_list=tag_list,
                                batchsize=args.batchsize)
 
     if args.format == 'xml':
@@ -78,6 +91,9 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input',
                         default=None,
                         help='a file with tokenized sentences in each line')
+    parser.add_argument('-w', '--weights',
+                        default=None,
+                        help='a file that contains weights (p_tag, p_dep)')
     parser.add_argument('--batchsize',
                         type=int,
                         default=32,

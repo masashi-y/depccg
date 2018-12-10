@@ -2,6 +2,7 @@ from typing import Dict
 import numpy as np
 cimport numpy as np
 import logging
+import json
 from .cat cimport Category
 from libcpp.pair cimport pair
 
@@ -212,3 +213,21 @@ def maybe_split_and_join(string):
         split = string.split(' ')
         join = string
     return split, join
+
+
+def read_weights(filename, file_type='json'):
+    assert file_type == 'json'
+    categories = None
+    probs = []
+    constraints = []
+    for line in open(filename):
+        json_dict = json.loads(line.strip())
+        if categories is None:
+            categories = [Category.parse(cat) for cat in json_dict['categories']]
+
+        sent = ' '.join(denormalize(word) for word in json_dict['words'].split(' '))
+        dep = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
+        tag = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
+        probs.append((tag, dep))
+    return probs, categories
+

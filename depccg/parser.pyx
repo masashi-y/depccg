@@ -171,23 +171,57 @@ cdef class EnglishCCGParser:
                                           constraints=constraints)
         return res
 
-    def parse_json(self, json_input):
+    def parse_json(self, json_input, batchsize=16):
         if isinstance(json_input, str):
             json_input = [json.loads(line.strip()) for line in open(json_input)]
         categories = None
         sents = []
         probs = []
         constraints = []
-        for json_dict in json_input:
+        unprocessed = {}
+        for i, json_dict in enumerate(json_input):
             if categories is None:
                 categories = [Category.parse(cat) for cat in json_dict['categories']]
 
-            sent = ' '.join(denormalize(word) for word in json_dict['words'].split(' '))
-            dep = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
-            tag = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
+            words = [denormalize(word) for word in json_dict['words'].split(' ')]
+            sent = ' '.join(words)
+            dep = np.array(json_dict.get('heads', None)).reshape(json_dict['heads_shape']).astype(np.float32)
+            tag = np.array(json_dict.get('head_tags', None)).reshape(json_dict['head_tags_shape']).astype(np.float32)
+
+            if dep is None and tag is None:
+                def process_fun(_, new_tag_and_dep):
+                    return new_tag_and_dep
+                tag_and_dep = None
+            elif dep is None:
+                def process_fun(tag_and_dep, new_tag_and_dep):
+                    tag, _ = tag_and_dep
+                    _, new_dep = new_tag_and_dep
+                    return tag, new_dep
+                tag_and_dep = (tag, None)
+            elif tag is None:
+                def process_fun(tag_and_dep, new_tag_and_dep):
+                    _, dep = tag_and_dep
+                    new_tag, _ = new_tag_and_dep
+                    return new_tag, dep
+                tag_and_dep = (None, dep)
+            else:
+                process_fun = None
+                tag_and_dep = (tag, dep)
+
+            if process_fun is not None:
+                unprocessed[i] = (process_fun, words)
+
             constraints.append(json_dict.get('constraints', []))
             sents.append(sent)
-            probs.append((tag, dep))
+            probs.append(tag_and_dep)
+
+        if len(unprocessed) > 0:
+            assert self.tagger is not None, 'default supertagger is not loaded.'
+            _, splitted = zip(*unprocessed.values())
+            unprocessed_probs = self.tagger.predict_doc(splitted, batchsize=batchsize)
+            for (i, (process_fun, _)), new_tag_and_dep in zip(unprocessed.items(), unprocessed_probs):
+                probs[i] = process_fun(probs[i], new_tag_and_dep)
+            assert all(tag is not None and dep is not None for tag, dep in probs)
 
         if all(len(constraint) == 0 for constraint in constraints):
             constraints = None
