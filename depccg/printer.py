@@ -1,4 +1,4 @@
-
+import re
 
 class Token:
     def __init__(self, word, lemma, pos, chunk, entity):
@@ -110,7 +110,7 @@ def to_mathml(trees):
     for i, tree in enumerate(trees):
         words = tree[0][0].word if isinstance(tree[0], tuple) else tree[0].word
         trees_str = __show(tree)
-        string += f'<p>ID={i}: {word}</p>{trees_str}'
+        string += f'<p>ID={i}: {words}</p>{trees_str}'
 
     results = f"""\
 <!doctype html>

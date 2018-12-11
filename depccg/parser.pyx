@@ -48,24 +48,19 @@ def build_terminal_constraints(list constraints, tag_probs, tag_list):
 
 
 cdef class EnglishCCGParser:
-    cdef object py_category_dict
-    cdef object py_tag_list
+    cdef object binary_rules
+    cdef object possible_root_cats
+    cdef object category_dict
+    cdef object tag_list
+    cdef object unary_rules
+    cdef object seen_rules
+    cdef object beta
     cdef object use_beta
     cdef object use_category_dict
     cdef object use_seen_rules
-    cdef unordered_map[string, unordered_set[Cat]] category_dict_
-    cdef vector[Cat] tag_list_
-    cdef float beta_
-    cdef unsigned pruning_size_
-    cdef unsigned nbest_
-    cdef list py_binary_rules
-    cdef vector[Op] binary_rules_
-    cdef unordered_set[Cat] possible_root_cats_
-    cdef unordered_map[Cat, unordered_set[Cat]] unary_rules_
-    cdef unordered_set[CatPair] seen_rules_
-    cdef ApplyBinaryRules apply_binary_rules_
-    cdef ApplyUnaryRules apply_unary_rules_
-    cdef unsigned max_length_
+    cdef object pruning_size
+    cdef object nbest
+    cdef object max_length
     cdef object tagger
     cdef bytes lang
 
@@ -83,41 +78,23 @@ cdef class EnglishCCGParser:
                  nbest=1,
                  possible_root_cats=None,
                  max_length=250):
-
         if binary_rules is None:
-            binary_rules = en_default_binary_rules
+            self.binary_rules = en_default_binary_rules
         if possible_root_cats is None:
             possible_root_cats = ['S[dcl]', 'S[wq]', 'S[q]', 'S[qem]', 'NP']
-        possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
-                              for cat in possible_root_cats]
-
-        logger.info(f'beta value = {beta} (use beta = {use_beta})')
-        logger.info(f'pruning size = {pruning_size}')
-        logger.info(f'N best = {nbest}')
-        logger.info(f'use category dictionary = {use_category_dict}')
-        logger.info(f'use seen rules = {use_seen_rules}')
-        logger.info(f'allow at the root of a tree only categories in {possible_root_cats}'),
-        logger.info(f'give up sentences that contain > {max_length} words')
-        logger.info(f'combinators: {binary_rules}')
-
-        self.py_tag_list = tag_list
-        self.py_category_dict = category_dict
-        self.category_dict_ = convert_cat_dict(category_dict)
-        self.tag_list_ = cat_list_to_vector(tag_list)
-        self.beta_ = beta
+        self.possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
+                                   for cat in possible_root_cats]
+        self.category_dict = category_dict
+        self.tag_list = tag_list
+        self.unary_rules = unary_rules
+        self.seen_rules = seen_rules
+        self.beta = beta
         self.use_beta = use_beta
         self.use_category_dict = use_category_dict
         self.use_seen_rules = use_seen_rules
-        self.pruning_size_ = pruning_size
-        self.nbest_ = nbest
-        self.py_binary_rules = binary_rules
-        self.binary_rules_ = combinator_list_to_vector(self.py_binary_rules)
-        self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
-        self.unary_rules_ = convert_unary_rules(unary_rules)
-        self.seen_rules_ = convert_seen_rules(seen_rules)
-        self.apply_binary_rules_ = MakeEnApplyBinaryRules(self.binary_rules_)
-        self.apply_unary_rules_ = EnApplyUnaryRules
-        self.max_length_ = max_length
+        self.pruning_size = pruning_size
+        self.nbest = nbest
+        self.max_length = max_length
         self.tagger = None
         self.lang = b'en'
 
@@ -153,6 +130,32 @@ cdef class EnglishCCGParser:
         category_dict = read_cat_dict(category_dict)
         tag_list = read_cat_list(categories)
         seen_rules = read_seen_rules(seen_rules, lambda cat: cat.strip_feat('[X]').strip_feat('[nb]'))
+        parser = cls(category_dict, tag_list, unary_rules, seen_rules, **kwargs)
+        if tagger_model_dir:
+            parser.load_default_tagger(tagger_model_dir)
+        return parser
+
+    @classmethod
+    def from_json(cls, json_input, tagger_model_dir=None, **kwargs):
+        if isinstance(json_input, str):
+            logger.info(f'loading parser from json file: {json_input}')
+            json_input = json.load(open(json_input))
+        else:
+            assert isinstance(json_input, dict), \
+                'the input to from_json must be either a dict object or filename stirng'
+        unary_rules = [(Category.parse(c1), Category.parse(c2)) for c1, c2 in json_input['unary_rules']]
+        category_dict = {}
+        for word, cats in json_input['cat_dict'].items():
+            category_dict[word] = [Category.parse(cat) for cat in cats]
+
+        tag_list = [Category.parse(cat) for cat in json_input['targets']]
+        seen_rules = [(Category.parse(c1), Category.parse(c2)) for c1, c2 in json_input['seen_rules']]
+        preprocess = lambda cat: cat.strip_feat('[X]').strip_feat('[nb]')
+        seen_rules = []
+        for c1, c2 in json_input['seen_rules']:
+            c1 = preprocess(Category.parse(c1))
+            c2 = preprocess(Category.parse(c2))
+            seen_rules.append((c1, c2))
         parser = cls(category_dict, tag_list, unary_rules, seen_rules, **kwargs)
         if tagger_model_dir:
             parser.load_default_tagger(tagger_model_dir)
@@ -201,12 +204,6 @@ cdef class EnglishCCGParser:
                 tag_and_dep = (tag, None)
             elif tag is None:
                 raise NotImplementedError('not supported.')
-                # def process_fun(tag_and_dep, new_tag_and_dep):
-                #   _, dep = tag_and_dep
-                #   new_tag, _ = new_tag_and_dep
-                #   return new_tag, dep
-                # p = np.array(dep).reshape(json_dict['heads_shape']).astype(np.float32)
-                # g_and_dep = (None, dep)
             else:
                 process_fun = None
                 dep = np.array(dep).reshape(json_dict['heads_shape']).astype(np.float32)
@@ -246,20 +243,40 @@ cdef class EnglishCCGParser:
                                      list probs,
                                      tag_list=None,
                                      constraints=None):
+        logger.info(f'beta value = {self.beta} (use beta = {self.use_beta})')
+        logger.info(f'pruning size = {self.pruning_size}')
+        logger.info(f'N best = {self.nbest}')
+        logger.info(f'use category dictionary = {self.use_category_dict}')
+        logger.info(f'use seen rules = {self.use_seen_rules}')
+        logger.info(f'allow at the root of a tree only categories in {self.possible_root_cats}'),
+        logger.info(f'give up sentences that contain > {self.max_length} words')
+        logger.info(f'combinators: {self.binary_rules}')
+
         cdef int doc_size = len(sents), i, j
         cdef np.ndarray[float, ndim=2, mode='c'] cat_scores, dep_scores
         cdef vector[string] csents = vector[string](doc_size)
         cdef float **tags = <float**>malloc(doc_size * sizeof(float*))
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
 
-        cdef vector[Cat] c_tag_list = cat_list_to_vector(tag_list) if tag_list else self.tag_list_
-        cdef unordered_map[string, unordered_set[Cat]] category_dict = \
-            self.category_dict_ if self.use_category_dict else unordered_map[string, unordered_set[Cat]]()
-        cdef unordered_set[CatPair] seen_rules = \
-            self.seen_rules_ if self.use_seen_rules else unordered_set[CatPair]()
+        py_tag_list = tag_list or self.tag_list
+        cdef vector[Cat] tag_list_ = cat_list_to_vector(py_tag_list)
+        cdef unordered_map[string, unordered_set[Cat]] category_dict_ = \
+            convert_cat_dict(self.category_dict) if self.use_category_dict \
+                else unordered_map[string, unordered_set[Cat]]()
+        cdef float beta_ = self.beta
+        cdef bool use_beta = self.use_beta
+        cdef unsigned pruning_size_ = self.pruning_size
+        cdef unsigned nbest_ = self.nbest
+        cdef vector[Op] binary_rules_ = combinator_list_to_vector(self.binary_rules)
+        cdef unordered_set[Cat] possible_root_cats_ = cat_list_to_unordered_set(self.possible_root_cats)
+        cdef unordered_map[Cat, unordered_set[Cat]] unary_rules_ = convert_unary_rules(self.unary_rules)
+        cdef unordered_set[CatPair] seen_rules_ = \
+            convert_seen_rules(self.seen_rules) if self.use_seen_rules else unordered_set[CatPair]()
+        cdef ApplyBinaryRules default_apply_binary_rules = MakeEnApplyBinaryRules(binary_rules_)
+        cdef ApplyUnaryRules apply_unary_rules_ = EnApplyUnaryRules
+        cdef unsigned max_length_ = self.max_length
 
         cdef vector[ApplyBinaryRules] apply_binary_rules
-        cdef ApplyBinaryRules constrained_binary_rules
 
         if constraints is not None:
             assert len(constraints) == doc_size
@@ -270,16 +287,16 @@ cdef class EnglishCCGParser:
                 terminal_constraints = [cx for cx in constraint if len(cx) == 2]
                 logging.debug(f'non-terminal constraints: {nonterminal_constraints}')
                 logging.debug(f'terminal constraints: {terminal_constraints}')
-                constrained_binary_rule = MakeConstrainedBinaryRules(self.binary_rules_,
-                    build_nonterminal_constraints(nonterminal_constraints, self.unary_rules_))
+                constrained_binary_rule = MakeConstrainedBinaryRules(binary_rules_,
+                    build_nonterminal_constraints(nonterminal_constraints, unary_rules_))
                 apply_binary_rules.push_back(constrained_binary_rule)
-                py_cat_scores = build_terminal_constraints(terminal_constraints, py_cat_scores, self.py_tag_list)
+                py_cat_scores = build_terminal_constraints(terminal_constraints, py_cat_scores, py_tag_list)
                 new_probs.append((py_cat_scores, py_dep_scores))
             probs = new_probs
         else:
-            apply_binary_rules = vector[ApplyBinaryRules](doc_size, self.apply_binary_rules_)
+            apply_binary_rules = vector[ApplyBinaryRules](doc_size, default_apply_binary_rules)
 
-        tag_size = len(self.py_tag_list)
+        cdef int tag_size = tag_list_.size()
         for i, (py_cat_scores, py_dep_scores) in enumerate(probs):
             sent_size = len(sents[i].split(' '))
             if (sent_size, tag_size) != py_cat_scores.shape or \
@@ -299,47 +316,24 @@ cdef class EnglishCCGParser:
                    csents,
                    tags,
                    deps,
-                   category_dict,
-                   c_tag_list,
-                   self.beta_,
-                   self.use_beta,
-                   self.pruning_size_,
-                   self.nbest_,
-                   self.possible_root_cats_,
-                   self.unary_rules_,
-                   seen_rules,
+                   category_dict_,
+                   tag_list_,
+                   beta_,
+                   use_beta,
+                   pruning_size_,
+                   nbest_,
+                   possible_root_cats_,
+                   unary_rules_,
+                   seen_rules_,
                    apply_binary_rules,
-                   self.apply_unary_rules_,
-                   self.max_length_)
-        # for i in prange(doc_size, nogil=True, schedule='dynamic'):
-        #     cres[i] = ParseSentence(
-        #                 i,
-        #                 csents[i],
-        #                 tags[i],
-        #                 deps[i],
-        #                 self.category_dict_,
-        #                 c_tag_list,
-        #                 self.beta_,
-        #                 self.use_beta,
-        #                 self.pruning_size_,
-        #                 self.nbest_,
-        #                 self.possible_root_cats_,
-        #                 self.unary_rules_,
-        #                 self.seen_rules_,
-        #                 binary_rules[i],
-        #                 self.apply_unary_rules_,
-        #                 self.max_length_)
-        #     # nproccessed += 1
-        #     # if (nproccessed % block_size)  == block_size - 1:
-        #     #     fprintf(stderr, "%d.. ", nproccessed)
-        fprintf(stderr, "done.\n")
-
+                   apply_unary_rules_,
+                   max_length_)
         logger.info('done A* parsing')
         cdef list tmp, res = []
         cdef Tree parse
         for i in range(len(sents)):
             tmp = []
-            for j in range(min(self.nbest_, cres[i].size())):
+            for j in range(min(nbest_, cres[i].size())):
                 tmp.append((Tree.from_ptr(cres[i][j].first, self.lang), cres[i][j].second))
             res.append(tmp)
         free(tags)
@@ -353,6 +347,7 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
                  tag_list,
                  unary_rules,
                  seen_rules,
+                 binary_rules=None,
                  beta=0.00001,
                  use_beta=True,
                  use_category_dict=True,
@@ -362,6 +357,8 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
                  possible_root_cats=None,
                  max_length=250):
 
+        if binary_rules is None:
+            self.binary_rules = ja_default_binary_rules
         if possible_root_cats is None:
             possible_root_cats = [
                 'NP[case=nc,mod=nm,fin=f]',
@@ -381,24 +378,22 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
                 'S[mod=nm,form=stem,fin=f]',
                 'S[mod=nm,form=stem,fin=t]'
             ]
-        possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
-                              for cat in possible_root_cats]
 
-        self.category_dict_ = convert_cat_dict(category_dict)
-        self.tag_list_ = cat_list_to_vector(tag_list)
-        self.beta_ = beta
+        self.possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
+                                   for cat in possible_root_cats]
+        self.category_dict = category_dict
+        self.tag_list = tag_list
+        self.unary_rules = unary_rules
+        self.seen_rules = seen_rules
+        self.binary_rules = binary_rules
+        self.beta = beta
         self.use_beta = use_beta
         self.use_category_dict = use_category_dict
         self.use_seen_rules = use_seen_rules
-        self.pruning_size_ = pruning_size
-        self.nbest_ = nbest
-        self.py_binary_rules_ = ja_default_binary_rules
-        self.binary_rules_ = combinator_list_to_vector(self.py_binary_rules)
-        self.possible_root_cats_ = cat_list_to_unordered_set(possible_root_cats)
-        self.unary_rules_ = convert_unary_rules(unary_rules)
-        self.seen_rules_ = convert_seen_rules(seen_rules)
-        self.apply_binary_rules_ = JaApplyBinaryRules
-        self.apply_unary_rules_ = JaApplyUnaryRules
-        self.max_length_ = max_length
+        self.pruning_size = pruning_size
+        self.nbest = nbest
+        self.possible_root_cats = possible_root_cats
+        self.max_length = max_length
         self.tagger = None
-        self.lang = b'ja'
+        self.lang = b'en'
+
