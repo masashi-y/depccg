@@ -78,8 +78,7 @@ cdef class EnglishCCGParser:
                  nbest=1,
                  possible_root_cats=None,
                  max_length=250):
-        if binary_rules is None:
-            self.binary_rules = en_default_binary_rules
+        self.binary_rules = binary_rules or en_default_binary_rules
         if possible_root_cats is None:
             possible_root_cats = ['S[dcl]', 'S[wq]', 'S[q]', 'S[qem]', 'NP']
         self.possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat

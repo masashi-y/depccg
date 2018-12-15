@@ -8,6 +8,8 @@ from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, Token
 from .download import download, load_model_directory
 from .utils import read_partial_tree, read_weights
+from .combinator import en_default_binary_rules, ja_default_binary_rules
+from .combinator import remove_disfluency, headfirst_combinator
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
@@ -21,6 +23,10 @@ def main(args):
     else:
         probs, tag_list = None, None
 
+    binary_rules = en_default_binary_rules
+    if args.disfluency:
+        binary_rules.append(headfirst_combinator(remove_disfluency()))
+         
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
 
@@ -29,6 +35,7 @@ def main(args):
     parser = Parsers[args.lang].from_dir(model,
                                          load_tagger=load_tagger,
                                          nbest=args.nbest,
+                                         binary_rules=binary_rules,
                                          possible_root_cats=args.root_cats,
                                          pruning_size=args.pruning_size,
                                          beta=args.beta,
@@ -76,8 +83,8 @@ def main(args):
                 print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll}')
     else:  # 'auto', 'deriv', 'ja'
         for i, parsed in enumerate(res, 1):
-            for tree, _ in parsed:
-                print(f'ID={i}')
+            for tree, prob in parsed:
+                print(f'ID={i}, Prob={prob}')
                 print(getattr(tree, args.format))
 
 
@@ -130,6 +137,9 @@ if __name__ == '__main__':
     parser.add_argument('--disable-seen-rules',
                         action='store_true',
                         help='')
+    parser.add_argument('--disfluency',
+                        action='store_true',
+                        help='perform disfluency detection')
     parser.add_argument('--verbose',
                         action='store_true')
     parser.set_defaults(func=main)
