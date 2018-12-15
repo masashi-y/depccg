@@ -18,9 +18,6 @@ def main(args):
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         level=logging.DEBUG if args.verbose else logging.INFO)
 
-    binary_rules = en_default_binary_rules
-    if args.disfluency:
-        binary_rules.append(headfirst_combinator(remove_disfluency()))
     if args.weights is not None:
         probs, tag_list = read_weights(args.weights)
     else:
@@ -133,9 +130,6 @@ if __name__ == '__main__':
                         default=50,
                         type=int,
                         help='use only the most probable supertags per word')
-    parser.add_argument('--disfluency',
-                        action='store_true',
-                        help='perform disfluency detection')
     parser.add_argument('--disable-beta',
                         action='store_true',
                         help='disable the use of the beta value')

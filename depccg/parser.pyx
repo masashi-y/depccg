@@ -61,6 +61,7 @@ cdef class EnglishCCGParser:
     cdef object pruning_size
     cdef object nbest
     cdef object max_length
+    cdef object max_steps
     cdef object tagger
     cdef bytes lang
 
