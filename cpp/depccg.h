@@ -41,21 +41,13 @@ struct AgendaItem
 
 };
 
-class PartialConstraint
+struct PartialConstraint
 {
-public:
     PartialConstraint(Cat cat, unsigned start_of_span, unsigned span_length)
         : cat(cat), start_of_span(start_of_span), span_length(span_length) {}
 
     PartialConstraint(unsigned start_of_span, unsigned span_length)
         : cat(nullptr), start_of_span(start_of_span), span_length(span_length) {}
-
-    PartialConstraint(const PartialConstraint&) = default;
-
-    // PartialConstraint(const PartialConstraint&& other)
-    //     : cat(other.cat), start_of_span(other.start_of_span), span_length(span_length) {}
-
-    ~PartialConstraint() {}
 
     bool SpanOverlap(unsigned start_of_span0, unsigned span_length0) const {
     unsigned end_of_span = start_of_span + span_length - 1;
@@ -68,6 +60,13 @@ public:
             start_of_span <= end_of_span0 &&
             start_of_span <= end_of_span0 &&
             end_of_span0 < end_of_span);
+    }
+
+    bool Violates(Cat cat0, unsigned start_of_span0, unsigned span_length0) const {
+        if (cat && start_of_span == start_of_span0 && span_length == span_length0) {
+            return ! cat->Matches(cat0);
+        }
+        return false;
     }
 
     bool Violates(Cat cat0, unsigned start_of_span0, unsigned span_length0,
@@ -86,7 +85,6 @@ public:
         return SpanOverlap(start_of_span0, span_length0);
     }
 
-private:
     Cat cat;
     unsigned start_of_span;
     unsigned span_length;
@@ -109,9 +107,66 @@ public:
         constraints.emplace_back(start_of_span0, span_length0);
     }
 
+    // std::vector<NodeType> AcceptableTrees(NodeType node) const {
+    //     std::vector<NodeType> results;
+    //     bool add_node = false;
+    //     unsigned start_of_span0 = node->GetStartOfSpan();
+    //     unsigned span_length0 = node->GetLength();
+    //
+    //     for (auto&& constraint: this->constraints) {
+    //         if (constraint.cat && 
+    //             constraint.start_of_span == start_of_span0 && 
+    //             constraint.span_length == span_length0) {
+    //
+    //             if (constraint.cat->Matches(node->GetCategory())) {
+    //                 results.push_back(node);
+    //                 add_node = true;
+    //             }
+    //             if (unary_rules.count(node->GetCategory()) > 0) {
+    //                for (auto&& unary: unary_rules.at(node->GetCategory())) {
+    //                    if (unary->Matches(constraint.cat)) {
+    //                        NodeType unary_tree = std::make_shared<const Tree>(unary, node);
+    //                        results.push_back(unary_tree);
+    //                    }
+    //                }
+    //             }
+    //         }
+    //         if (! add_node && ! constraint.SpanOverlap(start_of_span0, span_length0))
+    //             results.push_back(node);
+    //     }
+    //     return results;
+    // }
+
     bool Violates(Cat cat0, unsigned start_of_span0, unsigned span_length0) const {
-        for (auto&& constraint: this->constraints) {
+        for (auto&& constraint: constraints) {
             if (constraint.Violates(cat0, start_of_span0, span_length0, unary_rules)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool ViolatesNoRec(NodeType node) const {
+        for (auto&& constraint: constraints) {
+            if (constraint.Violates(
+                    node->GetCategory(), node->GetStartOfSpan(), node->GetLength())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool Violates(NodeType node) const {
+        bool result = false;
+        if (! node->IsLeaf() && ! node->IsUnary() ) {
+            result |= ViolatesNoRec(node->GetLeftChild());
+            result |= ViolatesNoRec(node->GetRightChild());
+        }
+        if (result)
+            return true;
+        for (auto&& constraint: constraints) {
+            if (constraint.Violates(
+                    node->GetCategory(), node->GetStartOfSpan(), node->GetLength(), unary_rules)) {
                 return true;
             }
         }
@@ -153,8 +208,8 @@ std::vector<NodeType> JaApplyBinaryRules(
         unsigned start_of_span, unsigned span_length);
 
 ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules);
-ApplyBinaryRules MakeConstrainedBinaryRules(
-        const std::vector<Op>& binary_rules, const PartialConstraints& constraints);
+// ApplyBinaryRules MakeConstrainedBinaryRules(
+//         const std::vector<Op>& binary_rules, const PartialConstraints& constraints);
 
 std::vector<ScoredNode> ParseSentence(
         unsigned id,
@@ -172,7 +227,9 @@ std::vector<ScoredNode> ParseSentence(
         const std::unordered_set<CatPair>& seen_rules,
         ApplyBinaryRules apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
-        unsigned max_length);
+        PartialConstraints& constraints,
+        unsigned max_length,
+        unsigned max_steps);
 
 std::vector<std::vector<ScoredNode>> ParseSentences(
         std::vector<std::string>& sents,
@@ -189,7 +246,9 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         const std::unordered_set<CatPair>& seen_rules,
         const std::vector<ApplyBinaryRules>& apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
-        unsigned max_length);
+        std::vector<PartialConstraints>& constraints,
+        unsigned max_length,
+        unsigned max_steps);
 
 } // namespace myccg
 #endif

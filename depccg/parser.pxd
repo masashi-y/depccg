@@ -35,7 +35,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
     ApplyBinaryRules JaApplyBinaryRules
 
     ApplyBinaryRules MakeEnApplyBinaryRules(const vector[Op]&)
-    ApplyBinaryRules MakeConstrainedBinaryRules(const vector[Op]&, const PartialConstraints&)
+    # ApplyBinaryRules MakeConstrainedBinaryRules(const vector[Op]&, const PartialConstraints&)
 
     vector[ScoredNode] ParseSentence(
             unsigned id,
@@ -53,7 +53,9 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             const unordered_set[CatPair]& seen_rules,
             ApplyBinaryRules apply_binary_rules,
             ApplyUnaryRules apply_unary_rules,
-            unsigned max_length) nogil
+            PartialConstraints constraints,
+            unsigned max_length,
+            unsigned max_steps) nogil
 
     vector[vector[ScoredNode]] ParseSentences(
             vector[string]& sents,
@@ -70,6 +72,6 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             const unordered_set[CatPair]& seen_rules,
             const vector[ApplyBinaryRules]& apply_binary_rules,
             ApplyUnaryRules apply_unary_rules,
-            unsigned max_length)
-
-
+            vector[PartialConstraints]& constraints,
+            unsigned max_length,
+            unsigned max_steps)
