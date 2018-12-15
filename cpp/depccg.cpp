@@ -91,21 +91,20 @@ ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules) {
     };
 }
 
-ApplyBinaryRules MakeConstrainedBinaryRules(
-        const std::vector<Op>& binary_rules, const PartialConstraints& constraints) {
-    return [=] (const std::unordered_set<CatPair>& seen_rules,
-            NodeType left, NodeType right, unsigned start_of_span, unsigned span_length) {
-        std::vector <NodeType> results;
-        for (auto&& rule: EnGetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
-                if (! constraints.Violates(rule.result, start_of_span, span_length)) {
-                    NodeType subtree = std::make_shared<const Tree>(
-                        rule.result, rule.left_is_head, left, right, rule.combinator);
-                    results.push_back(subtree);
-                }
-        }
-        return results;
-    };
-}
+// ApplyBinaryRules MakeConstrainedBinaryRules(
+//         const std::vector<Op>& binary_rules, const PartialConstraints& constraints) {
+//     return [=] (const std::unordered_set<CatPair>& seen_rules,
+//             NodeType left, NodeType right, unsigned start_of_span, unsigned span_length) {
+//         std::vector <NodeType> results;
+//         for (auto&& rule: EnGetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
+//             NodeType subtree = std::make_shared<const Tree>(
+//                 rule.result, rule.left_is_head, left, right, rule.combinator);
+//             for (auto&& acceptable: constraints.AcceptableTrees(subtree))
+//                     results.push_back(acceptable);
+//         }
+//         return results;
+//     };
+// }
 
 std::vector<RuleCache>& JaGetRules(
         const std::unordered_set<CatPair>& seen_rules, Cat left, Cat right) {
@@ -194,7 +193,9 @@ std::vector<ScoredNode> ParseSentence(
         const std::unordered_set<CatPair>& seen_rules,
         ApplyBinaryRules apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
-        unsigned max_length) {
+        PartialConstraints& constraints,
+        unsigned max_length,
+        unsigned max_steps) {
     std::vector<std::string> tokens = utils::Split(sent, ' ');
     unsigned tag_size = tag_list.size();
     unsigned sent_size = tokens.size();
@@ -248,8 +249,10 @@ std::vector<ScoredNode> ParseSentence(
             scored_cats[i].pop();
             if (std::exp(prob_and_cat.first) > threshold) {
                 float in_prob = prob_and_cat.first;
-                agenda.emplace(false, agenda_id++, std::make_shared<const Leaf>(
-                            tokens[i], prob_and_cat.second, i), in_prob, out_prob, i, 1);
+                auto leaf = std::make_shared<const Leaf>(tokens[i], prob_and_cat.second, i);
+                if (! constraints.Violates(leaf)) {
+                    agenda.emplace(false, agenda_id++, leaf, in_prob, out_prob, i, 1);
+                }
             } else
                 break;
         }
@@ -267,6 +270,8 @@ std::vector<ScoredNode> ParseSentence(
             agenda.pop();
             continue;
         }
+        if (item.id >= max_steps)
+            break;
         agenda.pop();
         NodeType parse = item.parse;
 
@@ -285,8 +290,10 @@ std::vector<ScoredNode> ParseSentence(
                     && unary_rules.count(parse->GetCategory()) > 0) {
                 for (Cat unary: apply_unary_rules(unary_rules, parse)) {
                     NodeType subtree = std::make_shared<const Tree>(unary, parse);
-                    agenda.emplace(false, agenda_id++, subtree, item.in_prob - 0.1, item.out_prob,
-                                        item.start_of_span, item.span_length);
+                    if (! constraints.Violates(subtree)) {
+                        agenda.emplace(false, agenda_id++, subtree, item.in_prob - 0.1, item.out_prob,
+                                            item.start_of_span, item.span_length);
+                    }
                 }
             }
             for (auto&& other: chart.GetCellsStartingAt(item.start_of_span + item.span_length)) {
@@ -296,19 +303,20 @@ std::vector<ScoredNode> ParseSentence(
                     unsigned start_of_span = parse->GetStartOfSpan();
                     unsigned span_length = parse->GetLength() + right->GetLength();
 
-                    for (auto subtree: apply_binary_rules(
-                                seen_rules, parse, right, start_of_span, span_length)) {
-                        NodeType head = subtree->HeadIsLeft() ? parse : right;
-                        NodeType dep  = subtree->HeadIsLeft() ? right : parse;
-                        float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
-                        float in_prob = item.in_prob + prob + dep_score;
-                        float out_prob = tag_out_probs(item.start_of_span,
-                                        item.start_of_span + span_length)
-                                       + dep_out_probs(item.start_of_span,
-                                        item.start_of_span + span_length)
-                                       - best_dep_probs[head->GetHeadId()];
-                        agenda.emplace(false, agenda_id++, subtree, in_prob, out_prob,
-                                            item.start_of_span, span_length);
+                    for (auto subtree: apply_binary_rules(seen_rules, parse, right, start_of_span, span_length)) {
+                        if (! constraints.Violates(subtree)) {
+                            NodeType head = subtree->HeadIsLeft() ? parse : right;
+                            NodeType dep  = subtree->HeadIsLeft() ? right : parse;
+                            float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
+                            float in_prob = item.in_prob + prob + dep_score;
+                            float out_prob = tag_out_probs(item.start_of_span,
+                                            item.start_of_span + span_length)
+                                           + dep_out_probs(item.start_of_span,
+                                            item.start_of_span + span_length)
+                                           - best_dep_probs[head->GetHeadId()];
+                            agenda.emplace(false, agenda_id++, subtree, in_prob, out_prob,
+                                                item.start_of_span, span_length);
+                        }
                     }
                 }
             }
@@ -319,19 +327,20 @@ std::vector<ScoredNode> ParseSentence(
                     unsigned span_length = parse->GetLength() + left->GetLength();
                     unsigned start_of_span = left->GetStartOfSpan();
 
-                    for (auto subtree: apply_binary_rules(
-                                seen_rules, left, parse, start_of_span, span_length)) {
-                        NodeType head  = subtree->HeadIsLeft() ? left : parse;
-                        NodeType dep   = subtree->HeadIsLeft() ? parse : left;
-                        float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
-                        float in_prob = item.in_prob + prob + dep_score;
-                        float out_prob = tag_out_probs(start_of_span,
-                                        start_of_span + span_length)
-                                       + dep_out_probs(start_of_span,
-                                        start_of_span + span_length)
-                                       - best_dep_probs[head->GetHeadId()];
-                        agenda.emplace(false, agenda_id++, subtree, in_prob, out_prob,
-                                            start_of_span, span_length);
+                    for (auto subtree: apply_binary_rules(seen_rules, left, parse, start_of_span, span_length)) {
+                        if (! constraints.Violates(subtree)) {
+                            NodeType head  = subtree->HeadIsLeft() ? left : parse;
+                            NodeType dep   = subtree->HeadIsLeft() ? parse : left;
+                            float dep_score = dep_in_probs(dep->GetHeadId(), head->GetHeadId() + 1);
+                            float in_prob = item.in_prob + prob + dep_score;
+                            float out_prob = tag_out_probs(start_of_span,
+                                            start_of_span + span_length)
+                                           + dep_out_probs(start_of_span,
+                                            start_of_span + span_length)
+                                           - best_dep_probs[head->GetHeadId()];
+                            agenda.emplace(false, agenda_id++, subtree, in_prob, out_prob,
+                                                start_of_span, span_length);
+                        }
                     }
                 }
             }
@@ -360,7 +369,9 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         const std::unordered_set<CatPair>& seen_rules,
         const std::vector<ApplyBinaryRules>& apply_binary_rules,
         ApplyUnaryRules apply_unary_rules,
-        unsigned max_length) {
+        std::vector<PartialConstraints>& constraints,
+        unsigned max_length,
+        unsigned max_steps) {
     unsigned total_size = sents.size();
     unsigned block_size = std::max(1, (int)(total_size / 10));
     unsigned nprocessed = 0;
@@ -382,7 +393,9 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
                     seen_rules,
                     apply_binary_rules[i],
                     apply_unary_rules,
-                    max_length);
+                    constraints[i],
+                    max_length,
+                    max_steps);
         if ( ( nprocessed++ % block_size ) == block_size - 1 )
             std::cerr << nprocessed << ".. " << std::flush;
     }

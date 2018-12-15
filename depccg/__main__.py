@@ -18,6 +18,9 @@ def main(args):
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         level=logging.DEBUG if args.verbose else logging.INFO)
 
+    binary_rules = en_default_binary_rules
+    if args.disfluency:
+        binary_rules.append(headfirst_combinator(remove_disfluency()))
     if args.weights is not None:
         probs, tag_list = read_weights(args.weights)
     else:
@@ -41,7 +44,9 @@ def main(args):
                                          beta=args.beta,
                                          use_beta=not args.disable_beta,
                                          use_seen_rules=not args.disable_seen_rules,
-                                         use_category_dict=not args.disable_category_dictionary)
+                                         use_category_dict=not args.disable_category_dictionary,
+                                         max_length=args.max_length,
+                                         max_steps=args.max_steps)
 
     fin = sys.stdin if args.input is None else open(args.input)
 
@@ -128,6 +133,9 @@ if __name__ == '__main__':
                         default=50,
                         type=int,
                         help='use only the most probable supertags per word')
+    parser.add_argument('--disfluency',
+                        action='store_true',
+                        help='perform disfluency detection')
     parser.add_argument('--disable-beta',
                         action='store_true',
                         help='disable the use of the beta value')
@@ -140,6 +148,14 @@ if __name__ == '__main__':
     parser.add_argument('--disfluency',
                         action='store_true',
                         help='perform disfluency detection')
+    parser.add_argument('--max-length',
+                        default=250,
+                        type=int,
+                        help='give up parsing a sentence that contains more words than this value')
+    parser.add_argument('--max-steps',
+                        default=100000,
+                        type=int,
+                        help='give up parsing when the number of times of popping agenda items exceeds this value')
     parser.add_argument('--verbose',
                         action='store_true')
     parser.set_defaults(func=main)

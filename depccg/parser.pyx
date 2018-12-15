@@ -77,7 +77,8 @@ cdef class EnglishCCGParser:
                  pruning_size=50,
                  nbest=1,
                  possible_root_cats=None,
-                 max_length=250):
+                 max_length=250,
+                 max_steps=100000):
         self.binary_rules = binary_rules or en_default_binary_rules
         if possible_root_cats is None:
             possible_root_cats = ['S[dcl]', 'S[wq]', 'S[q]', 'S[qem]', 'NP']
@@ -94,6 +95,7 @@ cdef class EnglishCCGParser:
         self.pruning_size = pruning_size
         self.nbest = nbest
         self.max_length = max_length
+        self.max_steps = max_steps
         self.tagger = None
         self.lang = b'en'
 
@@ -274,26 +276,28 @@ cdef class EnglishCCGParser:
         cdef ApplyBinaryRules default_apply_binary_rules = MakeEnApplyBinaryRules(binary_rules_)
         cdef ApplyUnaryRules apply_unary_rules_ = EnApplyUnaryRules
         cdef unsigned max_length_ = self.max_length
+        cdef unsigned max_steps_ = self.max_steps
 
-        cdef vector[ApplyBinaryRules] apply_binary_rules
+        cdef vector[ApplyBinaryRules] apply_binary_rules = \
+                vector[ApplyBinaryRules](doc_size, default_apply_binary_rules)
+        cdef vector[PartialConstraints] c_constraints
 
         if constraints is not None:
             assert len(constraints) == doc_size
             logger.info('loading partial constraints')
+            c_constraints = vector[PartialConstraints](doc_size)
             new_probs = []
-            for constraint, (py_cat_scores, py_dep_scores) in zip(constraints, probs):
+            for i, (constraint, (py_cat_scores, py_dep_scores)) in enumerate(zip(constraints, probs)):
                 nonterminal_constraints = [cx for cx in constraint if len(cx) == 3]
                 terminal_constraints = [cx for cx in constraint if len(cx) == 2]
                 logging.debug(f'non-terminal constraints: {nonterminal_constraints}')
                 logging.debug(f'terminal constraints: {terminal_constraints}')
-                constrained_binary_rule = MakeConstrainedBinaryRules(binary_rules_,
-                    build_nonterminal_constraints(nonterminal_constraints, unary_rules_))
-                apply_binary_rules.push_back(constrained_binary_rule)
+                c_constraints[i] = build_nonterminal_constraints(nonterminal_constraints, unary_rules_)
                 py_cat_scores = build_terminal_constraints(terminal_constraints, py_cat_scores, py_tag_list)
                 new_probs.append((py_cat_scores, py_dep_scores))
             probs = new_probs
         else:
-            apply_binary_rules = vector[ApplyBinaryRules](doc_size, default_apply_binary_rules)
+            c_constraints = vector[PartialConstraints](doc_size, PartialConstraints())
 
         cdef int tag_size = tag_list_.size()
         for i, (py_cat_scores, py_dep_scores) in enumerate(probs):
@@ -326,7 +330,9 @@ cdef class EnglishCCGParser:
                    seen_rules_,
                    apply_binary_rules,
                    apply_unary_rules_,
-                   max_length_)
+                   c_constraints,
+                   max_length_,
+                   max_steps_)
         logger.info('done A* parsing')
         cdef list tmp, res = []
         cdef Tree parse
@@ -354,7 +360,8 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
                  pruning_size=50,
                  nbest=1,
                  possible_root_cats=None,
-                 max_length=250):
+                 max_length=250,
+                 max_steps=100000):
 
         if binary_rules is None:
             self.binary_rules = ja_default_binary_rules
@@ -393,6 +400,7 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.nbest = nbest
         self.possible_root_cats = possible_root_cats
         self.max_length = max_length
+        self.max_steps = max_steps
         self.tagger = None
         self.lang = b'en'
 
