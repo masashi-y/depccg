@@ -4,6 +4,17 @@ import argparse
 import codecs
 import sys
 
+
+try:
+    import html
+    def escape(text):
+        return html.escape(text)
+except ImportError:
+    import cgi
+    def escape(text):
+        return cgi.escape(text)
+
+
 if sys.version_info.major == 2:
     sys.stdin = codecs.getreader('utf-8')(sys.stdin)
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -11,6 +22,7 @@ if sys.version_info.major == 2:
 from depccg import PyAStarParser, PyJaAStarParser, to_mathml
 
 Parsers = {"en": PyAStarParser, "ja": PyJaAStarParser}
+
 
 class Token:
     def __init__(self, word, lemma, pos, chunk, entity):
@@ -35,6 +47,15 @@ class Token:
             w, p, n = items
             return Token(w, "XX", p, "XX", n)
 
+    def escaped(self):
+        return Token(
+                escape(self.word),
+                escape(self.lemma),
+                escape(self.pos),
+                escape(self.chunk),
+                escape(self.entity))
+
+
 def to_xml(trees, tagged_doc, file=sys.stdout):
     print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
     print("<?xml-stylesheet type=\"text/xsl\" href=\"candc.xml\"?>")
@@ -42,7 +63,7 @@ def to_xml(trees, tagged_doc, file=sys.stdout):
     for i, (tree, tagged) in enumerate(zip(trees, tagged_doc), 1):
         for j, (t, _) in enumerate(tree, 1):
             print("<ccg sentence=\"{}\" id=\"{}\">".format(i, j))
-            print(t.xml.format(*tagged))
+            print(t.xml.format(*[token.escaped() for token in tagged]))
             print("</ccg>")
     print("</candc>")
 
