@@ -47,7 +47,6 @@ def main(args):
 
     fin = sys.stdin if args.input is None else open(args.input)
 
-    tagged_doc = None
     if args.input_format == 'POSandNERtagged':
         tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
         doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
@@ -56,18 +55,20 @@ def main(args):
                                tag_list=tag_list,
                                batchsize=args.batchsize)
     elif args.input_format == 'json':
-        res = parser.parse_json([json.loads(line) for line in fin])
+        doc = [json.loads(line) for line in fin]
+        tagged_doc = [[Token.from_word(word) for word in sent['words'].split(' ')] for sent in doc]
+        res = parser.parse_json(doc)
     elif args.input_format == 'partial':
         doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
+        tagged_doc = [[Token.from_word(word) for word in sent] for sent in doc]
         res = parser.parse_doc(doc,
                                probs=probs,
                                tag_list=tag_list,
                                batchsize=args.batchsize,
                                constraints=constraints)
     else:
-        assert args.format not in ['xml', 'prolog'], \
-            'XML and Prolog output format is supported only with --input-format POSandNERtagged.'
         doc = [l.strip() for l in fin]
+        tagged_doc = [[Token.from_word(word) for word in sent.split(' ')] for sent in doc]
         res = parser.parse_doc(doc,
                                probs=probs,
                                tag_list=tag_list,

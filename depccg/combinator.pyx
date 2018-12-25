@@ -184,6 +184,9 @@ cpdef ja_generalized_forward_composition2(str left, str right, str result, str n
 cpdef remove_disfluency():
     return Combinator.from_ptr(<Op>new RemoveDisfluency())
 
+cpdef unknown_combinator():
+    return Combinator.from_ptr(<Op>new UnknownCombinator())
+
 
 cdef vector[Op] combinator_list_to_vector(list combinators):
     cdef vector[Op] results

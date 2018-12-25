@@ -123,6 +123,10 @@ cdef extern from "combinator.h" namespace "myccg" nogil:
     cdef cppclass RemoveDisfluency:
         RemoveDisfluency()
 
+    cdef cppclass UnknownCombinator:
+        UnknownCombinator()
+
+
 cdef class Combinator:
     cdef Op op_
 

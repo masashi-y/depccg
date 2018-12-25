@@ -528,6 +528,24 @@ class RemoveDisfluency: public CCombinator
     std::string ToStr() const { return "<X>"; }
 };
 
+class UnknownCombinator: public CCombinator
+{
+    public:
+    UnknownCombinator(): CCombinator(NONE) {}
+    bool CanApply(Cat left, Cat right) const {
+        throw std::runtime_error("don't use this combinator");
+    }
+
+    Cat Apply(Cat left, Cat right) const {
+        throw std::runtime_error("don't use this combinator");
+    }
+
+    bool HeadIsLeft(Cat left, Cat right) const {
+        throw std::runtime_error("don't use this combinator");
+    }
+
+    std::string ToStr() const { return "<*>"; }
+};
 
 extern CCombinator* unary_rule;
 

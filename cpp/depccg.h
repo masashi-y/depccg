@@ -125,7 +125,7 @@ public:
     //             if (unary_rules.count(node->GetCategory()) > 0) {
     //                for (auto&& unary: unary_rules.at(node->GetCategory())) {
     //                    if (unary->Matches(constraint.cat)) {
-    //                        NodeType unary_tree = std::make_shared<const Tree>(unary, node);
+    //                        NodeType unary_tree = std::make_shared<const CTree>(unary, node);
     //                        results.push_back(unary_tree);
     //                    }
     //                }

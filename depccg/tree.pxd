@@ -1,7 +1,9 @@
 from libcpp.pair cimport pair
 from libcpp.memory cimport shared_ptr
 from libcpp.string cimport string
+from libcpp cimport bool
 from .cat cimport Cat, CatPair
+from .combinator cimport Op, Combinator
 
 cdef extern from "tree.h" namespace "myccg" nogil:
     cdef cppclass Node:
@@ -22,6 +24,13 @@ cdef extern from "tree.h" namespace "myccg" nogil:
 
     ctypedef shared_ptr[const Node] NodeType
     ctypedef pair[NodeType, float] ScoredNode
+
+    cdef cppclass Leaf(Node):
+        Leaf(const string&, Cat, int)
+
+    cdef cppclass CTree(Node):
+        CTree(Cat, bool, NodeType, NodeType, Op)
+        CTree(Cat, NodeType)
 
     cdef cppclass AUTO:
         AUTO(NodeType tree)
@@ -49,6 +58,7 @@ cdef extern from "tree.h" namespace "myccg" nogil:
 
     string EnResolveCombinatorName(const Node*)
     string JaResolveCombinatorName(const Node*)
+
 
 cdef class Tree:
     cdef NodeType node_

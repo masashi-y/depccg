@@ -14,9 +14,9 @@ namespace myccg {
 
 class Node;
 class Leaf;
-class Tree;
+class CTree;
 typedef std::shared_ptr<const Node> NodeType;
-typedef std::shared_ptr<const Tree> TreeType;
+typedef std::shared_ptr<const CTree> TreeType;
 typedef std::shared_ptr<const Leaf> LeafType;
 typedef std::pair<NodeType, float> ScoredNode;
 
@@ -24,7 +24,7 @@ typedef std::pair<NodeType, float> ScoredNode;
 class FormatVisitor {
 public:
     virtual int Visit(const Leaf* leaf) = 0;
-    virtual int Visit(const Tree* leaf) = 0;
+    virtual int Visit(const CTree* leaf) = 0;
 };
 
 class Node
@@ -101,11 +101,11 @@ private:
 
 RuleType GetUnaryRuleType(Cat cat);
 
-class Tree: public Node
+class CTree: public Node
 {
 public:
 
-    Tree(Cat cat, bool left_is_head, const Node* lchild,
+    CTree(Cat cat, bool left_is_head, const Node* lchild,
             const Node* rchild, Op rule)
     : Node(cat, rule->GetRuleType(), lchild->GetLength() + rchild->GetLength()),
       left_is_head_(left_is_head),
@@ -114,7 +114,7 @@ public:
             rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
       headid_(left_is_head ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
 
-    Tree(Cat cat, bool left_is_head, NodeType lchild,
+    CTree(Cat cat, bool left_is_head, NodeType lchild,
             NodeType rchild, Op rule)
     : Node(cat, rule->GetRuleType(), lchild->GetLength() + rchild->GetLength()),
       left_is_head_(left_is_head),
@@ -123,19 +123,19 @@ public:
             rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
       headid_(left_is_head ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
 
-    Tree(Cat cat, const Node* lchild)
+    CTree(Cat cat, const Node* lchild)
     : Node(cat, GetUnaryRuleType(cat), lchild->GetLength()), left_is_head_(true),
       lchild_(lchild), rchild_(NULL), rule_(unary_rule),
       dependency_length_(lchild_->GetDependencyLength()),
       headid_(lchild_->GetHeadId()) {}
 
-    Tree(Cat cat, NodeType lchild)
+    CTree(Cat cat, NodeType lchild)
     : Node(cat, GetUnaryRuleType(cat), lchild->GetLength()), left_is_head_(true),
       lchild_(lchild), rchild_(NULL), rule_(unary_rule),
       dependency_length_(lchild_->GetDependencyLength()),
       headid_(lchild_->GetHeadId()) {}
 
-    ~Tree() {}
+    ~CTree() {}
 
     unsigned GetHeadId() const { return headid_; }
 
@@ -205,7 +205,7 @@ public:
         return leaves_;
     }
 
-    int Visit(const Tree* tree) {
+    int Visit(const CTree* tree) {
         tree->GetLeftChild()->Accept(*this);
         if (! tree->IsUnary())
             tree->GetRightChild()->Accept(*this);
@@ -234,7 +234,7 @@ public:
         ost << deriv.out_.str();
         return ost;
     }
-    int Visit(const Tree* tree);
+    int Visit(const CTree* tree);
     int Visit(const Leaf* leaf);
 
 private:
@@ -252,7 +252,7 @@ public:
     void Process() { tree_->Accept(*this); }
     std::string Get() const { return out_.str(); }
 
-    int Visit(const Tree* tree);
+    int Visit(const CTree* tree);
     int Visit(const Leaf* leaf);
 
 private:
@@ -272,7 +272,7 @@ public:
     }
     std::string Get() const { return out_.str(); }
 
-    int Visit(const Tree* tree);
+    int Visit(const CTree* tree);
     int Visit(const Leaf* leaf);
 
 private:
@@ -292,7 +292,7 @@ public:
         return ost << xml.out_.str();
     }
 
-    int Visit(const Tree* tree);
+    int Visit(const CTree* tree);
     int Visit(const Leaf* leaf);
 
 private:
@@ -313,7 +313,7 @@ public:
         return ost << xml.out_.str();
     }
 
-    int Visit(const Tree* tree);
+    int Visit(const CTree* tree);
     int Visit(const Leaf* leaf);
 
 private:
@@ -339,7 +339,7 @@ public:
     }
 
     void Indent() { for (int i = 0; i < depth; i++) out_ << " "; };
-    int Visit(const Tree* tree);
+    int Visit(const CTree* tree);
     int Visit(const Leaf* leaf);
 
 private:
@@ -361,7 +361,7 @@ public:
         return ost << xml.out_.str();
     }
 
-    int Visit(const Tree* tree);
+    int Visit(const CTree* tree);
     int Visit(const Leaf* leaf);
 
 private:

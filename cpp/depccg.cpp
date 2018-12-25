@@ -71,7 +71,7 @@ std::vector<NodeType> EnApplyBinaryRules(
         unsigned start_of_span, unsigned span_length) {
     std::vector <NodeType> results;
     for (auto&& rule: EnGetRules(en_binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
-            NodeType subtree = std::make_shared<const Tree>(
+            NodeType subtree = std::make_shared<const CTree>(
                     rule.result, rule.left_is_head, left, right, rule.combinator);
             results.push_back(subtree);
     }
@@ -83,7 +83,7 @@ ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules) {
             unsigned start_of_span, unsigned span_length) {
         std::vector <NodeType> results;
         for (auto&& rule: EnGetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
-                NodeType subtree = std::make_shared<const Tree>(
+                NodeType subtree = std::make_shared<const CTree>(
                         rule.result, rule.left_is_head, left, right, rule.combinator);
                 results.push_back(subtree);
         }
@@ -97,7 +97,7 @@ ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules) {
 //             NodeType left, NodeType right, unsigned start_of_span, unsigned span_length) {
 //         std::vector <NodeType> results;
 //         for (auto&& rule: EnGetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
-//             NodeType subtree = std::make_shared<const Tree>(
+//             NodeType subtree = std::make_shared<const CTree>(
 //                 rule.result, rule.left_is_head, left, right, rule.combinator);
 //             for (auto&& acceptable: constraints.AcceptableTrees(subtree))
 //                     results.push_back(acceptable);
@@ -136,7 +136,7 @@ std::vector<NodeType> JaApplyBinaryRules(
         unsigned start_of_span, unsigned span_length) {
     std::vector <NodeType> results;
     for (auto&& rule: JaGetRules(seen_rules, left->GetCategory(), right->GetCategory())) {
-            NodeType subtree = std::make_shared<const Tree>(
+            NodeType subtree = std::make_shared<const CTree>(
                     rule.result, rule.left_is_head, left, right, rule.combinator);
             results.push_back(subtree);
     }
@@ -289,7 +289,7 @@ std::vector<ScoredNode> ParseSentence(
             if ((sent_size == 1 || item.span_length != sent_size)
                     && unary_rules.count(parse->GetCategory()) > 0) {
                 for (Cat unary: apply_unary_rules(unary_rules, parse)) {
-                    NodeType subtree = std::make_shared<const Tree>(unary, parse);
+                    NodeType subtree = std::make_shared<const CTree>(unary, parse);
                     if (! constraints.Violates(subtree)) {
                         agenda.emplace(false, agenda_id++, subtree, item.in_prob - 0.1, item.out_prob,
                                             item.start_of_span, item.span_length);

@@ -1,5 +1,6 @@
 import re
 
+
 class Token:
     def __init__(self, word, lemma, pos, chunk, entity):
         self.word = word
@@ -8,20 +9,24 @@ class Token:
         self.chunk = chunk
         self.entity = entity
 
-    @staticmethod
-    def from_piped(string):
+    @classmethod
+    def from_piped(cls, string):
         # WORD|POS|NER or WORD|LEMMA|POS|NER
         # or WORD|LEMMA|POS|NER|CHUCK
         items = string.split('|')
         if len(items) == 5:
             w, l, p, n, c = items
-            return Token(w, l, p, c, n)
+            return cls(w, l, p, c, n)
         elif len(items) == 4:
             w, l, p, n = items
-            return Token(w, l, p, 'XX', n)
+            return cls(w, l, p, 'XX', n)
         else:
             w, p, n = items
-            return Token(w, 'XX', p, 'XX', n)
+            return cls(w, 'XX', p, 'XX', n)
+
+    @classmethod
+    def from_word(cls, word):
+            return cls(word, 'XX', 'XX', 'XX', 'XX')
 
 
 def to_xml(trees, tagged_doc):

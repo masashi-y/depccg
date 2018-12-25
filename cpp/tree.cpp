@@ -30,7 +30,7 @@ int Derivation::Visit(const Leaf* leaf) {
                 2 + lwidth_ + (int)utils::utf8_strlen(leaf->GetWord()));
 }
 
-int Derivation::Visit(const Tree* tree) {
+int Derivation::Visit(const CTree* tree) {
     int lwidth = lwidth_;
     int rwidth = lwidth;
     rwidth = std::max(rwidth, (tree->GetLeftChild()->Accept(*this)));
@@ -78,7 +78,7 @@ void Derivation::Process() {
     tree_->Accept(*this);
 }
 
-int AUTO::Visit(const Tree* tree) {
+int AUTO::Visit(const CTree* tree) {
     out_ << "(<T "
          << tree->GetCategory() << " "
          << (tree->HeadIsLeft() ? "0 " : "1 ")
@@ -114,7 +114,7 @@ int AUTO::Visit(const Leaf* leaf) {
 // std::string JaResolveCombinatorName(const Combinator* comb) {
 // }
 
-int JaCCG::Visit(const Tree* tree) {
+int JaCCG::Visit(const CTree* tree) {
     out_ << "{";
     if (tree->IsUnary()) {
         Cat child = tree->GetLeftChild()->GetCategory();
@@ -196,7 +196,7 @@ int PyXML::Visit(const Leaf* leaf) {
    return 0;
 }
 
-std::string ToCAndCStr(const Tree* tree) {
+std::string ToCAndCStr(const CTree* tree) {
     if (tree->IsUnary()) {
         Cat init = tree->GetLeftChild()->GetCategory();
         if ((init->Matches(CCategory::Parse("NP")) ||
@@ -227,7 +227,7 @@ std::string ToCAndCStr(const Tree* tree) {
 }
 
 int XMLVisitBase(FormatVisitor* visitor,
-        const Tree* tree, std::ostream& out, bool feat) {
+        const CTree* tree, std::ostream& out, bool feat) {
     Cat c = tree->GetCategory();
     out << "<rule type=\""
          << ToCAndCStr(tree)
@@ -241,12 +241,12 @@ int XMLVisitBase(FormatVisitor* visitor,
     return 0;
 }
 
-int XML::Visit(const Tree* tree) {
+int XML::Visit(const CTree* tree) {
     XMLVisitBase(this, tree, out_, feat_);
     return 0;
 }
 
-int PyXML::Visit(const Tree* tree) {
+int PyXML::Visit(const CTree* tree) {
     XMLVisitBase(this, tree, out_, feat_);
     return 0;
 }
@@ -319,7 +319,7 @@ int Prolog::Visit(const Leaf* leaf) {
 }
 
 // TODO: Fix this
-int Prolog::Visit(const Tree* tree) {
+int Prolog::Visit(const CTree* tree) {
     bool child = false, arg = false, noise = false, conj2 = false;
     Indent();
     if (tree->IsUnary()) {
@@ -439,7 +439,7 @@ void CoNLL::Process() {
     } 
 }
 
-int CoNLL::Visit(const Tree* tree) {
+int CoNLL::Visit(const CTree* tree) {
    int lhead = tree->GetLeftChild()->Accept(*this);
    if (! tree->IsUnary()) {
        int rhead = tree->GetRightChild()->Accept(*this);
@@ -457,8 +457,8 @@ int CoNLL::Visit(const Leaf* leaf) {
 }
 
 std::string EnResolveCombinatorName(const Node* parse) {
-    const Tree* tree;
-    if ( (tree = dynamic_cast<const Tree*>(parse)) == nullptr )
+    const CTree* tree;
+    if ( (tree = dynamic_cast<const CTree*>(parse)) == nullptr )
         throw std::runtime_error("This node is leaf and does not have combinator!");
     if (tree->IsUnary()) {
         Cat init = tree->GetLeftChild()->GetCategory();
@@ -491,8 +491,8 @@ std::string EnResolveCombinatorName(const Node* parse) {
 
 
 std::string JaResolveCombinatorName(const Node* parse) {
-   const Tree* tree;
-   if ( (tree = dynamic_cast<const Tree*>(parse)) == nullptr )
+   const CTree* tree;
+   if ( (tree = dynamic_cast<const CTree*>(parse)) == nullptr )
        throw std::runtime_error("This node is leaf and does not have combinator!");
     Cat child;
     Feat ch_feat;
