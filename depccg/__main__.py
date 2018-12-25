@@ -148,7 +148,7 @@ if __name__ == '__main__':
                         type=int,
                         help='give up parsing a sentence that contains more words than this value')
     parser.add_argument('--max-steps',
-                        default=100000,
+                        default=10000000,
                         type=int,
                         help='give up parsing when the number of times of popping agenda items exceeds this value')
     parser.add_argument('--verbose',
