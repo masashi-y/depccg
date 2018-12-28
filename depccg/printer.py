@@ -1,45 +1,21 @@
 import re
+import logging
+from lxml import etree
+from .tree import Tree
 
 
-class Token:
-    def __init__(self, word, lemma, pos, chunk, entity):
-        self.word = word
-        self.lemma = lemma
-        self.pos = pos
-        self.chunk = chunk
-        self.entity = entity
-
-    @classmethod
-    def from_piped(cls, string):
-        # WORD|POS|NER or WORD|LEMMA|POS|NER
-        # or WORD|LEMMA|POS|NER|CHUCK
-        items = string.split('|')
-        if len(items) == 5:
-            w, l, p, n, c = items
-            return cls(w, l, p, c, n)
-        elif len(items) == 4:
-            w, l, p, n = items
-            return cls(w, l, p, 'XX', n)
-        else:
-            w, p, n = items
-            return cls(w, 'XX', p, 'XX', n)
-
-    @classmethod
-    def from_word(cls, word):
-            return cls(word, 'XX', 'XX', 'XX', 'XX')
+logger = logging.getLogger(__name__)
 
 
 def to_xml(trees, tagged_doc):
-    out = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-           '<?xml-stylesheet type="text/xsl" href="candc.xml"?>\n'
-           '<candc>\n')
+    candc_node = etree.Element('candc')
     for i, (tree, tagged) in enumerate(zip(trees, tagged_doc), 1):
         for j, (t, _) in enumerate(tree, 1):
-            out += f'<ccg sentence="{i}" id="{j}">'
-            out += t.xml.format(*tagged) + '\n'
-            out += '</ccg>\n'
-    out += '</candc>\n'
-    return out
+            out = t.xml(tagged)
+            out.set('sentence', str(i))
+            out.set('id', str(j))
+            candc_node.append(out)
+    return etree.tostring(candc_node, pretty_print=True).decode('utf-8')
 
 
 def to_prolog(trees, tagged_doc):
@@ -52,7 +28,7 @@ def to_prolog(trees, tagged_doc):
             if "'" in tok.lemma:
                 tok.lemma = tok.lemma.replace("'", "\\'")
         for t, _ in tree:
-            out += t.prolog.format(i, *tagged) + '\n'
+            out += t.prolog().format(i, *tagged) + '\n'
     return out
 
 
@@ -135,4 +111,67 @@ def to_mathml(trees):
 </body></html>"""
     return results
 
+
+class ConvertToJiggXML(object):
+    def __init__(self, sid: int):
+        self.sid = sid
+        self._spid = 0
+        self.processed = 0
+
+    @property
+    def spid(self) -> int:
+        self._spid += 1
+        return self._spid
+
+    def process(self, tree: Tree, score: float = None):
+        def traverse(node: Tree):
+            id = f's{self.sid}_sp{self.spid}'
+            xml_node = etree.SubElement(res, 'span')
+            xml_node.set('category', str(node.cat.multi_valued))
+            xml_node.set('begin', str(node.start_of_span))
+            xml_node.set('end', str(node.start_of_span+len(node)))
+            xml_node.set('id', id)
+            if node.is_leaf:
+                xml_node.set('terminal', f's{self.sid}_{node.head_id}')
+            else:
+                childid = traverse(node.left_child)
+                if not node.is_unary:
+                    tmp = traverse(node.right_child)
+                    childid += ' ' + tmp
+                xml_node.set('child', childid)
+                xml_node.set('rule', node.op_string)
+            return id
+
+        res = etree.Element('ccg')
+        res.set('id', f's{self.sid}_ccg{self.processed}')
+        id = traverse(tree)
+        res.set('root', str(id))
+        if score is not None:
+            res.set('score', str(score))
+        self.processed += 1
+        return res
+
+
+def to_jigg_xml(trees, tagged_doc):
+    root_node = etree.Element('root')
+    document_node = etree.SubElement(root_node, 'document')
+    sentences_node = etree.SubElement(document_node, 'sentences')
+    for i, (parsed, tagged) in enumerate(zip(trees, tagged_doc)):
+        sentence_node = etree.SubElement(sentences_node, 'sentence')
+        tokens_node = etree.SubElement(sentence_node, 'tokens')
+        cats = [leaf.cat for leaf in parsed[0][0].leaves]
+        assert len(cats) == len(tagged)
+        for j, (token, cat) in enumerate(zip(tagged, cats)):
+            token_node = etree.SubElement(tokens_node, 'token')
+            token_node.set('start', str(j))
+            token_node.set('pos', token.pos)
+            token_node.set('entity', token.entity)
+            token_node.set('cat', str(cat))
+            token_node.set('id', f'{i}_{j}')
+            token_node.set('surf', token.word)
+            token_node.set('base', token.lemma)
+        converter = ConvertToJiggXML(i)
+        for tree, score in parsed:
+            sentence_node.append(converter.process(tree, score))
+    return etree.tostring(root_node, pretty_print=True).decode('utf-8')
 

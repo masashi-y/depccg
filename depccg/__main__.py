@@ -5,7 +5,8 @@ import logging
 import json
 
 from .parser import EnglishCCGParser, JapaneseCCGParser
-from .printer import to_mathml, to_prolog, to_xml, Token
+from .printer import to_mathml, to_prolog, to_xml, to_jigg_xml
+from depccg.token import Token, try_annotate_using_candc
 from .download import download, load_model_directory
 from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules
@@ -56,11 +57,12 @@ def main(args):
                                batchsize=args.batchsize)
     elif args.input_format == 'json':
         doc = [json.loads(line) for line in fin]
-        tagged_doc = [[Token.from_word(word) for word in sent['words'].split(' ')] for sent in doc]
+        tagged_doc = try_annotate_using_candc(
+            [[word for word in sent['words'].split(' ')] for sent in doc])
         res = parser.parse_json(doc)
     elif args.input_format == 'partial':
         doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
-        tagged_doc = [[Token.from_word(word) for word in sent] for sent in doc]
+        tagged_doc = try_annotate_using_candc(doc)
         res = parser.parse_doc(doc,
                                probs=probs,
                                tag_list=tag_list,
@@ -68,7 +70,9 @@ def main(args):
                                constraints=constraints)
     else:
         doc = [l.strip() for l in fin]
-        tagged_doc = [[Token.from_word(word) for word in sent.split(' ')] for sent in doc]
+        doc = [sentence for sentence in doc if len(sentence) > 0]
+        tagged_doc = try_annotate_using_candc(
+            [[word for word in sent.split(' ')] for sent in doc])
         res = parser.parse_doc(doc,
                                probs=probs,
                                tag_list=tag_list,
@@ -76,6 +80,8 @@ def main(args):
 
     if args.format == 'xml':
         print(to_xml(res, tagged_doc))
+    elif args.format == 'jigg':
+        print(to_jigg_xml(res, tagged_doc))
     elif args.format == 'prolog':
         print(to_prolog(res, tagged_doc))
     elif args.format == 'html':
@@ -83,12 +89,17 @@ def main(args):
     elif args.format == 'conll':
         for i, parsed in enumerate(res):
             for tree, prob in parsed:
-                print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll}')
-    else:  # 'auto', 'deriv', 'ja'
+                print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}')
+    elif args.format == 'auto':
+        for i, (parsed, tokens) in enumerate(zip(res, tagged_doc), 1):
+            for tree, prob in parsed:
+                print(f'ID={i}, Prob={prob}')
+                print(tree.auto(tokens=tokens))
+    else:  # 'deriv', 'ja'
         for i, parsed in enumerate(res, 1):
             for tree, prob in parsed:
                 print(f'ID={i}, Prob={prob}')
-                print(getattr(tree, args.format))
+                print(getattr(tree, args.format)())
 
 
 if __name__ == '__main__':
@@ -118,7 +129,7 @@ if __name__ == '__main__':
                         help='input format')
     parser.add_argument('-f', '--format',
                         default='auto',
-                        choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'prolog'],
+                        choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'prolog', 'jigg'],
                         help='output format')
     parser.add_argument('--root-cats',
                         default=None,

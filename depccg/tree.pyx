@@ -4,6 +4,8 @@ from libcpp.pair cimport pair
 from libcpp.memory cimport shared_ptr, make_shared
 from .cat cimport Cat, Category
 from .combinator import unknown_combinator
+from lxml import etree
+from .token import Token
 
 
 ## TODO: ugly code
@@ -146,6 +148,18 @@ cdef class Tree:
                 res.append(self.right_child)
             return res
 
+    property leaves:
+        def __get__(self):
+            def rec(node):
+                if node.is_leaf:
+                    res.append(node)
+                else:
+                    for child in node.children:
+                        rec(child)
+            res = []
+            rec(self)
+            return res
+
     property left_child:
         def __get__(self):
             assert not self.is_leaf, "This node is leaf and does not have any child!"
@@ -204,33 +218,65 @@ cdef class Tree:
     def __repr__(self):
         return self.auto
 
-    property auto:
-        def __get__(self):
-            cdef string res = AUTO(self.node_).Get()
-            return res.decode("utf-8")
+    def auto(self, tokens=None):
+        def rec(node):
+            if node.is_leaf:
+                cat = node.cat
+                word = node.word
+                pos = poss.pop(0)
+                return f'(<L {cat} {pos} {pos} {word} {cat}>)'
+            else:
+                cat = node.cat
+                children = ' '.join(rec(child) for child in node.children)
+                num_children = len(node.children)
+                head_is_left = 0 if node.head_is_left else 1
+                return f'(<T {cat} {head_is_left} {num_children}> {children} )'
+        if tokens:
+            poss = [token.pos for token in tokens]
+        else:
+            poss = ['POS' for _ in range(len(self))]
+        return rec(self)
 
-    property deriv:
-        def __get__(self):
-            cdef string res = Derivation(self.node_, not self.suppress_feat).Get()
-            return res.decode("utf-8")
+    def deriv(self):
+        cdef string res = Derivation(self.node_, not self.suppress_feat).Get()
+        return res.decode("utf-8")
 
-    property xml:
-        def __get__(self):
-            cdef string res = PyXML(self.node_, not self.suppress_feat).Get()
-            return res.decode("utf-8")
+    def xml(self, tokens=None):
+        def rec(node, parent):
+            if node.is_leaf:
+                leaf_node = etree.SubElement(parent, 'lf')
+                start, token = tokens.pop(0)
+                leaf_node.set('start', str(start))
+                leaf_node.set('span', '1')
+                leaf_node.set('word', token.word)
+                leaf_node.set('lemma', token.lemma)
+                leaf_node.set('pos', token.pos)
+                leaf_node.set('chunk', token.chunk)
+                leaf_node.set('entity', token.entity)
+                leaf_node.set('cat', str(node.cat))
+            else:
+                rule_node = etree.SubElement(parent, 'rule')
+                rule_node.set('rule', node.op_string)
+                rule_node.set('cat', str(node.cat))
+                for child in node.children:
+                    rec(child, rule_node)
 
-    property prolog:
-        def __get__(self):
-            cdef string res = Prolog(self.node_).Get()
-            return res.decode("utf-8")
+        if tokens is None:
+            tokens = [Token.from_word(word) for word in self.word.split(' ')]
+        tokens = list(enumerate(tokens))
+        res = etree.Element("ccg")
+        rec(self, res)
+        return res
 
-    property ja:
-        def __get__(self):
-            cdef string res = JaCCG(self.node_).Get()
-            return res.decode("utf-8")
+    def prolog(self):
+        cdef string res = Prolog(self.node_).Get()
+        return res.decode("utf-8")
 
-    property conll:
-        def __get__(self):
-            cdef string res = CoNLL(self.node_).Get()
-            return res.decode("utf-8")
+    def ja(self):
+        cdef string res = JaCCG(self.node_).Get()
+        return res.decode("utf-8")
+
+    def conll(self):
+        cdef string res = CoNLL(self.node_).Get()
+        return res.decode("utf-8")
 

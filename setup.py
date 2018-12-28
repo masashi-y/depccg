@@ -74,11 +74,14 @@ cpp_sources = ['depccg.cpp',
                'tree.cpp',
                'utils.cpp']
 
+c_sources = ['morpha.c']
+
 pyx_modules = ['depccg.parser',
                'depccg.tree',
                'depccg.cat',
                'depccg.combinator',
-               'depccg.utils']
+               'depccg.utils',
+               'depccg.morpha']
 
 
 root = os.path.abspath(os.path.dirname(__file__))
@@ -92,7 +95,8 @@ ext_modules = [
                   include_dirs=['.', numpy.get_include(), 'cpp'],
                   extra_compile_args=COMPILE_OPTIONS,
                   extra_link_args=LINK_OPTIONS +
-                  [os.path.join('cpp', cpp.replace('cpp', 'o')) for cpp in cpp_sources],
+                  [os.path.join('cpp', cpp.replace('cpp', 'o')) for cpp in cpp_sources] +
+                  [os.path.join('cpp', cpp.replace('c', 'o')) for cpp in c_sources],
                   language='c++')
         for pyx in pyx_modules]
 
