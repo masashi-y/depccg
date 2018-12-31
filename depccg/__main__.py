@@ -6,7 +6,7 @@ import json
 
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, to_jigg_xml
-from depccg.token import Token, try_annotate_using_candc
+from depccg.token import Token, english_annotator, japanese_annotator, annotate_XX
 from .download import download, load_model_directory
 from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules
@@ -24,8 +24,17 @@ def main(args):
     else:
         probs, tag_list = None, None
 
-    binary_rules = en_default_binary_rules
+    if args.lang == 'en':
+        binary_rules = en_default_binary_rules
+        annotate_fun = english_annotator.get(args.annotator, annotate_XX)
+    elif args.lang == 'ja':
+        binary_rules = ja_default_binary_rules
+        annotate_fun = japanese_annotator.get(args.annotator, annotate_XX)
+    else:
+        assert False
+
     if args.disfluency:
+        assert args.lang == 'en', f'not supported disfluency detection in language: {args.lang}'
         binary_rules.append(headfirst_combinator(remove_disfluency()))
          
     if args.root_cats is not None:
@@ -35,6 +44,7 @@ def main(args):
     model = args.model or load_model_directory(args.lang)
     parser = Parsers[args.lang].from_dir(model,
                                          load_tagger=load_tagger,
+                                         unary_penalty=args.unary_penalty,
                                          nbest=args.nbest,
                                          binary_rules=binary_rules,
                                          possible_root_cats=args.root_cats,
@@ -57,12 +67,12 @@ def main(args):
                                batchsize=args.batchsize)
     elif args.input_format == 'json':
         doc = [json.loads(line) for line in fin]
-        tagged_doc = try_annotate_using_candc(
+        tagged_doc = annotate_fun(
             [[word for word in sent['words'].split(' ')] for sent in doc])
         res = parser.parse_json(doc)
     elif args.input_format == 'partial':
         doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
-        tagged_doc = try_annotate_using_candc(doc)
+        tagged_doc = annotate_fun(doc)
         res = parser.parse_doc(doc,
                                probs=probs,
                                tag_list=tag_list,
@@ -71,8 +81,10 @@ def main(args):
     else:
         doc = [l.strip() for l in fin]
         doc = [sentence for sentence in doc if len(sentence) > 0]
-        tagged_doc = try_annotate_using_candc(
-            [[word for word in sent.split(' ')] for sent in doc])
+        tagged_doc = annotate_fun([[word for word in sent.split(' ')] for sent in doc],
+                                  tokenize=args.tokenize)
+        if args.tokenize:
+            tagged_doc, doc = tagged_doc
         res = parser.parse_doc(doc,
                                probs=probs,
                                tag_list=tag_list,
@@ -95,7 +107,7 @@ def main(args):
             for tree, prob in parsed:
                 print(f'ID={i}, Prob={prob}')
                 print(tree.auto(tokens=tokens))
-    else:  # 'deriv', 'ja'
+    else:  # deriv, ja, ptb
         for i, parsed in enumerate(res, 1):
             for tree, prob in parsed:
                 print(f'ID={i}, Prob={prob}')
@@ -115,6 +127,10 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--weights',
                         default=None,
                         help='a file that contains weights (p_tag, p_dep)')
+    parser.add_argument('-a', '--annotator',
+                        default=None,
+                        help='annotate POS, named entity, and lemmas using this library',
+                        choices=['candc', 'spacy', 'janome'])
     parser.add_argument('--batchsize',
                         type=int,
                         default=32,
@@ -129,11 +145,15 @@ if __name__ == '__main__':
                         help='input format')
     parser.add_argument('-f', '--format',
                         default='auto',
-                        choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'prolog', 'jigg'],
+                        choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'prolog', 'jigg', 'ptb'],
                         help='output format')
     parser.add_argument('--root-cats',
                         default=None,
                         help='allow only these categories to be at the root of a tree. If None, use default setting.')
+    parser.add_argument('--unary-penalty',
+                        default=0.1,
+                        type=float,
+                        help='penalty to use a unary rule')
     parser.add_argument('--beta',
                         default=0.00001,
                         type=float,
@@ -142,6 +162,9 @@ if __name__ == '__main__':
                         default=50,
                         type=int,
                         help='use only the most probable supertags per word')
+    parser.add_argument('--tokenize',
+                        action='store_true',
+                        help='tokenize input sentences')
     parser.add_argument('--disable-beta',
                         action='store_true',
                         help='disable the use of the beta value')

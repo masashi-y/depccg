@@ -26,16 +26,13 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
     ctypedef unordered_set[Cat] (*ApplyUnaryRules)(
             const unordered_map[Cat, unordered_set[Cat]]&, NodeType)
 
+    ApplyUnaryRules DefaultApplyUnaryRules
+
+    ApplyBinaryRules MakeDefaultApplyBinaryRules(const vector[Op]&)
+
     ApplyUnaryRules EnApplyUnaryRules
 
-    ApplyUnaryRules JaApplyUnaryRules
-
-    ApplyBinaryRules EnApplyBinaryRules
-
-    ApplyBinaryRules JaApplyBinaryRules
-
     ApplyBinaryRules MakeEnApplyBinaryRules(const vector[Op]&)
-    # ApplyBinaryRules MakeConstrainedBinaryRules(const vector[Op]&, const PartialConstraints&)
 
     vector[ScoredNode] ParseSentence(
             unsigned id,
@@ -44,6 +41,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             float* dep_scores,
             const unordered_map[string, unordered_set[Cat]]& category_dict,
             const vector[Cat]& tag_list,
+            float unary_penalty,
             float beta,
             bool use_beta,
             unsigned pruning_size,
@@ -63,6 +61,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             float** dep_scores,
             const unordered_map[string, unordered_set[Cat]]& category_dict,
             const vector[Cat]& tag_list,
+            float unary_penalty,
             float beta,
             bint use_beta,
             unsigned pruning_size,

@@ -132,7 +132,7 @@ class ConvertToJiggXML(object):
             xml_node.set('end', str(node.start_of_span+len(node)))
             xml_node.set('id', id)
             if node.is_leaf:
-                xml_node.set('terminal', f's{self.sid}_{node.head_id}')
+                xml_node.set('terminal', f't{self.sid}_{node.head_id}')
             else:
                 childid = traverse(node.left_child)
                 if not node.is_unary:
@@ -167,7 +167,7 @@ def to_jigg_xml(trees, tagged_doc):
             token_node.set('pos', token.pos)
             token_node.set('entity', token.entity)
             token_node.set('cat', str(cat))
-            token_node.set('id', f'{i}_{j}')
+            token_node.set('id', f't{i}_{j}')
             token_node.set('surf', token.word)
             token_node.set('base', token.lemma)
         converter = ConvertToJiggXML(i)

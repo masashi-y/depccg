@@ -213,10 +213,22 @@ cdef class Tree:
             return deref(self.node_).LeftNumDescendants()
 
     def __str__(self):
-        return self.auto
+        return self.auto()
 
     def __repr__(self):
-        return self.auto
+        return self.auto()
+
+    def ptb(self):
+        def rec(node):
+            if node.is_leaf:
+                cat = node.cat
+                word = node.word
+                return f'({cat} {word})'
+            else:
+                cat = node.cat
+                children = ' '.join(rec(child) for child in node.children)
+                return f'({cat} {children})'
+        return f'( {rec(self)})'
 
     def auto(self, tokens=None):
         def rec(node):

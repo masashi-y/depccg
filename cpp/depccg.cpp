@@ -17,6 +17,51 @@
 
 namespace myccg {
 
+std::unordered_set<Cat> DefaultApplyUnaryRules(
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules, NodeType parse) {
+    return unary_rules.at(parse->GetCategory());
+}
+
+
+std::vector<RuleCache>& GetRules(
+        const std::vector<Op>& binary_rules,
+        const std::unordered_set<CatPair>& seen_rules, Cat left, Cat right) {
+    static auto rule_cache = std::unordered_map<CatPair, std::vector<RuleCache>>();
+
+    auto key = std::make_pair(left, right);
+    if (rule_cache.count(key) > 0) {
+        return rule_cache[key];
+    } else {
+        std::vector<RuleCache> tmp;
+        bool is_seen = seen_rules.size() == 0 ||
+            seen_rules.count(std::make_pair(left, right)) > 0;
+        if (is_seen) {
+            for (auto rule: binary_rules) {
+                if (rule->CanApply(left, right)) {
+                    tmp.emplace_back(rule->Apply(left, right),
+                                rule->HeadIsLeft(left, right), rule);
+                }
+            }
+        }
+#pragma omp critical(ApplyBinaryRules)
+        rule_cache.emplace(key, tmp);
+        return rule_cache[key];
+    }
+}
+
+
+ApplyBinaryRules MakeDefaultApplyBinaryRules(const std::vector<Op>& binary_rules) {
+        return [&] (const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
+            unsigned start_of_span, unsigned span_length) {
+        std::vector <NodeType> results;
+        for (auto&& rule: GetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
+                NodeType subtree = std::make_shared<const CTree>(
+                        rule.result, rule.left_is_head, left, right, rule.combinator);
+                results.push_back(subtree);
+        }
+        return results;
+    };
+}
 
 
 std::unordered_set<Cat> EnApplyUnaryRules(
@@ -28,12 +73,6 @@ std::unordered_set<Cat> EnApplyUnaryRules(
             results.insert(result);
     }
     return results;
-}
-
-
-std::unordered_set<Cat> JaApplyUnaryRules(
-        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules, NodeType parse) {
-    return unary_rules.at(parse->GetCategory());
 }
 
 
@@ -66,18 +105,6 @@ std::vector<RuleCache>& EnGetRules(
     }
 }
 
-std::vector<NodeType> EnApplyBinaryRules(
-        const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
-        unsigned start_of_span, unsigned span_length) {
-    std::vector <NodeType> results;
-    for (auto&& rule: EnGetRules(en_binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
-            NodeType subtree = std::make_shared<const CTree>(
-                    rule.result, rule.left_is_head, left, right, rule.combinator);
-            results.push_back(subtree);
-    }
-    return results;
-}
-
 ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules) {
         return [&] (const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
             unsigned start_of_span, unsigned span_length) {
@@ -89,58 +116,6 @@ ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules) {
         }
         return results;
     };
-}
-
-// ApplyBinaryRules MakeConstrainedBinaryRules(
-//         const std::vector<Op>& binary_rules, const PartialConstraints& constraints) {
-//     return [=] (const std::unordered_set<CatPair>& seen_rules,
-//             NodeType left, NodeType right, unsigned start_of_span, unsigned span_length) {
-//         std::vector <NodeType> results;
-//         for (auto&& rule: EnGetRules(binary_rules, seen_rules, left->GetCategory(), right->GetCategory())) {
-//             NodeType subtree = std::make_shared<const CTree>(
-//                 rule.result, rule.left_is_head, left, right, rule.combinator);
-//             for (auto&& acceptable: constraints.AcceptableTrees(subtree))
-//                     results.push_back(acceptable);
-//         }
-//         return results;
-//     };
-// }
-
-std::vector<RuleCache>& JaGetRules(
-        const std::unordered_set<CatPair>& seen_rules, Cat left, Cat right) {
-    static auto rule_cache = std::unordered_map<CatPair, std::vector<RuleCache>>();
-
-    auto key = std::make_pair(left, right);
-    if (rule_cache.count(key) > 0) {
-        return rule_cache[key];
-    } else {
-        std::vector<RuleCache> tmp;
-        bool is_seen = seen_rules.size() == 0 ||
-            seen_rules.count(std::make_pair(left, right)) > 0;
-        if (is_seen) {
-            for (auto rule: ja_binary_rules) {
-                if (rule->CanApply(left, right)) {
-                    tmp.emplace_back(rule->Apply(left, right),
-                                rule->HeadIsLeft(left, right), rule);
-                }
-            }
-        }
-#pragma omp critical(ApplyBinaryRules)
-        rule_cache.emplace(key, tmp);
-        return rule_cache[key];
-    }
-}
-
-std::vector<NodeType> JaApplyBinaryRules(
-        const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
-        unsigned start_of_span, unsigned span_length) {
-    std::vector <NodeType> results;
-    for (auto&& rule: JaGetRules(seen_rules, left->GetCategory(), right->GetCategory())) {
-            NodeType subtree = std::make_shared<const CTree>(
-                    rule.result, rule.left_is_head, left, right, rule.combinator);
-            results.push_back(subtree);
-    }
-    return results;
 }
 
 
@@ -184,6 +159,7 @@ std::vector<ScoredNode> ParseSentence(
         float* dep_scores,
         const std::unordered_map<std::string, std::unordered_set<Cat>>& category_dict,
         const std::vector<Cat>& tag_list,
+        float unary_penalty,
         float beta,
         bool use_beta,
         unsigned pruning_size,
@@ -291,7 +267,7 @@ std::vector<ScoredNode> ParseSentence(
                 for (Cat unary: apply_unary_rules(unary_rules, parse)) {
                     NodeType subtree = std::make_shared<const CTree>(unary, parse);
                     if (! constraints.Violates(subtree)) {
-                        agenda.emplace(false, agenda_id++, subtree, item.in_prob - 0.1, item.out_prob,
+                        agenda.emplace(false, agenda_id++, subtree, item.in_prob - unary_penalty, item.out_prob,
                                             item.start_of_span, item.span_length);
                     }
                 }
@@ -360,6 +336,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         float** dep_scores,
         const std::unordered_map<std::string, std::unordered_set<Cat>>& category_dict,
         const std::vector<Cat>& tag_list,
+        float unary_penalty,
         float beta,
         bool use_beta,
         unsigned pruning_size,
@@ -384,6 +361,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
                     dep_scores[i],
                     category_dict,
                     tag_list,
+                    unary_penalty,
                     beta,
                     use_beta,
                     pruning_size,

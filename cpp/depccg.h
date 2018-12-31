@@ -191,25 +191,17 @@ typedef std::function<std::vector<NodeType>(
         const std::unordered_set<CatPair>&, NodeType, NodeType, unsigned, unsigned)>
         ApplyBinaryRules;
 
+std::unordered_set<Cat> DefaultApplyUnaryRules(
+        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
+        NodeType parse);
+
+ApplyBinaryRules MakeDefaultApplyBinaryRules(const std::vector<Op>& binary_rules);
+
 std::unordered_set<Cat> EnApplyUnaryRules(
         const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
         NodeType parse);
 
-std::unordered_set<Cat> JaApplyUnaryRules(
-        const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules,
-        NodeType parse);
-
-std::vector<NodeType> EnApplyBinaryRules(
-        const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
-        unsigned start_of_span, unsigned span_length);
-
-std::vector<NodeType> JaApplyBinaryRules(
-        const std::unordered_set<CatPair>& seen_rules, NodeType left, NodeType right,
-        unsigned start_of_span, unsigned span_length);
-
 ApplyBinaryRules MakeEnApplyBinaryRules(const std::vector<Op>& binary_rules);
-// ApplyBinaryRules MakeConstrainedBinaryRules(
-//         const std::vector<Op>& binary_rules, const PartialConstraints& constraints);
 
 std::vector<ScoredNode> ParseSentence(
         unsigned id,
@@ -218,6 +210,7 @@ std::vector<ScoredNode> ParseSentence(
         float* dep_scores,
         const std::unordered_map<std::string, std::unordered_set<Cat>>& category_dict,
         const std::vector<Cat>& tag_list,
+        float unary_penalty,
         float beta,
         bool use_beta,
         unsigned pruning_size,
@@ -237,6 +230,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         float** dep_scores,
         const std::unordered_map<std::string, std::unordered_set<Cat>>& category_dict,
         const std::vector<Cat>& tag_list,
+        float unary_penalty,
         float beta,
         bool use_beta,
         unsigned pruning_size,
