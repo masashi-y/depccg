@@ -29,7 +29,10 @@ def main(args):
         annotate_fun = english_annotator.get(args.annotator, annotate_XX)
     elif args.lang == 'ja':
         binary_rules = ja_default_binary_rules
-        annotate_fun = japanese_annotator.get(args.annotator, annotate_XX)
+        if args.tokenize:
+            annotate_fun = japanese_annotator['janome']
+        else:
+            annotate_fun = annotate_XX
     else:
         assert False
 
@@ -114,23 +117,18 @@ def main(args):
                 print(getattr(tree, args.format)())
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser('A* CCG parser')
-    parser.add_argument('lang',
-                        help='language',
-                        choices=['en', 'ja'])
-    parser.add_argument('-m', '--model',
+def add_common_parser_arguments(parser):
+    parser.add_argument('-m',
+                        '--model',
                         help='path to model directory')
-    parser.add_argument('-i', '--input',
+    parser.add_argument('-i',
+                        '--input',
                         default=None,
                         help='a file with tokenized sentences in each line')
-    parser.add_argument('-w', '--weights',
+    parser.add_argument('-w',
+                        '--weights',
                         default=None,
                         help='a file that contains weights (p_tag, p_dep)')
-    parser.add_argument('-a', '--annotator',
-                        default=None,
-                        help='annotate POS, named entity, and lemmas using this library',
-                        choices=['candc', 'spacy', 'janome'])
     parser.add_argument('--batchsize',
                         type=int,
                         default=32,
@@ -139,17 +137,14 @@ if __name__ == '__main__':
                         type=int,
                         default=1,
                         help='output N best parses')
-    parser.add_argument('-I', '--input-format',
+    parser.add_argument('-I',
+                        '--input-format',
                         default='raw',
                         choices=['raw', 'POSandNERtagged', 'json', 'partial'],
                         help='input format')
-    parser.add_argument('-f', '--format',
-                        default='auto',
-                        choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'prolog', 'jigg', 'ptb'],
-                        help='output format')
     parser.add_argument('--root-cats',
                         default=None,
-                        help='allow only these categories to be at the root of a tree. If None, use default setting.')
+                        help='allow only these categories at the root of a tree.')
     parser.add_argument('--unary-penalty',
                         default=0.1,
                         type=float,
@@ -162,9 +157,6 @@ if __name__ == '__main__':
                         default=50,
                         type=int,
                         help='use only the most probable supertags per word')
-    parser.add_argument('--tokenize',
-                        action='store_true',
-                        help='tokenize input sentences')
     parser.add_argument('--disable-beta',
                         action='store_true',
                         help='disable the use of the beta value')
@@ -174,9 +166,6 @@ if __name__ == '__main__':
     parser.add_argument('--disable-seen-rules',
                         action='store_true',
                         help='')
-    parser.add_argument('--disfluency',
-                        action='store_true',
-                        help='perform disfluency detection')
     parser.add_argument('--max-length',
                         default=250,
                         type=int,
@@ -192,6 +181,47 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers()
     download_parser = subparsers.add_parser('download')
     download_parser.set_defaults(func=lambda args: download(args.lang))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('A* CCG parser')
+    parser.set_defaults(func=lambda _: parser.print_help())
+    subparsers = parser.add_subparsers()
+
+    english_parser = subparsers.add_parser('en')
+    english_parser.set_defaults(lang='en')
+    add_common_parser_arguments(english_parser)
+    english_parser.add_argument('-a',
+                                '--annotator',
+                                default=None,
+                                help='annotate POS, named entity, and lemmas using this library',
+                                choices=['candc', 'spacy'])
+    english_parser.add_argument('-f',
+                                '--format',
+                                default='auto',
+                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg', 'ptb'],
+                                help='output format')
+    english_parser.add_argument('--tokenize',
+                                action='store_true',
+                                help='tokenize input sentences')
+    english_parser.add_argument('--disfluency',
+                                action='store_true',
+                                help='perform disfluency detection')
+
+    japanese_parser = subparsers.add_parser('ja')
+    japanese_parser.set_defaults(lang='ja')
+    add_common_parser_arguments(japanese_parser)
+    japanese_parser.add_argument('-f',
+                                 '--format',
+                                 default='ja',
+                                 choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'jigg', 'ptb'],
+                                 help='output format')
+    japanese_parser.add_argument('--pre-tokenized',
+                                 dest='tokenize',
+                                 action='store_false',
+                                 help='the input is pre-tokenized (for running parsing experiments etc.)')
+    japanese_parser.set_defaults(disfluency=False)
+
     args = parser.parse_args()
     args.func(args)
 

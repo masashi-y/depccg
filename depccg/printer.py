@@ -15,7 +15,7 @@ def to_xml(trees, tagged_doc):
             out.set('sentence', str(i))
             out.set('id', str(j))
             candc_node.append(out)
-    return etree.tostring(candc_node, pretty_print=True).decode('utf-8')
+    return etree.tostring(candc_node, encoding='utf-8', pretty_print=True).decode('utf-8')
 
 
 def to_prolog(trees, tagged_doc):
@@ -173,5 +173,5 @@ def to_jigg_xml(trees, tagged_doc):
         converter = ConvertToJiggXML(i)
         for tree, score in parsed:
             sentence_node.append(converter.process(tree, score))
-    return etree.tostring(root_node, pretty_print=True).decode('utf-8')
+    return etree.tostring(root_node, encoding='utf-8', pretty_print=True).decode('utf-8')
 

@@ -288,6 +288,18 @@ cdef class Tree:
         cdef string res = JaCCG(self.node_).Get()
         return res.decode("utf-8")
 
+    # def ja(self):
+    #     def rec(node):
+    #         if node.is_leaf:
+    #             cat = node.cat
+    #             word = node.word
+    #             return f'({cat} {word})'
+    #         else:
+    #             cat = node.cat
+    #             children = ' '.join(rec(child) for child in node.children)
+    #             return f'({cat} {children})'
+    #     return f'( {rec(self)})'
+
     def conll(self):
         cdef string res = CoNLL(self.node_).Get()
         return res.decode("utf-8")

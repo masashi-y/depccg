@@ -149,6 +149,7 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
 def annotate_using_janome(sentences, tokenize=False):
     assert tokenize, 'no support for using janome with pre-tokenized inputs'
     from janome.tokenizer import Tokenizer
+    logger.info('use Janome to tokenize and annotate POS infos.')
     tokenizer = Tokenizer()
     res = []
     raw_sentences = []
