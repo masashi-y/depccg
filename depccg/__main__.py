@@ -95,7 +95,7 @@ def main(args):
 
     if args.format == 'xml':
         print(to_xml(res, tagged_doc))
-    elif args.format == 'jigg':
+    elif args.format == 'jigg_xml':
         print(to_jigg_xml(res, tagged_doc))
     elif args.format == 'prolog':
         print(to_prolog(res, tagged_doc))
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     english_parser.add_argument('-f',
                                 '--format',
                                 default='auto',
-                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg', 'ptb'],
+                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg_xml', 'ptb'],
                                 help='output format')
     english_parser.add_argument('--tokenize',
                                 action='store_true',
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     japanese_parser.add_argument('-f',
                                  '--format',
                                  default='ja',
-                                 choices=['auto', 'deriv', 'xml', 'ja', 'conll', 'html', 'jigg', 'ptb'],
+                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml', 'ptb'],
                                  help='output format')
     japanese_parser.add_argument('--pre-tokenized',
                                  dest='tokenize',

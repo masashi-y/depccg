@@ -260,12 +260,9 @@ cdef class Tree:
                 start, token = tokens.pop(0)
                 leaf_node.set('start', str(start))
                 leaf_node.set('span', '1')
-                leaf_node.set('word', token.word)
-                leaf_node.set('lemma', token.lemma)
-                leaf_node.set('pos', token.pos)
-                leaf_node.set('chunk', token.chunk)
-                leaf_node.set('entity', token.entity)
                 leaf_node.set('cat', str(node.cat))
+                for k, v in token.items():
+                    leaf_node.set(k, v)
             else:
                 rule_node = etree.SubElement(parent, 'rule')
                 rule_node.set('rule', node.op_string)
@@ -287,18 +284,6 @@ cdef class Tree:
     def ja(self):
         cdef string res = JaCCG(self.node_).Get()
         return res.decode("utf-8")
-
-    # def ja(self):
-    #     def rec(node):
-    #         if node.is_leaf:
-    #             cat = node.cat
-    #             word = node.word
-    #             return f'({cat} {word})'
-    #         else:
-    #             cat = node.cat
-    #             children = ' '.join(rec(child) for child in node.children)
-    #             return f'({cat} {children})'
-    #     return f'( {rec(self)})'
 
     def conll(self):
         cdef string res = CoNLL(self.node_).Get()

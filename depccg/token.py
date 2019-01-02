@@ -2,19 +2,23 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import NamedTuple, List
+from typing import List
 
 from depccg.download import MODEL_DIRECTORY
 from depccg.morpha import MorphaStemmer
 from depccg.printer import logger
 
 
-class Token(NamedTuple):
-    word: str
-    lemma: str
-    pos: str
-    chunk: str
-    entity: str
+class Token(dict):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def __getattr__(self, item):
+        return self[item]
+
+    def __repr__(self):
+        res = super().__repr__()
+        return f'Token({res})'
 
     @classmethod
     def from_piped(cls, string: str) -> 'Token':
@@ -22,18 +26,29 @@ class Token(NamedTuple):
         # or WORD|LEMMA|POS|NER|CHUCK
         items = string.split('|')
         if len(items) == 5:
-            w, l, p, n, c = items
-            return cls(w, l, p, c, n)
+            word, lemma, pos, entity, chunk = items
         elif len(items) == 4:
-            w, l, p, n = items
-            return cls(w, l, p, 'XX', n)
+            word, lemma, pos, entity = items
+            chunk = 'XX'
         else:
-            w, p, n = items
-            return cls(w, 'XX', p, 'XX', n)
+            assert len(items) == 3
+            word, pos, entity = items
+            lemma = 'XX'
+            chunk = 'XX'
+
+        return Token(word=word,
+                     lemma=lemma,
+                     pos=pos,
+                     entity=entity,
+                     chunk=chunk)
 
     @classmethod
     def from_word(cls, word: str) -> 'Token':
-        return cls(word, 'XX', 'XX', 'XX', 'XX')
+        return Token(word=word,
+                     lemma='XX',
+                     pos='XX',
+                     entity='XX',
+                     chunk='XX')
 
 
 candc_cmd = "cat \"{0}\" | {1}/bin/pos --model {1}/models/pos | {1}/bin/ner --model {1}/models/ner"
@@ -156,11 +171,19 @@ def annotate_using_janome(sentences, tokenize=False):
     for sentence in sentences:
         sentence = ''.join(sentence)
         tokenized = tokenizer.tokenize(sentence)
-        tokens = [Token(word=token.surface,
-                        pos=token.part_of_speech,
-                        entity='XX',
-                        lemma=token.base_form,
-                        chunk='XX') for token in tokenized]
+        tokens = []
+        for token in tokenized:
+            pos, pos1, pos2, pos3 = token.part_of_speech.split(',')
+            token = Token(surf=token.surface,
+                          pos=pos,
+                          pos1=pos1,
+                          pos2=pos2,
+                          pos3=pos3,
+                          inflectionForm=token.infl_form,
+                          inflectionType=token.infl_type,
+                          reading=token.reading,
+                          base=token.base_form)
+            tokens.append(token)
         raw_sentence = [token.surface for token in tokenized]
         res.append(tokens)
         raw_sentences.append(raw_sentence)

@@ -164,12 +164,10 @@ def to_jigg_xml(trees, tagged_doc):
         for j, (token, cat) in enumerate(zip(tagged, cats)):
             token_node = etree.SubElement(tokens_node, 'token')
             token_node.set('start', str(j))
-            token_node.set('pos', token.pos)
-            token_node.set('entity', token.entity)
             token_node.set('cat', str(cat))
             token_node.set('id', f't{i}_{j}')
-            token_node.set('surf', token.word)
-            token_node.set('base', token.lemma)
+            for k, v in token.items():
+                token_node.set(k, v)
         converter = ConvertToJiggXML(i)
         for tree, score in parsed:
             sentence_node.append(converter.process(tree, score))
