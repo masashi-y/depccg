@@ -47,23 +47,7 @@ if sys.platform == 'darwin':
     LINK_OPTIONS.append('-nodefaultlibs')
 
 
-def generate_cython(root, source):
-    print('Cythonizing sources')
-    p = subprocess.call([sys.executable,
-                         os.path.join(root, 'bin', 'cythonize.py'),
-                         source], env=os.environ)
-    if p != 0:
-        raise RuntimeError('Running cythonize failed')
-
-
-def generate_cpp(options):
-    options = ' '.join(options)
-    options = f'OPTIONS={options}'
-    with chdir('cpp'):
-        p = subprocess.call(["make", options], env=os.environ)
-        if p != 0:
-            raise RuntimeError('Running cythonize failed')
-
+root = os.path.abspath(os.path.dirname(__file__))
 
 cpp_sources = ['depccg.cpp',
                'cat.cpp',
@@ -84,9 +68,32 @@ pyx_modules = ['depccg.parser',
                'depccg.morpha']
 
 
-root = os.path.abspath(os.path.dirname(__file__))
-generate_cpp(CPP_OPTIONS)
-generate_cython(root, 'depccg')
+def clean():
+    depccg_dir = os.path.join(root, 'depccg')
+    for name in os.listdir(depccg_dir):
+        file_path = os.path.join(depccg_dir, name)
+        if any(file_path.endswith(ext) for ext in ['.so', '.cpp', '.c']):
+            os.unlink(file_path)
+    with chdir('cpp'):
+        subprocess.call(["make", "clean"], env=os.environ)
+
+
+def generate_cython(root, source):
+    print('Cythonizing sources')
+    p = subprocess.call([sys.executable,
+                         os.path.join(root, 'bin', 'cythonize.py'),
+                         source], env=os.environ)
+    if p != 0:
+        raise RuntimeError('Running cythonize failed')
+
+
+def generate_cpp(options):
+    options = ' '.join(options)
+    options = f'OPTIONS={options}'
+    with chdir('cpp'):
+        p = subprocess.call(["make", options], env=os.environ)
+        if p != 0:
+            raise RuntimeError('Running cythonize failed')
 
 
 ext_modules = [
@@ -101,11 +108,18 @@ ext_modules = [
         for pyx in pyx_modules]
 
 
-setup(
-    name="depccg",
-    packages=find_packages(),
-    ext_modules=ext_modules,
-    cmdclass={"build_ext": build_ext},
-    scripts=['bin/depccg_en', 'bin/depccg_ja'],
-    zip_safe=False,
-)
+if len(sys.argv) > 1 and sys.argv[1] == 'clean':
+    clean()
+else:
+    generate_cpp(CPP_OPTIONS)
+
+    generate_cython(root, 'depccg')
+
+    setup(
+        name="depccg",
+        packages=find_packages(),
+        ext_modules=ext_modules,
+        cmdclass={"build_ext": build_ext},
+        scripts=['bin/depccg_en', 'bin/depccg_ja'],
+        zip_safe=False,
+    )

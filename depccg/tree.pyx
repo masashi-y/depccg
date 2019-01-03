@@ -265,7 +265,7 @@ cdef class Tree:
                     leaf_node.set(k, v)
             else:
                 rule_node = etree.SubElement(parent, 'rule')
-                rule_node.set('rule', node.op_string)
+                rule_node.set('type', node.op_string)
                 rule_node.set('cat', str(node.cat))
                 for child in node.children:
                     rec(child, rule_node)

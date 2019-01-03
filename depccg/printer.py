@@ -7,93 +7,94 @@ from .tree import Tree
 logger = logging.getLogger(__name__)
 
 
-def to_xml(trees, tagged_doc):
+def to_xml(nbest_trees, tagged_doc):
     candc_node = etree.Element('candc')
-    for i, (tree, tagged) in enumerate(zip(trees, tagged_doc), 1):
-        for j, (t, _) in enumerate(tree, 1):
-            out = t.xml(tagged)
+    for i, (nbest, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+        for j, (tree, _) in enumerate(nbest, 1):
+            out = tree.xml(tokens)
             out.set('sentence', str(i))
             out.set('id', str(j))
             candc_node.append(out)
     return etree.tostring(candc_node, encoding='utf-8', pretty_print=True).decode('utf-8')
 
 
-def to_prolog(trees, tagged_doc):
+def to_prolog(nbest_trees, tagged_doc):
     out = (':- op(601, xfx, (/)).\n'
            ':- op(601, xfx, (\)).\n'
            ':- multifile ccg/2, id/2.\n'
            ':- discontiguous ccg/2, id/2.\n\n')
-    for i, (tree, tagged) in enumerate(zip(trees, tagged_doc), 1):
-        for tok in tagged:
-            if "'" in tok.lemma:
-                tok.lemma = tok.lemma.replace("'", "\\'")
-        for t, _ in tree:
-            out += t.prolog().format(i, *tagged) + '\n'
+    for i, (nbest, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+        for token in tokens:
+            if "'" in token.lemma:
+                token.lemma = token.lemma.replace("'", "\\'")
+        for t, _ in nbest:
+            out += t.prolog().format(i, *tokens) + '\n'
     return out
 
 
-def show_mathml_tree(tree):
-    cat_str = show_mathml_cat(str(tree.cat))
+def mathml_subtree(tree):
+    cat_str = mathml_cat(str(tree.cat))
     if not tree.is_leaf:
-        children_str = ''.join(map(show_mathml_tree, tree.children))
-        return f"""\
+        children_str = ''.join(map(mathml_subtree, tree.children))
+        return f'''\
 <mrow>
   <mfrac linethickness='2px'>
     <mrow>{children_str}</mrow>
     <mstyle mathcolor='Red'>{cat_str}</mstyle>
   </mfrac>
   <mtext mathsize='0.8' mathcolor='Black'>{tree.op_string}</mtext>
-</mrow>"""
+</mrow>'''
     else:
-        return f"""\
+        return f'''\
 <mrow>
   <mfrac linethickness='2px'>
     <mtext mathsize='1.0' mathcolor='Black'>{tree.word}</mtext>
     <mstyle mathcolor='Red'>{cat_str}</mstyle>
   </mfrac>
   <mtext mathsize='0.8' mathcolor='Black'>lex</mtext>
-</mrow>"""
+</mrow>'''
 
 
-def show_mathml_cat(cat):
+def mathml_cat(cat):
     cats_feats = re.findall(r'([\w\\/()]+)(\[.+?\])*', cat)
     mathml_str = ''
     for cat, feat in cats_feats:
-        cat_mathml = f"""\
+        cat_mathml = f'''\
 <mi mathvariant='italic'
-  mathsize='1.0' mathcolor='Red'>{cat}</mi>"""
+  mathsize='1.0' mathcolor='Red'>{cat}</mi>'''
 
         if feat != '':
-            mathml_str += f"""\
+            mathml_str += f'''\
 <msub>{cat_mathml}
   <mrow>
   <mi mathvariant='italic'
     mathsize='0.8' mathcolor='Purple'>{feat}</mi>
   </mrow>
-</msub>"""
+</msub>'''
         else:
             mathml_str += cat_mathml
     return mathml_str
 
 
-def to_mathml(trees):
-    def __show(tree):
-        res = ''
-        for t in tree:
-            if isinstance(t, tuple):
-                t, prob = t
-                res += f'<p>Log prob={prob:.5e}</p>'
-            tree_str = show_mathml_tree(t)
-            res += f'<math xmlns="http://www.w3.org/1998/Math/MathML">{tree_str}</math>'
-        return res
+def mathml_nbest_trees(tree):
+    res = ''
+    for t in tree:
+        if isinstance(t, tuple):
+            t, prob = t
+            res += f'<p>Log prob={prob:.5e}</p>'
+        tree_str = mathml_subtree(t)
+        res += f'<math xmlns="http://www.w3.org/1998/Math/MathML">{tree_str}</math>'
+    return res
 
+
+def to_mathml(trees):
     string = ''
-    for i, tree in enumerate(trees):
-        words = tree[0][0].word if isinstance(tree[0], tuple) else tree[0].word
-        trees_str = __show(tree)
+    for i, nbest in enumerate(trees):
+        words = nbest[0][0].word if isinstance(nbest[0], tuple) else nbest[0].word
+        trees_str = mathml_nbest_trees(nbest)
         string += f'<p>ID={i}: {words}</p>{trees_str}'
 
-    results = f"""\
+    results = f'''\
 <!doctype html>
 <html lang='en'>
 <head>
@@ -108,8 +109,16 @@ def to_mathml(trees):
   </script>
 </head>
 <body>{string}
-</body></html>"""
+</body></html>'''
     return results
+
+
+def diff(tree1, tree2):
+    def rec(node1, node2):
+        pass
+    str1, str2 = '', ''
+    rec(tree1, tree2)
+    return None
 
 
 class ConvertToJiggXML(object):
