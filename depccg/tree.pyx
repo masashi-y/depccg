@@ -143,6 +143,8 @@ cdef class Tree:
 
     property children:
         def __get__(self):
+            if self.is_leaf:
+                return []
             res = [self.left_child]
             if not self.is_unary:
                 res.append(self.right_child)

@@ -32,69 +32,27 @@ def to_prolog(nbest_trees, tagged_doc):
     return out
 
 
-def mathml_subtree(tree):
-    cat_str = mathml_cat(str(tree.cat))
-    if not tree.is_leaf:
-        children_str = ''.join(map(mathml_subtree, tree.children))
-        return f'''\
+MATHML_SUBTREE_NONTERMINAL = '''\
 <mrow>
-  <mfrac linethickness='2px'>
-    <mrow>{children_str}</mrow>
-    <mstyle mathcolor='Red'>{cat_str}</mstyle>
+  <mfrac {3} linethickness='2px'>
+    <mrow>{0}</mrow>
+    <mstyle mathcolor='Red'>{1}</mstyle>
   </mfrac>
-  <mtext mathsize='0.8' mathcolor='Black'>{tree.op_string}</mtext>
-</mrow>'''
-    else:
-        return f'''\
+  <mtext mathsize='0.8' mathcolor='Black'>{2}</mtext>
+</mrow>
+'''
+
+MATHML_SUBTREE_TERMINAL = '''\
 <mrow>
   <mfrac linethickness='2px'>
-    <mtext mathsize='1.0' mathcolor='Black'>{tree.word}</mtext>
-    <mstyle mathcolor='Red'>{cat_str}</mstyle>
+    <mtext mathsize='1.0' mathcolor='Black'>{0}</mtext>
+    <mstyle mathcolor='Red'>{1}</mstyle>
   </mfrac>
   <mtext mathsize='0.8' mathcolor='Black'>lex</mtext>
-</mrow>'''
+</mrow>
+'''
 
-
-def mathml_cat(cat):
-    cats_feats = re.findall(r'([\w\\/()]+)(\[.+?\])*', cat)
-    mathml_str = ''
-    for cat, feat in cats_feats:
-        cat_mathml = f'''\
-<mi mathvariant='italic'
-  mathsize='1.0' mathcolor='Red'>{cat}</mi>'''
-
-        if feat != '':
-            mathml_str += f'''\
-<msub>{cat_mathml}
-  <mrow>
-  <mi mathvariant='italic'
-    mathsize='0.8' mathcolor='Purple'>{feat}</mi>
-  </mrow>
-</msub>'''
-        else:
-            mathml_str += cat_mathml
-    return mathml_str
-
-
-def mathml_nbest_trees(tree):
-    res = ''
-    for t in tree:
-        if isinstance(t, tuple):
-            t, prob = t
-            res += f'<p>Log prob={prob:.5e}</p>'
-        tree_str = mathml_subtree(t)
-        res += f'<math xmlns="http://www.w3.org/1998/Math/MathML">{tree_str}</math>'
-    return res
-
-
-def to_mathml(trees):
-    string = ''
-    for i, nbest in enumerate(trees):
-        words = nbest[0][0].word if isinstance(nbest[0], tuple) else nbest[0].word
-        trees_str = mathml_nbest_trees(nbest)
-        string += f'<p>ID={i}: {words}</p>{trees_str}'
-
-    results = f'''\
+MATHML_MAIN = '''\
 <!doctype html>
 <html lang='en'>
 <head>
@@ -108,17 +66,57 @@ def to_mathml(trees):
      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
   </script>
 </head>
-<body>{string}
-</body></html>'''
-    return results
+<body>
+  {0}
+</body>
+</html>
+'''
 
 
-def diff(tree1, tree2):
-    def rec(node1, node2):
-        pass
-    str1, str2 = '', ''
-    rec(tree1, tree2)
-    return None
+def mathml_subtree(tree, bgcolor=None):
+    bgcolor = f'mathbackground={bgcolor}' if bgcolor else ''
+    cat_str = mathml_cat(str(tree.cat))
+    if not tree.is_leaf:
+        children_str = ''.join(map(mathml_subtree, tree.children))
+        return MATHML_SUBTREE_NONTERMINAL.format(
+            children_str, cat_str, tree.op_string, bgcolor)
+    else:
+        return MATHML_SUBTREE_TERMINAL.format(
+            tree.word, cat_str)
+
+
+def mathml_cat(cat):
+    cats_feats = re.findall(r'([\w\\/()]+)(\[.+?\])*', cat)
+    mathml_str = ''
+    for cat, feat in cats_feats:
+        cat_mathml = f'''\
+<mi mathvariant='italic'
+  mathsize='1.0' mathcolor='Red'>{cat}</mi>'''
+        if feat != '':
+            mathml_str += f'''\
+<msub>{cat_mathml}
+  <mrow>
+  <mi mathvariant='italic'
+    mathsize='0.8' mathcolor='Purple'>{feat}</mi>
+  </mrow>
+</msub>'''
+        else:
+            mathml_str += cat_mathml
+    return mathml_str
+
+
+def to_mathml(trees):
+    result = ''
+    for i, nbest in enumerate(trees):
+        words = nbest[0][0].word if isinstance(nbest[0], tuple) else nbest[0].word
+        result += f'<p>ID={i}: {words}</p>'
+        for tree in nbest:
+            if isinstance(tree, tuple):
+                tree, prob = tree
+                result += f'<p>Log prob={prob:.5e}</p>'
+            tree_str = tree if isinstance(tree, str) else mathml_subtree(tree)
+            result += f'<math xmlns="http://www.w3.org/1998/Math/MathML">{tree_str}</math>'
+    return MATHML_MAIN.format(result)
 
 
 class ConvertToJiggXML(object):
