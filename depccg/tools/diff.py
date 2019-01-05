@@ -1,7 +1,7 @@
 
 import argparse
 import logging
-from depccg import read_auto
+from .reader import read_trees_guess_extension
 from depccg.printer import mathml_subtree, MATHML_SUBTREE_TERMINAL, mathml_cat, MATHML_SUBTREE_NONTERMINAL, MATHML_MAIN
 
 
@@ -85,12 +85,12 @@ if __name__ == '__main__':
     parser.add_argument('--sampling', default='head', choices=['head', 'tail', 'random'])
     args = parser.parse_args()
     if args.file2:
-        file1_trees = [(args.file1, tree) for _, tree in read_auto(args.file1)]
-        file2_trees = [(args.file2, tree) for _, tree in read_auto(args.file2)]
+        file1_trees = [(args.file1, tree) for _, _, tree in read_trees_guess_extension(args.file1)]
+        file2_trees = [(args.file2, tree) for _, _, tree in read_trees_guess_extension(args.file2)]
         assert len(file1_trees) == len(file2_trees)
         tree_pairs = list(zip(file1_trees, file2_trees))
     else:
-        file1_trees = ((args.file1, tree) for _, tree in read_auto(args.file1))
+        file1_trees = ((args.file1, tree) for _, tree in read_trees_guess_extension(args.file1))
         tree_pairs = list(zip(file1_trees, file1_trees))
 
     print(to_diffs(tree_pairs, args.max_output_num, args.sampling))

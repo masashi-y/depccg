@@ -6,6 +6,7 @@ from .cat cimport Cat, Category
 from .combinator import unknown_combinator
 from lxml import etree
 from .token import Token
+from depccg.utils import denormalize
 
 
 ## TODO: ugly code
@@ -236,7 +237,7 @@ cdef class Tree:
         def rec(node):
             if node.is_leaf:
                 cat = node.cat
-                word = node.word
+                word = denormalize(node.word)
                 pos = poss.pop(0)
                 return f'(<L {cat} {pos} {pos} {word} {cat}>)'
             else:

@@ -16,9 +16,13 @@ def normalize(word):
     elif word == "-RRB-":
         return ")"
     elif word == "-LCB-":
-        return "("
+        return "{"
     elif word == "-RCB-":
-        return ")"
+        return "}"
+    elif word == "-LSB-":
+        return "["
+    elif word == "-RSB-":
+        return "]"
     else:
         return word
 
@@ -32,6 +36,10 @@ def denormalize(word):
         return "-LCB-"
     elif word == "}":
         return "-RCB-"
+    elif word == "[":
+        return "-LSB-"
+    elif word == "]":
+        return "-RSB-"
     word = word.replace(">", "-RAB-")
     word = word.replace("<", "-LAB-")
     return word

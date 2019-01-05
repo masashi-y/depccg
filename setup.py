@@ -117,7 +117,7 @@ else:
 
     setup(
         name="depccg",
-        version=__version__,  # NOQA
+        # version=__version__,  # NOQA
         description='A parser for natural language based on combinatory categorial grammar',
         long_description=open('README.md').read(),
         long_description_content_type='text/markdown',
