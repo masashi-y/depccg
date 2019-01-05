@@ -51,7 +51,7 @@ class Token(dict):
                      chunk='XX')
 
 
-candc_cmd = "cat \"{0}\" | {1}/bin/pos --model {1}/models/pos | {1}/bin/ner --model {1}/models/ner"
+candc_cmd = "cat \"{0}\" | {1}/bin/pos --model {2} | {1}/bin/ner --model {3}"
 
 
 def annotate_XX(sentences: List[List[str]], tokenize=False) -> List[List[Token]]:
@@ -67,13 +67,17 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
         raise NotImplementedError('no tokenizer implemented in the C&C pipeline')
 
     candc_dir = os.environ.get('CANDC', None)
+    candc_model_pos = None
+    candc_model_ner = None
     fail = False
     if candc_dir:
         candc_dir = Path(candc_dir)
-        if (candc_dir / 'bin' /'pos').exists() and \
-                (candc_dir / 'bin' /'ner').exists() and \
-                   (candc_dir / 'models' / 'pos').exists() and \
-                (candc_dir / 'models' / 'ner').exists():
+        candc_model_pos = Path(os.environ.get('CANDC_MODEL_POS', str(candc_dir / 'models' / 'pos')))
+        candc_model_ner = Path(os.environ.get('CANDC_MODEL_NER', str(candc_dir / 'models' / 'ner')))
+        if (candc_dir / 'bin' / 'pos').exists() and \
+                (candc_dir / 'bin' / 'ner').exists() and \
+                candc_model_pos.exists() and \
+                candc_model_ner.exists():
             pass
         else:
             logger.info('CANDC environmental variable may not be configured correctly.')
@@ -89,6 +93,7 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
 
     logger.info('find C&C parser at CANDC environmental variable.')
     logger.info('use C&C pipeline to annotate POS and NER infos.')
+    logger.info(f'C&C models: [{candc_model_pos}, {candc_model_ner}]')
 
     stemmer = MorphaStemmer(str(MODEL_DIRECTORY / 'verbstem.list'))
 
@@ -97,7 +102,10 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
         for sentence in sentences:
             print(' '.join(sentence), file=f)
 
-    command = candc_cmd.format(tmpfile, candc_dir)
+    command = candc_cmd.format(tmpfile,
+                               candc_dir,
+                               candc_model_pos,
+                               candc_model_ner)
     proc = subprocess.Popen(command,
                             shell=True,
                             stdin=subprocess.PIPE,

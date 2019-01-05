@@ -118,6 +118,7 @@ else:
     setup(
         name="depccg",
         packages=find_packages(),
+        package_data={'depccg': ['models/*']},
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext},
         scripts=['bin/depccg_en', 'bin/depccg_ja'],
