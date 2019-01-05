@@ -117,10 +117,24 @@ else:
 
     setup(
         name="depccg",
+        version=__version__,  # NOQA
+        description='A parser for natural language based on combinatory categorial grammar',
+        long_description=open('README.md').read(),
+        long_description_content_type='text/markdown',
+        author='Masashi Yoshikawa',
+        author_email='yoshikawa.masashi.yh8@is.naist.jp',
+        url='https://github.com/masashi-y/depccg',
+        license='MIT License',
         packages=find_packages(),
         package_data={'depccg': ['models/*']},
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext},
         scripts=['bin/depccg_en', 'bin/depccg_ja'],
         zip_safe=False,
+        install_requires=[
+            'numpy>=1.15.0',
+            'chainer>=2.0.0',
+            'lxml',
+            'cython'
+        ]
     )
