@@ -231,7 +231,9 @@ public:
         return puncts_.count(left) > 0;
     }
 
-    Cat Apply(Cat left, Cat right) const { return right; }
+    Cat Apply(Cat left, Cat right) const {
+        return CCategory::Make(right, Slash::Bwd(), right);
+    }
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     std::string ToStr() const { return "<rp>"; };
 
