@@ -207,6 +207,7 @@ en_default_binary_rules = [
     headfirst_combinator(conjunction2()),
     headfirst_combinator(remove_punctuation(False)),
     headfirst_combinator(remove_punctuation(True)),
+    headfirst_combinator(remove_punctuation_left()),
     headfirst_combinator(comma_and_verb_phrase_to_adverb()),
     headfirst_combinator(parenthetical_direct_speech())
 ]
