@@ -13,7 +13,7 @@ __More stable and easier to use ocaml version is also available__: [depccg.ml](h
 #### Build
 
 ```
-pip install cython chainer==1.23
+pip install cython chainer
 git clone https://github.com/masashi-y/depccg.git
 cd depccg/src
 python setup.py build_ext --inplace
