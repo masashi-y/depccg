@@ -231,7 +231,19 @@ cdef class Tree:
                 cat = node.cat
                 children = ' '.join(rec(child) for child in node.children)
                 return f'({cat} {children})'
-        return f'( {rec(self)})'
+        return f'(ROOT {rec(self)})'
+
+    def nltk_tree(self):
+        from nltk.tree import Tree
+        def rec(node):
+            if node.is_leaf:
+                cat = node.cat
+                children = [node.word]
+            else:
+                cat = node.cat
+                children = [rec(child) for child in node.children]
+            return Tree(str(cat), children)
+        return rec(self)
 
     def auto(self, tokens=None):
         def rec(node):
