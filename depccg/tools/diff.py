@@ -46,9 +46,10 @@ def diff(tree1, tree2):
 
 
 def to_diffs(tree_pairs, max_output_num, sampling):
-    diffs = [(name1, name2, tree1, tree2) + diff(tree1, tree2) for (name1, tree1), (name2, tree2) in tree_pairs]
-    diffs = [(name1, name2, tree1, tree2, tree1_str, tree2_str)
-             for (name1, name2, tree1, tree2, trees_are_different, tree1_str, tree2_str) in diffs
+    diffs = [(i, name1, name2, tree1, tree2) + diff(tree1, tree2)
+            for i, ((name1, tree1), (name2, tree2)) in enumerate(tree_pairs)]
+    diffs = [(i, name1, name2, tree1, tree2, tree1_str, tree2_str)
+             for (i, name1, name2, tree1, tree2, trees_are_different, tree1_str, tree2_str) in diffs
              if trees_are_different]
     logger.info(f'The number of input tree pairs: {len(tree_pairs)}')
     logger.info(f'The number of different tree pairs: {len(diffs)}')
@@ -67,7 +68,7 @@ def to_diffs(tree_pairs, max_output_num, sampling):
         else:
             assert False
     result = ''
-    for i, (name1, name2, tree1, tree2, tree1_str, tree2_str) in enumerate(diffs):
+    for (i, name1, name2, tree1, tree2, tree1_str, tree2_str) in diffs:
         if i > 0:
             result += '<hr>'
         result += f'<p><strong>{name1}</strong> ID={i}: {tree1.word}</p>'
