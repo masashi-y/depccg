@@ -40,11 +40,18 @@ cdef PartialConstraints build_nonterminal_constraints(
 def build_terminal_constraints(list constraints, tag_probs, tag_list):
     pseudo_neginf = -10e10
     tag_dict = {tag: i for i, tag in enumerate(tag_list)}
+    sent_len, old_tag_size = tag_probs.shape
+    if len (tag_list) != old_tag_size:
+        assert len(tag_list) > old_tag_size
+        new_tag_probs = np.full((sent_len, len(tag_list)), pseudo_neginf, 'f')
+        new_tag_probs[:sent_len, :old_tag_size] = tag_probs
+    else:
+        new_tag_probs = tag_probs
     for cat, i in constraints:
         cat_index = tag_dict[cat]
-        tag_probs[i, :] = pseudo_neginf
-        tag_probs[i, cat_index] = 0
-    return tag_probs
+        new_tag_probs[i, :] = pseudo_neginf
+        new_tag_probs[i, cat_index] = 0
+    return new_tag_probs
 
 ctypedef ApplyBinaryRules (*MakeApplyBinaryRules)(const vector[Op]&)
 
@@ -309,6 +316,15 @@ cdef class EnglishCCGParser:
             logger.info('loading partial constraints')
             c_constraints = vector[PartialConstraints](doc_size)
             new_probs = []
+
+            # update py_tag_list and tag_list_ if there are unseen supertags in constraints
+            cats_terminal_constraints = [cx[0] for constraint in constraints for cx in constraint if len(cx) == 2]
+            new_terminal_categories = list({cat for cat in cats_terminal_constraints if cat not in py_tag_list})
+            if len (new_terminal_categories) > 0:
+                logging.info(f'newly added categories in terminal constraints: {new_terminal_categories}')
+                py_tag_list += new_terminal_categories
+                tag_list_ = cat_list_to_vector(py_tag_list)
+
             for i, (constraint, (py_cat_scores, py_dep_scores)) in enumerate(zip(constraints, probs)):
                 nonterminal_constraints = [cx for cx in constraint if len(cx) == 3]
                 terminal_constraints = [cx for cx in constraint if len(cx) == 2]
