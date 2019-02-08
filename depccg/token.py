@@ -126,7 +126,7 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
     for sentence in tagged_sentences:
         words, poss = zip(*[(word, pos) for word, pos, _ in sentence])
         lemmas = stemmer.analyze(list(words), list(poss))
-        tokens = [Token(word=word, pos=pos, entity=ner, lemma=lemma, chunk='XX')
+        tokens = [Token(word=word, pos=pos, entity=ner, lemma=lemma.lower(), chunk='XX')
                   for (word, pos, ner), lemma in zip(sentence, lemmas)]
         res.append(tokens)
     return res
@@ -156,11 +156,16 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
             else:
                 ner = token.ent_iob_ + '-' + token.ent_type_
 
+            # takes care of pronoun
+            if token.lemma_ == '-PRON-':
+                lemma = str(token).lower()
+            else:
+                lemma = token.lemma_.lower()
             tokens.append(
                 Token(word=str(token),
                       pos=token.tag_,
                       entity=ner,
-                      lemma=token.lemma_,
+                      lemma=lemma,
                       chunk='XX'))
         res.append(tokens)
     if tokenize:

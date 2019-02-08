@@ -16,6 +16,10 @@ MODELS = {
 
 MODEL_DIRECTORY = Path(__file__).parent / 'models'
 
+SEMANTIC_TEMPLATES = {
+    'en': MODEL_DIRECTORY / 'semantic_templates_en_event.yaml',
+    'ja': MODEL_DIRECTORY / 'semantic_templates_ja_event.yaml'
+}
 
 def reporthook(count, block_size, total_size):
     global start_time
