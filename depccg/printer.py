@@ -15,7 +15,7 @@ def to_xml(nbest_trees, tagged_doc):
             out.set('sentence', str(i))
             out.set('id', str(j))
             candc_node.append(out)
-    return etree.tostring(candc_node, encoding='utf-8', pretty_print=True).decode('utf-8')
+    return candc_node
 
 
 def to_prolog(nbest_trees, tagged_doc):
@@ -122,7 +122,7 @@ def to_mathml(trees):
 class ConvertToJiggXML(object):
     def __init__(self, sid: int):
         self.sid = sid
-        self._spid = 0
+        self._spid = -1
         self.processed = 0
 
     @property
@@ -153,6 +153,7 @@ class ConvertToJiggXML(object):
         res.set('id', f's{self.sid}_ccg{self.processed}')
         id = traverse(tree)
         res.set('root', str(id))
+        res[0].set('root', 'true')
         if score is not None:
             res.set('score', str(score))
         self.processed += 1
@@ -173,10 +174,14 @@ def to_jigg_xml(trees, tagged_doc):
             token_node.set('start', str(j))
             token_node.set('cat', str(cat))
             token_node.set('id', f't{i}_{j}')
+            if 'word' in token:
+                token['surf'] = token.pop('word')
+            if 'lemma' in token:
+                token['base'] = token.pop('lemma')
             for k, v in token.items():
                 token_node.set(k, v)
         converter = ConvertToJiggXML(i)
         for tree, score in parsed:
             sentence_node.append(converter.process(tree, score))
-    return etree.tostring(root_node, encoding='utf-8', pretty_print=True).decode('utf-8')
+    return root_node
 

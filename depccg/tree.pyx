@@ -126,6 +126,26 @@ cdef class Tree:
     def of_auto(line, lang='en'):
         return _AutoLineReader(line, lang).parse()
 
+    @staticmethod
+    def of_nltk_tree(tree, lang='en'):
+        position = [-1]
+        def rec(node):
+            cat = Category.parse(node.label())
+            if isinstance(node[0], str):
+                word = node[0]
+                position[0] += 1
+                return Tree.make_terminal(word, cat, position[0], lang)
+            else:
+                children = [rec(child) for child in node]
+                if len(children) == 1:
+                    return Tree.make_unary(cat, children[0], lang)
+                else:
+                    assert len(children) == 2
+                    left, right = children
+                    return Tree.make_binary(
+                        cat, True, left, right, unknown_op, lang)
+        return rec(tree)
+
     def __cinit__(self):
         self.suppress_feat = False
 
