@@ -13,6 +13,7 @@ from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules
 from .combinator import remove_disfluency, headfirst_combinator
 from .semantics.ccg2lambda import parse as ccg2lambda
+from .semantics.ccg2lambda import nltk2json
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
@@ -28,9 +29,16 @@ def main(args):
 
     if args.lang == 'en':
         binary_rules = en_default_binary_rules
+        if args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']:
+            assert args.annotator, \
+                f'Specify --annotator argument in using "{args.format}" output format'
         annotate_fun = english_annotator.get(args.annotator, annotate_XX)
+
     elif args.lang == 'ja':
         binary_rules = ja_default_binary_rules
+        if args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']:
+            assert args.tokenize, \
+                f'Specify --tokenize argument in using "{args.format}" output format'
         if args.tokenize:
             annotate_fun = japanese_annotator['janome']
         else:
@@ -120,11 +128,19 @@ def main(args):
         _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates), nbest=args.nbest)
         for i, (parsed, formulas) in enumerate(zip(res, formulas_list)):
             for j, ((tree, prob), formula) in enumerate(zip(parsed, formulas)):
+                formula = nltk2json.run(formula)
                 print(f'# ID={i} log probability={prob:.4e}\n{formula}')
     elif args.format == 'conll':
         for i, parsed in enumerate(res):
             for tree, prob in parsed:
                 print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}')
+    elif args.format == 'json':
+        for i, (parsed, tokens) in enumerate(zip(res, tagged_doc), 1):
+            for tree, prob in parsed:
+                res = tree.json(tokens=tokens)
+                res['id'] = i
+                res['prob'] = prob
+                json.dump(res, sys.stdout)
     elif args.format == 'auto':
         for i, (parsed, tokens) in enumerate(zip(res, tagged_doc), 1):
             for tree, prob in parsed:
@@ -221,7 +237,8 @@ if __name__ == '__main__':
     english_parser.add_argument('-f',
                                 '--format',
                                 default='auto',
-                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg_xml', 'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda'],
+                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg_xml',
+                                         'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
                                 help='output format')
     english_parser.add_argument('--tokenize',
                                 action='store_true',
@@ -236,7 +253,8 @@ if __name__ == '__main__':
     japanese_parser.add_argument('-f',
                                  '--format',
                                  default='ja',
-                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml', 'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda'],
+                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml',
+                                          'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
                                  help='output format')
     japanese_parser.add_argument('--pre-tokenized',
                                  dest='tokenize',

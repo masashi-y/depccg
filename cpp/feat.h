@@ -25,6 +25,7 @@ public:
     virtual std::string SubstituteWildcard(const std::string& string) const = 0;
     virtual bool ContainsKeyValue(const std::string& key, const std::string& value) const = 0;
     virtual Feat ToMultiValue() const = 0;
+    virtual std::unordered_map<std::string, std::string> Values() const = 0;
     Feature() {}
 };
 
@@ -40,6 +41,12 @@ public:
     std::string SubstituteWildcard(const std::string& string) const;
     bool ContainsKeyValue(const std::string& key, const std::string& value) const;
     Feat ToMultiValue() const { return this; }
+    std::unordered_map<std::string, std::string> Values() const {
+        std::unordered_map<std::string, std::string> res;
+        for(auto&& key_val : values_)
+            res[key_val.first] = key_val.second;
+        return res;                
+    }
 
 private:
     std::vector<std::pair<std::string, std::string>> values_;
@@ -59,6 +66,12 @@ public:
     std::string SubstituteWildcard(const std::string& string) const;
     bool ContainsKeyValue(const std::string& key, const std::string& value) const NO_IMPLEMENTATION
     Feat ToMultiValue() const;
+    std::unordered_map<std::string, std::string> Values() const {
+        std::unordered_map<std::string, std::string> res;
+        if (value_ != "")
+            res[value_] = "true";
+        return res;
+    }
 
 private:
     std::string value_;
