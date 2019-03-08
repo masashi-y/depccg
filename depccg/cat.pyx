@@ -43,9 +43,9 @@ cdef class Category:
         def __get__(self):
             return Category.from_ptr(self.cat_.ToMultiValue())
 
-    property without_feat:
+    property base:
         def __get__(self):
-            return self.cat_.ToStrWithoutFeat()
+            return self.cat_.ToStrWithoutFeat().decode('utf-8')
 
     property left:
         def __get__(self):
@@ -117,11 +117,44 @@ cdef class Category:
     property slash:
         def __get__(self):
             assert self.is_functor, 'Category "{}" is not a functor type.'.format(str(self))
-            return self.cat_.GetSlash().ToStr()
+            return self.cat_.GetSlash().ToStr().decode('utf-8')
+
+    property features:
+        def __get__(self):
+            cdef unordered_map[string, string] c_features
+            cdef pair[string, string] tmp
+            cdef str key, val
+            if self.is_functor:
+                return {}
+            else:
+                c_features = self.cat_.GetFeat().Values()
+                res = {}
+                for tmp in c_features:
+                    key = tmp.first.decode('utf-8')
+                    val = tmp.second.decode('utf-8')
+                    res[key] = val
+                return res
+
 
     cpdef strip_feat(self, feat):
         assert feat.startswith('[') and feat.endswith(']'), \
             'please enclose a feature with [] as in Category.parse(\'S[dcl]\\NP\').strip_feat(\'[dcl]\')'
         cdef string c_feat = feat.encode('utf-8')
         return Category.from_ptr(self.cat_.StripFeat(c_feat))
+
+    def json(self):
+        def rec(node):
+            if node.is_functor:
+                return {
+                    'slash': node.slash,
+                    'left': rec(node.left),
+                    'right': rec(node.right)
+                }
+            else:
+                feature = node.features
+                return {
+                    'base': node.base,
+                    'feature': feature if len(feature) > 0 else None
+                }
+        return rec(self)
 

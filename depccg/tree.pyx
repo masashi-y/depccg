@@ -312,6 +312,25 @@ cdef class Tree:
         rec(self, res)
         return res
 
+    def json(self, tokens=None, full=False):
+        def rec(node):
+            if node.is_leaf:
+                token = tokens.pop(0)
+                res = dict(token)
+                res['cat'] = node.cat.json if full else str(node.cat)
+                return res
+            else:
+                return {
+                    'type': node.op_string,
+                    'cat': node.cat.json if full else str(node.cat),
+                    'children': [rec(child) for child in node.children]
+                }
+
+        if tokens is None:
+            tokens = [Token.from_word(word) for word in self.word.split(' ')]
+        tokens = list(tokens)
+        return rec(self)
+
     def prolog(self):
         cdef string res = Prolog(self.node_).Get()
         return res.decode("utf-8")

@@ -3,14 +3,17 @@ import argparse
 import sys
 import logging
 import json
+from lxml import etree
 
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, to_jigg_xml
 from depccg.token import Token, english_annotator, japanese_annotator, annotate_XX
-from .download import download, load_model_directory
+from .download import download, load_model_directory, SEMANTIC_TEMPLATES
 from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules
 from .combinator import remove_disfluency, headfirst_combinator
+from .semantics.ccg2lambda import parse as ccg2lambda
+from .semantics.ccg2lambda import nltk2json
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
@@ -26,9 +29,16 @@ def main(args):
 
     if args.lang == 'en':
         binary_rules = en_default_binary_rules
+        if args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']:
+            assert args.annotator, \
+                f'Specify --annotator argument in using "{args.format}" output format'
         annotate_fun = english_annotator.get(args.annotator, annotate_XX)
+
     elif args.lang == 'ja':
         binary_rules = ja_default_binary_rules
+        if args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']:
+            assert args.tokenize, \
+                f'Specify --tokenize argument in using "{args.format}" output format'
         if args.tokenize:
             annotate_fun = japanese_annotator['janome']
         else:
@@ -94,17 +104,43 @@ def main(args):
                                batchsize=args.batchsize)
 
     if args.format == 'xml':
-        print(to_xml(res, tagged_doc))
+        output = etree.tostring(
+            to_xml(res, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
+        print(output)
     elif args.format == 'jigg_xml':
-        print(to_jigg_xml(res, tagged_doc))
+        output = etree.tostring(
+            to_jigg_xml(res, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
+        print(output)
     elif args.format == 'prolog':
         print(to_prolog(res, tagged_doc))
     elif args.format == 'html':
         print(to_mathml(res))
+    elif args.format == 'jigg_xml_ccg2lambda':
+        jigg_xml = to_jigg_xml(res, tagged_doc)
+        templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
+        assert templates, f'--semantic-templates must be spcified for language: {args.lang}'
+        result_xml_str, _ = ccg2lambda.parse(jigg_xml, str(templates), nbest=args.nbest)
+        print(result_xml_str.decode('utf-8'))
+    elif args.format == 'ccg2lambda':
+        jigg_xml = to_jigg_xml(res, tagged_doc)
+        templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
+        assert templates, f'--semantic-templates must be spcified for language: {args.lang}'
+        _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates), nbest=args.nbest)
+        for i, (parsed, formulas) in enumerate(zip(res, formulas_list)):
+            for j, ((tree, prob), formula) in enumerate(zip(parsed, formulas)):
+                formula = nltk2json.run(formula)
+                print(f'# ID={i} log probability={prob:.4e}\n{formula}')
     elif args.format == 'conll':
         for i, parsed in enumerate(res):
             for tree, prob in parsed:
                 print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}')
+    elif args.format == 'json':
+        for i, (parsed, tokens) in enumerate(zip(res, tagged_doc), 1):
+            for tree, prob in parsed:
+                res = tree.json(tokens=tokens)
+                res['id'] = i
+                res['prob'] = prob
+                json.dump(res, sys.stdout)
     elif args.format == 'auto':
         for i, (parsed, tokens) in enumerate(zip(res, tagged_doc), 1):
             for tree, prob in parsed:
@@ -174,6 +210,8 @@ def add_common_parser_arguments(parser):
                         default=10000000,
                         type=int,
                         help='give up parsing when the number of times of popping agenda items exceeds this value')
+    parser.add_argument('--semantic-templates',
+                        help='semantic templates used in "ccg2lambda" format output')
     parser.add_argument('--verbose',
                         action='store_true')
     parser.set_defaults(func=main)
@@ -199,7 +237,8 @@ if __name__ == '__main__':
     english_parser.add_argument('-f',
                                 '--format',
                                 default='auto',
-                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg_xml', 'ptb'],
+                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg_xml',
+                                         'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
                                 help='output format')
     english_parser.add_argument('--tokenize',
                                 action='store_true',
@@ -214,7 +253,8 @@ if __name__ == '__main__':
     japanese_parser.add_argument('-f',
                                  '--format',
                                  default='ja',
-                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml', 'ptb'],
+                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml',
+                                          'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
                                  help='output format')
     japanese_parser.add_argument('--pre-tokenized',
                                  dest='tokenize',

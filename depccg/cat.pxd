@@ -1,5 +1,6 @@
 from libcpp.string cimport string
 from libcpp.pair cimport pair
+from libcpp.unordered_map cimport unordered_map
 from libcpp cimport bool
 
 cdef extern from "feat.h" namespace "myccg" nogil:
@@ -18,6 +19,7 @@ cdef extern from "feat.h" namespace "myccg" nogil:
         string SubstituteWildcard(const string& string) const
         bint ContainsKeyValue(const string& key, const string& value) const
         Feat ToMultiValue() const
+        unordered_map[string, string] Values() const;
 
 
 cdef extern from "cat.h" namespace "myccg" nogil:
