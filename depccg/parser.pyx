@@ -103,6 +103,7 @@ cdef class EnglishCCGParser:
     cdef object max_length
     cdef object max_steps
     cdef object tagger
+    cdef object gpu
     cdef bytes lang
 
     def __init__(self,
@@ -119,7 +120,8 @@ cdef class EnglishCCGParser:
                  nbest=1,
                  possible_root_cats=None,
                  max_length=250,
-                 max_steps=100000):
+                 max_steps=100000,
+                 gpu=-1):
         self.apply_unary_rules_ = EnApplyUnaryRules
         self.make_apply_binary_rules_ = MakeEnApplyBinaryRules
         self.binary_rules = binary_rules or en_default_binary_rules
@@ -140,6 +142,7 @@ cdef class EnglishCCGParser:
         self.max_length = max_length
         self.max_steps = max_steps
         self.tagger = None
+        self.gpu = gpu
         self.lang = b'en'
 
     def load_default_tagger(self, model_path):
@@ -162,6 +165,8 @@ cdef class EnglishCCGParser:
             self.tagger = eval(json.load(f)['model'])(dirname)
         logger.info(f'initializing supertagger with parameters at {model_file}')
         chainer.serializers.load_npz(model_file, self.tagger)
+        if self.gpu >= 0:
+            self.tagger.to_gpu(self.gpu)
 
     def load_allennlp_tagger(self, model_path):
         from allennlp.models.archival import load_archive
@@ -169,7 +174,8 @@ cdef class EnglishCCGParser:
         from depccg.models.my_allennlp.dataset.supertagging_dataset import SupertaggingDatasetReader
         from depccg.models.my_allennlp.dataset.supertagging_dataset import TritrainSupertaggingDatasetReader
         from depccg.models.my_allennlp.predictor.supertagger_predictor import SupertaggerPredictor
-        archive = load_archive(os.path.join(model_path, 'tagger_model.tar.gz'))
+        archive = load_archive(os.path.join(model_path, 'tagger_model.tar.gz'),
+                               cuda_device=self.gpu)
         predictor = SupertaggerPredictor.from_archive(archive, 'supertagger-predictor')
         self.tagger = AllennlpSupertagger(predictor)
 
@@ -442,7 +448,8 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
                  nbest=1,
                  possible_root_cats=None,
                  max_length=250,
-                 max_steps=100000):
+                 max_steps=100000,
+                 gpu=-1):
 
         binary_rules = binary_rules or ja_default_binary_rules
         if possible_root_cats is None:
@@ -483,6 +490,7 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.max_length = max_length
         self.max_steps = max_steps
         self.tagger = None
+        self.gpu = gpu
         self.lang = b'ja'
 
     @classmethod

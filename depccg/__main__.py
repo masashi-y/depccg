@@ -67,7 +67,8 @@ def main(args):
                                          use_seen_rules=not args.disable_seen_rules,
                                          use_category_dict=not args.disable_category_dictionary,
                                          max_length=args.max_length,
-                                         max_steps=args.max_steps)
+                                         max_steps=args.max_steps,
+                                         gpu=args.gpu)
 
     fin = sys.stdin if args.input is None else open(args.input)
 
@@ -165,6 +166,10 @@ def add_common_parser_arguments(parser):
                         '--weights',
                         default=None,
                         help='a file that contains weights (p_tag, p_dep)')
+    parser.add_argument('--gpu',
+                        type=int,
+                        default=-1,
+                        help='specify gpu id')
     parser.add_argument('--batchsize',
                         type=int,
                         default=32,
