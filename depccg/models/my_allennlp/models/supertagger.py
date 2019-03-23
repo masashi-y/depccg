@@ -18,7 +18,7 @@ from allennlp.nn import InitializerApplicator, RegularizerApplicator, Activation
 from allennlp.nn.util import get_text_field_mask, get_range_vector
 from allennlp.nn.util import get_device_of, masked_log_softmax
 from allennlp.training.metrics import CategoricalAccuracy
-from my_allennlp.nn.bilinear import BilinearWithBias
+from depccg.models.my_allennlp.nn.bilinear import BilinearWithBias
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -94,7 +94,6 @@ class Supertagger(Model):
         self.head_tag_temperature = head_tag_temperature
         self.head_temperature = head_temperature
         initializer(self)
-        logger.info(self)
 
     @overrides
     def forward(self,  # type: ignore
@@ -195,6 +194,7 @@ class Supertagger(Model):
             output_dict['predicted_heads'] = output_dict['predicted_heads'].cpu().detach().numpy()
         if 'predicted_head_tags' in output_dict:
             output_dict['predicted_head_tags'] = output_dict['predicted_head_tags'].cpu().detach().numpy()
+        output_dict.pop('loss')
         return output_dict
 
     def _construct_loss(self,

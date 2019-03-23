@@ -12,8 +12,6 @@ from allennlp.models import Model
 from allennlp.predictors.predictor import Predictor
 import allennlp.predictors.predictor as predictor
 from allennlp.data.vocabulary import DEFAULT_OOV_TOKEN, DEFAULT_PADDING_TOKEN
-from ccg_seed_pb2 import *
-from utils import denormalize
 
 
 @Predictor.register('supertagger-predictor')
@@ -45,17 +43,17 @@ class SupertaggerPredictor(Predictor):
         categories, paddings = all_categories[2:], all_categories[:2]
         assert all(padding in [DEFAULT_PADDING_TOKEN, DEFAULT_OOV_TOKEN] for padding in paddings)
         for output_dict in output_dicts:
+            length = len(output_dict['words'].split(' '))
             output_dict['categories'] = categories
-            head_tags = output_dict["head_tags"]
+            head_tags = output_dict["head_tags"][:length, :]
             assert head_tags.shape[-1] == len(categories)
-            heads = output_dict["heads"]
+            heads = output_dict["heads"][:length, :length+1]
             output_dict["predicted_head_tags"] = [all_categories[i] for i in output_dict["predicted_head_tags"]]
             output_dict["predicted_heads"] = output_dict["predicted_heads"].tolist()
             output_dict["head_tags"] = head_tags.flatten().astype(float).tolist()
             output_dict["heads"] = heads.flatten().astype(float).tolist()
             output_dict["head_tags_shape"] = list(head_tags.shape)
             output_dict["heads_shape"] = list(heads.shape)
-            output_dict.pop("loss")
             output_dict.pop("mask")
         return output_dicts
 

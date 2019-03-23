@@ -12,3 +12,6 @@ models
 *.o
 data
 depccg/*.cpp
+depccg.egg-info
+.idea
+.vscode

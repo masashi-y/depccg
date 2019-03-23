@@ -13,7 +13,7 @@ from allennlp.data.fields import SequenceLabelField, TextField, MetadataField, A
 from allennlp.data.instance import Instance
 from allennlp.data.tokenizers import Token
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
-import utils
+from depccg import utils
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 

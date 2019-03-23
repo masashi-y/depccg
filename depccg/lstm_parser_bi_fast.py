@@ -172,7 +172,7 @@ class FastBiaffineLSTMParser(chainer.Chain):
         cat_ys = [v[:l] for v, l in zip(cat_ys, ls)]
         return cat_ys, dep_ys
 
-    def predict(self, xs):
+    def _predict(self, xs):
         xs = [self.extractor.process(x) for x in xs]
         ws, ss, ps, ls = concat_examples(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
@@ -185,10 +185,10 @@ class FastBiaffineLSTMParser(chainer.Chain):
         doc = sorted(enumerate(doc), key=lambda x: len(x[1]))
         for i in range(0, len(doc), batchsize):
             ids, batch = zip(*doc[i:i + batchsize])
-            pred = self.predict(batch)
+            pred = self._predict(batch)
             res.extend((j, y) for j, y in zip(ids, pred))
         res = [pred for _, pred in sorted(res)]
-        return res
+        return res, self.cats
 
     def _init_state(self, batchsize):
         res = [Variable(self.xp.zeros(

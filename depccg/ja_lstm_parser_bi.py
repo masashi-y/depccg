@@ -95,7 +95,7 @@ class BiaffineJaLSTMParser(chainer.Chain):
 
         return cat_ys, dep_ys
 
-    def predict(self, xs):
+    def _predict(self, xs):
         xs = [self.extractor.process(x) for x in xs]
         ws, ss, ps = zip(*xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
@@ -106,8 +106,8 @@ class BiaffineJaLSTMParser(chainer.Chain):
     def predict_doc(self, doc, batchsize=16):
         res = []
         for i in range(0, len(doc), batchsize):
-            res.extend(self.predict(doc[i:i + batchsize]))
-        return res
+            res.extend(self._predict(doc[i:i + batchsize]))
+        return res, self.cats
 
     @property
     def cats(self):

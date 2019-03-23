@@ -53,7 +53,36 @@ def build_terminal_constraints(list constraints, tag_probs, tag_list):
         new_tag_probs[i, cat_index] = 0
     return new_tag_probs
 
+
+from itertools import islice
+def lazy_groups_of(iterator, group_size):
+    return iter(lambda: list(islice(iterator, 0, group_size)), [])
+
+
+class AllennlpSupertagger(object):
+    def __init__(self, predictor):
+        self.predictor = predictor
+        self.dataset_reader = predictor._dataset_reader
+
+    def predict_doc(self, splitted, batchsize=32):
+        instances = iter(self.dataset_reader.text_to_instance(' '.join(sentence))
+                         for sentence in splitted)
+
+        categories = None
+        probs = []
+        import json
+        for batch in lazy_groups_of(instances, batchsize):
+            for json_dict in self.predictor.predict_batch_instance(batch):
+                if categories is None:
+                    categories = [Category.parse(cat) for cat in json_dict['categories']]
+                dep = np.array(json_dict['heads']).reshape(json_dict['heads_shape']).astype(np.float32)
+                tag = np.array(json_dict['head_tags']).reshape(json_dict['head_tags_shape']).astype(np.float32)
+                probs.append((tag, dep))
+        return probs, categories
+
+
 ctypedef ApplyBinaryRules (*MakeApplyBinaryRules)(const vector[Op]&)
+
 
 cdef class EnglishCCGParser:
     cdef ApplyUnaryRules apply_unary_rules_
@@ -62,7 +91,6 @@ cdef class EnglishCCGParser:
     cdef object binary_rules
     cdef object possible_root_cats
     cdef object category_dict
-    cdef object tag_list
     cdef object unary_rules
     cdef object seen_rules
     cdef object unary_penalty
@@ -79,7 +107,6 @@ cdef class EnglishCCGParser:
 
     def __init__(self,
                  category_dict,
-                 tag_list,
                  unary_rules,
                  seen_rules,
                  binary_rules=None,
@@ -101,7 +128,6 @@ cdef class EnglishCCGParser:
         self.possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
                                    for cat in possible_root_cats]
         self.category_dict = category_dict
-        self.tag_list = tag_list
         self.unary_rules = unary_rules
         self.seen_rules = seen_rules
         self.unary_penalty = unary_penalty
@@ -116,8 +142,15 @@ cdef class EnglishCCGParser:
         self.tagger = None
         self.lang = b'en'
 
-    def load_default_tagger(self, dirname):
-        logger.info(f'loading default supertagger at {dirname}')
+    def load_default_tagger(self, model_path):
+        logger.info(f'loading default supertagger at {model_path}')
+        if os.path.isdir(model_path) and \
+            os.path.exists(os.path.join(model_path, 'tagger_model')):
+            self.load_chainer_tagger(model_path)
+        else:
+            self.load_allennlp_tagger(model_path)
+
+    def load_chainer_tagger(self, dirname):
         from depccg.lstm_parser_bi_fast import FastBiaffineLSTMParser
         from depccg.ja_lstm_parser_bi import BiaffineJaLSTMParser
         model_file = os.path.join(dirname, 'tagger_model')
@@ -130,11 +163,21 @@ cdef class EnglishCCGParser:
         logger.info(f'initializing supertagger with parameters at {model_file}')
         chainer.serializers.load_npz(model_file, self.tagger)
 
+    def load_allennlp_tagger(self, model_path):
+        from allennlp.models.archival import load_archive
+        from depccg.models.my_allennlp.models.supertagger import Supertagger
+        from depccg.models.my_allennlp.dataset.supertagging_dataset import SupertaggingDatasetReader
+        from depccg.models.my_allennlp.dataset.supertagging_dataset import TritrainSupertaggingDatasetReader
+        from depccg.models.my_allennlp.predictor.supertagger_predictor import SupertaggerPredictor
+        archive = load_archive(os.path.join(model_path, 'tagger_model.tar.gz'))
+        predictor = SupertaggerPredictor.from_archive(archive, 'supertagger-predictor')
+        self.tagger = AllennlpSupertagger(predictor)
+
     @classmethod
     def from_dir(cls, dirname, load_tagger=False, **kwargs):
         logger.info(f'loading parser from {dirname}')
         args = []
-        for file in ['unary_rules.txt', 'cat_dict.txt', 'target.txt', 'seen_rules.txt']:
+        for file in ['unary_rules.txt', 'cat_dict.txt', 'seen_rules.txt']:
             arg = os.path.join(dirname, file)
             if os.path.exists(arg):
                 args.append(arg)
@@ -145,16 +188,14 @@ cdef class EnglishCCGParser:
         return cls.from_files(*args, **kwargs)
 
     @classmethod
-    def from_files(cls, unary_rules=None, category_dict=None,
-                   categories=None, seen_rules=None, tagger_model_dir=None, **kwargs):
-        files = [file for file in [unary_rules, category_dict, categories, seen_rules, tagger_model_dir]
+    def from_files(cls, unary_rules=None, category_dict=None, seen_rules=None, tagger_model_dir=None, **kwargs):
+        files = [file for file in [unary_rules, category_dict, seen_rules, tagger_model_dir]
                  if file is not None]
         logger.info(f'loading parser from files: {files}')
         unary_rules = read_unary_rules(unary_rules) if unary_rules else []
         category_dict = read_cat_dict(category_dict) if category_dict else {}
-        tag_list = read_cat_list(categories) if categories else []
         seen_rules = read_seen_rules(seen_rules, cls.preprocess_seen_rules) if seen_rules else []
-        parser = cls(category_dict, tag_list, unary_rules, seen_rules, **kwargs)
+        parser = cls(category_dict, unary_rules, seen_rules, **kwargs)
         if tagger_model_dir:
             parser.load_default_tagger(tagger_model_dir)
         return parser
@@ -172,15 +213,12 @@ cdef class EnglishCCGParser:
         for word, cats in json_input['cat_dict'].items():
             category_dict[word] = [Category.parse(cat) for cat in cats]
 
-        tag_list = [Category.parse(cat) for cat in json_input['targets']]
-        seen_rules = [(Category.parse(c1), Category.parse(c2)) for c1, c2 in json_input['seen_rules']]
-        preprocess = lambda cat: cat.strip_feat('[X]').strip_feat('[nb]')
         seen_rules = []
         for c1, c2 in json_input['seen_rules']:
             c1 = cls.preprocess_seen_rules(Category.parse(c1))
             c2 = cls.preprocess_seen_rules(Category.parse(c2))
             seen_rules.append((c1, c2))
-        parser = cls(category_dict, tag_list, unary_rules, seen_rules, **kwargs)
+        parser = cls(category_dict, unary_rules, seen_rules, **kwargs)
         if tagger_model_dir:
             parser.load_default_tagger(tagger_model_dir)
         return parser
@@ -194,11 +232,13 @@ cdef class EnglishCCGParser:
         logger.info('start tagging sentences')
         if probs is None:
             assert self.tagger is not None, 'default supertagger is not loaded.'
-            probs = self.tagger.predict_doc(splitted, batchsize=batchsize)
+            probs, tag_list = self.tagger.predict_doc(splitted, batchsize=batchsize)
+        else:
+            assert tag_list is not None
         logger.info('done tagging sentences')
         res = self._parse_doc_tag_and_dep(list(sents),
                                           list(probs),
-                                          tag_list=tag_list,
+                                          tag_list,
                                           constraints=constraints)
         return res
 
@@ -250,7 +290,8 @@ cdef class EnglishCCGParser:
                         'Assigning them using default tagger.')
             assert self.tagger is not None, 'default supertagger is not loaded.'
             _, splitted = zip(*unprocessed.values())
-            unprocessed_probs = self.tagger.predict_doc(splitted, batchsize=batchsize)
+            unprocessed_probs, new_categories = self.tagger.predict_doc(splitted, batchsize=batchsize)
+            categories = new_categories
             for (i, (process_fun, _)), new_tag_and_dep in zip(sorted(unprocessed.items()), unprocessed_probs):
                 probs[i] = process_fun(probs[i], new_tag_and_dep)
             assert all(tag is not None and dep is not None for tag, dep in probs)
@@ -262,14 +303,14 @@ cdef class EnglishCCGParser:
                            for cxs in constraints]
         res = self._parse_doc_tag_and_dep(sents,
                                           probs,
-                                          tag_list=categories,
+                                          categories,
                                           constraints=constraints)
         return res
 
     cdef list _parse_doc_tag_and_dep(self,
                                      list sents,
                                      list probs,
-                                     tag_list=None,
+                                     py_tag_list,
                                      constraints=None):
         logger.info(f'unary penalty = {self.unary_penalty}')
         logger.info(f'beta value = {self.beta} (use beta = {self.use_beta})')
@@ -281,14 +322,15 @@ cdef class EnglishCCGParser:
         logger.info(f'give up sentences that contain > {self.max_length} words')
         logger.info(f'combinators: {self.binary_rules}')
 
+        py_tag_list = [Category.parse(cat) if isinstance(cat, str) else cat
+                       for cat in py_tag_list]
         cdef int doc_size = len(sents), i, j
         cdef np.ndarray[float, ndim=2, mode='c'] cat_scores, dep_scores
         cdef vector[string] csents = vector[string](doc_size)
         cdef float **tags = <float**>malloc(doc_size * sizeof(float*))
         cdef float **deps = <float**>malloc(doc_size * sizeof(float*))
 
-        py_tag_list = tag_list or self.tag_list
-        cdef vector[Cat] tag_list_ = cat_list_to_vector(py_tag_list)
+        cdef vector[Cat] tag_list_ = cat_list_to_vector(list(py_tag_list))
         cdef unordered_map[string, unordered_set[Cat]] category_dict_ = \
             convert_cat_dict(self.category_dict) if self.use_category_dict \
                 else unordered_map[string, unordered_set[Cat]]()
@@ -388,7 +430,6 @@ cdef class EnglishCCGParser:
 cdef class JapaneseCCGParser(EnglishCCGParser):
     def __init__(self,
                  category_dict,
-                 tag_list,
                  unary_rules,
                  seen_rules,
                  binary_rules=None,
@@ -429,7 +470,6 @@ cdef class JapaneseCCGParser(EnglishCCGParser):
         self.possible_root_cats = [Category.parse(cat) if not isinstance(cat, Category) else cat
                                    for cat in possible_root_cats]
         self.category_dict = category_dict
-        self.tag_list = tag_list
         self.unary_rules = unary_rules
         self.seen_rules = seen_rules
         self.binary_rules = binary_rules
