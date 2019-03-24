@@ -20,10 +20,10 @@ from chainer.functions.noise import dropout
 from chainer.functions.connection.n_step_lstm import NStepLSTM as NStepLSTMFunction
 
 
-if cuda.cudnn_enabled:
-    cudnn = cuda.cudnn
-    libcudnn = cuda.cudnn.cudnn
-    _cudnn_version = libcudnn.getVersion()
+# if cuda.cudnn_enabled:
+#     cudnn = cuda.cudnn
+#     libcudnn = cuda.cudnn
+#     _cudnn_version = libcudnn.getVersion()
 
 
 class DropoutRandomStates(object):
@@ -331,7 +331,8 @@ def fixed_length_n_step_lstm(
 
     xp = cuda.get_array_module(hx, hx.data)
 
-    if xp is not numpy and cuda.cudnn_enabled and _cudnn_version >= 5000:
+    if False:
+    # if xp is not numpy and cuda.cudnn_enabled and _cudnn_version >= 5000:
         states = get_random_state().create_dropout_states(dropout_ratio)
         # flatten all input variables
         inputs = tuple(itertools.chain(

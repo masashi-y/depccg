@@ -64,7 +64,7 @@ class AllennlpSupertagger(object):
         self.predictor = predictor
         self.dataset_reader = predictor._dataset_reader
 
-    def predict_doc(self, splitted, batchsize=32):
+    def predict_doc(self, splitted, batchsize=32, gpu=None):
         instances = iter(self.dataset_reader.text_to_instance(' '.join(sentence))
                          for sentence in splitted)
 
@@ -166,6 +166,7 @@ cdef class EnglishCCGParser:
         logger.info(f'initializing supertagger with parameters at {model_file}')
         chainer.serializers.load_npz(model_file, self.tagger)
         if self.gpu >= 0:
+            logger.info(f'sending the supertagger to gpu: {self.gpu}')
             self.tagger.to_gpu(self.gpu)
 
     def load_allennlp_tagger(self, model_path):
@@ -174,6 +175,8 @@ cdef class EnglishCCGParser:
         from depccg.models.my_allennlp.dataset.supertagging_dataset import SupertaggingDatasetReader
         from depccg.models.my_allennlp.dataset.supertagging_dataset import TritrainSupertaggingDatasetReader
         from depccg.models.my_allennlp.predictor.supertagger_predictor import SupertaggerPredictor
+        if self.gpu >= 0:
+            logger.info(f'sending the supertagger to gpu: {self.gpu}')
         archive = load_archive(os.path.join(model_path, 'tagger_model.tar.gz'),
                                cuda_device=self.gpu)
         predictor = SupertaggerPredictor.from_archive(archive, 'supertagger-predictor')
@@ -238,7 +241,8 @@ cdef class EnglishCCGParser:
         logger.info('start tagging sentences')
         if probs is None:
             assert self.tagger is not None, 'default supertagger is not loaded.'
-            probs, tag_list = self.tagger.predict_doc(splitted, batchsize=batchsize)
+            probs, tag_list = self.tagger.predict_doc(
+                    splitted, batchsize=batchsize, gpu=self.gpu)
         else:
             assert tag_list is not None
         logger.info('done tagging sentences')
@@ -296,7 +300,8 @@ cdef class EnglishCCGParser:
                         'Assigning them using default tagger.')
             assert self.tagger is not None, 'default supertagger is not loaded.'
             _, splitted = zip(*unprocessed.values())
-            unprocessed_probs, new_categories = self.tagger.predict_doc(splitted, batchsize=batchsize)
+            unprocessed_probs, new_categories = self.tagger.predict_doc(
+                    splitted, batchsize=batchsize, gpu=self.gpu)
             categories = new_categories
             for (i, (process_fun, _)), new_tag_and_dep in zip(sorted(unprocessed.items()), unprocessed_probs):
                 probs[i] = process_fun(probs[i], new_tag_and_dep)

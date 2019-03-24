@@ -6,7 +6,7 @@ import chainer.links as L
 import chainer.functions as F
 
 from depccg.utils import read_model_defs
-from depccg.biaffine import Biaffine
+from depccg.biaffine import Biaffine, Bilinear
 from depccg.param import Param
 
 
@@ -28,20 +28,20 @@ class FeatureExtractor(object):
         self.start_char = self.chars[START]
         self.end_char = self.chars[END]
 
-    def process(self, words):
+    def process(self, words, xp=np):
         """
         words: list of unicode tokens
         """
-        w = np.array([self.start_word] + [self.words.get(
+        w = xp.array([self.start_word] + [self.words.get(
             x, self.unk_word) for x in words] + [self.end_word], 'i')
         l = max(len(x) for x in words)
-        c = -np.ones((len(words) + 2, l), 'i')
+        c = -xp.ones((len(words) + 2, l), 'i')
         c[0, 0] = self.start_char
         c[-1, 0] = self.end_char
         for i, word in enumerate(words, 1):
             for j in range(len(word)):
                 c[i, j] = self.chars.get(word[j], self.unk_char)
-        return w, c, np.array([l], 'i')
+        return w, c, xp.array([l], 'i')
 
 
 class BiaffineJaLSTMParser(chainer.Chain):
@@ -60,7 +60,7 @@ class BiaffineJaLSTMParser(chainer.Chain):
                 rel_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
                 rel_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
                 biaffine_arc=Biaffine(self.dep_dim),
-                biaffine_tag=L.Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
+                biaffine_tag=Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
 
     def forward(self, ws, cs, ls, dep_ts=None):
         ws = map(self.emb_word, ws)
@@ -96,15 +96,20 @@ class BiaffineJaLSTMParser(chainer.Chain):
         return cat_ys, dep_ys
 
     def _predict(self, xs):
-        xs = [self.extractor.process(x) for x in xs]
+        xs = [self.extractor.process(x, self.xp) for x in xs]
         ws, ss, ps = zip(*xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             cat_ys, dep_ys = self.forward(ws, ss, ps)
-        return zip([F.log_softmax(y[1:-1]).data for y in cat_ys],
-                   [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
+        cat_ys = [F.log_softmax(y[1:-1]).data for y in cat_ys]
+        cat_ys = [chainer.cuda.to_cpu(y) for y in cat_ys]
+        dep_ys = [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys]
+        dep_ys = [chainer.cuda.to_cpu(y) for y in dep_ys]
+        return list(zip(cat_ys, dep_ys))
 
-    def predict_doc(self, doc, batchsize=16):
+    def predict_doc(self, doc, batchsize=16, gpu=-1):
         res = []
+        if gpu >= 0:
+            chainer.cuda.get_device_from_id(gpu).use()
         for i in range(0, len(doc), batchsize):
             res.extend(self._predict(doc[i:i + batchsize]))
         return res, self.cats

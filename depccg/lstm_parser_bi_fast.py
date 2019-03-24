@@ -55,16 +55,16 @@ class FeatureExtractor(object):
         self.end_suf = [[self.suffixes[END]] + [IGNORE] * 3]
         self.length = length
 
-    def process(self, words):
+    def process(self, words, xp):
         """
         words: list of unicode tokens
         """
         words = list(map(normalize, words))
-        w = np.array([self.start_word] + [self.words.get(
+        w = xp.array([self.start_word] + [self.words.get(
             x.lower(), self.unk_word) for x in words] + [self.end_word], 'i')
-        s = np.asarray(self.start_suf + [[self.suffixes.get(
+        s = xp.asarray(self.start_suf + [[self.suffixes.get(
             f, self.unk_suf) for f in get_suffix(x)] for x in words] + self.end_suf, 'i')
-        p = np.asarray(self.start_pre + [[self.prefixes.get(
+        p = xp.asarray(self.start_pre + [[self.prefixes.get(
             f, self.unk_prf) for f in get_prefix(x)] for x in words] + self.end_pre, 'i')
         if not self.length:
             return w, s, p
@@ -173,16 +173,21 @@ class FastBiaffineLSTMParser(chainer.Chain):
         return cat_ys, dep_ys
 
     def _predict(self, xs):
-        xs = [self.extractor.process(x) for x in xs]
+        xs = [self.extractor.process(x, self.xp) for x in xs]
         ws, ss, ps, ls = concat_examples(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             cat_ys, dep_ys = self.forward(ws, ss, ps, ls)
-        return zip([F.log_softmax(y[1:-1]).data for y in cat_ys],
-                   [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys])
+        cat_ys = [F.log_softmax(y[1:-1]).data for y in cat_ys]
+        cat_ys = [chainer.cuda.to_cpu(y) for y in cat_ys]
+        dep_ys = [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys]
+        dep_ys = [chainer.cuda.to_cpu(y) for y in dep_ys]
+        return list(zip(cat_ys, dep_ys))
 
-    def predict_doc(self, doc, batchsize=32):
+    def predict_doc(self, doc, batchsize=32, gpu=-1):
         res = []
         doc = sorted(enumerate(doc), key=lambda x: len(x[1]))
+        if gpu >= 0:
+            chainer.cuda.get_device_from_id(gpu).use()
         for i in range(0, len(doc), batchsize):
             ids, batch = zip(*doc[i:i + batchsize])
             pred = self._predict(batch)
