@@ -40,7 +40,7 @@ def process_pyx(fromfile, tofile):
     except ImportError:
         pass
 
-    flags = ['--fast-fail']
+    flags = ['--fast-fail', '-X', 'language_level=3']
     if tofile.endswith('.cpp'):
         flags += ['--cplus']
 

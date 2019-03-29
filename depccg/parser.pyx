@@ -318,11 +318,7 @@ cdef class EnglishCCGParser:
                                           constraints=constraints)
         return res
 
-    cdef list _parse_doc_tag_and_dep(self,
-                                     list sents,
-                                     list probs,
-                                     py_tag_list,
-                                     constraints=None):
+    def _parse_doc_tag_and_dep(self, sents, probs, py_tag_list, constraints=None):
         logger.info(f'unary penalty = {self.unary_penalty}')
         logger.info(f'beta value = {self.beta} (use beta = {self.use_beta})')
         logger.info(f'pruning size = {self.pruning_size}')

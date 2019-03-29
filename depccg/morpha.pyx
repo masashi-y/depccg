@@ -29,7 +29,7 @@ cdef class MorphaStemmer:
         return True
 
     cdef string analyze_one(self, string &word, string &pos, char *out):
-        cdef char under_bar = '_'
+        cdef char under_bar = b'_'
         cdef string inp = word
         inp += under_bar
         inp += pos
