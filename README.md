@@ -163,26 +163,62 @@ ID=1, Prob=-53.98793411254883
 
 ```python
 from depccg.parser import EnglishCCGParser
+from pathlib import Path
 
-# Refer to (Lewis and Steedman, 2014) for category dictionary, seen rules, pruning etc.
+# Available keyword arguments in initializing a CCG parser
+# Please refer to the following paper for category dictionary, seen rules, pruning etc.
 # "A* CCG Parsing with a Supertag-factored Model", Lewis and Steedman, 2014
+kwargs = dict(
+    # A list of binary rules 
+    # By default: depccg.combinator.en_default_binary_rules
+    binary_rules=None,
+    # Penalize an application of a unary rule by adding this value (negative log probability)
+    unary_penalty=0.1,
+    # Prune supertags with low probabilities using this value
+    beta=0.00001,
+    # Set False if not prune
+    use_beta=True,
+    # Use category dictionary
+    use_category_dict=True,
+    # Use seen rules
+    use_seen_rules=True,
+    # This also used to prune supertags
+    pruning_size=50,
+    # Nbest outputs
+    nbest=1,
+    # Limit categories that can appear at the root of a CCG tree
+    # By default: S[dcl], S[wq], S[q], S[qem], NP.
+    possible_root_cats=None,
+    # Give up parsing long sentences
+    max_length=250,
+    # Give up parsing if it runs too many steps
+    max_steps=100000,
+    # You can specify a GPU
+    gpu=-1
+)
+
+# Initialize a parser from a model directory
 model = "/path/to/model/directory"
 parser = EnglishCCGParser.from_dir(
     model,
-    load_tagger=True, # Load supertagging model in `model` directory
-    binary_rules=None, # a list of binary rules (by default, depccg.combinator.en_default_binary_rules)
-    unary_penalty=0.1, # Penalize an application of a unary rule by adding this value (negative log probability)
-    beta=0.00001, # Prune supertags with low probabilities using this value
-    use_beta=True, # Set False if not prune
-    use_category_dict=True, # Use category dictionary
-    use_seen_rules=True, # Use seen rules
-    pruning_size=50, # This also used to prune supertags
-    nbest=1, # Nbest outputs
-    possible_root_cats=None, # Limit categories that can appear at the root of a CCG tree (by default, S[dcl], S[wq], S[q], S[qem], NP)
-    max_length=250, # Give up parsing long sentences
-    max_steps=100000, # Give up parsing if it runs too many steps
-    gpu=-1 # You can specify a GPU
-)
+    load_tagger=True, # Load supertagging model
+    **kwargs)
+
+model = Path("/path/to/model/directory")
+parser = EnglishCCGParser.from_files(
+    unary_rules=model / 'unary_rules.txt',
+    category_dict=model / 'cat_dict.txt',
+    seen_rules=model / 'seen_rules.txt',
+    tagger_model_dir=model / 'tagger_model',
+    **kwargs)
+
+# If you don't like to keep separate files,
+# wget http://cl.naist.jp/~masashi-y/resources/depccg/config.json
+model = Path("/path/to/model/directory")
+parser = EnglishCCGParser.from_json(
+    model / 'config.json',
+    tagger_model_dir=model / 'tagger_model',
+    **kwargs)
 
 sents = [
   "This is a test sentence .",
@@ -199,10 +235,38 @@ For Japanese CCG parsing, use `depccg.JapaneseCCGParser`,
 which has the exactly same interface.
 Note that the Japanese parser accepts pre-tokenized sentences as input.
 
-## Training model
+## Train your own model
 
-We make tri-training dataset publicly available:
-[English Tri-training Dataset](http://cl.naist.jp/~masashi-y/resources/depccg/headfirst_parsed.conll.stagged.gz) (309M)
+You can use my [allennlp](https://allennlp.org/)-based supertagger and extend it.
+
+To train a supertagger, compress the English ccgbank into a json file by command:
+```sh
+➜ python -m depccg.tools.data --mode train /path/to/ccgbank/wsj_02-21.auto out_directory
+➜ python -m depccg.tools.data --mode test /path/to/ccgbank/wsj_00.auto out_directory
+```
+which will outputs `traindata.json` and `testdata.json`. Then download [vocab](http://cl.naist.jp/~masashi-y/resources/depccg/vocabulary.tar.gz):
+```sh
+➜ wget http://cl.naist.jp/~masashi-y/resources/depccg/vocabulary.tar.gz
+➜ tar xvf vocabulary.tar.gz
+```
+
+Then finally,
+```sh
+➜ vocab=vocabulary train_data=traindata.json test_data=testdata.json gpu=0 \
+  encoder_type=lstm token_embedding_type=char \
+  allennlp train --include-package depccg.models.my_allennlp --serialization-dir results supertagger.jsonnet
+```
+The training configs are passed either through environmental variables or directly writing to jsonnet config files, which are available in [supertagger.jsonnet](depccg/models/my_allennlp/config/supertagger.jsonnet) or [supertagger_tritrain.jsonnet](depccg/models/my_allennlp/config/supertagger_tritrain.jsonnet).
+The latter is a config file for using [tri-training silver data](http://cl.naist.jp/~masashi-y/resources/depccg/headfirst_parsed.conll.stagged.gz) (309M) constructed in (Yoshikawa et al., 2017), on top of the English CCGbank.
+
+To use the trained supertagger,
+```sh
+➜ echo '{"sentence": "this is a test sentence ."}' > input.jsonl
+➜ allennlp predict results/model.tar.gz --include-package depccg.models.my_allennlp --output-file weights.json input.jsonl
+➜ cat weights.json | depccg_en --input-format json
+```
+where `weights.json` contains probabilities used in the parser (`p_tag` and `p_dep`).
+Another option is to download the [pretrained ELMo model](#the-best-performing-elmo-model) and replace `tagger_model.tar.gz` in it with the `results/model.tar.gz`.
 
 ## Citation
 
@@ -211,7 +275,7 @@ If you make use of this software, please cite the following:
     @inproceedings{yoshikawa:2017acl,
       author={Yoshikawa, Masashi and Noji, Hiroshi and Matsumoto, Yuji},
       title={A* CCG Parsing with a Supertag and Dependency Factored Model},
-      booktitle={Proceedings of the 55th Annual Meeting of the Association for      Computational Linguistics (Volume 1: Long Papers)},
+      booktitle={Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
       publisher={Association for Computational Linguistics},
       year={2017},
       pages={277--287},
