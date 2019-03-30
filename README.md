@@ -275,8 +275,8 @@ Alternatively, you can download the [pretrained ELMo model](#the-best-performing
 
 ### Diff tool
 
-In error analysis, you must want to see diffs between trees in an intuitive manner.
-`depccg.tools.diff` exactly does this:
+In error analysis, you must want to see diffs between trees in an intuitive way.
+`depccg.tools.diff` does exactly this:
 
 ```sh
 ➜ python -m depccg.tools.diff file1.auto file2.auto > diff.html
@@ -286,7 +286,7 @@ which outputs:
 
 ![show diffs between trees](images/diff.png)
 
-where trees in the same line of the files are compared and the diffs are marked in color.
+where trees in the same lines of the files are compared and the diffs are marked in color.
 
 ## Citation
 
