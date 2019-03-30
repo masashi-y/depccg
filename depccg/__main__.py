@@ -20,7 +20,7 @@ Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
 def main(args):
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                        level=logging.DEBUG if args.verbose else logging.INFO)
+                        level=logging.CRITICAL if args.silent else logging.INFO)
 
     if args.weights is not None:
         probs, tag_list = read_weights(args.weights)
@@ -129,7 +129,6 @@ def main(args):
         _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates), nbest=args.nbest)
         for i, (parsed, formulas) in enumerate(zip(res, formulas_list)):
             for j, ((tree, prob), formula) in enumerate(zip(parsed, formulas)):
-                formula = nltk2json.run(formula)
                 print(f'# ID={i} log probability={prob:.4e}\n{formula}')
     elif args.format == 'conll':
         for i, parsed in enumerate(res):
@@ -217,7 +216,7 @@ def add_common_parser_arguments(parser):
                         help='give up parsing when the number of times of popping agenda items exceeds this value')
     parser.add_argument('--semantic-templates',
                         help='semantic templates used in "ccg2lambda" format output')
-    parser.add_argument('--verbose',
+    parser.add_argument('--silent',
                         action='store_true')
     parser.set_defaults(func=main)
 
