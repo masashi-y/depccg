@@ -129,7 +129,7 @@ def main(args):
         _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates), nbest=args.nbest)
         for i, (parsed, formulas) in enumerate(zip(res, formulas_list)):
             for j, ((tree, prob), formula) in enumerate(zip(parsed, formulas)):
-                print(f'# ID={i} log probability={prob:.4e}\n{formula}')
+                print(f'ID={i} log probability={prob:.4e}\n{formula}')
     elif args.format == 'conll':
         for i, parsed in enumerate(res):
             for tree, prob in parsed:
