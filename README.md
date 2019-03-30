@@ -116,6 +116,8 @@ and then,
 ➜ echo "this is a test sentence ." | depccg_en --model lstm_parser_elmo_finetune
 ```
 
+Using a GPU (by `--gpu` option) is recommended if possible.
+
 ### Using a pretrained Japanese parser
 
 The best performing model is available by:
@@ -266,7 +268,25 @@ To use the trained supertagger,
 ➜ cat weights.json | depccg_en --input-format json
 ```
 where `weights.json` contains probabilities used in the parser (`p_tag` and `p_dep`).
-Another option is to download the [pretrained ELMo model](#the-best-performing-elmo-model) and replace `tagger_model.tar.gz` in it with the `results/model.tar.gz`.
+
+Alternatively, you can download the [pretrained ELMo model](#the-best-performing-elmo-model) and replace `tagger_model.tar.gz` contained in it with the `results/model.tar.gz`.
+
+## Miscellaneous
+
+### Diff tool
+
+In error analysis, you must want to see diffs between trees in an intuitive manner.
+`depccg.tools.diff` exactly does this:
+
+```sh
+➜ python -m depccg.tools.diff file1.auto file2.auto > diff.html
+```
+
+which outputs:
+
+![show diffs between trees](images/diff.png)
+
+where trees in the same line of the files are compared and the diffs are marked in color.
 
 ## Citation
 
