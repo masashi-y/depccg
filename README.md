@@ -13,12 +13,12 @@ Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](htt
 Using pip:
 ```sh
 ➜ pip install cython numpy
-➜ pip install git+https://github.com/masashi-y/depccg.git@refactor
+➜ pip install git+https://github.com/masashi-y/depccg.git
 ```
 
 If OpenMP is available in your environment, you can use it for more efficient parsing:
 ```sh
-➜ USE_OPENMP=1 pip install git+https://github.com/masashi-y/depccg.git@refactor
+➜ USE_OPENMP=1 pip install git+https://github.com/masashi-y/depccg.git
 ```
 
 ## Usage
