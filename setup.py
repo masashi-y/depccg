@@ -26,6 +26,8 @@ except ImportError:
 Please install cython and numpy prior to installing depccg.""")
 
 
+install_requires = [line.strip() for line in open('requirements.txt')]
+
 
 @contextlib.contextmanager
 def chdir(new_dir):
@@ -140,5 +142,6 @@ else:
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext},
         scripts=['bin/depccg_en', 'bin/depccg_ja'],
+        install_requires=install_requires,
         zip_safe=False,
     )
