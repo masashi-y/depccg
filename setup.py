@@ -1,9 +1,7 @@
 #! -*- coding: utf-8 -*-
 
 from __future__ import print_function
-from Cython.Distutils import build_ext
 from setuptools import Extension, setup, find_packages
-import numpy
 import tempfile
 import subprocess
 import shutil
@@ -14,6 +12,12 @@ import distutils
 import platform
 import contextlib
 
+try:
+    from Cython.Distutils import build_ext
+except ImportError:
+    def build_ext(*args, **kwargs):
+        from Cython.Distutils import build_ext
+        return build_ext(*args, **kwargs)
 
 @contextlib.contextmanager
 def chdir(new_dir):
@@ -96,10 +100,14 @@ def generate_cpp(options):
             raise RuntimeError('Running cythonize failed')
 
 
+def numpy_includes():
+    import numpy
+    return numpy.get_include()
+
 ext_modules = [
         Extension(pyx,
                   [pyx.replace('.', '/') + '.cpp'],
-                  include_dirs=['.', numpy.get_include(), 'cpp'],
+                  include_dirs=['.', numpy_includes(), 'cpp'],
                   extra_compile_args=COMPILE_OPTIONS,
                   extra_link_args=LINK_OPTIONS +
                   [os.path.join('cpp', cpp.replace('cpp', 'o')) for cpp in cpp_sources] +
