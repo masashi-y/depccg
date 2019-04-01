@@ -128,5 +128,6 @@ else:
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext},
         scripts=['bin/depccg_en', 'bin/depccg_ja'],
+        setup_requires=['Cython==0.28.3', 'numpy >=1.15, <1.16'],
         zip_safe=False,
     )
