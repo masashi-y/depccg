@@ -12,12 +12,20 @@ import distutils
 import platform
 import contextlib
 
+
 try:
-    from Cython.Distutils import build_ext
+    from Cython.Build import build_ext
 except ImportError:
-    def build_ext(*args, **kwargs):
-        from Cython.Distutils import build_ext
-        return build_ext(*args, **kwargs)
+    sys.exit("""Could not import Cython, which is required to build depccg extension modules.
+Please install cython and numpy prior to installing depccg.""")
+
+try:
+    import numpy
+except ImportError:
+    sys.exit("""Could not import numpy, which is required to build the extension modules.
+Please install cython and numpy prior to installing depccg.""")
+
+
 
 @contextlib.contextmanager
 def chdir(new_dir):
@@ -100,14 +108,10 @@ def generate_cpp(options):
             raise RuntimeError('Running cythonize failed')
 
 
-def numpy_includes():
-    import numpy
-    return numpy.get_include()
-
 ext_modules = [
         Extension(pyx,
                   [pyx.replace('.', '/') + '.cpp'],
-                  include_dirs=['.', numpy_includes(), 'cpp'],
+                  include_dirs=['.', numpy.get_include(), 'cpp'],
                   extra_compile_args=COMPILE_OPTIONS,
                   extra_link_args=LINK_OPTIONS +
                   [os.path.join('cpp', cpp.replace('cpp', 'o')) for cpp in cpp_sources] +
@@ -136,6 +140,5 @@ else:
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext},
         scripts=['bin/depccg_en', 'bin/depccg_ja'],
-        setup_requires=['Cython==0.28.3', 'numpy >=1.15, <1.16'],
         zip_safe=False,
     )

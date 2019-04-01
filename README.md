@@ -12,6 +12,7 @@ Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](htt
 
 Using pip:
 ```sh
+➜ pip install cython numpy
 ➜ pip install git+https://github.com/masashi-y/depccg.git@refactor
 ```
 
