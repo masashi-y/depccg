@@ -12,6 +12,7 @@ import os
 import json
 import chainer
 import logging
+from pathlib import Path
 from cython.parallel cimport prange
 from libc.stdio cimport fprintf, stderr
 from .combinator cimport combinator_list_to_vector
@@ -177,8 +178,7 @@ cdef class EnglishCCGParser:
         from depccg.models.my_allennlp.predictor.supertagger_predictor import SupertaggerPredictor
         if self.gpu >= 0:
             logger.info(f'sending the supertagger to gpu: {self.gpu}')
-        archive = load_archive(os.path.join(model_path, 'tagger_model.tar.gz'),
-                               cuda_device=self.gpu)
+        archive = load_archive(model_path, cuda_device=self.gpu)
         predictor = SupertaggerPredictor.from_archive(archive, 'supertagger-predictor')
         self.tagger = AllennlpSupertagger(predictor)
 
@@ -193,25 +193,25 @@ cdef class EnglishCCGParser:
             else:
                 args.append(None)
         if load_tagger:
-            kwargs['tagger_model_dir'] = dirname
+            kwargs['tagger_model'] = dirname
         return cls.from_files(*args, **kwargs)
 
     @classmethod
-    def from_files(cls, unary_rules=None, category_dict=None, seen_rules=None, tagger_model_dir=None, **kwargs):
-        files = [file for file in [unary_rules, category_dict, seen_rules, tagger_model_dir]
+    def from_files(cls, unary_rules=None, category_dict=None, seen_rules=None, tagger_model=None, **kwargs):
+        files = [file for file in [unary_rules, category_dict, seen_rules, tagger_model]
                  if file is not None]
         logger.info(f'loading parser from files: {files}')
         unary_rules = read_unary_rules(unary_rules) if unary_rules else []
         category_dict = read_cat_dict(category_dict) if category_dict else {}
         seen_rules = read_seen_rules(seen_rules, cls.preprocess_seen_rules) if seen_rules else []
         parser = cls(category_dict, unary_rules, seen_rules, **kwargs)
-        if tagger_model_dir:
-            parser.load_default_tagger(tagger_model_dir)
+        if tagger_model:
+            parser.load_default_tagger(tagger_model)
         return parser
 
     @classmethod
-    def from_json(cls, json_input, tagger_model_dir=None, **kwargs):
-        if isinstance(json_input, str):
+    def from_json(cls, json_input, tagger_model=None, **kwargs):
+        if isinstance(json_input, (str, Path)):
             logger.info(f'loading parser from json file: {json_input}')
             json_input = json.load(open(json_input))
         else:
@@ -228,8 +228,8 @@ cdef class EnglishCCGParser:
             c2 = cls.preprocess_seen_rules(Category.parse(c2))
             seen_rules.append((c1, c2))
         parser = cls(category_dict, unary_rules, seen_rules, **kwargs)
-        if tagger_model_dir:
-            parser.load_default_tagger(tagger_model_dir)
+        if tagger_model:
+            parser.load_default_tagger(tagger_model)
         return parser
 
     @classmethod

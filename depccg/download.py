@@ -21,6 +21,11 @@ SEMANTIC_TEMPLATES = {
     'ja': MODEL_DIRECTORY / 'semantic_templates_ja_event.yaml'
 }
 
+CONFIGS = {
+    'en': MODEL_DIRECTORY / 'config_en.json',
+    'ja': MODEL_DIRECTORY / 'config_ja.json'
+}
+
 def reporthook(count, block_size, total_size):
     global start_time
     if count == 0:

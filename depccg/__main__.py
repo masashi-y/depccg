@@ -8,7 +8,7 @@ from lxml import etree
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import to_mathml, to_prolog, to_xml, to_jigg_xml
 from depccg.token import Token, english_annotator, japanese_annotator, annotate_XX
-from .download import download, load_model_directory, SEMANTIC_TEMPLATES
+from .download import download, load_model_directory, SEMANTIC_TEMPLATES, CONFIGS
 from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules
 from .combinator import remove_disfluency, headfirst_combinator
@@ -53,22 +53,29 @@ def main(args):
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
 
-    load_tagger = True  # args.input_format != 'json'
-    model = args.model or load_model_directory(args.lang)
-    parser = Parsers[args.lang].from_dir(model,
-                                         load_tagger=load_tagger,
-                                         unary_penalty=args.unary_penalty,
-                                         nbest=args.nbest,
-                                         binary_rules=binary_rules,
-                                         possible_root_cats=args.root_cats,
-                                         pruning_size=args.pruning_size,
-                                         beta=args.beta,
-                                         use_beta=not args.disable_beta,
-                                         use_seen_rules=not args.disable_seen_rules,
-                                         use_category_dict=not args.disable_category_dictionary,
-                                         max_length=args.max_length,
-                                         max_steps=args.max_steps,
-                                         gpu=args.gpu)
+    kwargs = dict(
+        unary_penalty=args.unary_penalty,
+        nbest=args.nbest,
+        binary_rules=binary_rules,
+        possible_root_cats=args.root_cats,
+        pruning_size=args.pruning_size,
+        beta=args.beta,
+        use_beta=not args.disable_beta,
+        use_seen_rules=not args.disable_seen_rules,
+        use_category_dict=not args.disable_category_dictionary,
+        max_length=args.max_length,
+        max_steps=args.max_steps,
+        gpu=args.gpu
+    )
+
+    use_allennlp = args.model and args.model.endswith('.tar.gz')
+    if use_allennlp:
+        config = CONFIGS[args.lang]
+        parser = Parsers[args.lang].from_json(config, args.model, **kwargs)
+    else:
+        load_tagger = True  # args.input_format != 'json'
+        model = args.model or load_model_directory(args.lang)
+        parser = Parsers[args.lang].from_dir(model, load_tagger=load_tagger, **kwargs)
 
     fin = sys.stdin if args.input is None else open(args.input)
 

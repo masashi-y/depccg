@@ -212,7 +212,7 @@ parser = EnglishCCGParser.from_files(
     unary_rules=model / 'unary_rules.txt',
     category_dict=model / 'cat_dict.txt',
     seen_rules=model / 'seen_rules.txt',
-    tagger_model_dir=model / 'tagger_model',
+    tagger_model=model / 'tagger_model',
     **kwargs)
 
 # If you don't like to keep separate files,
@@ -220,7 +220,7 @@ parser = EnglishCCGParser.from_files(
 model = Path("/path/to/model/directory")
 parser = EnglishCCGParser.from_json(
     model / 'config.json',
-    tagger_model_dir=model / 'tagger_model',
+    tagger_model=model / 'tagger_model',
     **kwargs)
 
 sents = [
@@ -264,13 +264,16 @@ The latter is a config file for using [tri-training silver data](http://cl.naist
 
 To use the trained supertagger,
 ```sh
+➜ echo "sentence": "this is a test sentence ."  | depccg_en --model results/model.tar.gz
+```
+
+or alternatively,
+```sh
 ➜ echo '{"sentence": "this is a test sentence ."}' > input.jsonl
 ➜ allennlp predict results/model.tar.gz --include-package depccg.models.my_allennlp --output-file weights.json input.jsonl
 ➜ cat weights.json | depccg_en --input-format json
 ```
 where `weights.json` contains probabilities used in the parser (`p_tag` and `p_dep`).
-
-Alternatively, you can download the [pretrained ELMo model](#the-best-performing-elmo-model) and replace `tagger_model.tar.gz` contained in it with the `results/model.tar.gz`.
 
 ## Miscellaneous
 
