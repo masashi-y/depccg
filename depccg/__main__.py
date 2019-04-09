@@ -40,7 +40,7 @@ def main(args):
             assert args.tokenize, \
                 f'Specify --tokenize argument in using "{args.format}" output format'
         if args.tokenize:
-            annotate_fun = japanese_annotator['janome']
+            annotate_fun = japanese_annotator[args.annotator]
         else:
             annotate_fun = annotate_XX
     else:
@@ -244,7 +244,7 @@ if __name__ == '__main__':
                                 '--annotator',
                                 default=None,
                                 help='annotate POS, named entity, and lemmas using this library',
-                                choices=['candc', 'spacy'])
+                                choices=english_annotator.keys())
     english_parser.add_argument('-f',
                                 '--format',
                                 default='auto',
@@ -261,6 +261,11 @@ if __name__ == '__main__':
     japanese_parser = subparsers.add_parser('ja')
     japanese_parser.set_defaults(lang='ja')
     add_common_parser_arguments(japanese_parser)
+    japanese_parser.add_argument('-a',
+                                 '--annotator',
+                                 default='janome',
+                                 help='annotate POS, named entity, and lemmas using this library',
+                                 choices=japanese_annotator.keys())
     japanese_parser.add_argument('-f',
                                  '--format',
                                  default='ja',

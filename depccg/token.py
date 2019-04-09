@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from typing import List
+from lxml import etree
 
 from depccg.download import MODEL_DIRECTORY
 from depccg.morpha import MorphaStemmer
@@ -133,7 +134,12 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
 
 
 def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=10000):
-    import spacy
+    try:
+        import spacy
+    except ImportError:
+        logger.error('failed to import janome. please install it by "pip install janome".')
+        exit(1)
+
     nlp = spacy.load('en', disable=['parser'])
     logger.info('use spacy to annotate POS and NER infos.')
 
@@ -176,7 +182,12 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
 
 def annotate_using_janome(sentences, tokenize=False):
     assert tokenize, 'no support for using janome with pre-tokenized inputs'
-    from janome.tokenizer import Tokenizer
+    try:
+        from janome.tokenizer import Tokenizer
+    except ImportError:
+        logger.error('failed to import janome. please install it by "pip install janome".')
+        exit(1)
+
     logger.info('use Janome to tokenize and annotate POS infos.')
     tokenizer = Tokenizer()
     res = []
@@ -203,6 +214,57 @@ def annotate_using_janome(sentences, tokenize=False):
     return res, raw_sentences
 
 
+jigg_cmd = "java -Xmx2g -cp \"{0}/jar/*\" jigg.pipeline.Pipeline -annotators {1} -file {2} -output {3}"
+
+
+def annotate_using_jigg(sentences, tokenize=False, pipeline='ssplit,kuromoji'):
+    assert tokenize, 'no support for using jigg with pre-tokenized inputs'
+    logger.info('use Jigg to tokenize and annotate POS infos.')
+
+    jigg_dir = os.environ.get('JIGG', None)
+    if not jigg_dir:
+        logger.error('did not find Jigg at JIGG environmental variable. exiting..')
+        exit(1)
+
+    tmpfile = tempfile.mktemp()
+    with open(tmpfile, 'w') as f:
+        for sentence in sentences:
+            print(' '.join(sentence), file=f)
+
+    outfile = tempfile.mktemp()
+    command = jigg_cmd.format(jigg_dir,
+                              pipeline,
+                              tmpfile,
+                              outfile)
+    proc = subprocess.Popen(command,
+                            shell=True,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+
+    proc.communicate()
+    res = []
+    raw_sentences = []
+    for sentence in etree.parse(outfile).getroot().xpath('*//sentence'):
+        tokens = []
+        for token in sentence.xpath('*//token'):
+            attrib = token.attrib
+            token = Token(surf=attrib['surf'],
+                          pos=attrib['pos'],
+                          pos1=attrib['pos1'],
+                          pos2=attrib['pos2'],
+                          pos3=attrib['pos3'],
+                          inflectionForm=attrib['inflectionForm'],
+                          inflectionType=attrib['inflectionType'],
+                          reading=attrib['reading'],
+                          base=attrib['base'])
+            tokens.append(token)
+        res.append(tokens)
+        raw_sentence = [token.surf for token in tokens]
+        raw_sentences.append(raw_sentence)
+    return res, raw_sentences
+
+
 english_annotator = {
     'candc': try_annotate_using_candc,
     'spacy': annotate_using_spacy,
@@ -210,5 +272,6 @@ english_annotator = {
 
 
 japanese_annotator = {
-    'janome': annotate_using_janome
+    'janome': annotate_using_janome,
+    'jigg': annotate_using_jigg
 }
