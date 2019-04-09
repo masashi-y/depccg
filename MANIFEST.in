@@ -1,6 +1,10 @@
+include bin/*
 include README.md
 include LICENSE
 include requirements.txt
 recursive-include cpp *
-recursive-include depccg *.pyx
-prune depccg/*.so
+recursive-include depccg *.pyx *.pxd
+exclude cpp/*.d
+exclude cpp/*.o
+exclude depccg/*.so
+exclude depccg/*.cpp
