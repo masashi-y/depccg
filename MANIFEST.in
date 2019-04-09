@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include cpp *
+recursive-include depccg *.pyx
+prune depccg/*.so
