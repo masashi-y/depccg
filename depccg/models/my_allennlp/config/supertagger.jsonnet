@@ -118,6 +118,30 @@ local TokenEmbedding =
       },
       encoder_input_dim: super.encoder_input_dim + 1024,
     }
+  else if token_embedding_type == 'bert' then
+    {
+      token_indexers: {
+        bert: {
+          type: "bert-pretrained",
+          pretrained_model: "bert-base-cased",
+          do_lowercase: false,
+          use_starting_offsets: true
+        }
+      },
+      text_field_embedder: {
+        allow_unmatched_keys: true,
+        embedder_to_indexer_map: {
+          bert: ["bert", "bert-offsets"]
+        },
+        token_embedders: {
+          bert: {
+            type: "bert-pretrained",
+            pretrained_model: "bert-base-cased"
+          },
+        },
+      },
+      encoder_input_dim: 768,
+  }
   else error 'invalid token embedding type %s' % [token_embedding_type];
 
 
@@ -145,6 +169,11 @@ local Encoder =
       dropout_prob: 0.1,
       residual_dropout_prob: 0.2,
       attention_dropout_prob: 0.1,
+    }
+  else if encoder_type == 'pass_through' then
+    {
+      type: 'pass_through',
+      input_dim: TokenEmbedding.encoder_input_dim
     }
   else error 'invalid encoder type %s' % [encoder_type];
 
