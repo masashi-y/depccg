@@ -6,14 +6,12 @@ import json
 from lxml import etree
 
 from .parser import EnglishCCGParser, JapaneseCCGParser
-from .printer import to_mathml, to_prolog, to_xml, to_jigg_xml
+from .printer import print_
 from depccg.token import Token, english_annotator, japanese_annotator, annotate_XX
 from .download import download, load_model_directory, SEMANTIC_TEMPLATES, CONFIGS
 from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules
 from .combinator import remove_disfluency, headfirst_combinator
-from .semantics.ccg2lambda import parse as ccg2lambda
-from .semantics.ccg2lambda import nltk2json
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
@@ -111,53 +109,11 @@ def main(args):
                                tag_list=tag_list,
                                batchsize=args.batchsize)
 
-    if args.format == 'xml':
-        output = etree.tostring(
-            to_xml(res, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
-        print(output)
-    elif args.format == 'jigg_xml':
-        output = etree.tostring(
-            to_jigg_xml(res, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
-        print(output)
-    elif args.format == 'prolog':
-        print(to_prolog(res, tagged_doc))
-    elif args.format == 'html':
-        print(to_mathml(res))
-    elif args.format == 'jigg_xml_ccg2lambda':
-        jigg_xml = to_jigg_xml(res, tagged_doc)
-        templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
-        assert templates, f'--semantic-templates must be spcified for language: {args.lang}'
-        result_xml_str, _ = ccg2lambda.parse(jigg_xml, str(templates), nbest=args.nbest)
-        print(result_xml_str.decode('utf-8'))
-    elif args.format == 'ccg2lambda':
-        jigg_xml = to_jigg_xml(res, tagged_doc)
-        templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
-        assert templates, f'--semantic-templates must be spcified for language: {args.lang}'
-        _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates), nbest=args.nbest)
-        for i, (parsed, formulas) in enumerate(zip(res, formulas_list)):
-            for j, ((tree, prob), formula) in enumerate(zip(parsed, formulas)):
-                print(f'ID={i} log probability={prob:.4e}\n{formula}')
-    elif args.format == 'conll':
-        for i, parsed in enumerate(res):
-            for tree, prob in parsed:
-                print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}')
-    elif args.format == 'json':
-        for i, (parsed, tokens) in enumerate(zip(res, tagged_doc), 1):
-            for tree, prob in parsed:
-                res = tree.json(tokens=tokens)
-                res['id'] = i
-                res['prob'] = prob
-                json.dump(res, sys.stdout)
-    elif args.format == 'auto':
-        for i, (parsed, tokens) in enumerate(zip(res, tagged_doc), 1):
-            for tree, prob in parsed:
-                print(f'ID={i}, Prob={prob}')
-                print(tree.auto(tokens=tokens))
-    else:  # deriv, ja, ptb
-        for i, parsed in enumerate(res, 1):
-            for tree, prob in parsed:
-                print(f'ID={i}, Prob={prob}')
-                print(getattr(tree, args.format)())
+        semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
+        print_(res, tagged_doc,
+               format=args.format,
+               lang=args.lang,
+               semantic_templates=semantic_templates)
 
 
 def add_common_parser_arguments(parser):

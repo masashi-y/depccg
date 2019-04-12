@@ -1,7 +1,14 @@
+from typing import List, Tuple, Optional
+
 import re
+import sys
 import logging
+import json
 from lxml import etree
+
 from .tree import Tree
+from .download import SEMANTIC_TEMPLATES
+from .semantics.ccg2lambda import parse as ccg2lambda
 
 
 logger = logging.getLogger(__name__)
@@ -185,3 +192,68 @@ def to_jigg_xml(trees, tagged_doc):
             sentence_node.append(converter.process(tree, score))
     return root_node
 
+
+def to_string(nbest_trees: List[List[Tuple[float, Tree]]],
+              tagged_doc: Optional[List[List['Token']]],
+              lang: str = 'en',
+              format: str = 'auto',
+              semantic_templates: Optional[str] = None) -> str:
+    if format == 'xml':
+        return etree.tostring(
+            to_xml(nbest_trees, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
+    elif format == 'jigg_xml':
+        return etree.tostring(
+            to_jigg_xml(nbest_trees, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
+    elif format == 'prolog':
+        return to_prolog(nbest_trees, tagged_doc)
+    elif format == 'html':
+        return to_mathml(nbest_trees)
+    elif format == 'jigg_xml_ccg2lambda':
+        jigg_xml = to_jigg_xml(nbest_trees, tagged_doc)
+        templates = semantic_templates or SEMANTIC_TEMPLATES.get(lang)
+        assert templates, f'--semantic-templates must be spcified for language: {lang}'
+        result_xml_str, _ = ccg2lambda.parse(jigg_xml, str(templates))
+        return result_xml_str.decode('utf-8')
+    elif format == 'ccg2lambda':
+        jigg_xml = to_jigg_xml(nbest_trees, tagged_doc)
+        templates = semantic_templates or SEMANTIC_TEMPLATES.get(lang)
+        assert templates, f'--semantic-templates must be spcified for language: {lang}'
+        _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates))
+        return '\n'.join(f'ID={i} log probability={prob:.4e}\n{formula}'
+            for i, (parsed, formulas) in enumerate(zip(nbest_trees, formulas_list))
+                for (tree, prob), formula in zip(parsed, formulas))
+    elif format == 'conll':
+        return '\n'.join(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}'
+            for i, parsed in enumerate(nbest_trees)
+                for tree, prob in parsed)
+    elif format == 'json':
+        output = []
+        for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+            for tree, prob in parsed:
+                res = tree.json(tokens=tokens)
+                res['id'] = i
+                res['prob'] = prob
+                output.append(json.dumps(res))
+        return '\n'.join(output)
+    elif format == 'auto':
+        return '\n'.join(f'ID={i}, log probability={prob}\n{tree.auto(tokens=tokens)}'
+            for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1)
+                for tree, prob in parsed)
+    else:  # deriv, ja, ptb
+        return '\n'.join(f'ID={i}, log probability={prob}\n{getattr(tree, format)()}'
+            for i, parsed in enumerate(nbest_trees, 1)
+                for tree, prob in parsed)
+
+
+def print_(nbest_trees: List[List[Tuple[float, Tree]]],
+           tagged_doc: Optional[List[List['Token']]],
+           lang: str = 'en',
+           format: str = 'auto',
+           semantic_templates: Optional[str] = None,
+           file = sys.stdout) -> str:
+    print(to_string(nbest_trees,
+                    tagged_doc,
+                    lang=lang,
+                    format=format,
+                    semantic_templates=semantic_templates),
+          file=file)

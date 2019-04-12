@@ -25,6 +25,8 @@ import sys
 from nltk.sem.logic import LogicalExpressionException
 from .ccg2lambda_tools import assign_semantics_to_ccg
 from .semantic_index import SemanticIndex
+from .logic_parser import lexpr
+from .nltk2normal import remove_true
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ def parse(ccg, templates, nbest=0, ncores=3):
     logging.info('Adding XML semantic nodes to sentences...')
     formulas_list = []
     for sentence, (sem_nodes, formulas) in zip(SENTENCES, sem_nodes_lists):
+        formulas = [str(remove_true(lexpr(formula))) for formula in formulas]
         formulas_list.append(formulas)
         sentence.extend(sem_nodes)
     logging.info('Finished adding XML semantic nodes to sentences.')
