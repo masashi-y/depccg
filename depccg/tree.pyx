@@ -6,7 +6,7 @@ from .cat cimport Cat, Category
 from .combinator import unknown_combinator
 from lxml import etree
 from .token import Token
-from depccg.utils import denormalize
+from depccg.utils import denormalize, normalize
 
 
 ## TODO: ugly code
@@ -30,6 +30,7 @@ class _AutoLineReader(object):
         self.index = 0
         self.word_id = -1
         self.lang = lang
+        self.tokens = []
 
     def next(self):
         end = self.line.find(' ', self.index)
@@ -45,7 +46,8 @@ class _AutoLineReader(object):
         return self.line[self.index]
 
     def parse(self):
-        return self.next_node()
+        tree = self.next_node()
+        return tree, self.tokens
 
     @property
     def next_node(self):
@@ -66,6 +68,8 @@ class _AutoLineReader(object):
         tag1 = self.next()  # modified POS tag
         tag2 = self.next()  # original POS
         word = self.next().replace('\\', '')
+        token = Token(word=word, pos=tag1, tag1=tag1, tag2=tag2)
+        self.tokens.append(token)
         if word == '-LRB-':
             word = "("
         elif word == '-RRB-':
@@ -283,6 +287,26 @@ cdef class Tree:
         else:
             poss = ['POS' for _ in range(len(self))]
         return rec(self)
+
+    def auto_flat(self, tokens=None):
+        def rec(node):
+            if node.is_leaf:
+                cat = node.cat
+                word = normalize(node.word)
+                word = word.replace('/', '\\/')
+                pos = poss.pop(0)
+                return f'(<L *** {cat} {pos} {word}>\n)'
+            else:
+                cat = node.cat
+                children = '\n'.join(rec(child) for child in node.children)
+                num_children = len(node.children)
+                head_is_left = 0 if node.head_is_left else 1
+                return f'(<T *** {cat} * {head_is_left} {num_children}>\n{children}\n)'
+        if tokens:
+            poss = [token.pos for token in tokens]
+        else:
+            poss = ['POS' for _ in range(len(self))]
+        return f'###\n{rec(self)}\n'
 
     def deriv(self):
         cdef string res = Derivation(self.node_, not self.suppress_feat).Get()

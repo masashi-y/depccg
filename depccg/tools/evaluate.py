@@ -12,8 +12,13 @@ import sys
 import re
 import logging
 import argparse
+import tempfile
+import os
+import subprocess
 from pathlib import Path
 
+from depccg.tree import Tree
+from depccg.tools.reader import read_auto
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                     level=logging.INFO)
@@ -79,6 +84,37 @@ IGNORE = {tuple(rule.split()) for rule in IGNORE_RULES.split('\n') if not rule.s
 def die(msg):
     logger.error(msg)
     sys.exit(1)
+
+
+def get_deps_from_auto(auto_file):
+    candc_dir = os.environ.get('CANDC', None)
+    if not candc_dir:
+        die('did not find C&C parser at CANDC environmental variable.')
+    CANDC_DIR = Path(candc_dir).resolve()
+    GENERATE = CANDC_DIR / 'bin' / 'generate'
+    MARKEDUP = CANDC_DIR / 'src' / 'data' / 'ccg' / 'cats' / 'markedup'
+    CATS = CANDC_DIR / 'src' / 'data' / 'ccg' / 'cats'
+    if not GENERATE.exists():
+        logger.error('Currently the evalution script requires C&C parser compiled from its source.')
+        die('expected: $CANDC/bin/generate')
+    elif not MARKEDUP.exists() or not CATS.exists:
+        logger.error('The C&C directory is not configured expectedly.')
+        die('expected: $CANDC/src/data/ccg/cats/markedup')
+
+    tmp1 = tempfile.mktemp()
+    tmp2 = tempfile.mktemp()
+    with open(tmp1, 'w') as f:
+        for _, tokens, tree in read_auto(auto_file):
+            print(tree.auto_flat(tokens=tokens), file=f)
+
+    command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp1} > {tmp2}'
+    proc = subprocess.Popen(command,
+                            shell=True,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    proc.communicate()
+    return tmp2
 
 
 def next_pargs(file):
@@ -243,7 +279,7 @@ def print_rel_stats(relation, correct, incorrect, missing):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('PARG_FILENAME', type=Path, help='gold parg file in ccgbank')
-    parser.add_argument('GOLD', type=Path, help='parse results in auto file format')
+    parser.add_argument('TEST', type=Path, help='parse results in auto file format')
     parser.add_argument('-v', '--verbose', action='store_true', help='produces verbose output')
     parser.add_argument('-r', '--relations', action='store_true', help='produces per relation output')
     args = parser.parse_args()
@@ -257,8 +293,9 @@ def main():
         die(f'could not open gold_deps file ({e.strerror})')
 
     try:
-        GOLD_FILE = open(args.GOLD)
-        preface += read_preface(args.GOLD, GOLD_FILE)
+        TEST = get_deps_from_auto(args.TEST)
+        TEST_FILE = open(TEST)
+        preface += read_preface(TEST, TEST_FILE)
     except IOError as e:
         die(f'could not open test file ({e.strerror})')
 
@@ -271,7 +308,7 @@ def main():
         end, gold_deps, gold_udeps = next_pargs(PARG_FILE)
         if end: break
 
-        parsed, test_lexcats, test_deps, test_udeps, test_rule_ids = next_test(GOLD_FILE)
+        parsed, test_lexcats, test_deps, test_udeps, test_rule_ids = next_test(TEST_FILE)
         nsentences += 1
         if not parsed:
             parse_failures += 1

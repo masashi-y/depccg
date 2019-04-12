@@ -17,8 +17,8 @@ def read_auto(filename, lang='en'):
         if line.startswith("ID"):
             name = line
         else:
-            tree = Tree.of_auto(line, lang)
-            yield name, Token(), tree
+            tree, tokens = Tree.of_auto(line, lang)
+            yield name, tokens, tree
 
 
 def read_xml(filename, lang='en'):
