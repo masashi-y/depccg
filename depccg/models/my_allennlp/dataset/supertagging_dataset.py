@@ -1,21 +1,35 @@
 from typing import Dict, List, Optional, Union
+from overrides import overrides
+from itertools import chain
 import json
 import logging
 import numpy
-
-from overrides import overrides
-from itertools import chain
 import random
 import json
+
 from allennlp.common.file_utils import cached_path
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import SequenceLabelField, TextField, MetadataField, ArrayField
 from allennlp.data.instance import Instance
 from allennlp.data.tokenizers import Token
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
+
 from depccg import utils
+from depccg.tools.data import convert_auto_to_json
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
+
+def read_dataset_auto_or_json(file_path: str):
+    if file_path.endswith('.json'):
+        logger.info(f'Reading instances from lines in json file at: {file_path}')
+        with open(file_path, 'r') as data_file:
+            json_data = json.load(data_file)
+    else:
+        logger.info(f'Reading trees in auto file at: {file_path}')
+        json_data = convert_auto_to_json(file_path)
+    logger.info(f'loaded {len(json_data)} instances')
+    return json_data
 
 
 @DatasetReader.register("supertagging_dataset")
@@ -28,12 +42,11 @@ class SupertaggingDatasetReader(DatasetReader):
 
     @overrides
     def _read(self, file_path):
-        with open(cached_path(file_path), 'r') as data_file:
-            logger.info('Reading instances from lines in file at: %s', file_path)
-            for instance in json.load(data_file):
-                sentence, labels = instance
-                tags, deps = labels
-                yield self.text_to_instance(sentence, tags, deps)
+        json_data = read_dataset_auto_or_json(cached_path(file_path))
+        for instance in json_data:
+            sentence, labels = instance
+            tags, deps = labels
+            yield self.text_to_instance(sentence, tags, deps)
 
     @overrides
     def text_to_instance(self,
@@ -77,13 +90,12 @@ class TritrainSupertaggingDatasetReader(SupertaggingDatasetReader):
         :return:
         """
         ccgbank, tritrain = file_paths['ccgbank'], file_paths['tritrain']
-        with open(cached_path(ccgbank), 'r') as data_file:
-            logger.info('Reading instances from CCGBank at: %s', ccgbank)
-            ccgbank = json.load(data_file)
 
-        with open(cached_path(tritrain), 'r') as data_file:
-            logger.info('Reading instances from tri-train dataset at: %s', tritrain)
-            tritrain = json.load(data_file)
+        logger.info(f'Reading instances from CCGBank at: {ccgbank}')
+        ccgbank = read_dataset_auto_or_json(cached_path(ccgbank))
+
+        logger.info(f'Reading instances from tri-train dataset at: {tritrain}')
+        tritrain = read_dataset_auto_or_json(cached_path(tritrain))
 
         ccgbank_size = len(ccgbank)
         tritrain_size = len(tritrain)
@@ -102,7 +114,7 @@ class TritrainSupertaggingDatasetReader(SupertaggingDatasetReader):
             tags, deps = labels
 
             if any(len(word) == 0 for word in sentence.split(' ')):
-                logging.info('skipping example: %s' % sentence)
+                logging.info(f'skipping example: {sentence}')
                 continue
             new_instance = self.text_to_instance(sentence, tags, deps, weight)
             yield new_instance
@@ -142,25 +154,18 @@ class FinetuneSupertaggingDatasetReader(SupertaggingDatasetReader):
 
     @overrides
     def _read(self, file_paths):
-        ccgbank, aux_data = file_paths['ccgbank'], file_paths['auxiliary']
-        with open(cached_path(ccgbank), 'r') as data_file:
-            logger.info(f'Reading instances from CCGBank at: {ccgbank}')
-            ccgbank = list(json.load(data_file))
-            logger.info(f'loaded {len(ccgbank)} instances')
+        ccgbank, aux_data  = file_paths['ccgbank'], file_paths['auxiliary']
+        logger.info(f'Reading instances from CCGBank at: {ccgbank}')
+        ccgbank = read_dataset_auto_or_json(cached_path(ccgbank))
+        logger.info(f'Reading instances from auxiliary dataset at: {aux_data}')
+        aux_data = read_dataset_auto_or_json(cached_path(aux_data))
 
         tritrain = file_paths.get('tritrain', None)
         if tritrain is not None:
-            with open(cached_path(tritrain), 'r') as data_file:
-                logger.info(f'Reading instances from tri-training dataset at: {tritrain}')
-                tritrain = list(json.load(data_file))
-                logger.info(f'loaded {len(tritrain)} instances')
+            logger.info(f'Reading instances from tri-training dataset at: {tritrain}')
+            tritrain = read_dataset_auto_or_json(cached_path(tritrain))
         else:
             tritrain = []
-
-        with open(cached_path(aux_data), 'r') as data_file:
-            logger.info(f'Reading instances from auxiliary dataset at: {aux_data}')
-            aux_data = list(json.load(data_file))
-            logger.info(f'loaded {len(aux_data)} instances')
 
         ccgbank = list(dataset_times(ccgbank, self.ccgbank_ratio))
         logger.info(f'ccgbank ratio = {self.ccgbank_ratio}: use {len(ccgbank)} sentences from ccgbank')

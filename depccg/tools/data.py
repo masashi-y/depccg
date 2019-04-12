@@ -1,7 +1,7 @@
 
 import json
 from depccg.tools.reader import read_auto
-from depccg.utils import normalize
+from depccg import utils
 from collections import defaultdict, Counter
 from pathlib import Path
 import logging
@@ -58,7 +58,7 @@ class TrainingDataCreator(object):
     def _traverse(self, tree):
         if tree.is_leaf:
             self.cats[str(tree.cat)] += 1
-            word = normalize(tree.word)
+            word = utils.normalize(tree.word)
             self.words[word.lower()] += 1
             for f in get_suffix(word):
                 self.suffixes[f] += 1
@@ -113,7 +113,7 @@ class TrainingDataCreator(object):
     def _create_samples(self, trees):
         for tree in trees:
             tokens = tree.leaves
-            words = [normalize(token.word) for token in tokens]
+            words = [utils.normalize(token.word) for token in tokens]
             cats = [str(token.cat) for token in tokens]
             deps = self._get_dependencies(tree, len(tokens))
             sent = ' '.join(words)
@@ -184,6 +184,19 @@ class TrainingDataCreator(object):
         with open(args.OUT / 'testsents.conll', 'w') as f:
             logger.info(f'writing to {f.name}')
             self._to_conll(f)
+
+    @staticmethod
+    def convert_json(autopath):
+        self = TrainingDataCreator(autopath, None, None, None)
+        trees = [tree for _, _, tree in read_auto(self.filepath) if tree.word != 'FAILED']
+        logger.info(f'loaded {len(trees)} trees')
+        self._create_samples(trees)
+        return self.samples
+
+
+def convert_auto_to_json(autopath):
+    return TrainingDataCreator.convert_json(autopath)
+
 
 if __name__ == '__main__':
     import argparse
