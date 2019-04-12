@@ -107,7 +107,8 @@ def get_deps_from_auto(auto_file):
         for _, tokens, tree in read_auto(auto_file):
             print(tree.auto_flat(tokens=tokens), file=f)
 
-    command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp1} > {tmp2}'
+    logger.info(f'writing deps to {tmp2}')
+    command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp1} | sed -e "s/^$/<c>\\n/" > {tmp2}'
     proc = subprocess.Popen(command,
                             shell=True,
                             stdin=subprocess.PIPE,
@@ -125,7 +126,11 @@ def next_pargs(file):
         return True, deps, udeps
     while line:
         line = line.strip()
-        if not line: break
+        if line.startswith('<s '):
+            line = file.readline()
+            continue
+        if line.startswith('<\\s>'):
+            break
         arg_index, pred_index, cat, slot, arg, pred = line.split()[:6]
         pred = f'{pred}_{int(pred_index) + 1}'
         arg = f'{arg}_{int(arg_index) + 1}'
@@ -288,7 +293,7 @@ def main():
 
     try:
         PARG_FILE = open(args.PARG_FILENAME)
-        preface += read_preface(args.PARG_FILENAME, PARG_FILE)
+        # preface += read_preface(args.PARG_FILENAME, PARG_FILE)
     except IOError as e:
         die(f'could not open gold_deps file ({e.strerror})')
 
@@ -334,10 +339,10 @@ def main():
         udeps_sent_correct += incorrect == 0 and missing == 0
 
     print(f'''{preface}
-    note: all these statistics are over just those sentences
-          for which the parser returned an analysis, and 
-          dependency extraction script is successful 
-    ''')
+note: all these statistics are over just those sentences
+      for which the parser returned an analysis, and 
+      dependency extraction script is successful 
+''')
 
     if args.relations:
         relations = relations_correct.copy()
