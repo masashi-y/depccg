@@ -85,7 +85,7 @@ It is also possible to obtain logical formulas using [ccg2lambda](https://github
 ```sh
 ➜ echo "This is a test sentence ." | depccg_en --format ccg2lambda --annotator spacy
 ID=0 log probability=-0.0006299018859863281
-exists x.(_this(x) & True & exists z1.(_sentence(z1) & _test(z1) & True & (x = z1)))
+exists x.(_this(x) & exists z1.(_sentence(z1) & _test(z1) & (x = z1)))
 ```
 
 ### The best performing ELMo model
