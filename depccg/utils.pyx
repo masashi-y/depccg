@@ -10,6 +10,15 @@ from libcpp.pair cimport pair
 logger = logging.getLogger(__name__)
 
 
+def is_json(file_path: str):
+    try:
+        with open(file_path, 'r') as data_file:
+            json.load(data_file)
+            return True
+    except json.JSONDecodeError:
+        return False
+
+
 def normalize(word):
     if word == "-LRB-":
         return "("

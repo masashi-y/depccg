@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 def read_dataset_auto_or_json(file_path: str):
-    if file_path.endswith('.json'):
+    if utils.is_json(file_path):
         logger.info(f'Reading instances from lines in json file at: {file_path}')
         with open(file_path, 'r') as data_file:
             json_data = json.load(data_file)
