@@ -108,71 +108,32 @@ def get_deps_from_auto(auto_file):
             print(tree.auto_flat(tokens=tokens), file=f)
 
     logger.info(f'writing deps to {tmp2}')
-    command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp1} | sed -e "s/^$/<c>\\n/" > {tmp2}'
+    command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp1}'
     proc = subprocess.Popen(command,
                             shell=True,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    proc.communicate()
-    return tmp2
+    results, error = proc.communicate()
+    if len(error.decode('utf-8')) > 0:
+        die(f'caught error in running $CANDC/bin/generate: {error}')
 
-
-def next_pargs(file):
-    deps = set()
-    udeps = set()
-    line = file.readline()
-    if not line:
-        return True, deps, udeps
-    while line:
-        line = line.strip()
-        if line.startswith('<s '):
-            line = file.readline()
-            continue
-        if line.startswith('<\\s>'):
-            break
-        arg_index, pred_index, cat, slot, arg, pred = line.split()[:6]
-        pred = f'{pred}_{int(pred_index) + 1}'
-        arg = f'{arg}_{int(arg_index) + 1}'
-        deps.add((pred, cat, slot, arg))
-        udeps.add((pred, arg))
-        line = file.readline()
-    return False, deps, udeps
-
-
-deps_ignored = 0
-def ignore(pred, cat, slot, arg, rule_id):
-    global deps_ignored
-    res = ('rule_id', rule_id) in IGNORE or \
-          (cat, slot, rule_id) in IGNORE or \
-          (pred, cat, slot, rule_id) in IGNORE or \
-          (pred, cat, slot, arg, rule_id) in IGNORE
-    deps_ignored += res
-    return res
-
-
-MARKUP = re.compile(r'<[0-9]>|\{[A-Z_]\*?\}|\[X\]')
-def strip_markup(cat):
-    cat = MARKUP.sub('', cat)
-    return cat[1:-1] if cat[0] == '(' else cat
-
-
-def next_test(file):
-    lexcats = []
-    deps = set()
-    udeps = set()
+    lines = iter(results.decode('utf-8').split('\n'))
+    deps, udeps = set(), set()
     rule_ids = {}
+    line = next(lines)
+    while line != '':
+        line = next(lines)
     
-    line = file.readline()
-    if not line:
-        die('unexpected end of file reading gold dependencies')
-    if line == '\n':
-        return False, lexcats, deps, udeps, rule_ids
-
-    while line:
+    for line in lines:
         line = line.strip()
-        if not line or line.startswith('<c>'):
-            break
+        if len(line) == 0:
+            # If 0, no dependencies for this sentence - probably a conversion script error.
+            parsed = len(rule_ids) > 0
+            yield parsed, deps, udeps, rule_ids
+            deps, udeps = set(), set()
+            rule_ids = {}
+            continue
         fields = line.split()
         pred, cat, slot, arg, rule_id = fields[:5]
         pred_word = pred.rsplit('_')[0]
@@ -182,24 +143,46 @@ def next_test(file):
             deps.add((pred, cat, slot, arg))
             rule_ids[(pred, cat, slot, arg)] = rule_id
             udeps.add((pred, arg))
-        line = file.readline()
 
-    if not line.startswith('<c>'):
-        die('unexpected end of file reading test lexical categories')
 
-    for token in line.split()[1:]:
-        word, pos, cat = token.split('|')
-        lexcats.append((word, cat))
+def get_pargs(file):
+    try:
+        lines = open(file)
+    except IOError as e:
+        die(f'could not open gold_deps file ({e.strerror})')
 
-    line = file.readline()
-    if line != '\n':
-        die('expected a blank line between each sentence')
+    deps, udeps = set(), set()
+    for line in lines:
+        line = line.strip()
+        if line.startswith('<s '):
+            continue
+        if line.startswith('<\\s>'):
+            yield deps, udeps
+            deps, udeps = set(), set()
+            continue
+        arg_index, pred_index, cat, slot, arg, pred = line.split()[:6]
+        pred = f'{pred}_{int(pred_index) + 1}'
+        arg = f'{arg}_{int(arg_index) + 1}'
+        deps.add((pred, cat, slot, arg))
+        udeps.add((pred, arg))
+    assert len(deps) == 0 and len(udeps) == 0
 
-    if not rule_ids:
-        # No dependencies for this sentence - probably a conversion script error.
-        return False, lexcats, deps, udeps, rule_ids
-    else:
-        return True, lexcats, deps, udeps, rule_ids
+
+DEPS_IGNORED = 0
+def ignore(pred, cat, slot, arg, rule_id):
+    global DEPS_IGNORED
+    res = ('rule_id', rule_id) in IGNORE or \
+          (cat, slot, rule_id) in IGNORE or \
+          (pred, cat, slot, rule_id) in IGNORE or \
+          (pred, cat, slot, arg, rule_id) in IGNORE
+    DEPS_IGNORED += res
+    return res
+
+
+MARKUP = re.compile(r'<[0-9]>|\{[A-Z_]\*?\}|\[X\]')
+def strip_markup(cat):
+    cat = MARKUP.sub('', cat)
+    return cat[1:-1] if cat[0] == '(' else cat
 
 
 def score_deps(gold_deps, test_deps, rule_ids, verbose, relations,
@@ -237,18 +220,6 @@ def score_udeps(gold_deps, test_deps):
   incorrect = test_deps.difference(gold_deps)
   missing = gold_deps.difference(test_deps)
   return len(correct), len(incorrect), len(missing)
-
-
-def read_preface(filename, file):
-    preface = f'# {filename} was generated using the following commands(s):\n'
-    line = file.readline()
-    while line != '\n':
-        if line.startswith('# this file'):
-            line = file.readline()
-            continue
-        preface += line.replace('# ', '#   ')
-        line = file.readline()
-    return preface
 
 
 def percentage(val, total):
@@ -291,29 +262,14 @@ def main():
 
     preface = f'# this file was generated by the following command(s):\n# {" ".join(sys.argv)}\n'
 
-    try:
-        PARG_FILE = open(args.PARG_FILENAME)
-        # preface += read_preface(args.PARG_FILENAME, PARG_FILE)
-    except IOError as e:
-        die(f'could not open gold_deps file ({e.strerror})')
-
-    try:
-        TEST = get_deps_from_auto(args.TEST)
-        TEST_FILE = open(TEST)
-        preface += read_preface(TEST, TEST_FILE)
-    except IOError as e:
-        die(f'could not open test file ({e.strerror})')
-
     nsentences, parse_failures = 0, 0
     deps_sent_correct, deps_correct, deps_incorrect, deps_missing = 0, 0, 0, 0
     udeps_sent_correct, udeps_correct, udeps_incorrect, udeps_missing = 0, 0, 0, 0
     relations_correct, relations_incorrect, relations_missing = {}, {}, {}
 
-    while True:
-        end, gold_deps, gold_udeps = next_pargs(PARG_FILE)
-        if end: break
-
-        parsed, test_lexcats, test_deps, test_udeps, test_rule_ids = next_test(TEST_FILE)
+    TEST = get_deps_from_auto(args.TEST)
+    for gold_deps, gold_udeps in get_pargs(args.PARG_FILENAME):
+        parsed, test_deps, test_udeps, test_rule_ids = next(TEST)
         nsentences += 1
         if not parsed:
             parse_failures += 1
@@ -365,7 +321,7 @@ note: all these statistics are over just those sentences
     print_stats('unlabelled', udeps_correct, udeps_incorrect, udeps_missing)
     print_acc('usent', 'unlabelled deps sentences correct', udeps_sent_correct, nparsed)
     print()
-    print_acc('skip', 'ignored deps (to ensure compatibility with CCGbank)', deps_ignored, deps_correct + deps_incorrect + deps_ignored)
+    print_acc('skip', 'ignored deps (to ensure compatibility with CCGbank)', DEPS_IGNORED, deps_correct + deps_incorrect + DEPS_IGNORED)
 
 
 if __name__ == '__main__':
