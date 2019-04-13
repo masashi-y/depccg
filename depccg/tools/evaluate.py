@@ -19,6 +19,7 @@ from pathlib import Path
 
 from depccg.tree import Tree
 from depccg.tools.reader import read_auto
+from depccg import utils
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                     level=logging.INFO)
@@ -101,14 +102,12 @@ def get_deps_from_auto(auto_file):
         logger.error('The C&C directory is not configured expectedly.')
         die('expected: $CANDC/src/data/ccg/cats/markedup')
 
-    tmp1 = tempfile.mktemp()
-    tmp2 = tempfile.mktemp()
-    with open(tmp1, 'w') as f:
+    tmp = tempfile.mktemp()
+    with open(tmp, 'w') as f:
         for _, tokens, tree in read_auto(auto_file):
             print(tree.auto_flat(tokens=tokens), file=f)
 
-    logger.info(f'writing deps to {tmp2}')
-    command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp1}'
+    command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp}'
     proc = subprocess.Popen(command,
                             shell=True,
                             stdin=subprocess.PIPE,
@@ -161,8 +160,8 @@ def get_pargs(file):
             deps, udeps = set(), set()
             continue
         arg_index, pred_index, cat, slot, arg, pred = line.split()[:6]
-        pred = f'{pred}_{int(pred_index) + 1}'
-        arg = f'{arg}_{int(arg_index) + 1}'
+        pred = f'{utils.normalize(pred)}_{int(pred_index) + 1}'
+        arg = f'{utils.normalize(arg)}_{int(arg_index) + 1}'
         deps.add((pred, cat, slot, arg))
         udeps.add((pred, arg))
     assert len(deps) == 0 and len(udeps) == 0
