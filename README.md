@@ -226,13 +226,13 @@ sents = [
   "This is second ."
 ]
 
-results = praser.parse_doc(sents)
+results = parser.parse_doc(sents)
 for nbests in results:
     for tree, log_prob in nbests:
         print(tree.deriv)
 ```
 
-For Japanese CCG parsing, use `depccg.JapaneseCCGParser`,
+For Japanese CCG parsing, use `depccg.parser.JapaneseCCGParser`,
 which has the exactly same interface.
 Note that the Japanese parser accepts pre-tokenized sentences as input.
 
