@@ -33,8 +33,12 @@ cdef extern from "combinator.h" namespace "myccg" nogil:
         string ToStr() const
         bool CanApply(Cat left, Cat right)
         Cat Apply(Cat left, Cat right) const
+        bool HeadIsLeft(Cat left, Cat right) const
 
     ctypedef const CCombinator* Op
+
+    cdef cppclass UnaryRule:
+        UnaryRule()
 
     cdef cppclass Conjunction2:
         Conjunction2()
@@ -96,7 +100,6 @@ cdef extern from "combinator.h" namespace "myccg" nogil:
     cdef cppclass JABackwardApplication:
         JABackwardApplication()
 
-
     cdef cppclass JAGeneralizedForwardComposition0 "myccg::JAGeneralizedForwardComposition<0, myccg::FX>":
         JAGeneralizedForwardComposition0(const Slash&, const Slash&, const Slash&, const string& string)
 
@@ -137,5 +140,6 @@ cdef class Combinator:
 
     cdef Category _apply(self, Category left, Category right)
 
+    cdef bool _head_is_left(self, Category left, Category right)
 
 cdef vector[Op] combinator_list_to_vector(list combinators)

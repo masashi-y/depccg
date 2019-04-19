@@ -10,7 +10,6 @@ cdef class Combinator:
         combinator.op_ = op
         return combinator
 
-
     def __str__(self):
         return self.op_.ToStr().decode('utf-8')
 
@@ -34,6 +33,19 @@ cdef class Combinator:
             return self._apply(left, right)
         else:
             return None
+
+    cdef bool _head_is_left(self, Category left, Category right):
+        return self.op_.HeadIsLeft(left.cat_, right.cat_)
+
+    def head_is_left(self, left, right):
+        if isinstance(left, Category) and isinstance(right, Category):
+            return self._head_is_left(left, right)
+        else:
+            return False
+
+
+cpdef unary_rule():
+    return Combinator.from_ptr(<Op>new UnaryRule())
 
 cpdef conjunction():
     return Combinator.from_ptr(<Op>new Conjunction())

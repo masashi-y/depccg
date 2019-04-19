@@ -5,7 +5,6 @@ import json
 import logging
 import numpy
 import random
-import json
 
 from allennlp.common.file_utils import cached_path
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
