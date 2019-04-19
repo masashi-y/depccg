@@ -85,7 +85,7 @@ It is also possible to obtain logical formulas using [ccg2lambda](https://github
 ```sh
 ➜ echo "This is a test sentence ." | depccg_en --format ccg2lambda --annotator spacy
 ID=0 log probability=-0.0006299018859863281
-exists x.(_this(x) & True & exists z1.(_sentence(z1) & _test(z1) & True & (x = z1)))
+exists x.(_this(x) & exists z1.(_sentence(z1) & _test(z1) & (x = z1)))
 ```
 
 ### The best performing ELMo model
@@ -112,8 +112,7 @@ To use the model, install `allennlp`:
 
 and then,
 ```sh
-➜ tar xvf lstm_parser_elmo_finetune.tar.gz
-➜ echo "this is a test sentence ." | depccg_en --model lstm_parser_elmo_finetune
+➜ echo "this is a test sentence ." | depccg_en --model lstm_parser_elmo_finetune.tar.gz
 ```
 
 Using a GPU (by `--gpu` option) is recommended if possible.
@@ -227,34 +226,33 @@ sents = [
   "This is second ."
 ]
 
-results = praser.parse_doc(sents)
+results = parser.parse_doc(sents)
 for nbests in results:
     for tree, log_prob in nbests:
         print(tree.deriv)
 ```
 
-For Japanese CCG parsing, use `depccg.JapaneseCCGParser`,
+For Japanese CCG parsing, use `depccg.parser.JapaneseCCGParser`,
 which has the exactly same interface.
 Note that the Japanese parser accepts pre-tokenized sentences as input.
 
-## Train your own model
+## Train your own English supertagging model
 
 You can use my [allennlp](https://allennlp.org/)-based supertagger and extend it.
 
-To train a supertagger, compress the English ccgbank into a json file by command:
+To train a supertagger, prepare [the English CCGbank](https://catalog.ldc.upenn.edu/LDC2005T13) and download [vocab](http://cl.naist.jp/~masashi-y/resources/depccg/vocabulary.tar.gz):
 ```sh
-➜ python -m depccg.tools.data --mode train /path/to/ccgbank/wsj_02-21.auto out_directory
-➜ python -m depccg.tools.data --mode test /path/to/ccgbank/wsj_00.auto out_directory
+➜ cat ccgbank/data/AUTO/{0[2-9],1[0-9],20,21}/* > wsj_02-21.auto
+➜ cat ccgbank/data/AUTO/00/* > wsj_00.auto
 ```
-which will outputs `traindata.json` and `testdata.json`. Then download [vocab](http://cl.naist.jp/~masashi-y/resources/depccg/vocabulary.tar.gz):
 ```sh
 ➜ wget http://cl.naist.jp/~masashi-y/resources/depccg/vocabulary.tar.gz
 ➜ tar xvf vocabulary.tar.gz
 ```
 
-Then finally,
+then,
 ```sh
-➜ vocab=vocabulary train_data=traindata.json test_data=testdata.json gpu=0 \
+➜ vocab=vocabulary train_data=wsj_02-21.auto test_data=wsj_00.auto gpu=0 \
   encoder_type=lstm token_embedding_type=char \
   allennlp train --include-package depccg.models.my_allennlp --serialization-dir results supertagger.jsonnet
 ```
@@ -263,7 +261,7 @@ The latter is a config file for using [tri-training silver data](http://cl.naist
 
 To use the trained supertagger,
 ```sh
-➜ echo "sentence": "this is a test sentence ."  | depccg_en --model results/model.tar.gz
+➜ echo "this is a test sentence ."  | depccg_en --model results/model.tar.gz
 ```
 
 or alternatively,
@@ -273,6 +271,16 @@ or alternatively,
 ➜ cat weights.json | depccg_en --input-format json
 ```
 where `weights.json` contains probabilities used in the parser (`p_tag` and `p_dep`).
+
+### Evaluation in terms of predicate-argument dependencies
+The standard CCG parsing evaluation can be performed with the following script:
+
+```sh
+➜ cat ccgbank/data/PARG/00/* > wsj_00.parg
+➜ export CANDC=/path/to/candc
+➜ python -m depccg.tools.evaluate wsj_00.parg wsj_00.predicted.auto
+```
+Currently, the script is dependent on [C&C](https://www.cl.cam.ac.uk/~sc609/candc-1.00.html)'s `generate` program, which is only available by compiling the C&C program from the source.
 
 ## Miscellaneous
 

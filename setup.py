@@ -133,7 +133,7 @@ else:
 
     setup(
         name="depccg",
-        version="1.0.2",  # NOQA
+        version="1.0.3",  # NOQA
         description='A parser for natural language based on combinatory categorial grammar',
         long_description=long_description,
         author='Masashi Yoshikawa',
