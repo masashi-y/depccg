@@ -9,9 +9,14 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# MODELS = {
+#     'en': ('tri_headfirst', 'http://cl.naist.jp/~masashi-y/resources/depccg/en_hf_tri.tar.gz'),
+#     'ja': ('ja_headfinal', 'http://cl.naist.jp/~masashi-y/resources/depccg/ja_hf_ccgbank.tar.gz')
+# }
+
 MODELS = {
-    'en': ('tri_headfirst', 'http://cl.naist.jp/~masashi-y/resources/depccg/en_hf_tri.tar.gz'),
-    'ja': ('ja_headfinal', 'http://cl.naist.jp/~masashi-y/resources/depccg/ja_hf_ccgbank.tar.gz')
+    'en': ('tri_headfirst', '1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv'),
+    'ja': ('ja_headfinal', '1bblQ6FYugXtgNNKnbCYgNfnQRkBATSY3')
 }
 
 MODEL_DIRECTORY = Path(__file__).parent / 'models'
@@ -42,13 +47,28 @@ def reporthook(count, block_size, total_size):
 
 def download(model_name):
     basename, url = MODELS[model_name]
+    from google_drive_downloader import GoogleDriveDownloader as gdd
     logging.info(f'start downloading from {url}')
     filename = (MODEL_DIRECTORY / basename).with_suffix('.tar.gz')
-    urlretrieve(url, filename, reporthook)
+    gdd.download_file_from_google_drive(file_id=url,
+                                        dest_path=filename,
+                                        unzip=False,
+                                        overwrite=True)
     logging.info(f'extracting files')
     tf = tarfile.open(filename)
     tf.extractall(MODEL_DIRECTORY)
     logging.info(f'finished')
+
+
+# def download(model_name):
+#     basename, url = MODELS[model_name]
+#     logging.info(f'start downloading from {url}')
+#     filename = (MODEL_DIRECTORY / basename).with_suffix('.tar.gz')
+#     urlretrieve(url, filename, reporthook)
+#     logging.info(f'extracting files')
+#     tf = tarfile.open(filename)
+#     tf.extractall(MODEL_DIRECTORY)
+#     logging.info(f'finished')
 
 
 def load_model_directory(model_name):
