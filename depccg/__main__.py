@@ -67,13 +67,15 @@ def main(args):
     )
 
     use_allennlp = args.model and args.model.endswith('.tar.gz')
+    config = args.config or CONFIGS[args.lang]
     if use_allennlp:
-        config = CONFIGS[args.lang]
         parser = Parsers[args.lang].from_json(config, args.model, **kwargs)
     else:
         load_tagger = True  # args.input_format != 'json'
-        model = args.model or load_model_directory(args.lang)
-        parser = Parsers[args.lang].from_dir(model, load_tagger=load_tagger, **kwargs)
+        model = None
+        if load_tagger:
+            model = args.model or load_model_directory(args.lang)
+        parser = Parsers[args.lang].from_json(config, model, **kwargs)
 
     fin = sys.stdin if args.input is None else open(args.input)
 
@@ -117,6 +119,9 @@ def main(args):
 
 
 def add_common_parser_arguments(parser):
+    parser.add_argument('-c',
+                        '--config',
+                        help='json config file specifying the set of unary rules used, etc.')
     parser.add_argument('-m',
                         '--model',
                         help='path to model directory')

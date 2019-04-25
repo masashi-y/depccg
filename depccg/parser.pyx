@@ -175,6 +175,7 @@ cdef class EnglishCCGParser:
         from depccg.models.my_allennlp.models.supertagger import Supertagger
         from depccg.models.my_allennlp.dataset.supertagging_dataset import SupertaggingDatasetReader
         from depccg.models.my_allennlp.dataset.supertagging_dataset import TritrainSupertaggingDatasetReader
+        from depccg.models.my_allennlp.dataset.ja_supertagging_dataset import JaSupertaggingDatasetReader
         from depccg.models.my_allennlp.predictor.supertagger_predictor import SupertaggerPredictor
         if self.gpu >= 0:
             logger.info(f'sending the supertagger to gpu: {self.gpu}')
@@ -218,15 +219,23 @@ cdef class EnglishCCGParser:
             assert isinstance(json_input, dict), \
                 'the input to from_json must be either a dict object or filename stirng'
         unary_rules = [(Category.parse(c1), Category.parse(c2)) for c1, c2 in json_input['unary_rules']]
+
         category_dict = {}
-        for word, cats in json_input['cat_dict'].items():
-            category_dict[word] = [Category.parse(cat) for cat in cats]
+        if 'cat_dict' in json_input:
+            for word, cats in json_input['cat_dict'].items():
+                category_dict[word] = [Category.parse(cat) for cat in cats]
+        else:
+            kwargs['use_category_dict'] = False
 
         seen_rules = []
-        for c1, c2 in json_input['seen_rules']:
-            c1 = cls.preprocess_seen_rules(Category.parse(c1))
-            c2 = cls.preprocess_seen_rules(Category.parse(c2))
-            seen_rules.append((c1, c2))
+        if 'cat_dict' in json_input:
+            for c1, c2 in json_input['seen_rules']:
+                c1 = cls.preprocess_seen_rules(Category.parse(c1))
+                c2 = cls.preprocess_seen_rules(Category.parse(c2))
+                seen_rules.append((c1, c2))
+        else:
+            kwargs['use_seen_rules'] = False
+
         parser = cls(category_dict, unary_rules, seen_rules, **kwargs)
         if tagger_model:
             parser.load_default_tagger(tagger_model)

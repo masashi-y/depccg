@@ -103,6 +103,7 @@ def get_deps_from_auto(auto_file):
         die('expected: $CANDC/src/data/ccg/cats/markedup')
 
     tmp = tempfile.mktemp()
+    print(tmp)
     with open(tmp, 'w') as f:
         for _, tokens, tree in read_auto(auto_file):
             print(tree.auto_flat(tokens=tokens), file=f)
@@ -115,7 +116,7 @@ def get_deps_from_auto(auto_file):
                             stderr=subprocess.PIPE)
     results, error = proc.communicate()
     if len(error.decode('utf-8')) > 0:
-        die(f'caught error in running $CANDC/bin/generate: {error}')
+        die(f'caught error in running $CANDC/bin/generate: {error.decode("utf-8")}')
 
     lines = iter(results.decode('utf-8').split('\n'))
     deps, udeps = set(), set()
