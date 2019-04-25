@@ -31,7 +31,7 @@ The best performing model in the paper trained on tri-training is available:
 ➜ depccg_en download
 ```
 
-It can be downloaded directly [here](http://cl.naist.jp/~masashi-y/resources/depccg/en_hf_tri.tar.gz) (189M).
+It can be downloaded directly [here](https://drive.google.com/file/d/1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv/view?usp=sharing) (189M).
 
 
 ```sh
@@ -93,7 +93,7 @@ exists x.(_this(x) & exists z1.(_sentence(z1) & _test(z1) & (x = z1)))
 
 In accordance with many other reported results, depccg obtains the improved performance by using contextualized word embeddings ([ELMo](https://allennlp.org/elmo); Peters et al., 2018).
 
-The ELMo model replaces affix embeddings in (Yoshikawa et al., 2017) with ELMo, resulting in 1124 dimensional input embeddings (ELMo + GloVe). It is trained on CCGbank and the [tri-training](#training-model) silver dataset.
+The ELMo model replaces affix embeddings in (Yoshikawa et al., 2017) with ELMo, resulting in 1124 dimensional input embeddings (ELMo + GloVe). It is trained on CCGbank and the [tri-training](https://drive.google.com/file/d/1rCJyb98AcNx5eBuC18-koCWJFfU4OV06/view?usp=sharing) silver dataset.
 
 ||Unlabeled F1|Labeled F1|
 |:-|:-|:-|
@@ -102,7 +102,7 @@ The ELMo model replaces affix embeddings in (Yoshikawa et al., 2017) with ELMo, 
 
 
 Please download the model from the following link.
-* [English ELMo model](https://cl.naist.jp/~masashi-y/resources/depccg/lstm_parser_elmo_finetune.tar.gz) (649M)
+* [English ELMo model](https://drive.google.com/file/d/1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr/view?usp=sharing) (649M)
 
 To use the model, install `allennlp`:
 
@@ -124,7 +124,7 @@ The best performing model is available by:
 ➜ depccg_ja download
 ```
 
-It can be downloaded directly [here](http://cl.naist.jp/~masashi-y/resources/depccg/ja_hf_ccgbank.tar.gz) (56M).
+It can be downloaded directly [here](https://drive.google.com/file/d/1bblQ6FYugXtgNNKnbCYgNfnQRkBATSY3/view?usp=sharing) (56M).
 
 The Japanese parser depends on [Janome](https://github.com/mocobeta/janome) for the tokenization. Please install it by:
 ```sh

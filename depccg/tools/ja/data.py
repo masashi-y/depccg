@@ -188,26 +188,26 @@ if __name__ == '__main__':
 
     # Creating training data
     parser.add_argument('PATH',
-            type=Path,
-            help='path to conll data file')
+                        type=Path,
+                        help='path to conll data file')
     parser.add_argument('OUT',
-            type=Path,
-            help='output directory path')
+                        type=Path,
+                        help='output directory path')
     parser.add_argument('--cat-freq-cut',
-            type=int,
-            default=10,
-            help='only allow categories which appear >= freq-cut')
+                        type=int,
+                        default=10,
+                        help='only allow categories which appear >= freq-cut')
     parser.add_argument('--word-freq-cut',
-            type=int,
-            default=5,
-            help='only allow words which appear >= freq-cut')
+                        type=int,
+                        default=5,
+                        help='only allow words which appear >= freq-cut')
     parser.add_argument('--char-freq-cut',
-            type=int,
-            default=5,
-            help='only allow characters which appear >= freq-cut')
+                        type=int,
+                        default=5,
+                        help='only allow characters which appear >= freq-cut')
     parser.add_argument('--mode',
-            choices=['train', 'test'],
-            default='train')
+                        choices=['train', 'test'],
+                        default='train')
 
     args = parser.parse_args()
     if args.mode == 'train':
