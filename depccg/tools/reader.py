@@ -62,6 +62,17 @@ def read_xml(filename, lang='en'):
 def read_jigg_xml(filename, lang='en'):
     unknown_op = unknown_combinator()  # TODO
 
+    # TODO
+    def try_get_surface(token):
+        if 'word' in token:
+            return token.word
+        elif 'surf' in token:
+            return token.surf
+        else:
+            raise RuntimeError(
+                'the attribute for the token\'s surface form is unknown')
+
+
     def parse(tree, tokens):
         def rec(node):
             attrib = node.attrib
@@ -77,7 +88,7 @@ def read_jigg_xml(filename, lang='en'):
                         cat, True, left, right, unknown_op, lang)
             else:
                 cat = Category.parse(attrib['category'])
-                word = tokens[attrib['terminal']].word
+                word = try_get_surface(tokens[attrib['terminal']])
                 position = int(attrib['begin'])
                 return Tree.make_terminal(word, cat, position, lang)
 
