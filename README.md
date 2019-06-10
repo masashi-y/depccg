@@ -1,4 +1,8 @@
 # depccg v1
+
+UPDATE 2019/6/7  
+_The datasets and codes for my ACL2019 paper ([Automatic Generation of High Quality CCGbanks for Parser Domain Adaptation](https://arxiv.org/abs/1906.01834)) are available at the following repo!_: https://github.com/masashi-y/ud2ccg
+
 Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](https://arxiv.org/abs/1704.06936)
 
 ### Requirements
