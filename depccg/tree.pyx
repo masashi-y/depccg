@@ -5,7 +5,7 @@ from libcpp.memory cimport shared_ptr, make_shared
 from .cat cimport Cat, Category
 from .combinator import unknown_combinator
 from lxml import etree
-from .token import Token
+from .tokens import Token
 from depccg.utils import denormalize, normalize
 
 

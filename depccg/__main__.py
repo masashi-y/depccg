@@ -7,7 +7,7 @@ from lxml import etree
 
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import print_
-from depccg.token import Token, english_annotator, japanese_annotator, annotate_XX
+from depccg.tokens import Token, english_annotator, japanese_annotator, annotate_XX
 from .download import download, load_model_directory, SEMANTIC_TEMPLATES, CONFIGS
 from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules

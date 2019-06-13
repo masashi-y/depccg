@@ -4,7 +4,7 @@ import re
 from depccg.combinator import ja_default_binary_rules, unary_rule
 from depccg.cat import Category
 from depccg.tree import Tree
-from depccg.token import Token
+from depccg.tokens import Token
 
 
 combinators = {sign: rule for rule, sign in zip(

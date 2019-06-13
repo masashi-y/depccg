@@ -2,7 +2,7 @@
 from ..tree import Tree
 from ..cat import Category
 from ..combinator import unknown_combinator
-from ..token import Token
+from ..tokens import Token
 from lxml import etree
 import logging
 
