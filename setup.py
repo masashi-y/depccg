@@ -133,9 +133,10 @@ else:
 
     setup(
         name="depccg",
-        version="1.0.3",  # NOQA
+        version="1.0.7",  # NOQA
         description='A parser for natural language based on combinatory categorial grammar',
         long_description=long_description,
+        long_description_content_type='text/markdown',
         author='Masashi Yoshikawa',
         author_email='yoshikawa.masashi.yh8@is.naist.jp',
         url='https://github.com/masashi-y/depccg',

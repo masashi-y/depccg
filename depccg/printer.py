@@ -4,6 +4,7 @@ import re
 import sys
 import logging
 import json
+import html
 from lxml import etree
 
 from .tree import Tree
@@ -86,16 +87,17 @@ def mathml_subtree(tree, bgcolor=None):
     if not tree.is_leaf:
         children_str = ''.join(map(mathml_subtree, tree.children))
         return MATHML_SUBTREE_NONTERMINAL.format(
-            children_str, cat_str, tree.op_string, bgcolor)
+            children_str, cat_str, html.escape(tree.op_string), bgcolor)
     else:
-        return MATHML_SUBTREE_TERMINAL.format(
-            tree.word, cat_str)
+        return MATHML_SUBTREE_TERMINAL.format(html.escape(tree.word), cat_str)
 
 
 def mathml_cat(cat):
     cats_feats = re.findall(r'([\w\\/()]+)(\[.+?\])*', cat)
     mathml_str = ''
     for cat, feat in cats_feats:
+        cat = html.escape(cat)
+        feat = html.escape(feat)
         cat_mathml = f'''\
 <mi mathvariant='italic'
   mathsize='1.0' mathcolor='Red'>{cat}</mi>'''
