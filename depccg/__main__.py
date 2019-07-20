@@ -47,7 +47,7 @@ def main(args):
     if args.disfluency:
         assert args.lang == 'en', f'not supported disfluency detection in language: {args.lang}'
         binary_rules.append(headfirst_combinator(remove_disfluency()))
-         
+
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
 
@@ -79,43 +79,62 @@ def main(args):
 
     fin = sys.stdin if args.input is None else open(args.input)
 
-    if args.input_format == 'POSandNERtagged':
-        tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
-        doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
-        res = parser.parse_doc(doc,
-                               probs=probs,
-                               tag_list=tag_list,
-                               batchsize=args.batchsize)
-    elif args.input_format == 'json':
-        doc = [json.loads(line) for line in fin]
-        tagged_doc = annotate_fun(
-            [[word for word in sent['words'].split(' ')] for sent in doc])
-        res = parser.parse_json(doc)
-    elif args.input_format == 'partial':
-        doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
-        tagged_doc = annotate_fun(doc)
-        res = parser.parse_doc(doc,
-                               probs=probs,
-                               tag_list=tag_list,
-                               batchsize=args.batchsize,
-                               constraints=constraints)
+    if args.input is not None:
+        input_type = open(args.input)
+    elif not sys.stdin.isatty():
+        input_type = sys.stdin
     else:
-        doc = [l.strip() for l in fin]
-        doc = [sentence for sentence in doc if len(sentence) > 0]
-        tagged_doc = annotate_fun([[word for word in sent.split(' ')] for sent in doc],
-                                  tokenize=args.tokenize)
-        if args.tokenize:
-            tagged_doc, doc = tagged_doc
-        res = parser.parse_doc(doc,
-                               probs=probs,
-                               tag_list=tag_list,
-                               batchsize=args.batchsize)
+        # reading from keyboard
+        input_type = None
+        sys.stdout.flush()
+        sys.stderr.flush()
+        logging.getLogger().setLevel(logging.CRITICAL)
 
-        semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
-        print_(res, tagged_doc,
-               format=args.format,
-               lang=args.lang,
-               semantic_templates=semantic_templates)
+    while True:
+        fin = [input()] if input_type is None else input_type
+
+        if args.input_format == 'POSandNERtagged':
+            tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
+            doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
+            res = parser.parse_doc(doc,
+                                   probs=probs,
+                                   tag_list=tag_list,
+                                   batchsize=args.batchsize)
+        elif args.input_format == 'json':
+            doc = [json.loads(line) for line in fin]
+            tagged_doc = annotate_fun(
+                [[word for word in sent['words'].split(' ')] for sent in doc])
+            res = parser.parse_json(doc)
+        elif args.input_format == 'partial':
+            doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
+            tagged_doc = annotate_fun(doc)
+            res = parser.parse_doc(doc,
+                                   probs=probs,
+                                   tag_list=tag_list,
+                                   batchsize=args.batchsize,
+                                   constraints=constraints)
+        else:
+            doc = [l.strip() for l in fin]
+            doc = [sentence for sentence in doc if len(sentence) > 0]
+            tagged_doc = annotate_fun([[word for word in sent.split(' ')] for sent in doc],
+                                      tokenize=args.tokenize)
+            if args.tokenize:
+                tagged_doc, doc = tagged_doc
+            res = parser.parse_doc(doc,
+                                   probs=probs,
+                                   tag_list=tag_list,
+                                   batchsize=args.batchsize)
+
+            semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
+            print_(res, tagged_doc,
+                   format=args.format,
+                   lang=args.lang,
+                   semantic_templates=semantic_templates)
+        
+        if input_type is None:
+            sys.stdout.flush()
+        else:
+            break
 
 
 def add_common_parser_arguments(parser):
@@ -230,8 +249,8 @@ if __name__ == '__main__':
     japanese_parser.add_argument('-f',
                                  '--format',
                                  default='ja',
-                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml',
-                                          'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
+                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml', 'ptb',
+                                          'ccg2lambda', 'jigg_xml_ccg2lambda', 'json', 'prolog'],
                                  help='output format')
     japanese_parser.add_argument('--pre-tokenized',
                                  dest='tokenize',

@@ -348,7 +348,8 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         ApplyUnaryRules apply_unary_rules,
         std::vector<PartialConstraints>& constraints,
         unsigned max_length,
-        unsigned max_steps) {
+        unsigned max_steps,
+        bool silent) {
     unsigned total_size = sents.size();
     unsigned block_size = std::max(1, (int)(total_size / 10));
     unsigned nprocessed = 0;
@@ -374,7 +375,7 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
                     constraints[i],
                     max_length,
                     max_steps);
-        if ( ( nprocessed++ % block_size ) == block_size - 1 )
+        if ( ! silent && ( nprocessed++ % block_size ) == block_size - 1 )
             std::cerr << nprocessed << ".. " << std::flush;
     }
     std::cerr << std::endl;

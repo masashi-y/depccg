@@ -364,6 +364,7 @@ cdef class EnglishCCGParser:
         cdef ApplyUnaryRules apply_unary_rules_ = self.apply_unary_rules_
         cdef unsigned max_length_ = self.max_length
         cdef unsigned max_steps_ = self.max_steps
+        cdef silent_ = not logger.isEnabledFor(logging.INFO)
 
         cdef vector[ApplyBinaryRules] apply_binary_rules = \
                 vector[ApplyBinaryRules](doc_size, default_apply_binary_rules)
@@ -412,24 +413,25 @@ cdef class EnglishCCGParser:
 
         logger.info('start A* parsing')
         cdef vector[vector[ScoredNode]] cres = ParseSentences(
-                   csents,
-                   tags,
-                   deps,
-                   category_dict_,
-                   tag_list_,
-                   unary_penalty_,
-                   beta_,
-                   use_beta,
-                   pruning_size_,
-                   nbest_,
-                   possible_root_cats_,
-                   unary_rules_,
-                   seen_rules_,
-                   apply_binary_rules,
-                   apply_unary_rules_,
-                   c_constraints,
-                   max_length_,
-                   max_steps_)
+                csents,
+                tags,
+                deps,
+                category_dict_,
+                tag_list_,
+                unary_penalty_,
+                beta_,
+                use_beta,
+                pruning_size_,
+                nbest_,
+                possible_root_cats_,
+                unary_rules_,
+                seen_rules_,
+                apply_binary_rules,
+                apply_unary_rules_,
+                c_constraints,
+                max_length_,
+                max_steps_,
+                silent_)
         logger.info('done A* parsing')
         cdef list tmp, res = []
         cdef Tree parse

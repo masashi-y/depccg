@@ -63,7 +63,7 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             const vector[Cat]& tag_list,
             float unary_penalty,
             float beta,
-            bint use_beta,
+            bool use_beta,
             unsigned pruning_size,
             unsigned nbest,
             const unordered_set[Cat]& possible_root_cats,
@@ -73,4 +73,5 @@ cdef extern from "depccg.h" namespace "myccg" nogil:
             ApplyUnaryRules apply_unary_rules,
             vector[PartialConstraints]& constraints,
             unsigned max_length,
-            unsigned max_steps)
+            unsigned max_steps,
+            bool silent)

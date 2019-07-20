@@ -6,6 +6,7 @@ import logging
 import json
 import html
 from lxml import etree
+from io import StringIO
 
 from .tree import Tree
 from .download import SEMANTIC_TEMPLATES
@@ -26,18 +27,95 @@ def to_xml(nbest_trees, tagged_doc):
     return candc_node
 
 
-def to_prolog(nbest_trees, tagged_doc):
-    out = (':- op(601, xfx, (/)).\n'
-           ':- op(601, xfx, (\)).\n'
-           ':- multifile ccg/2, id/2.\n'
-           ':- discontiguous ccg/2, id/2.\n\n')
+prolog_header = (
+    ':- op(601, xfx, (/)).\n'
+    ':- op(601, xfx, (\\)).\n'
+    ':- multifile ccg/2, id/2.\n'
+    ':- discontiguous ccg/2, id/2.\n'
+)
+
+
+def to_prolog_en(nbest_trees, tagged_doc):
+    with StringIO() as output:
+        print(prolog_header, file=output)
+        for i, (nbest, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+            for token in tokens:
+                if "'" in token.lemma:
+                    token.lemma = token.lemma.replace("'", "\\'")
+            for t, _ in nbest:
+                print(t.prolog().format(i, *tokens), file=output)
+        result = output.getvalue()
+    return result
+
+
+def to_prolog_ja(nbest_trees, tagged_doc):
+    ja_combinators = {
+        'SSEQ': 'sseq',
+        '>': 'fa',
+        '<': 'ba',
+        '>B': 'fc',
+        '<B1': 'bc1',
+        '<B2': 'bc2',
+        '<B3': 'bc3',
+        '<B4': 'bc4',
+        '>Bx1': 'fx1',
+        '>Bx2': 'fx2',
+        '>Bx3': 'fx3',
+        "ADNext": 'adnext',
+        "ADNint": 'adnint',
+        "ADV0": 'adv0',
+        "ADV1": 'adv1',
+    }
+
+    def traverse_cat(node):
+        if node.is_functor:
+            left = traverse_cat(node.left)
+            right = traverse_cat(node.right)
+            return f'({left}{node.slash}{right})'
+        else:
+            feature = node.features
+            base = node.base.lower()
+            if 'case' not in feature:
+                return base
+            else:
+                return f'{base}:{feature["case"]}'
+
+    def normalize_text(text):
+        return text.replace("'", "\\'")
+
+    def traverse_tree(node, tokens, depth=1):
+        whitespace = ' ' * depth
+        if node.is_leaf:
+            cat = traverse_cat(node.cat)
+            token = tokens.pop(0)
+            surf = normalize_text(token.get('surf', 'XX'))
+            base = normalize_text(token.get('base', 'XX'))
+            pos = '/'.join(normalize_text(token.get(key, 'XX'))
+                           for key in ('pos', 'pos1', 'pos2', 'pos3'))
+            infl_form = normalize_text(token.get('inflectionForm', 'XX'))
+            infl_type = normalize_text(token.get('inflectionType', 'XX'))
+            output.write(
+                f"\n{whitespace}t({cat}, '{surf}', '{base}', '{pos}', '{infl_form}', '{infl_type}')")
+        else:
+            cat = traverse_cat(node.cat)
+            rule = ja_combinators[node.op_string]
+            output.write(f"\n{whitespace}{rule}({cat}")
+            for i, child in enumerate(node.children):
+                if i < len(node.children):
+                    output.write(',')
+                traverse_tree(child, tokens, depth=depth+1)
+            output.write(')')
+
+    output = StringIO()
+    print(prolog_header, file=output)
     for i, (nbest, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
-        for token in tokens:
-            if "'" in token.lemma:
-                token.lemma = token.lemma.replace("'", "\\'")
-        for t, _ in nbest:
-            out += t.prolog().format(i, *tokens) + '\n'
-    return out
+        for tree, _ in nbest:
+            output.write(f'ccg({i},')
+            traverse_tree(tree, tokens)
+            output.write(').\n\n')
+    result = output.getvalue()
+    output.close()
+    return result
 
 
 MATHML_SUBTREE_NONTERMINAL = '''\
@@ -195,67 +273,72 @@ def to_jigg_xml(trees, tagged_doc):
     return root_node
 
 
-def to_string(nbest_trees: List[List[Tuple[float, Tree]]],
-              tagged_doc: Optional[List[List['Token']]],
-              lang: str = 'en',
-              format: str = 'auto',
-              semantic_templates: Optional[str] = None) -> str:
-    if format == 'xml':
-        return etree.tostring(
-            to_xml(nbest_trees, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
-    elif format == 'jigg_xml':
-        return etree.tostring(
-            to_jigg_xml(nbest_trees, tagged_doc), encoding='utf-8', pretty_print=True).decode('utf-8')
-    elif format == 'prolog':
-        return to_prolog(nbest_trees, tagged_doc)
-    elif format == 'html':
-        return to_mathml(nbest_trees)
-    elif format == 'jigg_xml_ccg2lambda':
-        jigg_xml = to_jigg_xml(nbest_trees, tagged_doc)
-        templates = semantic_templates or SEMANTIC_TEMPLATES.get(lang)
-        assert templates, f'--semantic-templates must be spcified for language: {lang}'
-        result_xml_str, _ = ccg2lambda.parse(jigg_xml, str(templates))
-        return result_xml_str.decode('utf-8')
-    elif format == 'ccg2lambda':
-        jigg_xml = to_jigg_xml(nbest_trees, tagged_doc)
-        templates = semantic_templates or SEMANTIC_TEMPLATES.get(lang)
-        assert templates, f'--semantic-templates must be spcified for language: {lang}'
-        _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates))
-        return '\n'.join(f'ID={i} log probability={prob:.4e}\n{formula}'
-            for i, (parsed, formulas) in enumerate(zip(nbest_trees, formulas_list))
-                for (tree, prob), formula in zip(parsed, formulas))
-    elif format == 'conll':
-        return '\n'.join(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}'
-            for i, parsed in enumerate(nbest_trees)
-                for tree, prob in parsed)
-    elif format == 'json':
-        output = []
-        for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
-            for tree, prob in parsed:
-                res = tree.json(tokens=tokens)
-                res['id'] = i
-                res['prob'] = prob
-                output.append(json.dumps(res))
-        return '\n'.join(output)
-    elif format == 'auto':
-        return '\n'.join(f'ID={i}, log probability={prob}\n{tree.auto(tokens=tokens)}'
-            for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1)
-                for tree, prob in parsed)
-    else:  # deriv, ja, ptb
-        return '\n'.join(f'ID={i}, log probability={prob}\n{getattr(tree, format)()}'
-            for i, parsed in enumerate(nbest_trees, 1)
-                for tree, prob in parsed)
-
-
 def print_(nbest_trees: List[List[Tuple[float, Tree]]],
            tagged_doc: Optional[List[List['Token']]],
            lang: str = 'en',
            format: str = 'auto',
            semantic_templates: Optional[str] = None,
            file = sys.stdout) -> str:
-    print(to_string(nbest_trees,
-                    tagged_doc,
-                    lang=lang,
-                    format=format,
-                    semantic_templates=semantic_templates),
-          file=file)
+    def process_xml(xml_node):
+        return etree.tostring(xml_node, encoding='utf-8', pretty_print=True).decode('utf-8')
+
+    if format == 'xml':
+        print(process_xml(to_xml(nbest_trees, tagged_doc)), file=file)
+    elif format == 'jigg_xml':
+        print(process_xml(to_jigg_xml(nbest_trees, tagged_doc)), file=file)
+    elif format == 'prolog':
+        if lang == 'en':
+            print(to_prolog_en(nbest_trees, tagged_doc), end='', file=file)
+        elif lang == 'ja':
+            print(to_prolog_ja(nbest_trees, tagged_doc), end='', file=file)
+    elif format == 'html':
+        print(to_mathml(nbest_trees), file=file)
+    elif format == 'jigg_xml_ccg2lambda':
+        jigg_xml = to_jigg_xml(nbest_trees, tagged_doc)
+        templates = semantic_templates or SEMANTIC_TEMPLATES.get(lang)
+        assert templates, f'--semantic-templates must be spcified for language: {lang}'
+        result_xml_str, _ = ccg2lambda.parse(jigg_xml, str(templates))
+        print(result_xml_str.decode('utf-8'), file=file)
+    elif format == 'ccg2lambda':
+        jigg_xml = to_jigg_xml(nbest_trees, tagged_doc)
+        templates = semantic_templates or SEMANTIC_TEMPLATES.get(lang)
+        assert templates, f'--semantic-templates must be spcified for language: {lang}'
+        _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates))
+        for i, (parsed, formulas) in enumerate(zip(nbest_trees, formulas_list)):
+            for (tree, prob), formula in zip(parsed, formulas):
+                print(f'ID={i} log probability={prob:.4e}\n{formula}', file=file)
+    elif format == 'conll':
+        for i, parsed in enumerate(nbest_trees):
+            for tree, prob in parsed:
+                print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}', file=file)
+    elif format == 'json':
+        for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+            for tree, prob in parsed:
+                res = tree.json(tokens=tokens)
+                res['id'] = i
+                res['prob'] = prob
+                print(json.dumps(res), file=file)
+    elif format == 'auto':
+        for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+            for tree, prob in parsed:
+                print(f'ID={i}, log probability={prob}\n{tree.auto(tokens=tokens)}', file=file)
+    else:  # deriv, ja, ptb
+        for i, parsed in enumerate(nbest_trees, 1):
+            for tree, prob in parsed:
+                print(f'ID={i}, log probability={prob}\n{getattr(tree, format)()}', file=file)
+
+
+def to_string(nbest_trees: List[List[Tuple[float, Tree]]],
+              tagged_doc: Optional[List[List['Token']]],
+              lang: str = 'en',
+              format: str = 'auto',
+              semantic_templates: Optional[str] = None) -> str:
+    with StringIO() as output:
+        print_(nbest_trees,
+            tagged_doc,
+            lang=lang,
+            format=format,
+            semantic_templates=semantic_templates,
+            file=output)
+        result = output.getvalue()
+    return result

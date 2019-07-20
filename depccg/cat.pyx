@@ -31,10 +31,10 @@ cdef class Category:
         return deref(self.cat_) == deref(other.cat_)
 
     def __eq__(self, other):
-       if isinstance(other, Category):
-           return self.equals_to(other)
-       else:
-           return False
+        if isinstance(other, Category):
+            return self.equals_to(other)
+        else:
+            return False
 
     def __hash__(self):
         return self.cat_.GetId()

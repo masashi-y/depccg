@@ -70,15 +70,15 @@ struct PartialConstraint
     }
 
     bool Violates(Cat cat0, unsigned start_of_span0, unsigned span_length0,
-           const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules) const {
+            const std::unordered_map<Cat, std::unordered_set<Cat>>& unary_rules) const {
         if (cat && start_of_span == start_of_span0 && span_length == span_length0) {
             if (cat->Matches(cat0))
                 return false;
             if (unary_rules.count(cat0) > 0) {
-               for (auto&& unary: unary_rules.at(cat0)) {
-                   if (unary->Matches(cat))
-                       return false;
-               }
+                for (auto&& unary: unary_rules.at(cat0)) {
+                    if (unary->Matches(cat))
+                        return false;
+                }
             }
             return true;
         }
@@ -242,7 +242,8 @@ std::vector<std::vector<ScoredNode>> ParseSentences(
         ApplyUnaryRules apply_unary_rules,
         std::vector<PartialConstraints>& constraints,
         unsigned max_length,
-        unsigned max_steps);
+        unsigned max_steps,
+        bool silent);
 
 } // namespace myccg
 #endif
