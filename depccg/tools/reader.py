@@ -74,7 +74,9 @@ def read_jigg_xml(filename, lang='en'):
 
 
     def parse(tree, tokens):
+        counter = 0
         def rec(node):
+            nonlocal counter
             attrib = node.attrib
             if 'terminal' not in attrib:
                 cat = Category.parse(attrib['category'])
@@ -89,7 +91,8 @@ def read_jigg_xml(filename, lang='en'):
             else:
                 cat = Category.parse(attrib['category'])
                 word = try_get_surface(tokens[attrib['terminal']])
-                position = int(attrib['begin'])
+                position = counter
+                counter += 1
                 return Tree.make_terminal(word, cat, position, lang)
 
         spans = {span.attrib['id']: span for span in tree.xpath('./span')}

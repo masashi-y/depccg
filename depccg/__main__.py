@@ -125,11 +125,11 @@ def main(args):
                                    tag_list=tag_list,
                                    batchsize=args.batchsize)
 
-            semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
-            print_(res, tagged_doc,
-                   format=args.format,
-                   lang=args.lang,
-                   semantic_templates=semantic_templates)
+        semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
+        print_(res, tagged_doc,
+                format=args.format,
+                lang=args.lang,
+                semantic_templates=semantic_templates)
         
         if input_type is None:
             sys.stdout.flush()

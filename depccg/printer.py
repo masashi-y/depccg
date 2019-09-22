@@ -78,7 +78,8 @@ def to_prolog_ja(nbest_trees, tagged_doc):
             if 'case' not in feature:
                 return base
             else:
-                return f'{base}:{feature["case"]}'
+                feature_case = feature["case"].lower()
+                return f'{base}:{feature_case}'
 
     def normalize_text(text):
         return text.replace("'", "\\'")
@@ -88,10 +89,13 @@ def to_prolog_ja(nbest_trees, tagged_doc):
         if node.is_leaf:
             cat = traverse_cat(node.cat)
             token = tokens.pop(0)
-            surf = normalize_text(token.get('surf', 'XX'))
+            surf = normalize_text(token.get('surf', node.word))
             base = normalize_text(token.get('base', 'XX'))
-            pos = '/'.join(normalize_text(token.get(key, 'XX'))
-                           for key in ('pos', 'pos1', 'pos2', 'pos3'))
+            tags = [token.get(key, 'XX') for key in ('pos', 'pos1', 'pos2', 'pos3')]
+            if all(tag == 'XX' for tag in tags):
+                pos = 'XX'
+            else:
+                pos = '/'.join(normalize_text(tag) for tag in tags)
             infl_form = normalize_text(token.get('inflectionForm', 'XX'))
             infl_type = normalize_text(token.get('inflectionType', 'XX'))
             output.write(

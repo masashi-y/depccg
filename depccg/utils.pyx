@@ -213,6 +213,8 @@ def read_partial_tree(string):
             if len(items) == 1:
                 words.append(items[0])
             elif len(items) == 2:
+                assert len(cat) > 0 and len(word) > 0, \
+                    'failed to parse partially annotated sentence.'
                 cat, word = items
                 words.append(word)
                 spans.append((Category.parse(cat), counter))
