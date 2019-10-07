@@ -64,7 +64,9 @@ public:
     bool Matches(Feat other) const;
     bool ContainsWildcard() const { return value_ == "X"; }
     std::string SubstituteWildcard(const std::string& string) const;
-    bool ContainsKeyValue(const std::string& key, const std::string& value) const NO_IMPLEMENTATION
+    bool ContainsKeyValue(const std::string& key, const std::string& value) const {
+        return key == value_ && (value == "" || value == "true");
+    }
     Feat ToMultiValue() const;
     std::unordered_map<std::string, std::string> Values() const {
         std::unordered_map<std::string, std::string> res;
