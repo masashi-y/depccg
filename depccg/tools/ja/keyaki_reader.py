@@ -43,7 +43,7 @@ class Functor(NamedTuple):
                 return str(cat)
             right = rec(cat.right if cat.slash == '\\' else cat.left)
             left = rec(cat.left if cat.slash == '\\' else cat.right)
-            return f'({right}{self.slash}{left})'
+            return f'({right}{cat.slash}{left})'
         return rec(self)[1:-1]
 
 
