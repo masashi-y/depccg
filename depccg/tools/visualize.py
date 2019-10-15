@@ -41,7 +41,7 @@ def to_mathml_separate_files(trees, directory_name='results'):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('PATH', help='path to either of *.auto, *.xml, *.jigg.xml')
+    parser.add_argument('PATH', help='path to either of *.auto, *.xml, *.jigg.xml, *.ptb')
     parser.add_argument('--mkdir', default=None, help='if specified, creates a directory')
     args = parser.parse_args()
 

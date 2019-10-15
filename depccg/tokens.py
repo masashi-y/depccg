@@ -136,8 +136,9 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
 def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=10000):
     try:
         import spacy
+        from spacy.tokens import Doc
     except ImportError:
-        logger.error('failed to import janome. please install it by "pip install janome".')
+        logger.error('failed to import spacy. please install it by "pip install spacy".')
         exit(1)
 
     nlp = spacy.load('en', disable=['parser'])
@@ -147,7 +148,7 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
         docs = [nlp.tokenizer(' '.join(sentence)) for sentence in sentences]
         raw_sentences = [[str(token) for token in doc] for doc in docs]
     else:
-        docs = [nlp.tokenizer.tokens_from_list(sentence) for sentence in sentences]
+        docs = [Doc(nlp.vocab, sentence) for sentence in sentences]
     for name, proc in nlp.pipeline:
         docs = proc.pipe(docs,
                          n_threads=n_threads,
