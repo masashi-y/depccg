@@ -67,7 +67,7 @@ def read_xml(filename, lang='en'):
                 return Tree.make_terminal(word, cat, position, lang)
         tokens = []
         tree = rec(tree)
-        return tree, tokens
+        return tokens, tree
 
     trees = etree.parse(filename).getroot().xpath('ccg')
     for tree in trees:
