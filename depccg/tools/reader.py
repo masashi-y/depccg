@@ -1,16 +1,26 @@
 
 from typing import Tuple, List
+from collections import defaultdict
 from ..tree import Tree
 from ..cat import Category
-from ..combinator import unknown_combinator
+from ..combinator import (guess_combinator_by_triplet,
+                          ja_default_binary_rules,
+                          en_default_binary_rules,
+                          unknown_combinator)
 from ..tokens import Token
 from lxml import etree
 import logging
 
 logger = logging.getLogger(__name__)
 
-
-UNKNOWN_OP = unknown_combinator()  # TODO
+UNK_COMBINATOR = unknown_combinator()
+BINARY_RULES = defaultdict(
+    lambda: [UNK_COMBINATOR],
+    {
+        'en': en_default_binary_rules,
+        'ja': ja_default_binary_rules
+    }
+)
 
 
 def read_auto(filename, lang='en'):
@@ -26,6 +36,7 @@ def read_auto(filename, lang='en'):
 
 
 def read_xml(filename, lang='en'):
+    binary_rules = BINARY_RULES[lang]
     def parse(tree):
         def rec(node):
             attrib = node.attrib
@@ -37,8 +48,11 @@ def read_xml(filename, lang='en'):
                 else:
                     assert len(children) == 2
                     left, right = children
+                    combinator = guess_combinator_by_triplet(
+                                    binary_rules, cat, left.cat, right.cat)
+                    combinator = combinator or UNK_COMBINATOR
                     return Tree.make_binary(
-                        cat, True, left, right, UNKNOWN_OP, lang)
+                        cat, True, left, right, combinator, lang)
             else:
                 assert node.tag == 'lf'
                 cat = Category.parse(attrib['cat'])
@@ -62,6 +76,7 @@ def read_xml(filename, lang='en'):
 
 
 def read_jigg_xml(filename, lang='en'):
+    binary_rules = BINARY_RULES[lang]
     # TODO
     def try_get_surface(token):
         if 'word' in token:
@@ -85,8 +100,11 @@ def read_jigg_xml(filename, lang='en'):
                 else:
                     assert len(children) == 2
                     left, right = children
+                    combinator = guess_combinator_by_triplet(
+                                    binary_rules, cat, left.cat, right.cat)
+                    combinator = combinator or UNK_COMBINATOR
                     return Tree.make_binary(
-                        cat, True, left, right, UNKNOWN_OP, lang)
+                        cat, True, left, right, combinator, lang)
             else:
                 cat = Category.parse(attrib['category'])
                 word = try_get_surface(tokens[attrib['terminal']])
@@ -115,6 +133,7 @@ def read_jigg_xml(filename, lang='en'):
 
 
 def parse_ptb(tree_string: str, lang='en') -> Tuple[Tree, List[Token]]:
+    binary_rules = BINARY_RULES[lang]
     assert tree_string.startswith('(ROOT ')
     buf = list(reversed(tree_string[6:-1].split(' ')))
     stack = []
@@ -146,7 +165,10 @@ def parse_ptb(tree_string: str, lang='en') -> Tuple[Tree, List[Token]]:
                 tree = Tree.make_unary(category, children[0], lang)
             elif len(children) == 2:
                 right, left = children
-                tree = Tree.make_binary(category, True, left, right, UNKNOWN_OP, lang)
+                combinator = guess_combinator_by_triplet(
+                                binary_rules, category, left.cat, right.cat)
+                combinator = combinator or UNK_COMBINATOR
+                tree = Tree.make_binary(category, True, left, right, combinator, lang)
             else:
                 assert False
         stack.append(tree)

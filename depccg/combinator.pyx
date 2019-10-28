@@ -238,3 +238,11 @@ ja_default_binary_rules = [
     headfinal_combinator(ja_generalized_forward_composition1('/', '\\', '\\', '>Bx2')),
     headfinal_combinator(ja_generalized_forward_composition2('/', '\\', '\\', '>Bx3')),
 ]
+
+
+def guess_combinator_by_triplet(binary_rules, parent, child1, child2):
+    for rule in binary_rules:
+        guess = rule.apply(child1, child2)
+        if guess and guess.matches(parent):
+            return rule
+    return None
