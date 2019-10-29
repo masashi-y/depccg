@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-f',
                         '--format',
                         default='xml',
-                        choices=['xml''prolog', 'jigg_xml', 'jigg_xml_ccg2lambda', 'json'],
+                        choices=['xml', 'prolog', 'jigg_xml', 'jigg_xml_ccg2lambda', 'json'],
                         help='output format')
     parser.add_argument('--semantic-templates',
                         help='semantic templates used in "ccg2lambda" format output')

@@ -308,6 +308,28 @@ cdef class Tree:
             poss = ['POS' for _ in range(len(self))]
         return f'###\n{rec(self)}\n'
 
+    def auto_extended(self, tokens=None):
+        def rec(node):
+            if node.is_leaf:
+                cat = node.cat
+                word = denormalize(node.word)
+                token = tokens.pop(0)
+                lemma = token.get('lemma', 'XX')
+                pos = token.get('pos', 'XX')
+                entity = token.get('entity', 'XX')
+                chunk = token.get('chunk', 'XX')
+                return f'(<L {cat} {word} {lemma} {pos} {entity} {chunk} {cat}>)'
+            else:
+                cat = node.cat
+                children = ' '.join(rec(child) for child in node.children)
+                num_children = len(node.children)
+                head_is_left = 0 if node.head_is_left else 1
+                rule = node.op_string
+                return f'(<T {cat} {rule} {head_is_left} {num_children}> {children} )'
+        if tokens is None:
+            tokens = [Token.from_word(word) for word in self.word.split(' ')]
+        return rec(self)
+
     def deriv(self):
         cdef string res = Derivation(self.node_, not self.suppress_feat).Get()
         return res.decode("utf-8")

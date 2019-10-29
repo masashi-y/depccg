@@ -322,10 +322,11 @@ def print_(nbest_trees: List[List[Tuple[float, Tree]]],
                 res['id'] = i
                 res['prob'] = prob
                 print(json.dumps(res), file=file)
-    elif format == 'auto':
+    elif format in ('auto', 'auto_extended'):
         for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
             for tree, prob in parsed:
-                print(f'ID={i}, log probability={prob}\n{tree.auto(tokens=tokens)}', file=file)
+                tree_string = getattr(tree, format)(tokens=tokens)
+                print(f'ID={i}, log probability={prob}\n{tree_string}', file=file)
     else:  # deriv, ja, ptb
         for i, parsed in enumerate(nbest_trees, 1):
             for tree, prob in parsed:

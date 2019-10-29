@@ -228,8 +228,8 @@ if __name__ == '__main__':
     english_parser.add_argument('-f',
                                 '--format',
                                 default='auto',
-                                choices=['auto', 'deriv', 'xml', 'conll', 'html', 'prolog', 'jigg_xml',
-                                         'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
+                                choices=['auto', 'auto_extended', 'deriv', 'xml', 'conll', 'html', 'prolog',
+                                         'jigg_xml', 'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
                                 help='output format')
     english_parser.add_argument('--tokenize',
                                 action='store_true',
