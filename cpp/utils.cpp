@@ -1,6 +1,7 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
 #include "utils.h"
 
 namespace myccg {
@@ -8,7 +9,7 @@ namespace utils {
 
 const std::string DropBrackets(const std::string& in) {
     int length = in.size();
-    if (in[0] == '(' && in[length-1] == ')' &&
+    if (length && in[0] == '(' && in[length-1] == ')' &&
             FindClosingBracket(in, 0) == length - 1)
         return in.substr(1, length - 2);
     else
@@ -32,6 +33,8 @@ int FindClosingBracket(const std::string& in, int start) {
 int FindNonNestedChar(const std::string& haystack, const std::string& needles) {
     int open_brackets = 0;
     // for (unsigned i = 0; i < haystack.size(); i++) {
+    if (! haystack.size())
+        return -1;
     for (unsigned i = haystack.size()-1; 0 < i; i--) {
         // std::cout << haystack <<  i << std::endl;
         // std::cout << i << std::endl;

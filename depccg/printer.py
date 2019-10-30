@@ -312,9 +312,9 @@ def print_(nbest_trees: List[List[Tuple[float, Tree]]],
             for (tree, prob), formula in zip(parsed, formulas):
                 print(f'ID={i} log probability={prob:.4e}\n{formula}', file=file)
     elif format == 'conll':
-        for i, parsed in enumerate(nbest_trees):
+        for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc)):
             for tree, prob in parsed:
-                print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll()}', file=file)
+                print(f'# ID={i}\n# log probability={prob:.4e}\n{tree.conll(tokens=tokens)}', file=file)
     elif format == 'json':
         for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
             for tree, prob in parsed:
@@ -327,7 +327,11 @@ def print_(nbest_trees: List[List[Tuple[float, Tree]]],
             for tree, prob in parsed:
                 tree_string = getattr(tree, format)(tokens=tokens)
                 print(f'ID={i}, log probability={prob}\n{tree_string}', file=file)
-    else:  # deriv, ja, ptb
+    elif format == 'ja':
+        for i, (parsed, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+            for tree, prob in parsed:
+                print(f'ID={i}, log probability={prob}\n{tree.ja(tokens=tokens)}', file=file)
+    else:  # deriv, ptb
         for i, parsed in enumerate(nbest_trees, 1):
             for tree, prob in parsed:
                 print(f'ID={i}, log probability={prob}\n{getattr(tree, format)()}', file=file)

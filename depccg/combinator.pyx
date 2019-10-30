@@ -2,25 +2,23 @@
 
 cdef class Combinator:
     def __cinit__(self):
-        pass
-
-    @staticmethod
-    cdef Combinator from_ptr(Op op):
-        combinator = Combinator()
-        combinator.op_ = op
-        return combinator
+        self.op_ = NULL
 
     def __str__(self):
+        if not self.op_:
+            return ''
         return self.op_.ToStr().decode('utf-8')
 
     def __repr__(self):
+        if not self.op_:
+            return ''
         return self.op_.ToStr().decode('utf-8')
 
     cdef bool _can_apply(self, Category left, Category right):
         return self.op_.CanApply(left.cat_, right.cat_)
 
     def can_apply(self, left, right):
-        if isinstance(left, Category) and isinstance(right, Category):
+        if self.op_ and isinstance(left, Category) and isinstance(right, Category):
             return self._can_apply(left, right)
         else:
             return False
@@ -38,166 +36,224 @@ cdef class Combinator:
         return self.op_.HeadIsLeft(left.cat_, right.cat_)
 
     def head_is_left(self, left, right):
-        if isinstance(left, Category) and isinstance(right, Category):
+        if self.op_ and isinstance(left, Category) and isinstance(right, Category):
             return self._head_is_left(left, right)
         else:
             return False
 
 
-cpdef unary_rule():
-    return Combinator.from_ptr(<Op>new UnaryRule())
+cdef class UnaryRule(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CUnaryRule()
 
-cpdef conjunction():
-    return Combinator.from_ptr(<Op>new Conjunction())
 
-cpdef conjunction2():
-    return Combinator.from_ptr(<Op>new Conjunction2())
+cdef class Conjunction(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CConjunction()
 
-cpdef coordinate():
-    return Combinator.from_ptr(<Op>new Coordinate())
 
-cpdef comma_and_verb_phrase_to_adverb():
-    return Combinator.from_ptr(<Op>new CommaAndVerbPhraseToAdverb())
+cdef class Conjunction2(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CConjunction2()
 
-cpdef parenthetical_direct_speech():
-    return Combinator.from_ptr(<Op>new ParentheticalDirectSpeech())
 
-cpdef remove_punctuation(bool punct_is_left):
-    return Combinator.from_ptr(<Op>new RemovePunctuation(punct_is_left))
+cdef class Coordinate(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CCoordinate()
 
-cpdef remove_punctuation_left():
-    return Combinator.from_ptr(<Op>new RemovePunctuationLeft())
 
-cpdef forward_application():
-    return Combinator.from_ptr(<Op>new ForwardApplication())
+cdef class CommaAndVerbPhraseToAdverb(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CCommaAndVerbPhraseToAdverb()
 
-cpdef backward_application():
-    return Combinator.from_ptr(<Op>new BackwardApplication())
+
+cdef class ParentheticalDirectSpeech(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CParentheticalDirectSpeech()
+
+
+cdef class RemovePunctuation(Combinator):
+    def __cinit__(self, bool punct_is_left):
+        self.op_ = <Op>new CRemovePunctuation(punct_is_left)
+
+
+cdef class RemovePunctuationLeft(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CRemovePunctuationLeft()
+
+
+cdef class ForwardApplication(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CForwardApplication()
+
+
+cdef class BackwardApplication(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CBackwardApplication()
+
 
 def slash_check(slashes):
     for slash in slashes:
         if slash not in ['/', '\\']:
             raise RuntimeError(f'slashes must be either of "\\" or "/": [{", ".join(slashes)}]')
 
-cpdef forward_composition(str left, str right, str result):
-    slash_check([left, right, result])
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new ForwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0])))
 
-cpdef backward_composition(str left, str right, str result):
-    slash_check([left, right, result])
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new BackwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0])))
+cdef class ForwardComposition(Combinator):
+    def __cinit__(self, str left, str right, str result):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        self.op_ = <Op>new CForwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]))
 
-cpdef generalized_forward_composition(str left, str right, str result):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new GeneralizedForwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0])))
 
-cpdef generalized_backward_composition(str left, str right, str result):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new GeneralizedBackwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0])))
+cdef class BackwardComposition(Combinator):
+    def __cinit__(self, str left, str right, str result):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        self.op_ = <Op>new CBackwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]))
 
-cpdef headfirst_combinator(Combinator combinator):
-    return Combinator.from_ptr((<Op>new HeadFirstCombinator(combinator.op_)))
 
-cpdef headfinal_combinator(Combinator combinator):
-    return Combinator.from_ptr((<Op>new HeadFinalCombinator(combinator.op_)))
+cdef class GeneralizedForwardComposition(Combinator):
+    def __cinit__(self, str left, str right, str result):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        self.op_ = <Op>new CGeneralizedForwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]))
 
-cpdef en_forward_application():
-    return Combinator.from_ptr(<Op>new ENForwardApplication())
 
-cpdef en_backward_application():
-    return Combinator.from_ptr(<Op>new ENBackwardApplication())
+cdef class GeneralizedBackwardComposition(Combinator):
+    def __cinit__(self, str left, str right, str result):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        self.op_ = <Op>new CGeneralizedBackwardComposition(Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]))
 
-cpdef conjoin():
-    return Combinator.from_ptr(<Op>new Conjoin())
 
-cpdef ja_forward_application():
-    return Combinator.from_ptr(<Op>new JAForwardApplication())
+cdef class HeadfirstCombinator(Combinator):
+    def __cinit__(self, Combinator combinator):
+        self.op_ = <Op>new CHeadFirstCombinator(combinator.op_)
 
-cpdef ja_backward_application():
-    return Combinator.from_ptr(<Op>new JABackwardApplication())
 
-cpdef ja_generalized_backward_composition0(str left, str right, str result, str name):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    cdef string c_name = name.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new JAGeneralizedBackwardComposition0(
-            Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
+cdef class HeadfinalCombinator(Combinator):
+    def __cinit__(self, Combinator combinator):
+        self.op_ = <Op>new CHeadFinalCombinator(combinator.op_)
 
-cpdef ja_generalized_backward_composition1(str left, str right, str result, str name):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    cdef string c_name = name.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new JAGeneralizedBackwardComposition1(
-            Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
 
-cpdef ja_generalized_backward_composition2(str left, str right, str result, str name):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    cdef string c_name = name.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new JAGeneralizedBackwardComposition2(
-            Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
+cdef class EnForwardApplication(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CENForwardApplication()
 
-cpdef ja_generalized_backward_composition3(str left, str right, str result, str name):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    cdef string c_name = name.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new JAGeneralizedBackwardComposition3(
-            Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
 
-cpdef ja_generalized_forward_composition0(str left, str right, str result, str name):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    cdef string c_name = name.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new JAGeneralizedForwardComposition0(
-            Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
+cdef class EnBackwardApplication(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CENBackwardApplication()
 
-cpdef ja_generalized_forward_composition1(str left, str right, str result, str name):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    cdef string c_name = name.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new JAGeneralizedForwardComposition1(
-            Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
 
-cpdef ja_generalized_forward_composition2(str left, str right, str result, str name):
-    cdef string c_left = left.encode('utf-8')
-    cdef string c_right = right.encode('utf-8')
-    cdef string c_result = result.encode('utf-8')
-    cdef string c_name = name.encode('utf-8')
-    return Combinator.from_ptr(
-        <Op>new JAGeneralizedForwardComposition2(
-            Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name))
+cdef class Conjoin(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CConjoin()
 
-cpdef remove_disfluency():
-    return Combinator.from_ptr(<Op>new RemoveDisfluency())
 
-cpdef unknown_combinator():
-    return Combinator.from_ptr(<Op>new UnknownCombinator())
+cdef class JaForwardApplication(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CJAForwardApplication()
+
+
+cdef class JaBackwardApplication(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CJABackwardApplication()
+
+
+cdef class JaGeneralizedBackwardComposition0(Combinator):
+    def __cinit__(self, str left, str right, str result, str name):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        cdef string c_name = name.encode('utf-8')
+        self.op_ = <Op>new CJAGeneralizedBackwardComposition0(
+                    Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
+
+
+cdef class JaGeneralizedBackwardComposition1(Combinator):
+    def __cinit__(self, str left, str right, str result, str name):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        cdef string c_name = name.encode('utf-8')
+        self.op_ = <Op>new CJAGeneralizedBackwardComposition1(
+                    Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
+
+
+cdef class JaGeneralizedBackwardComposition2(Combinator):
+    def __cinit__(self, str left, str right, str result, str name):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        cdef string c_name = name.encode('utf-8')
+        self.op_ = <Op>new CJAGeneralizedBackwardComposition2(
+                    Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
+
+
+cdef class JaGeneralizedBackwardComposition3(Combinator):
+    def __cinit__(self, str left, str right, str result, str name):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        cdef string c_name = name.encode('utf-8')
+        self.op_ = <Op>new CJAGeneralizedBackwardComposition3(
+                    Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
+
+
+cdef class JaGeneralizedForwardComposition0(Combinator):
+    def __cinit__(self, str left, str right, str result, str name):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        cdef string c_name = name.encode('utf-8')
+        self.op_ = <Op>new CJAGeneralizedForwardComposition0(
+                    Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
+
+
+cdef class JaGeneralizedForwardComposition1(Combinator):
+    def __cinit__(self, str left, str right, str result, str name):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        cdef string c_name = name.encode('utf-8')
+        self.op_ = <Op>new CJAGeneralizedForwardComposition1(
+                    Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
+
+
+cdef class JaGeneralizedForwardComposition2(Combinator):
+    def __cinit__(self, str left, str right, str result, str name):
+        slash_check([left, right, result])
+        cdef string c_left = left.encode('utf-8')
+        cdef string c_right = right.encode('utf-8')
+        cdef string c_result = result.encode('utf-8')
+        cdef string c_name = name.encode('utf-8')
+        self.op_ = <Op>new CJAGeneralizedForwardComposition2(
+                    Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
+
+
+cdef class RemoveDisfluency(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CRemoveDisfluency()
+
+
+cdef class UnknownCombinator(Combinator):
+    def __cinit__(self):
+        self.op_ = <Op>new CUnknownCombinator()
 
 
 cdef vector[Op] combinator_list_to_vector(list combinators):
@@ -209,34 +265,34 @@ cdef vector[Op] combinator_list_to_vector(list combinators):
 
 
 en_default_binary_rules = [
-    headfirst_combinator(en_forward_application()),
-    headfirst_combinator(en_backward_application()),
-    headfirst_combinator(forward_composition('/', '/', '/')),
-    headfirst_combinator(backward_composition('/', '\\', '/')),
-    headfirst_combinator(generalized_forward_composition('/', '/', '/')),
-    headfirst_combinator(generalized_backward_composition('/', '/', '/')),
-    headfirst_combinator(conjunction()),
-    headfirst_combinator(conjunction2()),
-    headfirst_combinator(remove_punctuation(False)),
-    headfirst_combinator(remove_punctuation(True)),
-    headfirst_combinator(remove_punctuation_left()),
-    headfirst_combinator(comma_and_verb_phrase_to_adverb()),
-    headfirst_combinator(parenthetical_direct_speech())
+    HeadfirstCombinator(EnForwardApplication()),
+    HeadfirstCombinator(EnBackwardApplication()),
+    HeadfirstCombinator(ForwardComposition('/', '/', '/')),
+    HeadfirstCombinator(BackwardComposition('/', '\\', '/')),
+    HeadfirstCombinator(GeneralizedForwardComposition('/', '/', '/')),
+    HeadfirstCombinator(GeneralizedBackwardComposition('/', '/', '/')),
+    HeadfirstCombinator(Conjunction()),
+    HeadfirstCombinator(Conjunction2()),
+    HeadfirstCombinator(RemovePunctuation(False)),
+    HeadfirstCombinator(RemovePunctuation(True)),
+    HeadfirstCombinator(RemovePunctuationLeft()),
+    HeadfirstCombinator(CommaAndVerbPhraseToAdverb()),
+    HeadfirstCombinator(ParentheticalDirectSpeech())
 ]
 
 
 ja_default_binary_rules = [
-    headfinal_combinator(conjoin()),
-    headfinal_combinator(ja_forward_application()),
-    headfinal_combinator(ja_backward_application()),
-    headfinal_combinator(ja_generalized_forward_composition0('/', '/', '/', '>B')),
-    headfinal_combinator(ja_generalized_backward_composition0('\\', '\\', '\\', '<B1')),
-    headfinal_combinator(ja_generalized_backward_composition1('\\', '\\', '\\', '<B2')),
-    headfinal_combinator(ja_generalized_backward_composition2('\\', '\\', '\\', '<B3')),
-    headfinal_combinator(ja_generalized_backward_composition3('\\', '\\', '\\', '<B4')),
-    headfinal_combinator(ja_generalized_forward_composition0('/', '\\', '\\', '>Bx1')),
-    headfinal_combinator(ja_generalized_forward_composition1('/', '\\', '\\', '>Bx2')),
-    headfinal_combinator(ja_generalized_forward_composition2('/', '\\', '\\', '>Bx3')),
+    HeadfinalCombinator(Conjoin()),
+    HeadfinalCombinator(JaForwardApplication()),
+    HeadfinalCombinator(JaBackwardApplication()),
+    HeadfinalCombinator(JaGeneralizedForwardComposition0('/', '/', '/', '>B')),
+    HeadfinalCombinator(JaGeneralizedBackwardComposition0('\\', '\\', '\\', '<B1')),
+    HeadfinalCombinator(JaGeneralizedBackwardComposition1('\\', '\\', '\\', '<B2')),
+    HeadfinalCombinator(JaGeneralizedBackwardComposition2('\\', '\\', '\\', '<B3')),
+    HeadfinalCombinator(JaGeneralizedBackwardComposition3('\\', '\\', '\\', '<B4')),
+    HeadfinalCombinator(JaGeneralizedForwardComposition0('/', '\\', '\\', '>Bx1')),
+    HeadfinalCombinator(JaGeneralizedForwardComposition1('/', '\\', '\\', '>Bx2')),
+    HeadfinalCombinator(JaGeneralizedForwardComposition2('/', '\\', '\\', '>Bx3')),
 ]
 
 

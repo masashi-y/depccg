@@ -11,7 +11,7 @@ from depccg.tokens import Token, english_annotator, japanese_annotator, annotate
 from .download import download, load_model_directory, SEMANTIC_TEMPLATES, CONFIGS
 from .utils import read_partial_tree, read_weights
 from .combinator import en_default_binary_rules, ja_default_binary_rules
-from .combinator import remove_disfluency, headfirst_combinator
+from .combinator import RemoveDisfluency, HeadfirstCombinator
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 
@@ -46,7 +46,7 @@ def main(args):
 
     if args.disfluency:
         assert args.lang == 'en', f'not supported disfluency detection in language: {args.lang}'
-        binary_rules.append(headfirst_combinator(remove_disfluency()))
+        binary_rules.append(HeadfirstCombinator(RemoveDisfluency()))
 
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')

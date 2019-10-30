@@ -6,14 +6,14 @@ from ..cat import Category
 from ..combinator import (guess_combinator_by_triplet,
                           ja_default_binary_rules,
                           en_default_binary_rules,
-                          unknown_combinator)
+                          UnknownCombinator)
 from ..tokens import Token
 from lxml import etree
 import logging
 
 logger = logging.getLogger(__name__)
 
-UNK_COMBINATOR = unknown_combinator()
+UNK_COMBINATOR = UnknownCombinator()
 BINARY_RULES = defaultdict(
     lambda: [UNK_COMBINATOR],
     {
@@ -51,20 +51,18 @@ def read_xml(filename, lang='en'):
                     combinator = guess_combinator_by_triplet(
                                     binary_rules, cat, left.cat, right.cat)
                     combinator = combinator or UNK_COMBINATOR
-                    return Tree.make_binary(
-                        cat, True, left, right, combinator, lang)
+                    return Tree.make_binary(cat, left, right, combinator, lang)
             else:
                 assert node.tag == 'lf'
                 cat = Category.parse(attrib['cat'])
                 word = attrib['word']
-                position = len(tokens)
                 token = Token(word=attrib['word'],
                               pos=attrib['pos'],
                               entity=attrib['entity'],
                               lemma=attrib['lemma'],
                               chunk=attrib['chunk'])
                 tokens.append(token)
-                return Tree.make_terminal(word, cat, position, lang)
+                return Tree.make_terminal(word, cat, lang)
         tokens = []
         tree = rec(tree)
         return tokens, tree
@@ -88,9 +86,7 @@ def read_jigg_xml(filename, lang='en'):
                 'the attribute for the token\'s surface form is unknown')
 
     def parse(tree, tokens):
-        counter = 0
         def rec(node):
-            nonlocal counter
             attrib = node.attrib
             if 'terminal' not in attrib:
                 cat = Category.parse(attrib['category'])
@@ -103,14 +99,11 @@ def read_jigg_xml(filename, lang='en'):
                     combinator = guess_combinator_by_triplet(
                                     binary_rules, cat, left.cat, right.cat)
                     combinator = combinator or UNK_COMBINATOR
-                    return Tree.make_binary(
-                        cat, True, left, right, combinator, lang)
+                    return Tree.make_binary(cat, left, right, combinator, lang)
             else:
                 cat = Category.parse(attrib['category'])
                 word = try_get_surface(tokens[attrib['terminal']])
-                position = counter
-                counter += 1
-                return Tree.make_terminal(word, cat, position, lang)
+                return Tree.make_terminal(word, cat, lang)
 
         spans = {span.attrib['id']: span for span in tree.xpath('./span')}
         return rec(spans[tree.attrib['root']])
@@ -152,7 +145,7 @@ def parse_ptb(tree_string: str, lang='en') -> Tuple[Tree, List[Token]]:
         if isinstance(stack[-1], str):
             word = stack.pop()
             category = stack.pop()
-            tree = Tree.make_terminal(word, category, position, lang)
+            tree = Tree.make_terminal(word, category, lang)
             position += 1
         else:
             assert isinstance(stack[-1], Tree)
@@ -168,7 +161,7 @@ def parse_ptb(tree_string: str, lang='en') -> Tuple[Tree, List[Token]]:
                 combinator = guess_combinator_by_triplet(
                                 binary_rules, category, left.cat, right.cat)
                 combinator = combinator or UNK_COMBINATOR
-                tree = Tree.make_binary(category, True, left, right, combinator, lang)
+                tree = Tree.make_binary(category, left, right, combinator, lang)
             else:
                 assert False
         stack.append(tree)

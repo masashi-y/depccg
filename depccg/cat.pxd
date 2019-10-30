@@ -77,7 +77,5 @@ cdef class Category:
 
     cdef bint _matches(self, Category other)
 
-    cdef bint _is_function_into(self, Category cat)
-
     cpdef strip_feat(self, feat)
 

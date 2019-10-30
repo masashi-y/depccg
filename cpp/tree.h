@@ -73,6 +73,9 @@ protected:
 class Leaf: public Node
 {
 public:
+    Leaf(const std::string& word, Cat cat)
+    : Node(cat, LEXICON, 1), word_(word), position_(-1) {}
+
     Leaf(const std::string& word, Cat cat, unsigned position)
     : Node(cat, LEXICON, 1), word_(word), position_(position) {}
 
@@ -104,6 +107,22 @@ RuleType GetUnaryRuleType(Cat cat);
 class CTree: public Node
 {
 public:
+
+    CTree(Cat cat, const Node* lchild, const Node* rchild, Op rule)
+    : Node(cat, rule->GetRuleType(), lchild->GetLength() + rchild->GetLength()),
+      left_is_head_(rule->HeadIsLeft(lchild->GetCategory(), rchild->GetCategory())),
+      lchild_(lchild), rchild_(rchild), rule_(rule),
+      dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
+            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
+      headid_(left_is_head_ ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
+
+    CTree(Cat cat, NodeType lchild, NodeType rchild, Op rule)
+    : Node(cat, rule->GetRuleType(), lchild->GetLength() + rchild->GetLength()),
+      left_is_head_(rule->HeadIsLeft(lchild->GetCategory(), rchild->GetCategory())),
+      lchild_(lchild), rchild_(rchild), rule_(rule),
+      dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
+            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
+      headid_(left_is_head_ ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
 
     CTree(Cat cat, bool left_is_head, const Node* lchild,
             const Node* rchild, Op rule)
@@ -189,11 +208,6 @@ private:
     unsigned headid_;
 };
 
-void ToXML(std::vector<std::shared_ptr<const Node>>&
-        trees, bool feat, std::ostream& out=std::cout);
-
-void ToXML(std::vector<const Node*>& trees, bool feat, std::ostream& out=std::cout);
-
 
 class GetLeaves: public FormatVisitor {
     typedef std::vector<const Leaf*> result_type;
@@ -244,83 +258,6 @@ private:
     bool feat_;
 };
 
-class AUTO: public FormatVisitor {
-public:
-    AUTO(const Node* tree): tree_(tree) { Process(); }
-    AUTO(NodeType tree): tree_(tree.get()) { Process(); }
-
-    void Process() { tree_->Accept(*this); }
-    std::string Get() const { return out_.str(); }
-
-    int Visit(const CTree* tree);
-    int Visit(const Leaf* leaf);
-
-private:
-    const Node* tree_;
-    std::stringstream out_;
-};
-
-class JaCCG: public FormatVisitor {
-public:
-    JaCCG(const Node* tree): tree_(tree) { Process(); }
-    JaCCG(NodeType tree): tree_(tree.get()) { Process(); }
-
-    void Process() { tree_->Accept(*this); }
-    friend std::ostream& operator<<(std::ostream& ost, const JaCCG& deriv) {
-        ost << deriv.out_.str();
-        return ost;
-    }
-    std::string Get() const { return out_.str(); }
-
-    int Visit(const CTree* tree);
-    int Visit(const Leaf* leaf);
-
-private:
-    const Node* tree_;
-    std::stringstream out_;
-};
-
-class XML: public FormatVisitor {
-
-public:
-    XML(const Node* tree, bool feat=true): tree_(tree), feat_(feat) { Process(); }
-    XML(NodeType tree, bool feat=true): tree_(tree.get()), feat_(feat) { Process(); }
-
-    void Process() { tree_->Accept(*this); }
-    std::string Get() const { return out_.str(); }
-    friend std::ostream& operator<<(std::ostream& ost, const XML& xml) {
-        return ost << xml.out_.str();
-    }
-
-    int Visit(const CTree* tree);
-    int Visit(const Leaf* leaf);
-
-private:
-    const Node* tree_;
-    bool feat_;
-    std::stringstream out_;
-};
-
-class PyXML: public FormatVisitor {
-
-public:
-    PyXML(const Node* tree, bool feat=true): tree_(tree), feat_(feat) { Process(); }
-    PyXML(NodeType tree, bool feat=true): tree_(tree.get()), feat_(feat) { Process(); }
-
-    void Process() { tree_->Accept(*this); }
-    std::string Get() const { return out_.str(); }
-    friend std::ostream& operator<<(std::ostream& ost, const PyXML& xml) {
-        return ost << xml.out_.str();
-    }
-
-    int Visit(const CTree* tree);
-    int Visit(const Leaf* leaf);
-
-private:
-    const Node* tree_;
-    bool feat_;
-    std::stringstream out_;
-};
 
 class Prolog: public FormatVisitor {
 
@@ -346,32 +283,9 @@ private:
     const Node* tree_;
     std::stringstream out_;
     int depth;
+    int position;
 };
 
-class CoNLL: public FormatVisitor {
-
-public:
-    CoNLL(const Node* tree);
-    CoNLL(NodeType tree);
-    ~CoNLL();
-
-    void Process();
-    std::string Get() const { return out_.str(); }
-    friend std::ostream& operator<<(std::ostream& ost, const CoNLL& xml) {
-        return ost << xml.out_.str();
-    }
-
-    int Visit(const CTree* tree);
-    int Visit(const Leaf* leaf);
-
-private:
-    int id_;
-    const Node* tree_;
-    int length_;
-    int* heads_;
-    const Leaf** leaves_;
-    std::stringstream out_;
-};
 
 std::string EnResolveCombinatorName(const Node* parse);
 std::string JaResolveCombinatorName(const Node* parse);

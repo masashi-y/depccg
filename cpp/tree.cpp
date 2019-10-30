@@ -17,11 +17,6 @@ RuleType GetUnaryRuleType(Cat cat) {
         (cat->IsBackwardTypeRaised() ? BWD_TYPERAISE : UNARY);
 }
 
-const std::string Node::ToStr() const {
-    AUTO res(this);
-    return res.Get();
-}
-
 int Derivation::Visit(const Leaf* leaf) {
     std::string cat_str = feat_ ? leaf->GetCategory()->ToStr()
                                 : leaf->GetCategory()->ToStrWithoutFeat();
@@ -78,178 +73,6 @@ void Derivation::Process() {
     tree_->Accept(*this);
 }
 
-int AUTO::Visit(const CTree* tree) {
-    out_ << "(<T "
-         << tree->GetCategory() << " "
-         << (tree->HeadIsLeft() ? "0 " : "1 ")
-         << (tree->IsUnary() ? "1" : "2")
-         << "> ";
-    tree->GetLeftChild()->Accept(*this);
-    if (! tree->IsUnary()) {
-        out_ << " ";
-        tree->GetRightChild()->Accept(*this);
-        // if (IsNormalFormExtended(tree->GetRuleTypeOld(),
-        //             tree->GetCategory(), tree->GetLeftChild(),
-        //             tree->GetRightChild())) {
-        //     std::cerr << "NORMAL" << std::endl;
-        // } else {
-        //     std::cerr << "NOT" << std::endl;
-        // }
-    }
-    out_ << " )";
-    return 0;
-}
-
-int AUTO::Visit(const Leaf* leaf) {
-    std::string pos = "POS";
-    out_ << "(<L "
-         << leaf->GetCategory() << " "
-         << pos << " "
-         << pos << " "
-         << leaf->GetWord() << " "
-         << leaf->GetCategory() << ">)";
-    return 0;
-}
-
-// std::string JaResolveCombinatorName(const Combinator* comb) {
-// }
-
-int JaCCG::Visit(const CTree* tree) {
-    out_ << "{";
-    if (tree->IsUnary()) {
-        Cat child = tree->GetLeftChild()->GetCategory();
-        Feat ch_feat = child->Arg(0)->GetFeat();
-        if (ch_feat->ContainsKeyValue("mod", "adn")) {
-            if (child->StripFeat()->ToStr() == "S")
-                out_ << "ADNext ";
-            else
-                out_ << "ADNint ";
-        } else if (ch_feat->ContainsKeyValue("mod", "adv")) {
-            if (tree->GetCategory()->StripFeat()->ToStr() == "(S\\NP)/(S\\NP)")
-                out_ << "ADV1 ";
-            else
-                out_ << "ADV0 ";
-        } else {
-            throw std::runtime_error("JaCCG::Visit: " + child->ToStr());
-        }
-
-    } else {
-         out_ << tree->GetRule() << " ";
-    }
-    out_ << tree->GetCategory() << " ";
-    tree->GetLeftChild()->Accept(*this);
-    if (! tree->IsUnary()) {
-        out_ << " ";
-        tree->GetRightChild()->Accept(*this);
-    }
-    out_ << "}";
-    return 0;
-}
-
-int JaCCG::Visit(const Leaf* leaf) {
-    out_ << "{"
-         << leaf->GetCategory() << " "
-         << leaf->GetWord() << "/"
-         << leaf->GetWord() << "/"
-         << "**"
-         << "}";
-    return 0;
-}
-
-std::string EscapeGTLT(const std::string& input) {
-    std::string s(input);
-    utils::ReplaceAll(&s, "<", "&lt;");
-    utils::ReplaceAll(&s, ">", "&gt;");
-    return s;
-}
-
-std::string EscapeAMP(const std::string& input) {
-    std::string s(input);
-    utils::ReplaceAll(&s, "&", "&amp;");
-    return s;
-}
-
-int XML::Visit(const Leaf* leaf) {
-    Cat c = leaf->GetCategory();
-    out_ << "<lf start=\"" << leaf->GetPosition()
-         << "\" span=\"" << 1
-         << "\" word=\"" << EscapeAMP(leaf->GetWord())
-         << "\" lemma=\"" << EscapeAMP(leaf->GetWord())
-         << "\" pos=\"DT\" chunk=\"I-NP\" entity=\"O\" cat=\""
-         << ( feat_ ? c->ToStr() : c->ToStrWithoutFeat() ) << "\" />"
-         << std::endl;
-   return 0;
-}
-
-int PyXML::Visit(const Leaf* leaf) {
-    Cat c = leaf->GetCategory();
-    int position = leaf->GetPosition();
-    out_ << "<lf start=\"" << position
-         << "\" span=\"" << 1
-         << "\" word=\"" << EscapeAMP(leaf->GetWord())
-         << "\" lemma=\"{" << position << ".lemma}\" "
-         << "pos=\"{" << position << ".pos}\" "
-         << "chunk=\"{" << position << ".chunk}\" "
-         << "entity=\"{" << position << ".entity}\" cat=\""
-         << ( feat_ ? c->ToStr() : c->ToStrWithoutFeat() ) << "\" />"
-         << std::endl;
-   return 0;
-}
-
-std::string ToCAndCStr(const CTree* tree) {
-    if (tree->IsUnary()) {
-        Cat init = tree->GetLeftChild()->GetCategory();
-        if ((init->Matches(CCategory::Parse("NP")) ||
-                init->Matches(CCategory::Parse("PP")))
-                && tree->GetCategory()->IsTypeRaised())
-            return "tr";
-        else
-            return "lex";
-    }
-    switch (tree->GetRule()->GetRuleType()) {
-        case FA: return "fa";
-        case BA: return "ba";
-        case FC: return "fc";
-        case BC: return "bx";
-        case GFC: return "gfc";
-        case GBC: return "gbx";
-        case FX: return "fx";
-        case BX: return "bx";
-        case CONJ: return "conj";
-        case CONJ2: return "conj";
-        case COORD: return "ba";
-        case RP: return "rp";
-        case LP: return "lp";
-        case NOISE: return "lp";
-        default:
-            return "other";
-    }
-}
-
-int XMLVisitBase(FormatVisitor* visitor,
-        const CTree* tree, std::ostream& out, bool feat) {
-    Cat c = tree->GetCategory();
-    out << "<rule type=\""
-         << ToCAndCStr(tree)
-         << "\" cat=\""
-         << ( feat ? c->ToStr() : c->ToStrWithoutFeat() ) << "\">"
-         << std::endl;
-    tree->GetLeftChild()->Accept(*visitor);
-    if (! tree->IsUnary())
-        tree->GetRightChild()->Accept(*visitor);
-    out << "</rule>" << std::endl;
-    return 0;
-}
-
-int XML::Visit(const CTree* tree) {
-    XMLVisitBase(this, tree, out_, feat_);
-    return 0;
-}
-
-int PyXML::Visit(const CTree* tree) {
-    XMLVisitBase(this, tree, out_, feat_);
-    return 0;
-}
 
 class PrologCatStr: public CatVisitor {
 public:
@@ -307,7 +130,6 @@ std::string escapeProlog(std::string in) {
 
 int Prolog::Visit(const Leaf* leaf) {
     Cat c = leaf->GetCategory();
-    int position = 1 + leaf->GetPosition();
     Indent();
     out_ << "t(" << PrologCatStr(c)
          << ", \'" << escapeProlog(leaf->GetWord())
@@ -315,6 +137,7 @@ int Prolog::Visit(const Leaf* leaf) {
          << "\', \'{" << position << ".pos}"
          << "\', \'{" << position << ".chunk}"
          << "\', \'{" << position << ".entity}\')";
+    position++;
    return 0;
 }
 
@@ -387,74 +210,7 @@ int Prolog::Visit(const CTree* tree) {
     }
     return 0;
 }
-void ToXML(std::vector<std::shared_ptr<const Node>>& trees, bool feat, std::ostream& out) {
-    std::vector<const Node*> v(trees.size());
-    for (unsigned i = 0; i < trees.size(); i++) {
-        v[i] = trees[i].get();
-    }
-    ToXML(v, feat, out);
-}
 
-void ToXML(std::vector<const Node*>& trees, bool feat, std::ostream& out) {
-    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
-    out << "<?xml-stylesheet type=\"text/xsl\" href=\"candc.xml\"?>" << std::endl;
-    out << "<candc>" << std::endl;
-    for (auto&& tree: trees) {
-        out << "<ccg>" << std::endl;
-        out << XML(tree, feat);
-        out << "</ccg>" << std::endl;
-    }
-    out << "</candc>" << std::endl;
-}
-
-CoNLL::CoNLL(const Node* tree)
-    : id_(0),
-      tree_(tree),
-      length_(tree->GetLength()),
-      heads_(new int[length_]),
-      leaves_(new const Leaf*[length_]) { Process(); }
-
-CoNLL::CoNLL(NodeType tree)
-    : id_(0),
-      tree_(tree.get()),
-      length_(tree->GetLength()),
-      heads_(new int[length_]),
-      leaves_(new const Leaf*[length_]) { Process(); }
-
-CoNLL::~CoNLL() {
-    delete[] heads_;
-    delete[] leaves_;
-}
-
-void CoNLL::Process() {
-    for (int i = 0; i < length_; i++) heads_[i] = 0;
-    tree_->Accept(*this);
-    const Leaf* leaf;
-    for (int i = 0; i < length_; i++) {
-        leaf = leaves_[i];
-        out_ << i+1 << "\t"
-             << leaf->GetWord() << "\t"
-             << leaf->GetCategory() << "\t"
-             << heads_[i] << std::endl;
-    } 
-}
-
-int CoNLL::Visit(const CTree* tree) {
-   int lhead = tree->GetLeftChild()->Accept(*this);
-   if (! tree->IsUnary()) {
-       int rhead = tree->GetRightChild()->Accept(*this);
-       int head =  tree->HeadIsLeft() ? lhead : rhead;
-       int child = tree->HeadIsLeft() ? rhead : lhead;
-       heads_[child] = head + 1;
-       return head;
-   }
-    return lhead;
-}
-
-int CoNLL::Visit(const Leaf* leaf) {
-    leaves_[id_++] = leaf;
-    return leaf->GetHeadId();
-}
 
 std::string EnResolveCombinatorName(const Node* parse) {
     const CTree* tree;

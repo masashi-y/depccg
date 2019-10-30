@@ -4,8 +4,12 @@ from cython.operator cimport dereference as deref
 
 
 cdef class Category:
-    def __cinit__(self):
-        pass
+    def __cinit__(self, cat):
+        if cat is None:
+            cat = ''
+        if not isinstance(cat, bytes):
+            cat = cat.encode('utf-8')
+        self.cat_ = CCategory.Parse(cat)
 
     def __str__(self):
         return self.cat_.ToStr().decode('utf-8')
@@ -15,15 +19,11 @@ cdef class Category:
 
     @staticmethod
     def parse(cat):
-        if not isinstance(cat, bytes):
-            cat = cat.encode('utf-8')
-        c = Category()
-        c.cat_ = CCategory.Parse(cat)
-        return c
+        return Category(cat)
 
     @staticmethod
     cdef Category from_ptr(Cat cat):
-        c = Category()
+        c = Category(None)
         c.cat_ = cat
         return c
 
@@ -95,10 +95,7 @@ cdef class Category:
         def __get__(self):
             return self.cat_.IsNorNP()
 
-    def is_function_into(self, cat):
-        return self._is_function_into(cat)
-
-    cdef bint _is_function_into(self, Category cat):
+    def is_function_into(self, Category cat):
         return self.cat_.IsFunctionInto(cat.cat_)
 
     property n_args:

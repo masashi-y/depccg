@@ -26,34 +26,19 @@ cdef extern from "tree.h" namespace "myccg" nogil:
     ctypedef pair[NodeType, float] ScoredNode
 
     cdef cppclass Leaf(Node):
-        Leaf(const string&, Cat, int)
+        Leaf(const string&, Cat)
 
     cdef cppclass CTree(Node):
         CTree(Cat, bool, NodeType, NodeType, Op)
+        CTree(Cat, NodeType, NodeType, Op)
         CTree(Cat, NodeType)
-
-    cdef cppclass AUTO:
-        AUTO(NodeType tree)
-        string Get()
 
     cdef cppclass Derivation:
         Derivation(NodeType tree, bint feat)
         string Get()
 
-    cdef cppclass JaCCG:
-        JaCCG(NodeType tree)
-        string Get()
-
-    cdef cppclass PyXML:
-        PyXML(NodeType tree, bint feat)
-        string Get()
-
     cdef cppclass Prolog:
         Prolog(NodeType tree)
-        string Get()
-
-    cdef cppclass CoNLL:
-        CoNLL(NodeType tree)
         string Get()
 
     string EnResolveCombinatorName(const Node*)

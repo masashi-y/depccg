@@ -3,7 +3,7 @@ from cython.operator cimport dereference as deref
 from libcpp.pair cimport pair
 from libcpp.memory cimport shared_ptr, make_shared
 from .cat cimport Cat, Category
-from .combinator import unknown_combinator
+from .combinator import UnknownCombinator
 from lxml import etree
 from .tokens import Token
 from depccg.utils import denormalize, normalize
@@ -21,7 +21,7 @@ cdef ResolveCombinatorName(const Node* tree, bytes lang):
     return res.decode("utf-8")
 
 
-unknown_op = unknown_combinator()
+unknown_op = UnknownCombinator()
 
 
 class _AutoLineReader(object):
@@ -75,7 +75,7 @@ class _AutoLineReader(object):
         elif word == '-RRB-':
             word = ')'
         dep = self.next()[:-2]
-        return Tree.make_terminal(word, cat, self.word_id, self.lang)
+        return Tree.make_terminal(word, cat, self.lang)
 
     def parse_tree(self):
         self.check('(')
@@ -92,7 +92,7 @@ class _AutoLineReader(object):
         if len(children) == 2:
             left, right = children
             return Tree.make_binary(
-                cat, left_is_head, left, right, unknown_op, self.lang)
+                cat, left, right, unknown_op, self.lang, left_is_head=left_is_head)
         elif len(children) == 1:
             return Tree.make_unary(cat, children[0], self.lang)
         else:
@@ -110,15 +110,20 @@ cdef class Tree:
         return p
 
     @staticmethod
-    def make_terminal(str word, Category cat, int position, lang):
+    def make_terminal(str word, Category cat, lang):
         cdef string c_word = word.encode('utf-8')
-        cdef NodeType node = <NodeType>make_shared[Leaf](c_word, cat.cat_, position)
+        cdef NodeType node = <NodeType>make_shared[Leaf](c_word, cat.cat_)
         return Tree.from_ptr(node, lang)
 
     @staticmethod
-    def make_binary(Category cat, bool left_is_head, Tree left, Tree right, Combinator op, lang):
-        cdef NodeType node = <NodeType>make_shared[CTree](
-            cat.cat_, left_is_head, left.node_, right.node_, op.op_)
+    def make_binary(Category cat, Tree left, Tree right, Combinator op, lang, left_is_head=None):
+        cdef NodeType node
+        cdef bool cleft_is_head
+        if left_is_head is not None:
+            cleft_is_head = left_is_head
+            node = <NodeType>make_shared[CTree](cat.cat_, cleft_is_head, left.node_, right.node_, op.op_)
+        else:
+            node = <NodeType>make_shared[CTree](cat.cat_, left.node_, right.node_, op.op_)
         return Tree.from_ptr(node, lang)
 
     @staticmethod
@@ -132,13 +137,11 @@ cdef class Tree:
 
     @staticmethod
     def of_nltk_tree(tree, lang='en'):
-        position = [-1]
         def rec(node):
             cat = Category.parse(node.label())
             if isinstance(node[0], str):
                 word = node[0]
-                position[0] += 1
-                return Tree.make_terminal(word, cat, position[0], lang)
+                return Tree.make_terminal(word, cat, lang)
             else:
                 children = [rec(child) for child in node]
                 if len(children) == 1:
@@ -146,8 +149,7 @@ cdef class Tree:
                 else:
                     assert len(children) == 2
                     left, right = children
-                    return Tree.make_binary(
-                        cat, True, left, right, unknown_op, lang)
+                    return Tree.make_binary(cat, left, right, unknown_op, lang)
         return rec(tree)
 
     def __cinit__(self):
@@ -186,6 +188,11 @@ cdef class Tree:
             res = []
             rec(self)
             return res
+
+    property child:
+        def __get__(self):
+            assert self.is_unary, "This node is not unary node! Please use `Tree.children`"
+            return self.left_child
 
     property left_child:
         def __get__(self):
@@ -381,11 +388,93 @@ cdef class Tree:
         cdef string res = Prolog(self.node_).Get()
         return res.decode("utf-8")
 
-    def ja(self):
-        cdef string res = JaCCG(self.node_).Get()
-        return res.decode("utf-8")
+    def ja(self, tokens=None):
+        def rec(node):
+            if node.is_leaf:
+                cat = node.cat
+                word = normalize(node.word)
+                token = tokens.pop(0)
+                base = token.get('base', word)
+                poss = [token.get(pos, '*') for pos in ('pos', 'pos1', 'pos2', 'pos3')]
+                poss = [pos for pos in poss if pos != '*']
+                pos = '-'.join(poss) if len(poss) else '_'
+                inflections = [token.get(i, '*') for i in ('inflectionForm', 'inflectionType')]
+                inflections = [i for i in inflections if i != '*']
+                inflection = '-'.join(inflections) if len(inflections) else '_'
+                return f'{{{cat} {word}/{word}/{pos}/{inflection}}}'
+            else:
+                if node.is_unary:
+                    child_features = node.child.cat.features.items()
+                    if ('mod', 'adn') in child_features:
+                        if node.child.cat.base == 'S':
+                            rule = 'ADNext'
+                        else:
+                            rule = 'ADNint'
+                    elif ('mod', 'adv') in child_features:
+                        if node.cat.base == '(S\\NP)/(S\\NP)':
+                            rule = 'ADV1'
+                        else:
+                            rule = 'ADV0'
+                    else:
+                        raise RuntimeError(
+                            'this tree is not supported in `ja` format')
+                else:
+                    rule = node.op_string
+                cat = node.cat
+                children = ' '.join(rec(child) for child in node.children)
+                return f'{{{rule} {cat} {children}}}'
+        if tokens is None:
+            tokens = [Token.from_word(word) for word in self.word.split(' ')]
+        return rec(self)
 
-    def conll(self):
-        cdef string res = CoNLL(self.node_).Get()
-        return res.decode("utf-8")
+    def conll(self, tokens=None):
+        stack = []
+        counter = 1
+        dependencies = []
+        def resolve_dependencies(node):
+            if node.is_leaf:
+                index = len(dependencies)
+                dependencies.append(-1)
+                return index
+            else:
+                if node.is_unary:
+                    return resolve_dependencies(node.child)
+                else:
+                    left_head = resolve_dependencies(node.left_child)
+                    right_head = resolve_dependencies(node.right_child)
+                    if node.head_is_left:
+                        dependencies[right_head] = left_head
+                        return left_head
+                    else:
+                        dependencies[left_head] = right_head
+                        return right_head
+
+        def rec(node):
+            nonlocal stack, counter, dependencies
+            if node.is_leaf:
+                cat = node.cat
+                word = denormalize(node.word)
+                token = tokens.pop(0)
+                lemma = token.get('lemma', '_')
+                pos = token.get('pos', '_')
+                stack.append(f'(<L {cat} {pos} {pos} {word} {cat}>)')
+                subtree = ' '.join(stack)
+                line = '\t'.join(
+                        (str(counter), word, lemma, pos, pos, '_', str(dependencies[counter-1] + 1), str(cat), '_', subtree))
+                stack = []
+                counter += 1
+                return line
+            else:
+                cat = node.cat
+                num_children = len(node.children)
+                head_is_left = 0 if node.head_is_left else 1
+                stack.append(f'(<T {cat} {head_is_left} {num_children}>')
+                children = '\n'.join(rec(child) for child in node.children) + ' )'
+                return children
+        if tokens is None:
+            tokens = [Token.from_word(word) for word in self.word.split(' ')]
+        resolve_dependencies(self)
+        assert len([dependency for dependency in dependencies if dependency == -1]) == 1
+        return rec(self)
+
 

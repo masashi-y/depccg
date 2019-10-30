@@ -49,7 +49,7 @@ Cat CCategory::Parse(const std::string& cat) {
 Cat CCategory::ParseUncached(const std::string& cat) {
     std::string new_cat(cat);
     std::string semantics;
-    if (new_cat.back() == '}') {
+    if (new_cat.size() && new_cat.back() == '}') {
         int open_idx = new_cat.rfind("{");
         semantics = new_cat.substr(open_idx + 1, new_cat.size() - open_idx - 1);
         new_cat = new_cat.substr(0, open_idx);

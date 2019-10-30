@@ -551,9 +551,6 @@ class UnknownCombinator: public CCombinator
 
 extern CCombinator* unary_rule;
 
-extern const std::vector<Op> en_binary_rules;
-extern const std::vector<Op> ja_binary_rules;
-
 } // namespace myccg
 
 #endif // include
