@@ -1,7 +1,8 @@
 
 import re
 
-from depccg.combinator import ja_default_binary_rules, unary_rule
+from depccg.combinator import UnaryRule
+from depccg.lang import ja_default_binary_rules
 from depccg.cat import Category
 from depccg.tree import Tree
 from depccg.tokens import Token
@@ -13,7 +14,7 @@ combinators = {sign: rule for rule, sign in zip(
 }
 
 for sign in ['ADNext', 'ADNint', 'ADV0', 'ADV1', 'ADV2']:
-    combinators[sign] = unary_rule()
+    combinators[sign] = UnaryRule()
 
 DEPENDENCY = re.compile(r'{.+?}')
 
@@ -69,7 +70,7 @@ class _JaCCGLineReader(object):
         surf, base, pos1, pos2 = self.next('}')[:-1].split('/')
         token = Token(surf=surf, base=base, pos1=pos1, pos2=pos2)
         self.tokens.append(token)
-        return Tree.make_terminal(surf, cat, self.word_id, self.lang)
+        return Tree.make_terminal(surf, cat, self.lang)
 
     def parse_tree(self):
         self.check('{')
@@ -89,5 +90,4 @@ class _JaCCGLineReader(object):
         else:
             assert len(children) == 2, f'failed to parse, invalid number of children: {self.line}'
             left, right = children
-            left_is_head = op.head_is_left(left.cat, right.cat)
-            return Tree.make_binary(cat, left_is_head, left, right, op, self.lang)
+            return Tree.make_binary(cat, left, right, op, self.lang)

@@ -87,7 +87,7 @@ def read_jigg_xml(filename, lang='en'):
                     left, right = children
                     combinator = guess_combinator_by_triplet(
                                     binary_rules, cat, left.cat, right.cat)
-                    combinator = combinator or UNK_COMBINATOR
+                    combinator = combinator or UNKNOWN_COMBINATOR
                     return Tree.make_binary(cat, left, right, combinator, lang)
             else:
                 cat = Category.parse(attrib['category'])
@@ -149,7 +149,7 @@ def parse_ptb(tree_string: str, lang='en') -> Tuple[Tree, List[Token]]:
                 right, left = children
                 combinator = guess_combinator_by_triplet(
                                 binary_rules, category, left.cat, right.cat)
-                combinator = combinator or UNK_COMBINATOR
+                combinator = combinator or UNKNOWN_COMBINATOR
                 tree = Tree.make_binary(category, left, right, combinator, lang)
             else:
                 assert False

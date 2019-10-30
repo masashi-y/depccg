@@ -199,7 +199,8 @@ def annotate_using_janome(sentences, tokenize=False):
         tokens = []
         for token in tokenized:
             pos, pos1, pos2, pos3 = token.part_of_speech.split(',')
-            token = Token(surf=token.surface,
+            token = Token(word=token.surface,
+                          surf=token.surface,
                           pos=pos,
                           pos1=pos1,
                           pos2=pos2,
@@ -250,7 +251,8 @@ def annotate_using_jigg(sentences, tokenize=False, pipeline='ssplit,kuromoji'):
         tokens = []
         for token in sentence.xpath('*//token'):
             attrib = token.attrib
-            token = Token(surf=attrib['surf'],
+            token = Token(word=attrib['surf'],
+                          surf=attrib['surf'],
                           pos=attrib['pos'],
                           pos1=attrib['pos1'],
                           pos2=attrib['pos2'],
