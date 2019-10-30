@@ -3,10 +3,11 @@ from cython.operator cimport dereference as deref
 from libcpp.pair cimport pair
 from libcpp.memory cimport shared_ptr, make_shared
 from .cat cimport Cat, Category
-from .combinator import UnknownCombinator
+from .combinator import UNKNOWN_COMBINATOR, guess_combinator_by_triplet
 from lxml import etree
 from .tokens import Token
 from depccg.utils import denormalize, normalize
+from .lang import BINARY_RULES
 
 
 ## TODO: ugly code
@@ -21,15 +22,13 @@ cdef ResolveCombinatorName(const Node* tree, bytes lang):
     return res.decode("utf-8")
 
 
-unknown_op = UnknownCombinator()
-
-
 class _AutoLineReader(object):
     def __init__(self, line, lang):
         self.line = line
         self.index = 0
         self.word_id = -1
         self.lang = lang
+        self.binary_rules = BINARY_RULES[self.lang]
         self.tokens = []
 
     def next(self):
@@ -91,8 +90,10 @@ class _AutoLineReader(object):
         self.next()
         if len(children) == 2:
             left, right = children
+            op = guess_combinator_by_triplet(cat, left.cat, right.cat)
+            op = op or UNKNOWN_COMBINATOR
             return Tree.make_binary(
-                cat, left, right, unknown_op, self.lang, left_is_head=left_is_head)
+                cat, left, right, op, self.lang, left_is_head=left_is_head)
         elif len(children) == 1:
             return Tree.make_unary(cat, children[0], self.lang)
         else:
@@ -149,7 +150,9 @@ cdef class Tree:
                 else:
                     assert len(children) == 2
                     left, right = children
-                    return Tree.make_binary(cat, left, right, unknown_op, lang)
+                    op = guess_combinator_by_triplet(cat, left.cat, right.cat)
+                    op = op or UNKNOWN_COMBINATOR
+                    return Tree.make_binary(cat, left, right, op, lang)
         return rec(tree)
 
     def __cinit__(self):

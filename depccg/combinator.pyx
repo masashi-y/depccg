@@ -264,41 +264,13 @@ cdef vector[Op] combinator_list_to_vector(list combinators):
     return results
 
 
-en_default_binary_rules = [
-    HeadfirstCombinator(EnForwardApplication()),
-    HeadfirstCombinator(EnBackwardApplication()),
-    HeadfirstCombinator(ForwardComposition('/', '/', '/')),
-    HeadfirstCombinator(BackwardComposition('/', '\\', '/')),
-    HeadfirstCombinator(GeneralizedForwardComposition('/', '/', '/')),
-    HeadfirstCombinator(GeneralizedBackwardComposition('/', '/', '/')),
-    HeadfirstCombinator(Conjunction()),
-    HeadfirstCombinator(Conjunction2()),
-    HeadfirstCombinator(RemovePunctuation(False)),
-    HeadfirstCombinator(RemovePunctuation(True)),
-    HeadfirstCombinator(RemovePunctuationLeft()),
-    HeadfirstCombinator(CommaAndVerbPhraseToAdverb()),
-    HeadfirstCombinator(ParentheticalDirectSpeech())
-]
-
-
-ja_default_binary_rules = [
-    HeadfinalCombinator(Conjoin()),
-    HeadfinalCombinator(JaForwardApplication()),
-    HeadfinalCombinator(JaBackwardApplication()),
-    HeadfinalCombinator(JaGeneralizedForwardComposition0('/', '/', '/', '>B')),
-    HeadfinalCombinator(JaGeneralizedBackwardComposition0('\\', '\\', '\\', '<B1')),
-    HeadfinalCombinator(JaGeneralizedBackwardComposition1('\\', '\\', '\\', '<B2')),
-    HeadfinalCombinator(JaGeneralizedBackwardComposition2('\\', '\\', '\\', '<B3')),
-    HeadfinalCombinator(JaGeneralizedBackwardComposition3('\\', '\\', '\\', '<B4')),
-    HeadfinalCombinator(JaGeneralizedForwardComposition0('/', '\\', '\\', '>Bx1')),
-    HeadfinalCombinator(JaGeneralizedForwardComposition1('/', '\\', '\\', '>Bx2')),
-    HeadfinalCombinator(JaGeneralizedForwardComposition2('/', '\\', '\\', '>Bx3')),
-]
-
-
 def guess_combinator_by_triplet(binary_rules, parent, child1, child2):
     for rule in binary_rules:
         guess = rule.apply(child1, child2)
         if guess and guess.matches(parent):
             return rule
     return None
+
+
+UNKNOWN_COMBINATOR = UnknownCombinator()
+

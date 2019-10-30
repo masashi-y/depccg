@@ -3,24 +3,13 @@ from typing import Tuple, List
 from collections import defaultdict
 from ..tree import Tree
 from ..cat import Category
-from ..combinator import (guess_combinator_by_triplet,
-                          ja_default_binary_rules,
-                          en_default_binary_rules,
-                          UnknownCombinator)
+from ..combinator import guess_combinator_by_triplet, UNKNOWN_COMBINATOR
+from ..lang import BINARY_RULES
 from ..tokens import Token
 from lxml import etree
 import logging
 
 logger = logging.getLogger(__name__)
-
-UNK_COMBINATOR = UnknownCombinator()
-BINARY_RULES = defaultdict(
-    lambda: [UNK_COMBINATOR],
-    {
-        'en': en_default_binary_rules,
-        'ja': ja_default_binary_rules
-    }
-)
 
 
 def read_auto(filename, lang='en'):
@@ -50,7 +39,7 @@ def read_xml(filename, lang='en'):
                     left, right = children
                     combinator = guess_combinator_by_triplet(
                                     binary_rules, cat, left.cat, right.cat)
-                    combinator = combinator or UNK_COMBINATOR
+                    combinator = combinator or UNKNOWN_COMBINATOR
                     return Tree.make_binary(cat, left, right, combinator, lang)
             else:
                 assert node.tag == 'lf'

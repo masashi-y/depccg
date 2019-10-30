@@ -16,7 +16,7 @@ from pathlib import Path
 from cython.parallel cimport prange
 from libc.stdio cimport fprintf, stderr
 from .combinator cimport combinator_list_to_vector
-from .combinator import en_default_binary_rules, ja_default_binary_rules
+from .lang import en_default_binary_rules, ja_default_binary_rules
 from .utils cimport *
 from .utils import maybe_split_and_join, denormalize
 from .cat cimport Category

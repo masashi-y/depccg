@@ -10,7 +10,7 @@ from .printer import print_
 from depccg.tokens import Token, english_annotator, japanese_annotator, annotate_XX
 from .download import download, load_model_directory, SEMANTIC_TEMPLATES, CONFIGS
 from .utils import read_partial_tree, read_weights
-from .combinator import en_default_binary_rules, ja_default_binary_rules
+from .lang import en_default_binary_rules, ja_default_binary_rules
 from .combinator import RemoveDisfluency, HeadfirstCombinator
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
