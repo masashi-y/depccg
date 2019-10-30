@@ -108,22 +108,6 @@ class CTree: public Node
 {
 public:
 
-    CTree(Cat cat, const Node* lchild, const Node* rchild, Op rule)
-    : Node(cat, rule->GetRuleType(), lchild->GetLength() + rchild->GetLength()),
-      left_is_head_(rule->HeadIsLeft(lchild->GetCategory(), rchild->GetCategory())),
-      lchild_(lchild), rchild_(rchild), rule_(rule),
-      dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
-            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
-      headid_(left_is_head_ ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
-
-    CTree(Cat cat, NodeType lchild, NodeType rchild, Op rule)
-    : Node(cat, rule->GetRuleType(), lchild->GetLength() + rchild->GetLength()),
-      left_is_head_(rule->HeadIsLeft(lchild->GetCategory(), rchild->GetCategory())),
-      lchild_(lchild), rchild_(rchild), rule_(rule),
-      dependency_length_(rchild_->GetHeadId() - lchild_->GetHeadId() +
-            rchild_->GetDependencyLength() + lchild_->GetDependencyLength()),
-      headid_(left_is_head_ ? lchild_->GetHeadId() : rchild_->GetHeadId()) {}
-
     CTree(Cat cat, bool left_is_head, const Node* lchild,
             const Node* rchild, Op rule)
     : Node(cat, rule->GetRuleType(), lchild->GetLength() + rchild->GetLength()),

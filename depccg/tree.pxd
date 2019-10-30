@@ -12,10 +12,7 @@ cdef extern from "tree.h" namespace "myccg" nogil:
         shared_ptr[const Node] GetLeftChild() const
         shared_ptr[const Node] GetRightChild() const
         bint IsLeaf() const
-        int GetStartOfSpan() const
         string GetWord() const
-        int GetHeadId() const
-        int GetDependencyLength() const
         bint HeadIsLeft() const
         bint IsUnary() const
         int NumDescendants() const
@@ -30,7 +27,6 @@ cdef extern from "tree.h" namespace "myccg" nogil:
 
     cdef cppclass CTree(Node):
         CTree(Cat, bool, NodeType, NodeType, Op)
-        CTree(Cat, NodeType, NodeType, Op)
         CTree(Cat, NodeType)
 
     cdef cppclass Derivation:

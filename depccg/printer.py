@@ -222,27 +222,31 @@ class ConvertToJiggXML(object):
         return self._spid
 
     def process(self, tree: Tree, score: float = None):
+        counter = 0
         def traverse(node: Tree):
+            nonlocal counter
             id = f's{self.sid}_sp{self.spid}'
             xml_node = etree.SubElement(res, 'span')
             xml_node.set('category', str(node.cat.multi_valued))
-            xml_node.set('begin', str(node.start_of_span))
-            xml_node.set('end', str(node.start_of_span+len(node)))
             xml_node.set('id', id)
             if node.is_leaf:
-                xml_node.set('terminal', f't{self.sid}_{node.head_id}')
+                start_of_span = counter
+                counter += 1
+                xml_node.set('terminal', f't{self.sid}_{start_of_span}')
             else:
-                childid = traverse(node.left_child)
+                childid, start_of_span = traverse(node.left_child)
                 if not node.is_unary:
-                    tmp = traverse(node.right_child)
+                    tmp, _ = traverse(node.right_child)
                     childid += ' ' + tmp
                 xml_node.set('child', childid)
                 xml_node.set('rule', node.op_string)
-            return id
+            xml_node.set('begin', str(start_of_span))
+            xml_node.set('end', str(start_of_span+len(node)))
+            return id, start_of_span
 
         res = etree.Element('ccg')
         res.set('id', f's{self.sid}_ccg{self.processed}')
-        id = traverse(tree)
+        id, _ = traverse(tree)
         res.set('root', str(id))
         res[0].set('root', 'true')
         if score is not None:

@@ -87,7 +87,9 @@ class TrainingDataCreator(object):
                 print(f'{key} # {str(value)}', file=f)
 
     def _get_dependencies(self, tree, sent_len):
+        counter = 0
         def rec(subtree):
+            nonlocal counter
             if not subtree.is_leaf:
                 children = subtree.children
                 if len(children) == 2:
@@ -98,7 +100,9 @@ class TrainingDataCreator(object):
                     head = rec(children[0])
                 return head
             else:
-                return subtree.head_id
+                head = counter
+                counter += 1
+                return head
 
         res = [-1 for _ in range(sent_len)]
         rec(tree)

@@ -535,15 +535,15 @@ class UnknownCombinator: public CCombinator
     public:
     UnknownCombinator(): CCombinator(NONE) {}
     bool CanApply(Cat left, Cat right) const {
-        throw std::runtime_error("don't use this combinator");
+        return false;
     }
 
     Cat Apply(Cat left, Cat right) const {
-        throw std::runtime_error("don't use this combinator");
+        return CCategory::Parse("UNK");
     }
 
     bool HeadIsLeft(Cat left, Cat right) const {
-        throw std::runtime_error("don't use this combinator");
+        return true;
     }
 
     std::string ToStr() const { return "<*>"; }

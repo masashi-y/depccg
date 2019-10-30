@@ -90,7 +90,7 @@ class _AutoLineReader(object):
         self.next()
         if len(children) == 2:
             left, right = children
-            op = guess_combinator_by_triplet(cat, left.cat, right.cat)
+            op = guess_combinator_by_triplet(self.binary_rules, cat, left.cat, right.cat)
             op = op or UNKNOWN_COMBINATOR
             return Tree.make_binary(
                 cat, left, right, op, self.lang, left_is_head=left_is_head)
@@ -120,11 +120,10 @@ cdef class Tree:
     def make_binary(Category cat, Tree left, Tree right, Combinator op, lang, left_is_head=None):
         cdef NodeType node
         cdef bool cleft_is_head
-        if left_is_head is not None:
-            cleft_is_head = left_is_head
-            node = <NodeType>make_shared[CTree](cat.cat_, cleft_is_head, left.node_, right.node_, op.op_)
-        else:
-            node = <NodeType>make_shared[CTree](cat.cat_, left.node_, right.node_, op.op_)
+        if left_is_head is None:
+            left_is_head = op.head_is_left(left, right)
+        cleft_is_head = left_is_head
+        node = <NodeType>make_shared[CTree](cat.cat_, cleft_is_head, left.node_, right.node_, op.op_)
         return Tree.from_ptr(node, lang)
 
     @staticmethod
@@ -212,22 +211,10 @@ cdef class Tree:
         def __get__(self):
             return deref(self.node_).IsLeaf()
 
-    property start_of_span:
-        def __get__(self):
-            return deref(self.node_).GetStartOfSpan()
-
     property word:
         def __get__(self):
             cdef string res = deref(self.node_).GetWord()
             return res.decode("utf-8")
-
-    property head_id:
-        def __get__(self):
-            return deref(self.node_).GetHeadId()
-
-    property dependency_length:
-        def __get__(self):
-            return deref(self.node_).GetDependencyLength()
 
     property head_is_left:
         def __get__(self):
