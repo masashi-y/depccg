@@ -29,6 +29,7 @@ If OpenMP is available in your environment, you can use it for more efficient pa
 ### Using a pretrained English parser
 
 Currently following models are available for English:
+
 |Name| Description | unlabeled/labeled F1 on CCGbank| Download |
 |:-|:-|:-|:-|:-|
 | basic |model trained on the combination of CCGbank and tri-training dataset (Yoshikawa et al., 2017)|94.0%/88.8%| [link](https://drive.google.com/file/d/1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv/view?usp=sharing) (189M) |
