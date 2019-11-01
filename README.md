@@ -28,22 +28,39 @@ If OpenMP is available in your environment, you can use it for more efficient pa
 
 ### Using a pretrained English parser
 
-__Better performing ELMo model is also [available](#the-best-performing-elmo-model) now.__
+Currently following models are available for English:
+|Name| Description | unlabeled/labeled F1 on CCGbank| Download |
+|:-|:-|:-|:-|:-|
+| basic |model trained on the combination of CCGbank and tri-training dataset (Yoshikawa et al., 2017)|94.0%/88.8%| [link](https://drive.google.com/file/d/1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv/view?usp=sharing) (189M) |
+| `en[elmo]` | basic model with its embeddings replaced with ELMo (Peters et al., 2018) |94.98%/90.51%| [link](https://drive.google.com/file/d/1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr/view?usp=sharing) (649M)
+| `en[elmo_rebank]` |ELMo model trained on Rebanked CCGbank (Honnibal et al., 2010) | - | [link](https://drive.google.com/open?id=1deyCjSgCuD16WkEhOL3IXEfQBfARh_ll) (1G) |
 
-The best performing model in the paper trained on tri-training is available:
+The basic model is available by:
 ```sh
 ➜ depccg_en download
 ```
-
-It can be downloaded directly [here](https://drive.google.com/file/d/1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv/view?usp=sharing) (189M).
-
-
+To use:
 ```sh
 ➜ echo "this is a test sentence ." | depccg_en
 ID=1, Prob=-0.0006299018859863281
 (<T S[dcl] 0 2> (<T S[dcl] 0 2> (<L NP XX XX this NP>) (<T S[dcl]\NP 0 2> (<L (S[dcl]\NP)/NP XX XX is (S[dcl]\NP)/NP>) (<T NP 0 2> (<L NP[nb]/N XX XX a NP[nb]/N>) (<T N 0 2> (<L N/N XX XX test N/N>) (<L N XX XX sentence N>) ) ) ) ) (<L . XX XX . .>) )
 ```
-You can specify output format (see [below](#available-output-formats)).
+
+You can download other models by specifying their names:
+```sh
+➜ depccg_en download en[elmo]
+```
+To use, make sure to install [allennlp](https://github.com/allenai/allennlp):
+```sh
+➜ pip install allennlp
+➜ echo "this is a test sentence ." | depccg_en --model elmo
+```
+
+You can also specify in the `--model` option the path of a model file (in tar.gz) that is available from links above.
+
+Using a GPU (by `--gpu` option) is recommended if possible.
+
+There are several output formats (see [below](#available-output-formats)).
 
 ```sh
 ➜ echo "this is a test sentence ." | depccg_en --format deriv
@@ -92,34 +109,6 @@ ID=0 log probability=-0.0006299018859863281
 exists x.(_this(x) & exists z1.(_sentence(z1) & _test(z1) & (x = z1)))
 ```
 
-### The best performing ELMo model
-
-
-In accordance with many other reported results, depccg obtains the improved performance by using contextualized word embeddings ([ELMo](https://allennlp.org/elmo); Peters et al., 2018).
-
-The ELMo model replaces affix embeddings in (Yoshikawa et al., 2017) with ELMo, resulting in 1124 dimensional input embeddings (ELMo + GloVe). It is trained on CCGbank and the [tri-training](https://drive.google.com/file/d/1rCJyb98AcNx5eBuC18-koCWJFfU4OV06/view?usp=sharing) silver dataset.
-
-||Unlabeled F1|Labeled F1|
-|:-|:-|:-|
-|(Yoshikawa et al., 2017)|94.0|88.8|
-|+ELMo|94.98|90.51|
-
-
-Please download the model from the following link.
-* [English ELMo model](https://drive.google.com/file/d/1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr/view?usp=sharing) (649M)
-
-To use the model, install `allennlp`:
-
-```sh
-➜ pip install allennlp
-```
-
-and then,
-```sh
-➜ echo "this is a test sentence ." | depccg_en --model lstm_parser_elmo_finetune.tar.gz
-```
-
-Using a GPU (by `--gpu` option) is recommended if possible.
 
 ### Using a pretrained Japanese parser
 
@@ -152,6 +141,7 @@ ID=1, Prob=-53.98793411254883
 ### Available output formats
 
 * `auto` - the most standard format following AUTO format in the English CCGbank
+* `auto_extended` - extension of auto format with combinator info and POS/NER tags
 * `deriv` - visualized derivations in ASCII art
 * `xml` - XML format compatible with C&C's XML format (only for English parsing)
 * `conll` - CoNLL format
