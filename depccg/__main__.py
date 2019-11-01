@@ -8,12 +8,16 @@ from lxml import etree
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import print_
 from depccg.tokens import Token, english_annotator, japanese_annotator, annotate_XX
-from .download import download, load_model_directory, SEMANTIC_TEMPLATES, CONFIGS
+from .download import download, load_model_directory, SEMANTIC_TEMPLATES, model_is_available, AVAILABLE_MODEL_VARIANTS
+from .lang import BINARY_RULES
 from .utils import read_partial_tree, read_weights
 from .lang import en_default_binary_rules, ja_default_binary_rules
-from .combinator import RemoveDisfluency, HeadfirstCombinator
+from .combinator import HeadfirstCombinator
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
+
+# disable lengthy allennlp logs
+logging.getLogger('allennlp').setLevel(logging.ERROR)
 
 
 def main(args):
@@ -25,28 +29,18 @@ def main(args):
     else:
         probs, tag_list = None, None
 
+    binary_rules = BINARY_RULES[args.lang]
     if args.lang == 'en':
-        binary_rules = en_default_binary_rules
-        if args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']:
-            assert args.annotator, \
+        assert not (args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] and args.annotator), \
                 f'Specify --annotator argument in using "{args.format}" output format'
         annotate_fun = english_annotator.get(args.annotator, annotate_XX)
 
     elif args.lang == 'ja':
-        binary_rules = ja_default_binary_rules
-        if args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']:
-            assert args.tokenize, \
+        assert not (args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] and args.tokenize), \
                 f'Specify --tokenize argument in using "{args.format}" output format'
-        if args.tokenize:
-            annotate_fun = japanese_annotator[args.annotator]
-        else:
-            annotate_fun = annotate_XX
+        annotate_fun = japanese_annotator[args.annotator] if args.tokenize else annotate_XX
     else:
         assert False
-
-    if args.disfluency:
-        assert args.lang == 'en', f'not supported disfluency detection in language: {args.lang}'
-        binary_rules.append(HeadfirstCombinator(RemoveDisfluency()))
 
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
@@ -66,16 +60,15 @@ def main(args):
         gpu=args.gpu
     )
 
-    use_allennlp = args.model and args.model.endswith('.tar.gz')
-    config = args.config or CONFIGS[args.lang]
-    if use_allennlp:
-        parser = Parsers[args.lang].from_json(config, args.model, **kwargs)
+    model_name = f'{args.lang}[{args.model}]'
+    if args.model and model_is_available(model_name):
+        model, config = load_model_directory(model_name)
     else:
-        load_tagger = True  # args.input_format != 'json'
-        model = None
-        if load_tagger:
-            model = args.model or load_model_directory(args.lang)
-        parser = Parsers[args.lang].from_json(config, model, **kwargs)
+        def_model, config = load_model_directory(args.lang)
+        model = args.model or def_model
+
+    parser = Parsers[args.lang].from_json(
+                args.config or config, model, **kwargs)
 
     fin = sys.stdin if args.input is None else open(args.input)
 
@@ -209,7 +202,11 @@ def add_common_parser_arguments(parser):
 
     subparsers = parser.add_subparsers()
     download_parser = subparsers.add_parser('download')
-    download_parser.set_defaults(func=lambda args: download(args.lang))
+    download_parser.add_argument('VARIANT',
+                                 nargs='?',
+                                 default=None,
+                                 choices=AVAILABLE_MODEL_VARIANTS[parser.get_default('lang')])
+    download_parser.set_defaults(func=lambda args: download(args.lang, args.VARIANT))
 
 
 if __name__ == '__main__':
