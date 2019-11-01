@@ -102,7 +102,7 @@ def to_prolog_ja(nbest_trees, tagged_doc):
                 f"\n{whitespace}t({cat}, '{surf}', '{base}', '{pos}', '{infl_form}', '{infl_type}')")
         else:
             cat = traverse_cat(node.cat)
-            rule = ja_combinators[node.op_string]
+            rule = ja_combinators[node.op_symbol]
             output.write(f"\n{whitespace}{rule}({cat}")
             for i, child in enumerate(node.children):
                 if i < len(node.children):
@@ -239,7 +239,7 @@ class ConvertToJiggXML(object):
                     tmp, _ = traverse(node.right_child)
                     childid += ' ' + tmp
                 xml_node.set('child', childid)
-                xml_node.set('rule', node.op_string)
+                xml_node.set('rule', node.op_symbol)
             xml_node.set('begin', str(start_of_span))
             xml_node.set('end', str(start_of_span+len(node)))
             return id, start_of_span

@@ -218,30 +218,6 @@ public:
 result_type leaves_;
 };
 
-class Derivation: public FormatVisitor {
-
-public:
-    Derivation(const Node* tree, bool feat=true)
-        : tree_(tree), lwidth_(0), feat_(feat) { Process(); }
-    Derivation(NodeType tree, bool feat=true)
-        : tree_(tree.get()), lwidth_(0), feat_(feat) { Process(); }
-
-    void Process();
-    std::string Get() const { return out_.str(); }
-    friend std::ostream& operator<<(std::ostream& ost, const Derivation& deriv) {
-        ost << deriv.out_.str();
-        return ost;
-    }
-    int Visit(const CTree* tree);
-    int Visit(const Leaf* leaf);
-
-private:
-    const Node* tree_;
-    std::stringstream out_;
-    int lwidth_;
-    bool feat_;
-};
-
 
 class Prolog: public FormatVisitor {
 
@@ -270,9 +246,7 @@ private:
     int position;
 };
 
-
 std::string EnResolveCombinatorName(const Node* parse);
-std::string JaResolveCombinatorName(const Node* parse);
 
 } // namespace myccg
 

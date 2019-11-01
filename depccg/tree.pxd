@@ -28,17 +28,13 @@ cdef extern from "tree.h" namespace "myccg" nogil:
     cdef cppclass CTree(Node):
         CTree(Cat, bool, NodeType, NodeType, Op)
         CTree(Cat, NodeType)
-
-    cdef cppclass Derivation:
-        Derivation(NodeType tree, bint feat)
-        string Get()
+        Op GetRule()
 
     cdef cppclass Prolog:
         Prolog(NodeType tree)
         string Get()
 
     string EnResolveCombinatorName(const Node*)
-    string JaResolveCombinatorName(const Node*)
 
 
 cdef class Tree:

@@ -2,24 +2,13 @@ from libcpp.string cimport string
 from cython.operator cimport dereference as deref
 from libcpp.pair cimport pair
 from libcpp.memory cimport shared_ptr, make_shared
+from lxml import etree
+from io import StringIO
 from .cat cimport Cat, Category
 from .combinator import UNKNOWN_COMBINATOR, guess_combinator_by_triplet
-from lxml import etree
 from .tokens import Token
-from depccg.utils import denormalize, normalize
+from .utils import denormalize, normalize
 from .lang import BINARY_RULES
-
-
-## TODO: ugly code
-cdef ResolveCombinatorName(const Node* tree, bytes lang):
-    cdef string res;
-    if lang == b"en":
-        res = EnResolveCombinatorName(tree)
-    elif lang == b"ja":
-        res = JaResolveCombinatorName(tree)
-    else:
-        res = b"error: " + lang
-    return res.decode("utf-8")
 
 
 class _AutoLineReader(object):
@@ -162,10 +151,33 @@ cdef class Tree:
             return Category.from_ptr(deref(self.node_).GetCategory())
 
     property op_string:
+        """C&C-style string representing a combinator. e.g. fa, ba fx, bx"""
         def __get__(self):
             assert not self.is_leaf, "This node is leaf and does not have combinator!"
             cdef const Node* c_node = &deref(self.node_)
-            return ResolveCombinatorName(c_node, self.lang)
+            return EnResolveCombinatorName(c_node).decode('utf-8')
+
+    property op_symbol:
+        """standard CCG style string representing a combinator. e.g. >, <, >B"""
+        def __get__(self):
+            assert not self.is_leaf, "This node is leaf and does not have combinator!"
+            cdef const CTree* c_node = <const CTree*>&deref(self.node_)
+            # tentatively put this here
+            if self.lang == 'ja' and self.is_unary:
+                child_features = self.child.cat.features.items()
+                if ('mod', 'adn') in child_features:
+                    if self.child.cat.base == 'S':
+                        return 'ADNext'
+                    else:
+                        return 'ADNint'
+                elif ('mod', 'adv') in child_features:
+                    if self.cat.base == '(S\\NP)/(S\\NP)':
+                        return 'ADV1'
+                    else:
+                        return 'ADV0'
+                else:
+                    raise RuntimeError('this tree is not supported in `ja` format')
+            return c_node.GetRule().ToStr().decode('utf-8')
 
     def __len__(self):
         return deref(self.node_).GetLength()
@@ -328,8 +340,41 @@ cdef class Tree:
         return rec(self)
 
     def deriv(self):
-        cdef string res = Derivation(self.node_, not self.suppress_feat).Get()
-        return res.decode("utf-8")
+        catstr  = ''
+        wordstr = ''
+        for leaf in self.leaves:
+            str_cat = str(leaf.cat)
+            str_word = leaf.word
+            nextlen = 2 + max(len(str_word), len(str_cat))
+            lcatlen = (nextlen - len(str_cat)) // 2
+            rcatlen = lcatlen + (nextlen - len(str_cat)) % 2
+            catstr += ' ' * lcatlen + str_cat + ' ' * rcatlen
+            lwordlen = (nextlen - len(str_word)) // 2
+            rwordlen = lwordlen + (nextlen - len(str_word)) % 2
+            wordstr += ' ' * lwordlen + str_word + ' ' * rwordlen
+
+        def rec(lwidth, node):
+            rwidth = lwidth
+
+            if node.is_leaf:
+                return max(rwidth,
+                           2 + lwidth + len(str(node.cat)),
+                           2 + lwidth + len(node.word))
+            else:
+                for child in node.children:
+                    rwidth = max(rwidth, rec(rwidth, child))
+                op = node.op_symbol
+                print(lwidth * ' ' + (rwidth - lwidth) * '-' + str(op), file=output)
+                str_res = str(node.cat)
+                respadlen = (rwidth - lwidth - len(str_res)) // 2 + lwidth
+                print(respadlen * ' ' + str_res, file=output)
+                return rwidth
+
+        with StringIO() as output:
+            print(catstr.rstrip(), file=output)
+            print(wordstr.rstrip(), file=output)
+            rec(0, self)
+            return output.getvalue()
 
     def xml(self, tokens=None):
         def rec(node, parent):
@@ -393,26 +438,8 @@ cdef class Tree:
                 inflection = '-'.join(inflections) if len(inflections) else '_'
                 return f'{{{cat} {word}/{word}/{pos}/{inflection}}}'
             else:
-                if node.is_unary:
-                    child_features = node.child.cat.features.items()
-                    if ('mod', 'adn') in child_features:
-                        if node.child.cat.base == 'S':
-                            rule = 'ADNext'
-                        else:
-                            rule = 'ADNint'
-                    elif ('mod', 'adv') in child_features:
-                        if node.cat.base == '(S\\NP)/(S\\NP)':
-                            rule = 'ADV1'
-                        else:
-                            rule = 'ADV0'
-                    else:
-                        raise RuntimeError(
-                            'this tree is not supported in `ja` format')
-                else:
-                    rule = node.op_string
-                cat = node.cat
                 children = ' '.join(rec(child) for child in node.children)
-                return f'{{{rule} {cat} {children}}}'
+                return f'{{{node.op_symbol} {node.cat} {children}}}'
         if tokens is None:
             tokens = [Token.from_word(word) for word in self.word.split(' ')]
         return rec(self)
