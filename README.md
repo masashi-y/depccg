@@ -33,8 +33,8 @@ Currently following models are available for English:
 |Name| Description | unlabeled/labeled F1 on CCGbank| Download |
 |:-|:-|:-|:-|
 | basic |model trained on the combination of CCGbank and tri-training dataset (Yoshikawa et al., 2017)|94.0%/88.8%| [link](https://drive.google.com/file/d/1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv/view?usp=sharing) (189M) |
-| `en[elmo]` | basic model with its embeddings replaced with ELMo (Peters et al., 2018) |94.98%/90.51%| [link](https://drive.google.com/file/d/1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr/view?usp=sharing) (649M) |
-| `en[elmo_rebank]` |ELMo model trained on Rebanked CCGbank (Honnibal et al., 2010) | - | [link](https://drive.google.com/open?id=1deyCjSgCuD16WkEhOL3IXEfQBfARh_ll) (1G) |
+| `elmo` | basic model with its embeddings replaced with ELMo (Peters et al., 2018) |94.98%/90.51%| [link](https://drive.google.com/file/d/1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr/view?usp=sharing) (649M) |
+| `elmo_rebank` |ELMo model trained on Rebanked CCGbank (Honnibal et al., 2010) | - | [link](https://drive.google.com/open?id=1deyCjSgCuD16WkEhOL3IXEfQBfARh_ll) (1G) |
 
 The basic model is available by:
 ```sh
@@ -49,7 +49,7 @@ ID=1, Prob=-0.0006299018859863281
 
 You can download other models by specifying their names:
 ```sh
-➜ depccg_en download en[elmo]
+➜ depccg_en download elmo
 ```
 To use, make sure to install [allennlp](https://github.com/allenai/allennlp):
 ```sh
