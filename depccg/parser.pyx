@@ -16,6 +16,7 @@ from pathlib import Path
 from cython.parallel cimport prange
 from libc.stdio cimport fprintf, stderr
 from .combinator cimport combinator_list_to_vector
+from .combinator import SpecialCombinator
 from .lang import en_default_binary_rules, ja_default_binary_rules
 from .utils cimport *
 from .utils import maybe_split_and_join, denormalize
@@ -221,20 +222,35 @@ cdef class EnglishCCGParser:
         unary_rules = [(Category.parse(c1), Category.parse(c2)) for c1, c2 in json_input['unary_rules']]
 
         category_dict = {}
-        if 'cat_dict' in json_input:
+        if 'cat_dict' in json_input and len(json_input['cat_dict']):
             for word, cats in json_input['cat_dict'].items():
                 category_dict[word] = [Category.parse(cat) for cat in cats]
         else:
             kwargs['use_category_dict'] = False
 
         seen_rules = []
-        if 'cat_dict' in json_input:
+        if 'seen_rules' in json_input and len(json_input['seen_rules']):
             for c1, c2 in json_input['seen_rules']:
                 c1 = cls.preprocess_seen_rules(Category.parse(c1))
                 c2 = cls.preprocess_seen_rules(Category.parse(c2))
                 seen_rules.append((c1, c2))
         else:
             kwargs['use_seen_rules'] = False
+
+        special_combinators = []
+        if 'binary_rules' in json_input and len(json_input['binary_rules']):
+            for left, right, result, left_is_head in json_input['binary_rules']:
+                left = Category(left)
+                right = Category(right)
+                result = Category(result)
+                combinator = SpecialCombinator(left, right, result, left_is_head)
+                special_combinators.append(combinator)
+        if len(special_combinators) > 0:
+            if 'binary_rules' in kwargs:
+                kwargs['binary_rules'].extend(special_combinators)
+            else:
+                binary_rules = en_default_binary_rules + special_combinators
+                kwargs['binary_rules'] = binary_rules
 
         parser = cls(category_dict, unary_rules, seen_rules, **kwargs)
         if tagger_model:

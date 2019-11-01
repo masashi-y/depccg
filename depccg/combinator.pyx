@@ -246,6 +246,12 @@ cdef class JaGeneralizedForwardComposition2(Combinator):
                     Slash(c_left[0]), Slash(c_right[0]), Slash(c_result[0]), c_name)
 
 
+cdef class SpecialCombinator(Combinator):
+    def __cinit__(self, Category left, Category right, Category result, bool head_is_left):
+        self.op_ = <Op>new CSpecialCombinator(
+                    left.cat_, right.cat_, result.cat_, head_is_left)
+
+
 cdef class RemoveDisfluency(Combinator):
     def __cinit__(self):
         self.op_ = <Op>new CRemoveDisfluency()

@@ -4,6 +4,7 @@ cimport numpy as np
 import logging
 import json
 from .cat cimport Category
+from .combinator import SpecialCombinator
 from libcpp.pair cimport pair
 
 
@@ -135,6 +136,22 @@ cpdef read_unary_rules(filename):
         cat2 = Category.parse(cat2)
         results.append((cat1, cat2))
     logger.info(f'load {len(results)} unary rules')
+    return results
+
+
+cpdef read_binary_rules(filename):
+    results = []
+    for line in open(filename, encoding='utf-8'):
+        line = remove_comment(line.strip())
+        if len(line) == 0:
+            continue
+        head_is_left, left, right, result = line.split()
+        left = Category(left)
+        right = Category(right)
+        result = Category(result)
+        combinator = SpecialCombinator(left, right, result, head_is_left)
+        results.append(combinator)
+    logger.info(f'load {len(results)} binary rules')
     return results
 
 

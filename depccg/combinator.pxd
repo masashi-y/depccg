@@ -122,6 +122,8 @@ cdef extern from "combinator.h" namespace "myccg" nogil:
     cdef cppclass CJAGeneralizedBackwardComposition3 "myccg::JAGeneralizedBackwardComposition<3, myccg::BC>":
         CJAGeneralizedBackwardComposition3(const Slash&, const Slash&, const Slash&, const string& string)
 
+    cdef cppclass CSpecialCombinator "myccg::SpecialCombinator":
+        CSpecialCombinator(Cat left, Cat right, Cat result, bool head_is_left)
 
     cdef cppclass CRemoveDisfluency "myccg::RemoveDisfluency":
         CRemoveDisfluency()
