@@ -155,7 +155,7 @@ ID=1, Prob=-53.98793411254883
 * `json` - JSON format
 * `ja` - a format adopted in Japanese CCGbank (only for Japanese)
 
-### Programatic Usage
+### Programmatic Usage
 
 ```python
 from depccg.parser import EnglishCCGParser
