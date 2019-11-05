@@ -25,6 +25,12 @@ MODELS = {
         '1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr',
         MODEL_DIRECTORY / 'config_en.json'
     ),
+    'en[rebank]': (
+        'allennlp',
+        'lstm_parser_char_rebanking',
+        '1Az840uCW8QuAkNCZq_Y8VOkW5j0Vtcj9',
+        MODEL_DIRECTORY / 'config_rebank.json'
+    ),
     'en[elmo_rebank]': (
         'allennlp',
         'lstm_parser_elmo_rebanking',
