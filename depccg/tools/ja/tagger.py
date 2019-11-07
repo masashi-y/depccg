@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('-f',
                         '--format',
                         default='jigg_xml',
-                        choices=['prolog', 'jigg_xml', 'jigg_xml_ccg2lambda', 'json'],
+                        choices=['prolog', 'jigg_xml', 'jigg_xml_ccg2lambda', 'json', 'deriv'],
                         help='output format')
     parser.add_argument('--semantic-templates',
                         help='semantic templates used in "ccg2lambda" format output')
@@ -30,13 +30,12 @@ if __name__ == '__main__':
     annotate_fun = japanese_annotator[args.annotator]
     doc, trees = [], []
     for _, tokens, tree in read_trees_guess_extension(args.PATH, lang='ja'):
-        doc.append([token.surf for token in tokens])
+        doc.append(tokens)
         trees.append([(tree, 0)])
-    tagged_doc = annotate_fun(doc, tokenize=False)
 
     semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES[LANG]
     print_(trees,
-           tagged_doc,
+           doc,
            format=args.format,
            lang=LANG,
            semantic_templates=semantic_templates)
