@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 def read_auto(filename, lang='en'):
+    """
+    English CCGbank contains some unwanted categories such as (S\\NP)\\(S\\NP)[conj].
+    This reads the treebank while taking care of those categories.
+    """
     for line in open(filename):
         line = line.strip()
         if len(line) == 0:
@@ -20,6 +24,12 @@ def read_auto(filename, lang='en'):
         if line.startswith("ID"):
             name = line
         else:
+            tokens = []
+            for token in line.split(' '):
+                if token[0] == '(' and token.endswith(')[conj]'):
+                    token = token[:-6]
+                tokens.append(token)
+            line = ' '.join(tokens)
             tree, tokens = Tree.of_auto(line, lang)
             yield name, tokens, tree
 
