@@ -232,7 +232,7 @@ class ConvertToJiggXML(object):
             if node.is_leaf:
                 start_of_span = counter
                 counter += 1
-                xml_node.set('terminal', f't{self.sid}_{start_of_span}')
+                xml_node.set('terminal', f's{self.sid}_{start_of_span}')
             else:
                 childid, start_of_span = traverse(node.left_child)
                 if not node.is_unary:
@@ -268,7 +268,7 @@ def to_jigg_xml(trees, tagged_doc):
             token_node = etree.SubElement(tokens_node, 'token')
             token_node.set('start', str(j))
             token_node.set('cat', str(cat))
-            token_node.set('id', f't{i}_{j}')
+            token_node.set('id', f's{i}_{j}')
             if 'word' in token:
                 token['surf'] = token.pop('word')
             if 'lemma' in token:

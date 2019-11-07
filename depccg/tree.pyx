@@ -163,8 +163,8 @@ cdef class Tree:
             assert not self.is_leaf, "This node is leaf and does not have combinator!"
             cdef const CTree* c_node = <const CTree*>&deref(self.node_)
             # tentatively put this here
-            if self.lang == 'ja' and self.is_unary:
-                child_features = self.child.cat.features.items()
+            if self.lang == b'ja' and self.is_unary:
+                child_features = self.child.cat.arg(0).features.items()
                 if ('mod', 'adn') in child_features:
                     if self.child.cat.base == 'S':
                         return 'ADNext'
@@ -175,8 +175,8 @@ cdef class Tree:
                         return 'ADV1'
                     else:
                         return 'ADV0'
-                else:
-                    raise RuntimeError('this tree is not supported in `ja` format')
+                # else:
+                #     raise RuntimeError('this tree is not supported in `ja` format')
             return c_node.GetRule().ToStr().decode('utf-8')
 
     def __len__(self):
