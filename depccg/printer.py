@@ -211,10 +211,11 @@ def to_mathml(trees):
 
 
 class ConvertToJiggXML(object):
-    def __init__(self, sid: int):
+    def __init__(self, sid: int, use_symbol: bool):
         self.sid = sid
         self._spid = -1
         self.processed = 0
+        self.use_symbol = use_symbol
 
     @property
     def spid(self) -> int:
@@ -239,7 +240,7 @@ class ConvertToJiggXML(object):
                     tmp, _ = traverse(node.right_child)
                     childid += ' ' + tmp
                 xml_node.set('child', childid)
-                xml_node.set('rule', node.op_symbol)
+                xml_node.set('rule', node.op_symbol if self.use_symbol else node.op_string)
             xml_node.set('begin', str(start_of_span))
             xml_node.set('end', str(start_of_span+len(node)))
             return id, start_of_span
@@ -255,7 +256,7 @@ class ConvertToJiggXML(object):
         return res
 
 
-def to_jigg_xml(trees, tagged_doc):
+def to_jigg_xml(trees, tagged_doc, use_symbol=False):
     root_node = etree.Element('root')
     document_node = etree.SubElement(root_node, 'document')
     sentences_node = etree.SubElement(document_node, 'sentences')
@@ -275,7 +276,7 @@ def to_jigg_xml(trees, tagged_doc):
                 token['base'] = token.pop('lemma')
             for k, v in token.items():
                 token_node.set(k, v)
-        converter = ConvertToJiggXML(i)
+        converter = ConvertToJiggXML(i, use_symbol)
         for tree, score in parsed:
             sentence_node.append(converter.process(tree, score))
     return root_node
@@ -293,7 +294,8 @@ def print_(nbest_trees: List[List[Tuple[float, Tree]]],
     if format == 'xml':
         print(process_xml(to_xml(nbest_trees, tagged_doc)), file=file)
     elif format == 'jigg_xml':
-        print(process_xml(to_jigg_xml(nbest_trees, tagged_doc)), file=file)
+        use_symbol = lang == 'ja'
+        print(process_xml(to_jigg_xml(nbest_trees, tagged_doc, use_symbol=use_symbol)), file=file)
     elif format == 'prolog':
         if lang == 'en':
             print(to_prolog_en(nbest_trees, tagged_doc), end='', file=file)
