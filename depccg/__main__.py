@@ -31,7 +31,7 @@ def main(args):
 
     binary_rules = BINARY_RULES[args.lang]
     if args.lang == 'en':
-        assert not (args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] and args.annotator), \
+        assert not args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] or args.annotator, \
                 f'Specify --annotator argument in using "{args.format}" output format'
         annotate_fun = english_annotator.get(args.annotator, annotate_XX)
 
