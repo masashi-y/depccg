@@ -36,8 +36,8 @@ def main(args):
         annotate_fun = english_annotator.get(args.annotator, annotate_XX)
 
     elif args.lang == 'ja':
-        assert not (args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] and args.tokenize), \
-                f'Specify --tokenize argument in using "{args.format}" output format'
+        assert not args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] or args.tokenize, \
+                f'Cannot specify --pre-tokenized argument using "{args.format}" output format'
         annotate_fun = japanese_annotator[args.annotator] if args.tokenize else annotate_XX
     else:
         assert False

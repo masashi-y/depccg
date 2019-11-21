@@ -56,8 +56,13 @@ def parse(ccg, templates, nbest=0, ncores=3):
         'Element mismatch: {0} vs {1}'.format(len(sem_nodes_lists), len(SENTENCES))
     logging.info('Adding XML semantic nodes to sentences...')
     formulas_list = []
-    for sentence, (sem_nodes, formulas) in zip(SENTENCES, sem_nodes_lists):
-        formulas = [str(remove_true(lexpr(formula))) for formula in formulas]
+    for sentence, (sem_nodes, orig_formulas) in zip(SENTENCES, sem_nodes_lists):
+        formulas = []
+        for formula in orig_formulas:
+            try:
+                formulas.append(str(remove_true(lexpr(formula))))
+            except LogicalExpressionException:
+                formulas.append(formula)
         formulas_list.append(formulas)
         sentence.extend(sem_nodes)
     logging.info('Finished adding XML semantic nodes to sentences.')
