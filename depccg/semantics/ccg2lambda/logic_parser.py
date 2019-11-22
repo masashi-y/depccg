@@ -25,5 +25,5 @@ def lexpr(formula_str):
     except LogicalExpressionException as e:
         msg = 'Failed to parse {0}. Error: {1}'.format(formula_str, e)
         logging.error(msg)
-        raise LogicalExpressionException(msg)
+        raise LogicalExpressionException(0, msg)
     return expr

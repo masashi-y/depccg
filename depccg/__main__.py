@@ -84,7 +84,9 @@ def main(args):
         logging.getLogger().setLevel(logging.CRITICAL)
 
     while True:
-        fin = [input()] if input_type is None else input_type
+        fin = [line for line in ([input()] if input_type is None else input_type) if len(line.strip()) > 0]
+        if len(fin) == 0:
+            break
 
         if args.input_format == 'POSandNERtagged':
             tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
