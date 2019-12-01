@@ -71,9 +71,7 @@ public:
 class Conjunction2: public CCombinator
 {
 public:
-    Conjunction2(): CCombinator(CONJ2),
-      puncts_({CCategory::Parse(",")}) {}
-               // CCategory::Parse(";")}) {}
+    Conjunction2(): CCombinator(CONJ2) {}
 
     bool CanApply(Cat left, Cat right) const {
         if (*left == *CCategory::Parse("conj")
@@ -86,9 +84,6 @@ public:
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     std::string ToStr() const { return "<Φ>"; }
-
-private:
-    std::unordered_set<Cat> puncts_;
 };
 
 class Coordinate: public CCombinator
@@ -113,17 +108,16 @@ public:
 class Conjunction: public CCombinator
 {
 public:
-    Conjunction(): CCombinator(CONJ),
-      puncts_({CCategory::Parse(","),
-               CCategory::Parse(";"),
-               CCategory::Parse("conj")}) {}
+    Conjunction(): CCombinator(CONJ) {}
 
     bool CanApply(Cat left, Cat right) const {
         if (CCategory::Parse("NP\\NP")->Matches(right))
             return false;
-        return (puncts_.count(left) > 0 &&
+        return (*left == *CCategory::Parse(",") ||
+                *left == *CCategory::Parse(";") ||
+                *left == *CCategory::Parse("conj")) &&
                 !right->IsPunct() &&
-                !right->IsTypeRaised()); // &&
+                !right->IsTypeRaised(); // &&
                 // ! (!right->IsFunctor() &&
                         // right->GetType() == "N"));
     }
@@ -134,9 +128,6 @@ public:
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     std::string ToStr() const { return "<Φ>"; }
-
-private:
-    std::unordered_set<Cat> puncts_;
 };
 
 //  ,  S[ng|pss]\NP
@@ -145,28 +136,20 @@ private:
 class CommaAndVerbPhraseToAdverb: public CCombinator
 {
 public:
-    CommaAndVerbPhraseToAdverb()
-        : CCombinator(NOISE),
-          ngVP_(CCategory::Parse("S[ng]\\NP")),
-          pssVP_(CCategory::Parse("S[pss]\\NP")),
-          result_(CCategory::Parse("(S\\NP)\\(S\\NP)")) {}
+    CommaAndVerbPhraseToAdverb(): CCombinator(NOISE) {}
 
     bool CanApply(Cat left, Cat right) const {
         return (!left->IsFunctor() &&
                 left->GetType() == "," &&
-                (*right == *ngVP_ || *right == *pssVP_));
+                (*right == *CCategory::Parse("S[ng]\\NP") ||
+                 *right == *CCategory::Parse("S[pss]\\NP")));
     }
 
-    Cat Apply(Cat left, Cat right) const { return result_; }
+    Cat Apply(Cat left, Cat right) const { return CCategory::Parse("(S\\NP)\\(S\\NP)"); }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
 
     std::string ToStr() const { return "<*>"; };
-
-private:
-    Cat ngVP_;
-    Cat pssVP_;
-    Cat result_;
 };
 
 //  ,  S[dcl]/S[dcl]
@@ -175,26 +158,19 @@ private:
 class ParentheticalDirectSpeech: public CCombinator
 {
 public:
-    ParentheticalDirectSpeech()
-        : CCombinator(NOISE),
-          SdclSdcl_(CCategory::Parse("S[dcl]/S[dcl]")),
-          result_(CCategory::Parse("(S\\NP)/(S\\NP)")) {}
+    ParentheticalDirectSpeech(): CCombinator(NOISE) {}
 
     bool CanApply(Cat left, Cat right) const {
         return (!left->IsFunctor() &&
                 left->GetType() == "," &&
-                *right == *SdclSdcl_);
+                *right == *CCategory::Parse("S[dcl]/S[dcl]"));
     }
 
-    Cat Apply(Cat left, Cat right) const { return result_; }
+    Cat Apply(Cat left, Cat right) const { return CCategory::Parse("(S\\NP)/(S\\NP)"); }
 
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
 
     std::string ToStr() const { return "<*>"; };
-
-private:
-    Cat SdclSdcl_;
-    Cat result_;
 };
 
 class RemovePunctuation: public CCombinator
@@ -223,12 +199,11 @@ private:
 class RemovePunctuationLeft: public CCombinator
 {
 public:
-    RemovePunctuationLeft(): CCombinator(LP),
-      puncts_({CCategory::Parse("LQU"),
-               CCategory::Parse("LRB"),}) {}
+    RemovePunctuationLeft(): CCombinator(LP) {}
 
     bool CanApply(Cat left, Cat right) const {
-        return puncts_.count(left) > 0;
+        return *left == *CCategory::Parse("LQU") || 
+                *left == *CCategory::Parse("LRB");
     }
 
     Cat Apply(Cat left, Cat right) const {
@@ -236,9 +211,6 @@ public:
     }
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     std::string ToStr() const { return "<rp>"; };
-
-private:
-    std::unordered_set<Cat> puncts_;
 };
 
 class SpecialCombinator: public CCombinator
