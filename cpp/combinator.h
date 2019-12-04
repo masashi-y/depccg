@@ -416,7 +416,7 @@ class Conjoin: public CCombinator
 public:
     Conjoin(): CCombinator(SSEQ) {}
     bool CanApply(Cat left, Cat right) const {
-        return (ja_possible_root_cats.count(left) > 0 &&
+        return (PossibleRootCats().count(left) > 0 &&
                 *left == *right &&
                 !left->IsFunctor());
     }
@@ -424,8 +424,30 @@ public:
     bool HeadIsLeft(Cat left, Cat right) const { return false; }
     std::string ToStr() const { return "SSEQ"; };
 
-private:
-    static const std::unordered_set<Cat> ja_possible_root_cats;
+    std::unordered_set<Cat>& PossibleRootCats() const {
+        static std::unordered_set<Cat> ja_possible_root_cats;
+        if (ja_possible_root_cats.empty()) {
+            for (std::string cat :{ "NP[case=nc,mod=nm,fin=f]",    // 170
+                                    "NP[case=nc,mod=nm,fin=t]",    // 2972
+                                    "S[mod=nm,form=attr,fin=t]",   // 2
+                                    "S[mod=nm,form=base,fin=f]",   // 68
+                                    "S[mod=nm,form=base,fin=t]",   // 19312
+                                    "S[mod=nm,form=cont,fin=f]",   // 3
+                                    "S[mod=nm,form=cont,fin=t]",   // 36
+                                    "S[mod=nm,form=da,fin=f]",     // 1
+                                    "S[mod=nm,form=da,fin=t]",     // 68
+                                    "S[mod=nm,form=hyp,fin=t]",    // 1
+                                    "S[mod=nm,form=imp,fin=f]",    // 3
+                                    "S[mod=nm,form=imp,fin=t]",    // 15
+                                    "S[mod=nm,form=r,fin=t]",      // 2
+                                    "S[mod=nm,form=s,fin=t]",      // 1
+                                    "S[mod=nm,form=stem,fin=f]",   // 11
+                                    "S[mod=nm,form=stem,fin=t]"    // 710
+                                    })
+            ja_possible_root_cats.insert(CCategory::Parse(cat));
+        }
+        return ja_possible_root_cats;
+    }
 };
 
 class JAForwardApplication: public ForwardApplication
