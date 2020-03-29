@@ -3,6 +3,6 @@ cython
 lxml
 pyyaml
 nltk
-chainer>=2.0.0
+chainer>=2.0.0, <=6.7.0
 googledrivedownloader
 requests
