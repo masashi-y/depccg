@@ -26,7 +26,7 @@ def read_auto(filename, lang='en'):
         else:
             tokens = []
             for token in line.split(' '):
-                if token[0] == '(' and token.endswith(')[conj]'):
+                if token.endswith(')[conj]'):
                     token = token[:-6]
                 tokens.append(token)
             line = ' '.join(tokens)
