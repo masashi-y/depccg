@@ -236,7 +236,7 @@ Note that the Japanese parser accepts pre-tokenized sentences as input.
 
 You can use my [allennlp](https://allennlp.org/)-based supertagger and extend it.
 
-To train a supertagger, prepare [the English CCGbank](https://catalog.ldc.upenn.edu/LDC2005T13) and download [vocab](http://cl.naist.jp/~masashi-y/resources/depccg/vocabulary.tar.gz):
+To train a supertagger, prepare [the English CCGbank](https://catalog.ldc.upenn.edu/LDC2005T13) and download [vocab](https://drive.google.com/file/d/1_rX5UAxVjjcXpRM6EoWee4XprYjEonwl/view?usp=sharing):
 ```sh
 ➜ cat ccgbank/data/AUTO/{0[2-9],1[0-9],20,21}/* > wsj_02-21.auto
 ➜ cat ccgbank/data/AUTO/00/* > wsj_00.auto
