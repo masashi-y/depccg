@@ -195,7 +195,7 @@ def annotate_using_janome(sentences, tokenize=False):
     raw_sentences = []
     for sentence in sentences:
         sentence = ''.join(sentence)
-        tokenized = tokenizer.tokenize(sentence)
+        tokenized = list(tokenizer.tokenize(sentence))
         tokens = []
         for token in tokenized:
             pos, pos1, pos2, pos3 = token.part_of_speech.split(',')
