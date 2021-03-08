@@ -205,7 +205,7 @@ public:
     }
 
     bool IsBackwardTypeRaised() const {
-        return (this->IsTypeRaised() && this->slash_.IsForward());
+        return (this->IsTypeRaised() && this->slash_.IsBackward());
     }
 
     bool IsFunctor() const { return true; }
