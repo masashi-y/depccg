@@ -151,7 +151,6 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
         docs = [Doc(nlp.vocab, sentence) for sentence in sentences]
     for name, proc in nlp.pipeline:
         docs = proc.pipe(docs,
-                         n_threads=n_threads,
                          batch_size=batch_size)
 
     res = []
