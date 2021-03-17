@@ -141,7 +141,7 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
         logger.error('failed to import spacy. please install it by "pip install spacy".')
         exit(1)
 
-    nlp = spacy.load('en', disable=['parser'])
+    nlp = spacy.load('en_core_web_sm', disable=['parser'])
     logger.info('use spacy to annotate POS and NER infos.')
 
     if tokenize:
