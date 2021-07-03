@@ -85,7 +85,7 @@ class Unification(object):
         return True
 
     def ignore(self, x: str) -> bool:
-        return x in VARIABLES
+        return x in self.variables
 
     def __getitem__(self, key: str) -> Category:
 
@@ -93,7 +93,7 @@ class Unification(object):
             if x.is_functor:
                 return x.functor(rec(x.left), rec(x.right))
             else:
-                if x.feature in VARIABLES:
+                if x.feature in self.variables:
                     return Atom(x.base, self.mapping[x.feature])
                 else:
                     return x
