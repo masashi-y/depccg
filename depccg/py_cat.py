@@ -1,4 +1,4 @@
-from typing import Optional, Callable, List, Tuple, TypeVar
+from typing import Optional, Callable, Tuple, TypeVar, Iterator
 from dataclasses import dataclass
 import re
 
@@ -22,23 +22,70 @@ class Feature(object):
 
 @dataclass(frozen=True)
 class UnaryFeature(Feature):
-    value: str
+    """Common feature type widely used in many CCGBanks.
+    This assumes None or "X" values as representing a variable feature.
+    As commonly done in the parsing literature, the 'nb' variable is treated
+    sometimes as not existing, i.e., NP[conj] and NP[nb] can match.
+    """
+
+    value: Optional[str] = None
 
     def __str__(self):
-        return self.value
+        return self.value if self.value is not None else ''
+
+    def is_unified_with(self, other: 'UnaryFeature') -> bool:
+        return (
+            self.is_variable
+            or self.is_ignorable
+            or self == other
+        )
+
+    @property
+    def is_variable(self) -> bool:
+        return self.value == "X"
+
+    @property
+    def is_ignorable(self) -> bool:
+        return self.value is None or self.value == "nb"
 
 
 @dataclass(frozen=True)
 class TernaryFeature(Feature):
+    """Feature type used in the Japanese version of CCGBank.
+    This assumes a feature with values (X1, X2, X3) as representing a variable.
+    """
+
     kv1: Pair[str]
     kv2: Pair[str]
     kv3: Pair[str]
 
-    def items(self) -> List[Pair[str]]:
-        return [self.kv1, self.kv2, self.kv3]
+    def items(self) -> Iterator[Pair[str]]:
+        return (self.kv1, self.kv2, self.kv3)
+
+    def values(self) -> Iterator[str]:
+        return (v for _, v in self.items())
+
+    def keys(self) -> Iterator[str]:
+        return (k for k, _ in self.items())
 
     def __str__(self) -> str:
         return ','.join(f'{k}={v}' for k, v in self.items())
+
+    def is_unified_with(self, other: 'UnaryFeature') -> bool:
+        if self == other:
+            return True
+
+        if list(self.keys()) != list(other.keys()):
+            return False
+
+        return all(
+            v1 == v2 or v1.startswith('X')
+            for v1, v2 in zip(self.values(), other.values())
+        )
+
+    @property
+    def is_variable(self) -> bool:
+        return any(v.startswith('X') for v in self.values())
 
 
 class Category(object):
@@ -61,12 +108,12 @@ class Category(object):
 
     @classmethod
     def parse(cls, text: str) -> 'Category':
-        items = cat_split.sub(r' \1 ', text)
-        buf = list(reversed([i for i in items.split(' ') if i != '']))
+        tokens = cat_split.sub(r' \1 ', text)
+        buffer = list(reversed([i for i in tokens.split(' ') if i != '']))
         stack = []
 
-        while len(buf):
-            item = buf.pop()
+        while len(buffer):
+            item = buffer.pop()
             if item in punctuations:
                 stack.append(Atom(item))
             elif item == '(':
@@ -81,10 +128,10 @@ class Category(object):
             elif item in ('/', '\\', '|'):
                 stack.append(item)
             else:
-                if len(buf) >= 3 and buf[-1] == '[':
-                    buf.pop()
-                    feature = Feature.parse(buf.pop())
-                    assert buf.pop() == ']'
+                if len(buffer) >= 3 and buffer[-1] == '[':
+                    buffer.pop()
+                    feature = Feature.parse(buffer.pop())
+                    assert buffer.pop() == ']'
                     stack.append(Atom(item, feature))
                 else:
                     stack.append(Atom(item))
@@ -98,12 +145,13 @@ class Category(object):
 @dataclass(frozen=True)
 class Atom(Category):
     base: str
-    feature: Optional[Feature] = None
+    feature: Feature = UnaryFeature()
 
     def __str__(self) -> str:
-        if self.feature is None:
+        feature = str(self.feature)
+        if len(feature) == 0:
             return self.base
-        return f'{self.base}[{self.feature}]'
+        return f'{self.base}[{feature}]'
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str):

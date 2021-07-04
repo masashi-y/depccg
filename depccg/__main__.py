@@ -11,7 +11,7 @@ from depccg.tokens import Token, english_annotator, japanese_annotator, annotate
 from .download import download, load_model_directory, SEMANTIC_TEMPLATES, model_is_available, AVAILABLE_MODEL_VARIANTS
 from .lang import BINARY_RULES
 from .utils import read_partial_tree, read_weights
-from .lang import en_default_binary_rules, ja_default_binary_rules
+from .lang import en_default_binary_rules, ja_default_binary_rules, set_global_language_to
 from .combinator import HeadfirstCombinator
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
@@ -32,15 +32,17 @@ def main(args):
     binary_rules = BINARY_RULES[args.lang]
     if args.lang == 'en':
         assert not args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] or args.annotator, \
-                f'Specify --annotator argument in using "{args.format}" output format'
+            f'Specify --annotator argument in using "{args.format}" output format'
         annotate_fun = english_annotator.get(args.annotator, annotate_XX)
 
     elif args.lang == 'ja':
         assert not args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] or args.tokenize, \
-                f'Cannot specify --pre-tokenized argument using "{args.format}" output format'
+            f'Cannot specify --pre-tokenized argument using "{args.format}" output format'
         annotate_fun = japanese_annotator[args.annotator] if args.tokenize else annotate_XX
     else:
         assert False
+
+    set_global_language_to(args.lang)
 
     if args.root_cats is not None:
         args.root_cats = args.root_cats.split(',')
@@ -68,7 +70,7 @@ def main(args):
         model = args.model or def_model
 
     parser = Parsers[args.lang].from_json(
-                args.config or config, model, **kwargs)
+        args.config or config, model, **kwargs)
 
     fin = sys.stdin if args.input is None else open(args.input)
 
@@ -84,13 +86,16 @@ def main(args):
         logging.getLogger().setLevel(logging.CRITICAL)
 
     while True:
-        fin = [line for line in ([input()] if input_type is None else input_type) if len(line.strip()) > 0]
+        fin = [line for line in (
+            [input()] if input_type is None else input_type) if len(line.strip()) > 0]
         if len(fin) == 0:
             break
 
         if args.input_format == 'POSandNERtagged':
-            tagged_doc = [[Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
-            doc = [' '.join(token.word for token in sent) for sent in tagged_doc]
+            tagged_doc = [
+                [Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
+            doc = [' '.join(token.word for token in sent)
+                   for sent in tagged_doc]
             res = parser.parse_doc(doc,
                                    probs=probs,
                                    tag_list=tag_list,
@@ -101,7 +106,8 @@ def main(args):
                 [[word for word in sent['words'].split(' ')] for sent in doc])
             res = parser.parse_json(doc)
         elif args.input_format == 'partial':
-            doc, constraints = zip(*[read_partial_tree(l.strip()) for l in fin])
+            doc, constraints = zip(
+                *[read_partial_tree(l.strip()) for l in fin])
             tagged_doc = annotate_fun(doc)
             res = parser.parse_doc(doc,
                                    probs=probs,
@@ -120,12 +126,14 @@ def main(args):
                                    tag_list=tag_list,
                                    batchsize=args.batchsize)
 
-        semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(args.lang)
-        print_(res, tagged_doc,
-                format=args.format,
-                lang=args.lang,
-                semantic_templates=semantic_templates)
-        
+        semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(
+            args.lang)
+        print_(
+            res, tagged_doc,
+            format=args.format,
+            semantic_templates=semantic_templates
+        )
+
         if input_type is None:
             sys.stdout.flush()
         else:
@@ -208,7 +216,8 @@ def add_common_parser_arguments(parser):
                                  nargs='?',
                                  default=None,
                                  choices=AVAILABLE_MODEL_VARIANTS[parser.get_default('lang')])
-    download_parser.set_defaults(func=lambda args: download(args.lang, args.VARIANT))
+    download_parser.set_defaults(
+        func=lambda args: download(args.lang, args.VARIANT))
 
 
 if __name__ == '__main__':
@@ -259,6 +268,3 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.func(args)
-
-
-

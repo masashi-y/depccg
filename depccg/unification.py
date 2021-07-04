@@ -1,8 +1,5 @@
-from typing import Optional, Dict, Set
+from typing import Dict, Union
 from depccg.py_cat import Category, Atom, Feature
-
-
-VARIABLES = {'X', 'Y', 'Z'}
 
 
 class Unification(object):
@@ -17,22 +14,36 @@ class Unification(object):
     S[mod]
 
     Args:
-        x: a string pattern (e.g., "a/b") to match against the first argument (x above).
-        y: a string pattern ("b") to match against the first argument (y above).
+        meta_x: a string pattern (e.g., "a/b") to match against the first argument (x above).
+        meta_y: a string pattern ("b") to match against the first argument (y above).
     """
 
-    def __init__(self, x: str, y: str, variables: Optional[Set[str]] = None) -> None:
+    def __init__(
+        self,
+        meta_x: Union[str, Category],
+        meta_y: Union[str, Category],
+    ) -> None:
         self.cats: Dict[str, Category] = {}
-        self.mapping = {}
-        self.x = Category.parse(x)
-        self.y = Category.parse(y)
+        # mapping of variable feature to its instantiation
+        self.mapping: Dict[Feature, Feature] = {}
+        self.meta_x = (
+            Category.parse(meta_x) if isinstance(meta_x, str) else meta_x
+        )
+        self.meta_y = (
+            Category.parse(meta_y) if isinstance(meta_y, str) else meta_y
+        )
         # meta variables to feature values
         self.x_features: Dict[str, Feature] = {}
         self.y_features: Dict[str, Feature] = {}
-        self.variables = variables or VARIABLES
         self.success = False
+        self.done = False
 
     def __call__(self, x: Category, y: Category) -> bool:
+        if self.done:
+            raise RuntimeError(
+                "cannot use the same Unification object more than once."
+            )
+        self.done = True
 
         def scan_deep(s: Category, v: str, index: int, results: Dict[str, Feature]):
             if s.is_functor:
@@ -65,8 +76,8 @@ class Unification(object):
             return False  # s.is_functor and t.is_atomic
 
         self.success = (
-            scan(self.x, x, self.x_features) and scan(
-                self.y, y, self.y_features)
+            scan(self.meta_x, x, self.x_features) and scan(
+                self.meta_y, y, self.y_features)
         )
 
         if not self.success:
@@ -79,16 +90,24 @@ class Unification(object):
             return True
 
         for var in meta_vars:
-            if self.ignore(self.x_features[var]) and not self.ignore(self.y_features[var]):
-                self.mapping[self.x_features[var]] = self.y_features[var]
-            elif not self.ignore(self.x_features[var]) and self.ignore(self.y_features[var]):
-                self.mapping[self.y_features[var]] = self.x_features[var]
-            elif self.x_features[var] != self.y_features[var]:
-                return False
-        return True
+            x_feature = self.x_features[var]
+            y_feature = self.y_features[var]
 
-    def ignore(self, x: str) -> bool:
-        return x in self.variables
+            # these pairs can match: (NP[nb], NP[conj]), (NP, NP[conj]), (NP[X], NP[conj])
+            if x_feature.is_unified_with(y_feature):
+                # if (NP[X], NP[conj]), further memorize the matching `X := conj`
+                # if there're two of `X := conj` and `X := nb`, choose one arbitrarily
+                if x_feature.is_variable:
+                    self.mapping[x_feature] = y_feature
+
+            elif y_feature.is_unified_with(x_feature):
+                if y_feature.is_variable:
+                    self.mapping[y_feature] = x_feature
+            else:
+                self.success = False
+                return False
+
+        return True
 
     def __getitem__(self, key: str) -> Category:
 
@@ -96,10 +115,15 @@ class Unification(object):
             if x.is_functor:
                 return x.functor(rec(x.left), rec(x.right))
             else:
-                if x.feature in self.variables:
+                if x.feature in self.mapping:
                     return Atom(x.base, self.mapping[x.feature])
                 else:
                     return x
 
-        assert self.success
+        assert self.success, \
+            ("the unification has not been successful. "
+             "Unification.__getitem__ is not callable in that case.")
+
+        if key not in self.cats:
+            raise KeyError(f'meta category `{key}` has not been observed.')
         return rec(self.cats[key])
