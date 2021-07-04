@@ -1,8 +1,9 @@
 from typing import Optional, Callable, List, Union, Tuple, TypeVar
+from dataclasses import dataclass
 from collections import OrderedDict
 import re
 
-X = TypeVar['X']
+X = TypeVar('X')
 Pair = Tuple[X, X]
 
 cat_split = re.compile(r'([\[\]\(\)/\\])')
@@ -19,21 +20,21 @@ class Feature(OrderedDict):
             assert isinstance(x, list)
             self.update(x)
 
+    def __str__(self):
+        if self.simple:
+            return self[Feature.DEFAULT_KEY]
+        return ','.join(f'{k}={v}' for k, v in self.items())
+
     @property
     def simple(self) -> bool:
         return (
             len(self) == 1 and Feature.DEFAULT_KEY in self
         )
 
-    def __str__(self):
-        if self.simple:
-            return self[Feature.DEFAULT_KEY]
-        return ','.join(f'{k}={v}' for k, v in self.items())
-
-    @staticmethod
+    @classmethod
     def parse(cls, text: str) -> 'Feature':
         if '=' in text and ',' in text:
-            Feature([kv.split('=') for kv in text.split(',')])
+            return Feature([kv.split('=') for kv in text.split(',')])
         return Feature(text)
 
 
@@ -45,13 +46,6 @@ class Category(object):
     @property
     def is_atomic(self):
         return not self.is_functor
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, Category):
-            return str(self) == str(other)
-        elif isinstance(other, str):
-            return str(self) == other
-        return False
 
     def __repr__(self) -> str:
         return str(self)
@@ -76,15 +70,13 @@ class Category(object):
                 pass
             elif item == ')':
                 y = stack.pop()
+                if len(stack) == 0:
+                    return y
                 f = stack.pop()
                 x = stack.pop()
-                stack.append(f(x, y))
-            elif item == '/':
-                stack.append(lambda x, y: Functor(x, '/', y))
-            elif item == '\\':
-                stack.append(lambda x, y: Functor(x, '\\', y))
-            elif item == '|':
-                stack.append(lambda x, y: Functor(x, '|', y))
+                stack.append(Functor(x, f, y))
+            elif item in ('/', '\\', '|'):
+                stack.append(item)
             else:
                 if len(buf) >= 3 and buf[-1] == '[':
                     buf.pop()
@@ -97,29 +89,39 @@ class Category(object):
         if len(stack) == 1:
             return stack[0]
         x, f, y = stack
-        return f(x, y)
+        return Functor(x, f, y)
 
 
+@dataclass(frozen=True)
 class Atom(Category):
-    def __init__(self, base: str, feature: Optional[Feature] = None) -> None:
-        self.base = base
-        self.feature = feature
-
-    @property
-    def is_atomic(self):
-        return True
+    base: str
+    feature: Optional[Feature] = None
 
     def __str__(self) -> str:
         if self.feature is None:
             return self.base
         return f'{self.base}[{self.feature}]'
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return str(self) == other
+        elif not isinstance(other, Atom):
+            return False
+        return (
+            self.base == other.base
+            and self.feature == other.feature
+        )
 
+    @property
+    def is_atomic(self):
+        return True
+
+
+@dataclass(frozen=True)
 class Functor(Category):
-    def __init__(self, left: Category, slash: str, right: Category) -> None:
-        self.left = left
-        self.slash = slash
-        self.right = right
+    left: Category
+    slash: str
+    right: Category
 
     def __str__(self) -> str:
         def _str(cat):
@@ -127,6 +129,17 @@ class Functor(Category):
                 return f'({cat})'
             return str(cat)
         return _str(self.left) + self.slash + _str(self.right)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return str(self) == other
+        elif not isinstance(other, Functor):
+            return False
+        return (
+            self.left == other.left
+            and self.slash == other.slash
+            and self.right == other.right
+        )
 
     @property
     def functor(self) -> Callable[[Category, Category], Category]:

@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Set
-from depccg.py_cat import Category, Atom
+from depccg.py_cat import Category, Atom, Feature
 
 
 VARIABLES = {'X', 'Y', 'Z'}
@@ -22,26 +22,31 @@ class Unification(object):
     """
 
     def __init__(self, x: str, y: str, variables: Optional[Set[str]] = None) -> None:
-        self.cats = {}
+        self.cats: Dict[str, Category] = {}
         self.mapping = {}
         self.x = Category.parse(x)
         self.y = Category.parse(y)
-        self.x_features = {}
-        self.y_features = {}
+        # meta variables to feature values
+        self.x_features: Dict[str, Feature] = {}
+        self.y_features: Dict[str, Feature] = {}
         self.variables = variables or VARIABLES
         self.success = False
 
     def __call__(self, x: Category, y: Category) -> bool:
 
-        def scan_deep(s: Category, v: str, index: int, results: Dict[str, str]):
+        def scan_deep(s: Category, v: str, index: int, results: Dict[str, Feature]):
             if s.is_functor:
                 index = scan_deep(s.left, v, index, results)
                 index = scan_deep(s.right, v, index, results)
                 return index
-            results[v + str(index)] = s.feature
+            results[f'{v}{index}'] = s.feature
             return index + 1
 
-        def scan(s: Category, t: Category, results: Dict[str, str]) -> bool:
+        def scan(s: Category, t: Category, results: Dict[str, Feature]) -> bool:
+            # collect categories corresponding to meta variables
+            if s.is_atomic:
+                self.cats[s.base] = t
+
             if (
                 s.is_functor and t.is_functor and (
                     s.slash == t.slash or '|' in (s.slash, t.slash))
@@ -51,15 +56,13 @@ class Unification(object):
                         s.right, t.right, results)
                 )
             elif s.is_atomic and t.is_functor:
-                self.cats[s.base] = t
                 scan_deep(t, s.base, 0, results)
                 return True
             elif s.is_atomic and t.is_atomic:
-                self.cats[s.base] = t
                 if t.feature is not None:
                     results[s.base] = t.feature
                 return True
-            return False
+            return False  # s.is_functor and t.is_atomic
 
         self.success = (
             scan(self.x, x, self.x_features) and scan(

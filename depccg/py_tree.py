@@ -107,7 +107,7 @@ class Tree(object):
         left: 'Tree',
         right: 'Tree',
         op_string: str,
-        left_is_head: bool=True,
+        left_is_head: bool = True,
     ) -> 'Tree':
         return Tree(cat, [left, right], op_string, left_is_head)
 
