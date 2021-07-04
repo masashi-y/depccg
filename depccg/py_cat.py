@@ -1,6 +1,5 @@
-from typing import Optional, Callable, List, Union, Tuple, TypeVar
+from typing import Optional, Callable, List, Tuple, TypeVar
 from dataclasses import dataclass
-from collections import OrderedDict
 import re
 
 X = TypeVar('X')
@@ -10,32 +9,36 @@ cat_split = re.compile(r'([\[\]\(\)/\\])')
 punctuations = [',', '.', ';', ':', 'LRB', 'RRB', 'conj', '*START*', '*END*']
 
 
-class Feature(OrderedDict):
-    DEFAULT_KEY = '**DEFAULT_KEY**'
-
-    def __init__(self, x: Union[str, List[Pair[str]]]):
-        if isinstance(x, str):
-            self[Feature.DEFAULT_KEY] = x
-        else:
-            assert isinstance(x, list)
-            self.update(x)
-
-    def __str__(self):
-        if self.simple:
-            return self[Feature.DEFAULT_KEY]
-        return ','.join(f'{k}={v}' for k, v in self.items())
-
-    @property
-    def simple(self) -> bool:
-        return (
-            len(self) == 1 and Feature.DEFAULT_KEY in self
-        )
+class Feature(object):
+    def __repr__(self) -> str:
+        return str(self)
 
     @classmethod
     def parse(cls, text: str) -> 'Feature':
         if '=' in text and ',' in text:
-            return Feature([kv.split('=') for kv in text.split(',')])
-        return Feature(text)
+            return TernaryFeature(*[tuple(kv.split('=')) for kv in text.split(',')])
+        return UnaryFeature(text)
+
+
+@dataclass(frozen=True)
+class UnaryFeature(Feature):
+    value: str
+
+    def __str__(self):
+        return self.value
+
+
+@dataclass(frozen=True)
+class TernaryFeature(Feature):
+    kv1: Pair[str]
+    kv2: Pair[str]
+    kv3: Pair[str]
+
+    def items(self) -> List[Pair[str]]:
+        return [self.kv1, self.kv2, self.kv3]
+
+    def __str__(self) -> str:
+        return ','.join(f'{k}={v}' for k, v in self.items())
 
 
 class Category(object):
