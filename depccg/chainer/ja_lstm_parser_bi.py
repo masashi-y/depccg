@@ -5,9 +5,9 @@ import chainer
 import chainer.links as L
 import chainer.functions as F
 
-from depccg.utils import read_model_defs
-from depccg.biaffine import Biaffine, Bilinear
-from depccg.param import Param
+from depccg.py_utils import read_model_defs
+from depccg.chainer.biaffine import Biaffine, Bilinear
+from depccg.chainer.param import Param
 
 
 UNK = "*UNKNOWN*"
@@ -34,14 +34,14 @@ class FeatureExtractor(object):
         """
         w = xp.array([self.start_word] + [self.words.get(
             x, self.unk_word) for x in words] + [self.end_word], 'i')
-        l = max(len(x) for x in words)
-        c = -xp.ones((len(words) + 2, l), 'i')
+        length = max(len(x) for x in words)
+        c = -xp.ones((len(words) + 2, length), 'i')
         c[0, 0] = self.start_char
         c[-1, 0] = self.end_char
         for i, word in enumerate(words, 1):
             for j in range(len(word)):
                 c[i, j] = self.chars.get(word[j], self.unk_char)
-        return w, c, xp.array([l], 'i')
+        return w, c, xp.array([length], 'i')
 
 
 class BiaffineJaLSTMParser(chainer.Chain):
@@ -50,17 +50,20 @@ class BiaffineJaLSTMParser(chainer.Chain):
         self.extractor = FeatureExtractor(model_path)
         self.in_dim = self.word_dim + self.char_dim
         super(BiaffineJaLSTMParser, self).__init__(
-                emb_word=L.EmbedID(self.n_words, self.word_dim),
-                emb_char=L.EmbedID(self.n_chars, 50, ignore_label=IGNORE),
-                conv_char=L.Convolution2D(1, self.char_dim, (3, 50), stride=1, pad=(1, 0)),
-                lstm_f=L.NStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
-                lstm_b=L.NStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
-                arc_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
-                arc_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
-                rel_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
-                rel_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
-                biaffine_arc=Biaffine(self.dep_dim),
-                biaffine_tag=Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
+            emb_word=L.EmbedID(self.n_words, self.word_dim),
+            emb_char=L.EmbedID(self.n_chars, 50, ignore_label=IGNORE),
+            conv_char=L.Convolution2D(
+                1, self.char_dim, (3, 50), stride=1, pad=(1, 0)),
+            lstm_f=L.NStepLSTM(self.nlayers, self.in_dim,
+                               self.hidden_dim, 0.32),
+            lstm_b=L.NStepLSTM(self.nlayers, self.in_dim,
+                               self.hidden_dim, 0.32),
+            arc_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
+            arc_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
+            rel_dep=L.Linear(2 * self.hidden_dim, self.dep_dim),
+            rel_head=L.Linear(2 * self.hidden_dim, self.dep_dim),
+            biaffine_arc=Biaffine(self.dep_dim),
+            biaffine_tag=Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
 
     def forward(self, ws, cs, ls, dep_ts=None):
         ws = map(self.emb_word, ws)
@@ -69,7 +72,7 @@ class BiaffineJaLSTMParser(chainer.Chain):
                 self.conv_char(
                     F.expand_dims(
                         self.emb_char(c), 1)), (int(l[0]), 1)))
-                    for c, l in zip(cs, ls)]
+              for c, l in zip(cs, ls)]
         xs_f = [F.dropout(F.concat([w, c]), 0.5) for w, c in zip(ws, cs)]
         xs_b = [x[::-1] for x in xs_f]
 
@@ -88,10 +91,10 @@ class BiaffineJaLSTMParser(chainer.Chain):
             heads = [F.argmax(y, axis=1) for y in dep_ys]
 
         cat_ys = [self.biaffine_tag(
-                    F.elu(F.dropout(self.rel_dep(h), 0.32)),
-                    F.elu(F.dropout(self.rel_head(
-                        F.embed_id(t, h, ignore_label=IGNORE)), 0.32)))
-                  for h, t in zip(hs, heads)]
+            F.elu(F.dropout(self.rel_dep(h), 0.32)),
+            F.elu(F.dropout(self.rel_head(
+                F.embed_id(t, h, ignore_label=IGNORE)), 0.32)))
+            for h, t in zip(hs, heads)]
 
         return cat_ys, dep_ys
 
@@ -117,5 +120,3 @@ class BiaffineJaLSTMParser(chainer.Chain):
     @property
     def cats(self):
         return list(zip(*sorted(self.targets.items(), key=lambda x: x[1])))[0]
-
-

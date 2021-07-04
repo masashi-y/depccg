@@ -113,9 +113,9 @@ def read_partial_tree(string: str) -> Tuple[List[str], List[SpanInfo]]:
             if len(items) == 1:
                 words.append(items[0])
             elif len(items) == 2:
+                cat, word = items
                 assert len(cat) > 0 and len(word) > 0, \
                     'failed to parse partially annotated sentence.'
-                cat, word = items
                 words.append(word)
                 spans.append(SpanInfo(Category.parse(cat), counter))
             counter += 1

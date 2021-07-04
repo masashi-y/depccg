@@ -21,4 +21,3 @@ class Param:
         p.__dict__["ps"].update(params)
         obj.__dict__.update(params)
         return p
-

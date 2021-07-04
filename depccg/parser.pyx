@@ -156,8 +156,8 @@ cdef class EnglishCCGParser:
             self.load_allennlp_tagger(model_path)
 
     def load_chainer_tagger(self, dirname):
-        from depccg.lstm_parser_bi_fast import FastBiaffineLSTMParser
-        from depccg.ja_lstm_parser_bi import BiaffineJaLSTMParser
+        from depccg.chainer.lstm_parser_bi_fast import FastBiaffineLSTMParser
+        from depccg.chainer.ja_lstm_parser_bi import BiaffineJaLSTMParser
         model_file = os.path.join(dirname, 'tagger_model')
         def_file = os.path.join(dirname, 'tagger_defs.txt')
         assert os.path.exists(model_file) and os.path.exists(def_file), \
@@ -173,11 +173,11 @@ cdef class EnglishCCGParser:
 
     def load_allennlp_tagger(self, model_path):
         from allennlp.models.archival import load_archive
-        from depccg.models.my_allennlp.models.supertagger import Supertagger
-        from depccg.models.my_allennlp.dataset.supertagging_dataset import SupertaggingDatasetReader
-        from depccg.models.my_allennlp.dataset.supertagging_dataset import TritrainSupertaggingDatasetReader
-        from depccg.models.my_allennlp.dataset.ja_supertagging_dataset import JaSupertaggingDatasetReader
-        from depccg.models.my_allennlp.predictor.supertagger_predictor import SupertaggerPredictor
+        from depccg.allennlp.models.supertagger import Supertagger
+        from depccg.allennlp.dataset.supertagging_dataset import SupertaggingDatasetReader
+        from depccg.allennlp.dataset.supertagging_dataset import TritrainSupertaggingDatasetReader
+        from depccg.allennlp.dataset.ja_supertagging_dataset import JaSupertaggingDatasetReader
+        from depccg.allennlp.predictor.supertagger_predictor import SupertaggerPredictor
         if self.gpu >= 0:
             logger.info(f'sending the supertagger to gpu: {self.gpu}')
         archive = load_archive(model_path, cuda_device=self.gpu)

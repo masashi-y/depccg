@@ -1,6 +1,5 @@
 
 import os
-import numpy as np
 import random
 import chainer
 import chainer.links as L
@@ -8,11 +7,11 @@ import chainer.functions as F
 from chainer import cuda
 from chainer import Variable
 from chainer.dataset.convert import _concat_arrays
-from .utils import read_pretrained_embeddings, read_model_defs
+from depccg.py_utils import read_model_defs
 from .biaffine import Biaffine, Bilinear
-from .param import Param
+from depccg.chainer.param import Param
 from .fixed_length_n_step_lstm import FixedLengthNStepLSTM
-from .utils import normalize
+from depccg.py_utils import normalize
 
 
 UNK = "*UNKNOWN*"
@@ -42,8 +41,10 @@ def get_prefix(word):
 class FeatureExtractor(object):
     def __init__(self, model_path, length=False):
         self.words = read_model_defs(os.path.join(model_path, "words.txt"))
-        self.suffixes = read_model_defs(os.path.join(model_path, "suffixes.txt"))
-        self.prefixes = read_model_defs(os.path.join(model_path, "prefixes.txt"))
+        self.suffixes = read_model_defs(
+            os.path.join(model_path, "suffixes.txt"))
+        self.prefixes = read_model_defs(
+            os.path.join(model_path, "prefixes.txt"))
         self.unk_word = self.words[UNK]
         self.start_word = self.words[START]
         self.end_word = self.words[END]
@@ -97,38 +98,44 @@ def concat_examples(batch, device=None):
         def to_device(x):
             return cuda.to_gpu(x, device, cuda.Stream.null)
 
-    result = [to_device(_concat_arrays([s[0] for s in batch], -1)), # ws
-              to_device(_concat_arrays([s[1] for s in batch], -1)), # ps
-              to_device(_concat_arrays([s[2] for s in batch], -1)), # ss
+    result = [to_device(_concat_arrays([s[0] for s in batch], -1)),  # ws
+              to_device(_concat_arrays([s[1] for s in batch], -1)),  # ps
+              to_device(_concat_arrays([s[2] for s in batch], -1)),  # ss
               [s[3] for s in batch]]                                # ls
 
     if len(batch[0]) == 7:
         result.append([to_device(s[4]) for s in batch])            # cat_ts
         result.append([to_device(s[5]) for s in batch])            # dep_ts
-        result.append(to_device(_concat_arrays([s[6] for s in batch], None))) # weights
+        result.append(to_device(_concat_arrays(
+            [s[6] for s in batch], None)))  # weights
 
     return tuple(result)
 
 
 class FastBiaffineLSTMParser(chainer.Chain):
     def __init__(self, model_path, word_dim=None, afix_dim=None, nlayers=2,
-            hidden_dim=128, dep_dim=100, dropout_ratio=0.5):
+                 hidden_dim=128, dep_dim=100, dropout_ratio=0.5):
         Param.load(self, os.path.join(model_path, 'tagger_defs.txt'))
         self.extractor = FeatureExtractor(model_path, length=True)
         self.in_dim = self.word_dim + 8 * self.afix_dim
         self.dropout_ratio = dropout_ratio
         super(FastBiaffineLSTMParser, self).__init__(
-                emb_word=L.EmbedID(self.n_words, self.word_dim, ignore_label=IGNORE),
-                emb_suf=L.EmbedID(self.n_suffixes, self.afix_dim, ignore_label=IGNORE),
-                emb_prf=L.EmbedID(self.n_prefixes, self.afix_dim, ignore_label=IGNORE),
-                lstm_f=FixedLengthNStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
-                lstm_b=FixedLengthNStepLSTM(self.nlayers, self.in_dim, self.hidden_dim, 0.32),
-                arc_dep=Linear(2 * self.hidden_dim, self.dep_dim),
-                arc_head=Linear(2 * self.hidden_dim, self.dep_dim),
-                rel_dep=Linear(2 * self.hidden_dim, self.dep_dim),
-                rel_head=Linear(2 * self.hidden_dim, self.dep_dim),
-                biaffine_arc=Biaffine(self.dep_dim),
-                biaffine_tag=Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
+            emb_word=L.EmbedID(self.n_words, self.word_dim,
+                               ignore_label=IGNORE),
+            emb_suf=L.EmbedID(self.n_suffixes, self.afix_dim,
+                              ignore_label=IGNORE),
+            emb_prf=L.EmbedID(self.n_prefixes, self.afix_dim,
+                              ignore_label=IGNORE),
+            lstm_f=FixedLengthNStepLSTM(
+                self.nlayers, self.in_dim, self.hidden_dim, 0.32),
+            lstm_b=FixedLengthNStepLSTM(
+                self.nlayers, self.in_dim, self.hidden_dim, 0.32),
+            arc_dep=Linear(2 * self.hidden_dim, self.dep_dim),
+            arc_head=Linear(2 * self.hidden_dim, self.dep_dim),
+            rel_dep=Linear(2 * self.hidden_dim, self.dep_dim),
+            rel_head=Linear(2 * self.hidden_dim, self.dep_dim),
+            biaffine_arc=Biaffine(self.dep_dim),
+            biaffine_tag=Bilinear(self.dep_dim, self.dep_dim, len(self.targets)))
 
     def forward(self, ws, ss, ps, ls, dep_ts=None):
         batchsize, slen = ws.shape
@@ -155,20 +162,23 @@ class FastBiaffineLSTMParser(chainer.Chain):
             heads = dep_ts
         else:
             heads = F.flatten(F.argmax(dep_ys, axis=2)) + \
-                    self.xp.repeat(self.xp.arange(0, batchsize * slen, slen), slen)
+                self.xp.repeat(self.xp.arange(0, batchsize * slen, slen), slen)
 
         hs = F.reshape(hs, (batchsize * slen, -1))
         heads = F.permutate(
-                    F.elu(F.dropout(
-                        self.rel_head(hs), 0.32)), heads)
+            F.elu(F.dropout(
+                self.rel_head(hs), 0.32)), heads)
 
         childs = F.elu(F.dropout(self.rel_dep(hs), 0.32))
         cat_ys = self.biaffine_tag(childs, heads)
 
-        dep_ys = F.split_axis(dep_ys, batchsize, 0) if batchsize > 1 else [dep_ys]
-        dep_ys = [F.reshape(v, v.shape[1:])[:l, :l] for v, l in zip(dep_ys, ls)]
+        dep_ys = F.split_axis(
+            dep_ys, batchsize, 0) if batchsize > 1 else [dep_ys]
+        dep_ys = [F.reshape(v, v.shape[1:])[:l, :l]
+                  for v, l in zip(dep_ys, ls)]
 
-        cat_ys = F.split_axis(cat_ys, batchsize, 0) if batchsize > 1 else [cat_ys]
+        cat_ys = F.split_axis(
+            cat_ys, batchsize, 0) if batchsize > 1 else [cat_ys]
         cat_ys = [v[:l] for v, l in zip(cat_ys, ls)]
         return cat_ys, dep_ys
 
@@ -203,4 +213,3 @@ class FastBiaffineLSTMParser(chainer.Chain):
     @property
     def cats(self):
         return list(zip(*sorted(self.targets.items(), key=lambda x: x[1])))[0]
-
