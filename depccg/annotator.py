@@ -8,50 +8,9 @@ from lxml import etree
 
 from depccg.download import MODEL_DIRECTORY
 from depccg.morpha import MorphaStemmer
+from depccg.types import Token
 
 logger = logging.getLogger(__name__)
-
-
-class Token(dict):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def __getattr__(self, item):
-        return self[item]
-
-    def __repr__(self):
-        res = super().__repr__()
-        return f'Token({res})'
-
-    @classmethod
-    def from_piped(cls, string: str) -> 'Token':
-        # WORD|POS|NER or WORD|LEMMA|POS|NER
-        # or WORD|LEMMA|POS|NER|CHUCK
-        items = string.split('|')
-        if len(items) == 5:
-            word, lemma, pos, entity, chunk = items
-        elif len(items) == 4:
-            word, lemma, pos, entity = items
-            chunk = 'XX'
-        else:
-            assert len(items) == 3
-            word, pos, entity = items
-            lemma = 'XX'
-            chunk = 'XX'
-
-        return Token(word=word,
-                     lemma=lemma,
-                     pos=pos,
-                     entity=entity,
-                     chunk=chunk)
-
-    @classmethod
-    def from_word(cls, word: str) -> 'Token':
-        return Token(word=word,
-                     lemma='XX',
-                     pos='XX',
-                     entity='XX',
-                     chunk='XX')
 
 
 candc_cmd = "cat \"{0}\" | {1}/bin/pos --model {2} | {1}/bin/ner --model {3}"
@@ -61,8 +20,10 @@ def annotate_XX(sentences: List[List[str]], tokenize=False) -> List[List[Token]]
     if tokenize:
         raise NotImplementedError('no tokenizer implemented')
 
-    return [[Token.from_word(word) for word in sentence]
-            for sentence in sentences]
+    return [
+        [Token.of_word(word) for word in sentence]
+        for sentence in sentences
+    ]
 
 
 def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List[List[Token]]:
@@ -146,8 +107,16 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
     for sentence in tagged_sentences:
         words, poss = zip(*[(word, pos) for word, pos, _ in sentence])
         lemmas = stemmer.analyze(list(words), list(poss))
-        tokens = [Token(word=word, pos=pos, entity=ner, lemma=lemma.lower(), chunk='XX')
-                  for (word, pos, ner), lemma in zip(sentence, lemmas)]
+        tokens = [
+            Token(
+                word=word,
+                pos=pos,
+                entity=ner,
+                lemma=lemma.lower(),
+                chunk='XX'
+            )
+            for (word, pos, ner), lemma in zip(sentence, lemmas)
+        ]
         res.append(tokens)
     return res
 

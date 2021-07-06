@@ -1,8 +1,8 @@
 
 from typing import List, Optional, Dict, Any
-from depccg.tree import Tree
-from depccg.tokens import Token
-from depccg.cat import Category
+from depccg.py_tree import Tree
+from depccg.types import Token
+from depccg.py_cat import Category
 
 
 def _json_of_category(category: Category) -> Dict[str, Any]:
@@ -61,7 +61,7 @@ def json_of(
             }
 
     if tokens is None:
-        tokens = [Token.from_word(word) for word in tree.word.split(' ')]
+        tokens = [Token.of_word(word) for word in tree.word.split(' ')]
 
     tokens = list(tokens)
     return rec(tree)

@@ -1,7 +1,7 @@
 from typing import List, Union, Optional
 import html
 import re
-from depccg.tree import Tree, ScoredTree
+from depccg.py_tree import Tree, ScoredTree
 
 
 _MATHML_SUBTREE_NONTERMINAL = '''\

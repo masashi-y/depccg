@@ -1,18 +1,17 @@
 
+from depccg.lang import set_global_language_to
+from depccg.utils import read_partial_tree, read_weights
+from depccg.lang import BINARY_RULES
+from depccg.download import download, load_model_directory, SEMANTIC_TEMPLATES, model_is_available, AVAILABLE_MODEL_VARIANTS
 import argparse
 import sys
 import logging
 import json
-from lxml import etree
 
 from .parser import EnglishCCGParser, JapaneseCCGParser
 from .printer import print_
-from depccg.tokens import Token, english_annotator, japanese_annotator, annotate_XX
-from .download import download, load_model_directory, SEMANTIC_TEMPLATES, model_is_available, AVAILABLE_MODEL_VARIANTS
-from .lang import BINARY_RULES
-from .utils import read_partial_tree, read_weights
-from .lang import en_default_binary_rules, ja_default_binary_rules, set_global_language_to
-from .combinator import HeadfirstCombinator
+from depccg.annotator import english_annotator, japanese_annotator, annotate_XX
+from depccg.types import Token
 
 Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
 

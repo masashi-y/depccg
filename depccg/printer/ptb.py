@@ -1,4 +1,4 @@
-from depccg.tree import Tree
+from depccg.py_tree import Tree
 
 
 def ptb_of(tree: Tree) -> Tree:

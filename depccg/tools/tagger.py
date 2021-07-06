@@ -2,7 +2,7 @@
 import argparse
 from depccg.tools.reader import read_trees_guess_extension
 from depccg.printer import print_
-from depccg.tokens import english_annotator
+from depccg.types import english_annotator
 from depccg.download import SEMANTIC_TEMPLATES
 
 LANG = 'en'
@@ -18,7 +18,8 @@ if __name__ == '__main__':
     parser.add_argument('-f',
                         '--format',
                         default='xml',
-                        choices=['auto', 'xml', 'prolog', 'jigg_xml', 'jigg_xml_ccg2lambda', 'json'],
+                        choices=['auto', 'xml', 'prolog', 'jigg_xml',
+                                 'jigg_xml_ccg2lambda', 'json'],
                         help='output format')
     parser.add_argument('--semantic-templates',
                         help='semantic templates used in "ccg2lambda" format output')

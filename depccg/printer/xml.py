@@ -1,7 +1,7 @@
 from typing import List, Optional
 from lxml import etree
-from depccg.tree import Tree, ScoredTree
-from depccg.tokens import Token
+from depccg.py_tree import Tree, ScoredTree
+from depccg.types import Token
 
 
 def _process_tree(tree: Tree, tokens: Optional[List[Token]] = None) -> etree.Element:
@@ -25,7 +25,7 @@ def _process_tree(tree: Tree, tokens: Optional[List[Token]] = None) -> etree.Ele
 
     if tokens is None:
         tokens = [
-            Token.from_word(word) for word in tree.word.split(' ')
+            Token.of_word(word) for word in tree.word.split(' ')
         ]
 
     tokens = list(enumerate(tokens))

@@ -5,7 +5,7 @@ import re
 X = TypeVar('X')
 Pair = Tuple[X, X]
 
-cat_split = re.compile(r'([\[\]\(\)/\\])')
+cat_split = re.compile(r'([\[\]\(\)/\\|])')
 punctuations = [',', '.', ';', ':', 'LRB', 'RRB', 'conj', '*START*', '*END*']
 
 
@@ -20,7 +20,7 @@ class Feature(object):
         return UnaryFeature(text)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class UnaryFeature(Feature):
     """Common feature type widely used in many CCGBanks.
     This assumes None or "X" values as representing a variable feature.
@@ -30,10 +30,17 @@ class UnaryFeature(Feature):
 
     value: Optional[str] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value if self.value is not None else ''
 
-    def is_unified_with(self, other: 'UnaryFeature') -> bool:
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self == Feature.parse(other)
+        elif not isinstance(other, UnaryFeature):
+            return False
+        return self.value == other.value
+
+    def unifies(self, other: 'UnaryFeature') -> bool:
         return (
             self.is_variable
             or self.is_ignorable
@@ -49,7 +56,7 @@ class UnaryFeature(Feature):
         return self.value is None or self.value == "nb"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class TernaryFeature(Feature):
     """Feature type used in the Japanese version of CCGBank.
     This assumes a feature with values (X1, X2, X3) as representing a variable.
@@ -71,7 +78,18 @@ class TernaryFeature(Feature):
     def __str__(self) -> str:
         return ','.join(f'{k}={v}' for k, v in self.items())
 
-    def is_unified_with(self, other: 'UnaryFeature') -> bool:
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self == Feature.parse(other)
+        elif not isinstance(other, TernaryFeature):
+            return False
+        return (
+            self.kv1 == other.kv1
+            and self.kv2 == other.kv2
+            and self.kv3 == other.kv3
+        )
+
+    def unifies(self, other: 'UnaryFeature') -> bool:
         if self == other:
             return True
 
@@ -142,7 +160,7 @@ class Category(object):
         return Functor(x, f, y)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Atom(Category):
     base: str
     feature: Feature = UnaryFeature()
@@ -163,12 +181,22 @@ class Atom(Category):
             and self.feature == other.feature
         )
 
+    def __xor__(self, other: object) -> bool:
+        if not isinstance(other, Atom):
+            return False
+        return self.base == other.base
+
     @property
     def is_atomic(self):
         return True
 
+    def clear_features(self, *args) -> 'Atom':
+        if self.feature in args:
+            return Atom(self.base)
+        return self
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, repr=False)
 class Functor(Category):
     left: Category
     slash: str
@@ -192,6 +220,15 @@ class Functor(Category):
             and self.right == other.right
         )
 
+    def __xor__(self, other: object) -> bool:
+        if not isinstance(other, Functor):
+            return False
+        return (
+            self.left ^ other.left
+            and self.slash == other.slash
+            and self.right ^ other.right
+        )
+
     @property
     def functor(self) -> Callable[[Category, Category], Category]:
         return lambda x, y: Functor(x, self.slash, y)
@@ -199,3 +236,9 @@ class Functor(Category):
     @property
     def is_functor(self):
         return True
+
+    def clear_features(self, *args) -> 'Functor':
+        return self.functor(
+            self.left.clear_features(*args),
+            self.right.clear_features(*args)
+        )

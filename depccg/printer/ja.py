@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from depccg.tree import Tree
-from depccg.tokens import Token
+from depccg.py_tree import Tree
+from depccg.types import Token
 from depccg.py_utils import normalize
 
 
@@ -44,6 +44,6 @@ def ja_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
             return f'{{{node.op_symbol} {node.cat} {children}}}'
 
     if tokens is None:
-        tokens = [Token.from_word(word) for word in tree.word.split(' ')]
+        tokens = [Token.of_word(word) for word in tree.word.split(' ')]
 
     return rec(tree)

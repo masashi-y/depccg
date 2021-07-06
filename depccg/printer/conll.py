@@ -1,7 +1,7 @@
 from typing import List, Optional
 from depccg.py_utils import denormalize
-from depccg.tokens import Token
-from depccg.tree import Tree
+from depccg.types import Token
+from depccg.py_tree import Tree
 
 
 def _resolve_dependencies(tree: Tree) -> List[int]:
@@ -87,7 +87,7 @@ def conll_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
             return children
 
     if tokens is None:
-        tokens = [Token.from_word(word) for word in tree.word.split(' ')]
+        tokens = [Token.of_word(word) for word in tree.word.split(' ')]
 
     dependencies = _resolve_dependencies(tree)
     return rec(tree)

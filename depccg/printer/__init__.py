@@ -4,8 +4,8 @@ import json
 from io import StringIO
 from lxml import etree
 
-from depccg.tree import ScoredTree
-from depccg.tokens import Token
+from depccg.py_tree import ScoredTree
+from depccg.types import Token
 from depccg.download import SEMANTIC_TEMPLATES
 from depccg.semantics.ccg2lambda import parse as ccg2lambda
 from depccg.lang import GLOBAL_LANG_NAME
@@ -63,7 +63,8 @@ def to_string(
     """
 
     if format in ('jigg_xml_ccg2lambda', 'ccg2lambda'):
-        templates = semantic_templates or SEMANTIC_TEMPLATES.get(GLOBAL_LANG_NAME)
+        templates = semantic_templates or SEMANTIC_TEMPLATES.get(
+            GLOBAL_LANG_NAME)
         assert templates is not None, \
             f'semantic_templates must be specified for language: {GLOBAL_LANG_NAME}'
 

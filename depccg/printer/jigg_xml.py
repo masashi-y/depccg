@@ -1,8 +1,8 @@
 from typing import List
 from lxml import etree
 
-from depccg.tokens import Token
-from depccg.tree import ScoredTree, Tree
+from depccg.types import Token
+from depccg.py_tree import ScoredTree, Tree
 
 
 class _ConvertToJiggXML(object):

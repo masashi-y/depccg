@@ -56,6 +56,8 @@ class Unification(object):
         def scan(s: Category, t: Category, results: Dict[str, Feature]) -> bool:
             # collect categories corresponding to meta variables
             if s.is_atomic:
+                if s.base in self.cats and not (t ^ self.cats[s.base]):
+                    return False
                 self.cats[s.base] = t
 
             if (
@@ -94,13 +96,13 @@ class Unification(object):
             y_feature = self.y_features[var]
 
             # these pairs can match: (NP[nb], NP[conj]), (NP, NP[conj]), (NP[X], NP[conj])
-            if x_feature.is_unified_with(y_feature):
+            if x_feature.unifies(y_feature):
                 # if (NP[X], NP[conj]), further memorize the matching `X := conj`
                 # if there're two of `X := conj` and `X := nb`, choose one arbitrarily
                 if x_feature.is_variable:
                     self.mapping[x_feature] = y_feature
 
-            elif y_feature.is_unified_with(x_feature):
+            elif y_feature.unifies(x_feature):
                 if y_feature.is_variable:
                     self.mapping[y_feature] = x_feature
             else:

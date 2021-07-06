@@ -1,8 +1,7 @@
 from typing import NamedTuple, List, Iterator, Union
 from depccg.cat import Category
 from depccg.combinator import UNKNOWN_COMBINATOR, guess_combinator_by_triplet
-from depccg.tokens import Token
-from depccg.py_utils import denormalize, normalize
+from depccg.types import Token
 from depccg.lang import BINARY_RULES, GLOBAL_LANG_NAME
 # from depccg.printer.auto import auto_of
 
@@ -231,11 +230,11 @@ class Tree(object):
 
     @property
     def word(self, token_key='word'):
-        return ' '.join(leaf.child.token[token_key] for leaf in self.leaves)
+        return ' '.join(leaf.children[0][token_key] for leaf in self.leaves)
 
     @property
     def head_is_left(self) -> bool:
-        return deref(self.node_).HeadIsLeft()
+        return True   # TODO  jderef(self.node_).HeadIsLeft()
 
     @property
     def is_unary(self) -> bool:

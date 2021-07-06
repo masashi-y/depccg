@@ -61,6 +61,11 @@ namespace parsing
         unsigned end_of_span() const { return start_of_span + span_length; }
     };
 
+    bool operator<(const agenda_item &left, const agenda_item &right)
+    {
+        return left.score() < right.score();
+    };
+
     class chart
     {
     public:
@@ -85,6 +90,17 @@ namespace parsing
             agenda_items::iterator begin() { return items.begin(); }
             agenda_items::iterator end() { return items.end(); }
 
+            void sort()
+            {
+                auto compare = [](parsing::agenda_item &s1, parsing::agenda_item &s2)
+                {
+                    return s1.score() > s2.score();
+                };
+                this->items.sort(compare);
+            }
+
+            bool seen;
+
         private:
             std::unordered_set<category_id> category_ids;
             agenda_items items;
@@ -96,18 +112,7 @@ namespace parsing
               nbest_(nbest),
               chart_(new cell[chart_size_]),
               ending_cells_(new std::vector<cell *>[length + 1]),
-              starting_cells_(new std::vector<cell *>[length + 1])
-        {
-            for (unsigned i = 0; i < length_; i++)
-            {
-                for (unsigned j = 0; j < length_; j++)
-                {
-                    cell *cell_ = &chart_[i * length_ + j];
-                    ending_cells_[i + j + 1].push_back(cell_);
-                    starting_cells_[i].push_back(cell_);
-                }
-            }
-        }
+              starting_cells_(new std::vector<cell *>[length + 1]) {}
 
         ~chart()
         {
@@ -118,7 +123,15 @@ namespace parsing
 
         cell &operator()(unsigned row, unsigned column)
         {
-            return chart_[row * length_ + column];
+            cell &cell_ = chart_[row * length_ + column];
+
+            if (!cell_.seen)
+            {
+                ending_cells_[row + column + 1].push_back(&cell_);
+                starting_cells_[row].push_back(&cell_);
+                cell_.seen = true;
+            }
+            return cell_;
         }
 
         agenda_item *update(unsigned row, unsigned column, agenda_item &item)
@@ -131,32 +144,13 @@ namespace parsing
             return &cell_.emplace(item);
         }
 
-        std::vector<agenda_item> nbest_trees()
-        {
-            auto compare = [](agenda_item &s1, agenda_item &s2)
-            {
-                return s1.score() > s2.score();
-            };
-
-            std::vector<agenda_item> result;
-            for (auto &&item : (*this)(0, 0))
-                result.push_back(item); // TODO: here copying
-
-            std::sort(result.begin(), result.end(), compare);
-            return result;
-        }
-
         unsigned size() const
         {
             cell &final_ = chart_[length_ - 1];
             return final_.size();
         }
 
-        bool empty() const
-        {
-            cell &final_ = chart_[length_ - 1];
-            return final_.size() == 0;
-        }
+        bool empty() const { return this->size() == 0; }
 
         std::vector<cell *> &cells_starting_at(unsigned index)
         {
@@ -238,12 +232,9 @@ namespace parsing
         }
     }
 
-    bool operator<(const agenda_item &left, const agenda_item &right)
-    {
-        return left.score() < right.score();
-    };
-
 } // namespace parsing
+
+typedef void *(*finalizer_type)(parsing::agenda_item *, unsigned *, void *);
 
 struct config
 {
@@ -263,11 +254,11 @@ unsigned parse_sentence(
     const std::unordered_set<unsigned> &possible_root_cats,
     void *binary_callback,
     void *unary_callback,
-    void *finalize,
+    finalizer_type finalizer_callback,
     scaffold_type scaffold,
+    void *finalizer_args,
     config *config)
 {
-
     auto apply_binary_rules = [&](unsigned x, unsigned y)
     {
         std::vector<combinator_result> results;
@@ -282,9 +273,6 @@ unsigned parse_sentence(
         return results;
     };
 
-    // if (length >= config.max_length)
-    //     return parsing_utils::failed();
-
     std::vector<float> best_tag_scores(length, 0);
     std::vector<float> best_dep_scores(length, 0);
 
@@ -295,12 +283,7 @@ unsigned parse_sentence(
 
     std::priority_queue<parsing::agenda_item> agenda;
 
-    std::vector<
-        std::priority_queue<
-            scored_category,
-            std::vector<scored_category>,
-            std::greater<scored_category>>>
-        scored_cats(length);
+    std::vector<std::priority_queue<scored_category>> scored_cats(length);
 
     float dep_leaf_out_score = 0.0;
     for (unsigned token_id = 0; token_id < length; token_id++)
@@ -327,130 +310,141 @@ unsigned parse_sentence(
             scored_cats[token_id].pop();
             if (std::exp(score_and_cat.first) > threshold)
             {
-                parsing::agenda_item item{
-                    false,
-                    score_and_cat.second,
-                    nullptr,
-                    nullptr,
-                    score_and_cat.first,
-                    out_score,
-                    token_id,
-                    token_id,
-                    1};
-                agenda.emplace(item);
+                agenda.push(
+                    {false,
+                     score_and_cat.second,
+                     nullptr,
+                     nullptr,
+                     score_and_cat.first,
+                     out_score,
+                     token_id,
+                     1,
+                     token_id});
             }
             else
                 break;
         }
+    }
 
-        parsing::chart chart(length, config->nbest > 1);
-        parsing::chart goal(1, config->nbest > 1);
+    parsing::chart chart(length, config->nbest > 1);
+    parsing::chart goal(1, config->nbest > 1);
 
-        for (unsigned s = 0; s < config->max_step && goal.size() < config->nbest && agenda.size(); s++)
+    for (unsigned s = 0; s < config->max_step && goal.size() < config->nbest && agenda.size(); s++)
+    {
+        parsing::agenda_item top_item = agenda.top();
+
+        agenda.pop();
+        if (top_item.fin)
         {
-            parsing::agenda_item top_item = agenda.top();
-            agenda.pop();
-            if (top_item.fin)
+            goal.update(0, 0, top_item);
+            continue;
+        }
+
+        parsing::agenda_item *item;
+        if ((item = chart.update(top_item.start_of_span, top_item.span_length - 1, top_item)) != nullptr)
+        {
+
+            if (item->span_length == length && possible_root_cats.count(item->cat))
             {
-                goal.update(0, 0, top_item);
-                continue;
+                agenda.push(
+                    {true,
+                     item->cat,
+                     item,
+                     nullptr,
+                     item->in_score + dep_in_scores(item->head_id, 0),
+                     0.0,
+                     item->start_of_span,
+                     item->span_length,
+                     item->head_id});
             }
 
-            parsing::agenda_item *item;
-            if ((item = chart.update(top_item.start_of_span, top_item.span_length - 1, top_item)))
+            if (length == 1 || item->span_length != length)
             {
-
-                if (item->span_length == length && possible_root_cats.count(item->cat))
+                for (auto &unary : apply_unary_rules(item->cat))
                 {
-                    agenda.emplace(
-                        true,
-                        item->cat,
-                        item,
-                        nullptr,
-                        item->in_score + dep_in_scores(item->head_id, 0),
-                        0.0,
-                        item->start_of_span,
-                        item->span_length,
-                        item->head_id);
+                    agenda.push(
+                        {false,
+                         unary.cat_id,
+                         item,
+                         nullptr,
+                         item->in_score - config->unary_penalty,
+                         item->out_score,
+                         item->start_of_span,
+                         item->span_length,
+                         item->head_id});
                 }
+            }
 
-                if (length == 1 || item->span_length != length)
+            for (auto &cell : chart.cells_starting_at(item->end_of_span()))
+            {
+                for (auto &other : *cell)
                 {
-                    for (auto &unary : apply_unary_rules(item->cat))
+                    unsigned span_length = item->span_length + other.span_length;
+                    unsigned start_of_span = item->start_of_span;
+                    unsigned end_of_span = start_of_span + span_length;
+
+                    for (auto &rule_result : apply_binary_rules(item->cat, other.cat))
                     {
-                        agenda.emplace(
-                            false,
-                            unary.cat_id,
-                            item,
-                            nullptr,
-                            item->in_score - config->unary_penalty,
-                            item->out_score,
-                            item->start_of_span,
-                            item->span_length,
-                            item->head_id);
+                        auto head = rule_result.head_is_left ? item : &other;
+                        auto child = rule_result.head_is_left ? &other : item;
+                        float dep_score = dep_in_scores(child->head_id, head->head_id + 1);
+                        float in_score = item->in_score + other.in_score + dep_score;
+                        float out_score = tag_out_scores(start_of_span, end_of_span) +
+                                          dep_out_scores(start_of_span, end_of_span) -
+                                          best_dep_scores[head->head_id];
+                        agenda.push(
+                            {false,
+                             rule_result.cat_id,
+                             item,
+                             &other,
+                             in_score,
+                             out_score,
+                             start_of_span,
+                             span_length,
+                             head->head_id});
                     }
                 }
-                for (auto &cell : chart.cells_starting_at(item->end_of_span()))
+            }
+            for (auto &cell : chart.cells_ending_at(item->start_of_span))
+            {
+                for (auto &other : *cell)
                 {
-                    for (auto &other : *cell)
-                    {
-                        unsigned span_length = item->span_length + other.span_length;
-                        unsigned start_of_span = item->start_of_span;
-                        unsigned end_of_span = start_of_span + span_length;
+                    unsigned span_length = item->span_length + other.span_length;
+                    unsigned start_of_span = other.start_of_span;
+                    unsigned end_of_span = start_of_span + span_length;
 
-                        for (auto &rule_result : apply_binary_rules(item->cat, other.cat))
-                        {
-                            auto head = rule_result.head_is_left ? item : &other;
-                            auto child = rule_result.head_is_left ? &other : item;
-                            float dep_score = dep_in_scores(child->head_id, head->head_id + 1);
-                            float in_score = item->in_score + other.in_score + dep_score;
-                            float out_score = tag_out_scores(start_of_span, end_of_span) +
-                                              dep_out_scores(start_of_span, end_of_span) -
-                                              best_dep_scores[head->head_id];
-                            agenda.emplace(
-                                false,
-                                rule_result.cat_id,
-                                item,
-                                &other,
-                                in_score,
-                                out_score,
-                                start_of_span,
-                                span_length,
-                                head->head_id);
-                        }
-                    }
-                }
-                for (auto &cell : chart.cells_ending_at(item->start_of_span))
-                {
-                    for (auto &other : *cell)
+                    for (auto &rule_result : apply_binary_rules(other.cat, item->cat))
                     {
-                        unsigned span_length = item->span_length + other.span_length;
-                        unsigned start_of_span = other.start_of_span;
-                        unsigned end_of_span = start_of_span + span_length;
-
-                        for (auto &rule_result : apply_binary_rules(other.cat, item->cat))
-                        {
-                            auto head = rule_result.head_is_left ? &other : item;
-                            auto child = rule_result.head_is_left ? item : &other;
-                            float dep_score = dep_in_scores(child->head_id, head->head_id + 1);
-                            float in_score = item->in_score + other.in_score + dep_score;
-                            float out_score = tag_out_scores(start_of_span, end_of_span) +
-                                              dep_out_scores(start_of_span, end_of_span) -
-                                              best_dep_scores[head->head_id];
-                            agenda.emplace(
-                                false,
-                                rule_result.cat_id,
-                                &other,
-                                item,
-                                in_score,
-                                out_score,
-                                start_of_span,
-                                span_length,
-                                head->head_id);
-                        }
+                        auto head = rule_result.head_is_left ? &other : item;
+                        auto child = rule_result.head_is_left ? item : &other;
+                        float dep_score = dep_in_scores(child->head_id, head->head_id + 1);
+                        float in_score = item->in_score + other.in_score + dep_score;
+                        float out_score = tag_out_scores(start_of_span, end_of_span) +
+                                          dep_out_scores(start_of_span, end_of_span) -
+                                          best_dep_scores[head->head_id];
+                        agenda.push(
+                            {false,
+                             rule_result.cat_id,
+                             &other,
+                             item,
+                             in_score,
+                             out_score,
+                             start_of_span,
+                             span_length,
+                             head->head_id});
                     }
                 }
             }
         }
-        return 0;
     }
+
+    if (goal.size() == 0)
+        return 1;
+
+    parsing::chart::cell &cell = goal(0, 0);
+    cell.sort();
+    unsigned token_id = 0;
+    finalizer_callback(&(*cell.begin()), &token_id, finalizer_args);
+
+    return 0;
+}

@@ -5,7 +5,7 @@ from depccg.combinator import UnaryRule
 from depccg.lang import ja_default_binary_rules
 from depccg.cat import Category
 from depccg.tree import Tree
-from depccg.tokens import Token
+from depccg.types import Token
 from depccg.tools.reader import ReaderResult
 
 
