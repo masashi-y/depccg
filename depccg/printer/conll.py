@@ -1,6 +1,5 @@
-from typing import List, Optional
+from typing import List
 from depccg.utils import denormalize
-from depccg.types import Token
 from depccg.tree import Tree
 
 
@@ -34,7 +33,7 @@ def _resolve_dependencies(tree: Tree) -> List[int]:
     return results
 
 
-def conll_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
+def conll_of(tree: Tree) -> str:
     """CoNLL-like format string where dependency relations are constructed by
     nodes' head_is_left property.
 
@@ -54,7 +53,7 @@ def conll_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
         if node.is_leaf:
             cat = node.cat
             word = denormalize(node.word)
-            token = tokens.pop(0)
+            token = node.token
             lemma = token.get('lemma', '_')
             pos = token.get('pos', '_')
             stack.append(f'(<L {cat} {pos} {pos} {word} {cat}>)')
@@ -85,9 +84,6 @@ def conll_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
             stack.append(f'(<T {cat} {head_is_left} {num_children}>')
             children = '\n'.join(rec(child) for child in node.children) + ' )'
             return children
-
-    if tokens is None:
-        tokens = [Token.of_word(word) for word in tree.word.split(' ')]
 
     dependencies = _resolve_dependencies(tree)
     return rec(tree)

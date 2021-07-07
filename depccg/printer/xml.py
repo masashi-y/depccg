@@ -1,10 +1,9 @@
-from typing import List, Optional
+from typing import List
 from lxml import etree
 from depccg.tree import Tree, ScoredTree
-from depccg.types import Token
 
 
-def _process_tree(tree: Tree, tokens: Optional[List[Token]] = None) -> etree.Element:
+def _process_tree(tree: Tree) -> etree.Element:
 
     def rec(node, parent):
 
@@ -23,12 +22,7 @@ def _process_tree(tree: Tree, tokens: Optional[List[Token]] = None) -> etree.Ele
             for child in node.children:
                 rec(child, rule_node)
 
-    if tokens is None:
-        tokens = [
-            Token.of_word(word) for word in tree.word.split(' ')
-        ]
-
-    tokens = list(enumerate(tokens))
+    tokens = list(enumerate(tree.tokens))
     result = etree.Element("ccg")
     rec(tree, result)
 
@@ -37,22 +31,20 @@ def _process_tree(tree: Tree, tokens: Optional[List[Token]] = None) -> etree.Ele
 
 def xml_of(
     nbest_trees: List[List[ScoredTree]],
-    tagged_doc: List[List[Token]],
 ) -> etree.Element:
     """convert parsing results to a XML etree.Element in a format commonly used by C&C.
 
     Args:
         nbest_trees (List[List[ScoredTree]]): parsing results
-        tagged_doc (List[List[Token]]): corresponding lists of tokens
 
     Returns:
         etree.Element: XML object
     """
 
     candc_node = etree.Element('candc')
-    for sentence_index, (trees, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+    for sentence_index, trees in enumerate(nbest_trees, 1):
         for tree_index, (tree, _) in enumerate(trees, 1):
-            out = _process_tree(tree, tokens)
+            out = _process_tree(tree)
             out.set('sentence', str(sentence_index))
             out.set('id', str(tree_index))
             candc_node.append(out)

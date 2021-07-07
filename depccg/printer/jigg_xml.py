@@ -1,7 +1,6 @@
 from typing import List
 from lxml import etree
 
-from depccg.types import Token
 from depccg.tree import ScoredTree, Tree
 
 
@@ -56,7 +55,6 @@ class _ConvertToJiggXML(object):
 
 def to_jigg_xml(
     trees: List[List[ScoredTree]],
-    tagged_doc: List[List[Token]],
     use_symbol: bool = False
 ) -> etree.Element:
     """generate etree.Element XML object in jigg format
@@ -64,7 +62,6 @@ def to_jigg_xml(
 
     Args:
         trees (List[List[ScoredTree]]): parsing result
-        tagged_doc (List[List[Token]]): list of tokens corresponding to input
         use_symbol (bool, optional): [description]. Defaults to False.
 
     Returns:
@@ -75,14 +72,14 @@ def to_jigg_xml(
     document_node = etree.SubElement(root_node, 'document')
     sentences_node = etree.SubElement(document_node, 'sentences')
 
-    for sentence_index, (parsed, tagged) in enumerate(zip(trees, tagged_doc)):
+    for sentence_index, parsed in enumerate(trees):
 
         sentence_node = etree.SubElement(sentences_node, 'sentence')
         tokens_node = etree.SubElement(sentence_node, 'tokens')
         cats = [leaf.cat for leaf in parsed[0].tree.leaves]
-        assert len(cats) == len(tagged)
+        tokens = parsed[0].tree.tokens
 
-        for token_index, (token, cat) in enumerate(zip(tagged, cats)):
+        for token_index, (token, cat) in enumerate(zip(tokens, cats)):
             token_node = etree.SubElement(tokens_node, 'token')
             token_node.set('start', str(token_index))
             token_node.set('cat', str(cat))

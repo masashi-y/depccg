@@ -1,16 +1,12 @@
-from typing import List, Optional
-
 from depccg.tree import Tree
-from depccg.types import Token
 from depccg.utils import normalize
 
 
-def ja_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
+def ja_of(tree: Tree) -> str:
     """tree string in the Japanese CCGBank's format
 
     Args:
         tree (Tree): tree object
-        tokens (Optional[List[Token]], optional): list of token objects. Defaults to None.
 
     Returns:
         str: tree string in Japanese CCGBank's format
@@ -20,7 +16,7 @@ def ja_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
         if node.is_leaf:
             cat = node.cat
             word = normalize(node.word)
-            token = tokens.pop(0)
+            token = node.token
 
             poss = [
                 token.get(pos, '*')
@@ -42,8 +38,5 @@ def ja_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:
         else:
             children = ' '.join(rec(child) for child in node.children)
             return f'{{{node.op_symbol} {node.cat} {children}}}'
-
-    if tokens is None:
-        tokens = [Token.of_word(word) for word in tree.word.split(' ')]
 
     return rec(tree)

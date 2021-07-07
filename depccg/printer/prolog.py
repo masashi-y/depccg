@@ -3,7 +3,6 @@ from io import StringIO
 
 from depccg.cat import Category
 from depccg.tree import ScoredTree, Tree
-from depccg.types import Token
 
 
 def _prolog_category_string(cat: Category) -> str:
@@ -33,8 +32,8 @@ def _prolog_category_string(cat: Category) -> str:
     return rec(cat)
 
 
-def _escape_prolog(string: str) -> str:
-    return string.replace("'", "")
+def _escape_prolog(text: str) -> str:
+    return text.replace("'", "\\'")
 
 
 _op_mapping = {
@@ -52,7 +51,7 @@ _op_mapping = {
 }
 
 
-def _prolog_string(tree: Tree, tokens: List[Token], sentence_index: int) -> str:
+def _prolog_string(tree: Tree, sentence_index: int) -> str:
 
     position = 0
     depth = 0
@@ -60,18 +59,19 @@ def _prolog_string(tree: Tree, tokens: List[Token], sentence_index: int) -> str:
     def indent(output):
         output.write(" " * depth)
 
-    def rec(node: Tree, tokens: List[Token], output):
+    def rec(node: Tree, output):
         nonlocal depth, position
 
         if node.is_leaf:
             indent(output)
+            token = node.token
             result_str = (
                 f"t({_prolog_category_string(node.cat)}, "
                 f"\'{_escape_prolog(node.word)}\', "
-                f"\'{tokens[position].lemma}\', "
-                f"\'{tokens[position].pos}\', "
-                f"\'{tokens[position].chunk}\', "
-                f"\'{tokens[position].entity}\')"
+                f"\'{_escape_prolog(token.lemma)}\', "
+                f"\'{token.pos}\', "
+                f"\'{token.chunk}\', "
+                f"\'{token.entity}\')"
             )
             output.write(result_str)
             position += 1
@@ -109,10 +109,10 @@ def _prolog_string(tree: Tree, tokens: List[Token], sentence_index: int) -> str:
                 output.write(f"{cat_str}, ")
 
             output.write("\n")
-            rec(tree.left, tokens, output)
+            rec(tree.left, output)
             if not tree.is_unary:
                 output.write(",\n")
-                rec(tree.right, tokens, output)
+                rec(tree.right, output)
             output.write(")")
             depth -= 1
 
@@ -122,7 +122,7 @@ def _prolog_string(tree: Tree, tokens: List[Token], sentence_index: int) -> str:
 
     with StringIO as output:
         output.write(f"ccg({sentence_index},\n")
-        rec(tree, tokens, output)
+        rec(tree, output)
         output.write(").\n")
         return output.getvalue()
 
@@ -135,19 +135,13 @@ _prolog_header = (
 )
 
 
-def _normalize_text(text):
-    return text.replace("'", "\\'")
-
-
 def to_prolog_en(
     nbest_trees: List[List[ScoredTree]],
-    tagged_doc: List[List[Token]]
 ) -> str:
     """convert parsing results to Prolog format used by LangPro.
 
     Args:
         nbest_trees (List[List[ScoredTree]]): parsing results
-        tagged_doc (List[List[Token]]): corresponding lists of tokens
 
     Returns:
         str: Prolog string
@@ -155,11 +149,9 @@ def to_prolog_en(
 
     with StringIO() as output:
         print(_prolog_header, file=output)
-        for sentence_index, (trees, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
-            for token in tokens:
-                token.lemma = _normalize_text(token.lemma)
+        for sentence_index, trees in enumerate(nbest_trees, 1):
             for tree, _ in trees:
-                print(_prolog_string(tree, tokens, sentence_index), file=output)
+                print(_prolog_string(tree, sentence_index), file=output)
         result = output.getvalue()
     return result
 
@@ -185,14 +177,12 @@ _ja_combinators = {
 
 def to_prolog_ja(
     nbest_trees: List[List[ScoredTree]],
-    tagged_doc: List[List[Token]]
 ) -> str:
     """convert parsing results to Prolog format used by LangPro.
     This is specifically used for Japanese sentences.
 
     Args:
         nbest_trees (List[List[ScoredTree]]): parsing results
-        tagged_doc (List[List[Token]]): corresponding lists of tokens
 
     Returns:
         str: Prolog string
@@ -212,13 +202,13 @@ def to_prolog_ja(
                 feature_case = feature["case"].lower()
                 return f'{base}:{feature_case}'
 
-    def traverse_tree(node, tokens, depth=1):
+    def traverse_tree(node, depth=1):
         whitespace = ' ' * depth
         if node.is_leaf:
             cat = traverse_cat(node.cat)
-            token = tokens.pop(0)
-            surf = _normalize_text(token.get('surf', node.word))
-            base = _normalize_text(token.get('base', 'XX'))
+            token = node.token
+            surf = _escape_prolog(token.get('surf', node.word))
+            base = _escape_prolog(token.get('base', 'XX'))
 
             tags = [
                 token.get(key, 'XX')
@@ -228,10 +218,10 @@ def to_prolog_ja(
             if all(tag == 'XX' for tag in tags):
                 pos = 'XX'
             else:
-                pos = '/'.join(_normalize_text(tag) for tag in tags)
+                pos = '/'.join(_escape_prolog(tag) for tag in tags)
 
-            infl_form = _normalize_text(token.get('inflectionForm', 'XX'))
-            infl_type = _normalize_text(token.get('inflectionType', 'XX'))
+            infl_form = _escape_prolog(token.get('inflectionForm', 'XX'))
+            infl_type = _escape_prolog(token.get('inflectionType', 'XX'))
 
             output.write(
                 f"\n{whitespace}t({cat}, '{surf}', '{base}', '{pos}', '{infl_form}', '{infl_type}')"
@@ -244,17 +234,17 @@ def to_prolog_ja(
             for i, child in enumerate(node.children):
                 if i < len(node.children):
                     output.write(',')
-                traverse_tree(child, tokens, depth=depth + 1)
+                traverse_tree(child, depth=depth + 1)
 
             output.write(')')
 
     output = StringIO()
     print(_prolog_header, file=output)
 
-    for sentence_index, (trees, tokens) in enumerate(zip(nbest_trees, tagged_doc), 1):
+    for sentence_index, trees in enumerate(nbest_trees, 1):
         for tree, _ in trees:
             output.write(f'ccg({sentence_index},')
-            traverse_tree(tree, tokens)
+            traverse_tree(tree)
             output.write(').\n\n')
 
     result = output.getvalue()

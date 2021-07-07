@@ -208,6 +208,15 @@ class Tree(object):
         return result
 
     @property
+    def tokens(self) -> List[Token]:
+        return [leaf.children[0] for leaf in self.leaves]
+
+    @property
+    def token(self) -> Token:
+        assert self.is_leaf, "Tree.token must be called on leaf objects"
+        return self.children[0]
+
+    @property
     def child(self):
         assert self.is_unary, "This node is not unary node! Please use `Tree.children`"
         return self.left_child
@@ -231,7 +240,7 @@ class Tree(object):
 
     @property
     def word(self, token_key='word'):
-        return ' '.join(leaf.children[0][token_key] for leaf in self.leaves)
+        return ' '.join(token[token_key] for token in self.tokens)
 
     @property
     def is_unary(self) -> bool:
