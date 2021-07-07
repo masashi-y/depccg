@@ -1,8 +1,9 @@
 from typing import Iterator, List, Tuple
 import re
 
-from depccg.combinator import UnaryRule
-from depccg.lang import ja_default_binary_rules
+# from depccg.combinator import UnaryRule
+# from depccg.lang import ja_default_binary_rules
+from depccg.grammar.en import combinators as ja_default_binary_rules
 from depccg.cat import Category
 from depccg.tree import Tree
 from depccg.types import Token
@@ -18,8 +19,9 @@ combinators = {
     )
 }
 
+# TODO
 for sign in ['ADNext', 'ADNint', 'ADV0', 'ADV1', 'ADV2']:
-    combinators[sign] = UnaryRule()
+    combinators[sign] = None  # UnaryRule()
 
 DEPENDENCY = re.compile(r'{.+?}')
 

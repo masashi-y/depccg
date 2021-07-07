@@ -1,9 +1,9 @@
+from typing import List, Tuple, Optional
 import os
 import subprocess
 import tempfile
 import logging
 from pathlib import Path
-from typing import List
 from lxml import etree
 
 from depccg.download import MODEL_DIRECTORY
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 candc_cmd = "cat \"{0}\" | {1}/bin/pos --model {2} | {1}/bin/ner --model {3}"
 
 
-def annotate_XX(sentences: List[List[str]], tokenize=False) -> List[List[Token]]:
+def annotate_XX(sentences: List[List[str]], tokenize: bool = False) -> List[List[Token]]:
     if tokenize:
         raise NotImplementedError('no tokenizer implemented')
 
@@ -26,7 +26,7 @@ def annotate_XX(sentences: List[List[str]], tokenize=False) -> List[List[Token]]
     ]
 
 
-def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List[List[Token]]:
+def try_annotate_using_candc(sentences: List[List[str]], tokenize: bool = False) -> List[List[Token]]:
     if tokenize:
         raise NotImplementedError(
             'no tokenizer implemented in the C&C pipeline')
@@ -37,21 +37,30 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
     fail = False
     if candc_dir:
         candc_dir = Path(candc_dir)
-        candc_model_pos = Path(os.environ.get(
-            'CANDC_MODEL_POS', str(candc_dir / 'models' / 'pos')))
-        candc_model_ner = Path(os.environ.get(
-            'CANDC_MODEL_NER', str(candc_dir / 'models' / 'ner')))
-        if (candc_dir / 'bin' / 'pos').exists() and \
-                (candc_dir / 'bin' / 'ner').exists() and \
-                candc_model_pos.exists() and \
-                candc_model_ner.exists():
+        candc_model_pos = Path(
+            os.environ.get(
+                'CANDC_MODEL_POS', str(candc_dir / 'models' / 'pos'))
+        )
+        candc_model_ner = Path(
+            os.environ.get(
+                'CANDC_MODEL_NER', str(candc_dir / 'models' / 'ner'))
+        )
+
+        if (
+            (candc_dir / 'bin' / 'pos').exists()
+            and (candc_dir / 'bin' / 'ner').exists()
+            and candc_model_pos.exists()
+            and candc_model_ner.exists()
+        ):
             pass
+
         else:
             logger.info(
                 'CANDC environmental variable may not be configured correctly.')
             logger.info(
                 '$CANDC/bin/{pos,ner} and $CANDC/models/{pos,ner} are expected to exist.')
             fail = True
+
     else:
         fail = True
 
@@ -96,7 +105,7 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
             ]
             for sentence in tagged_sentences
         ]
-    except:
+    except RuntimeError:
         raise RuntimeError(
             'failed to process C&C output. there might have been some problem '
             'during running C&C pipeline?\n'
@@ -121,16 +130,24 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize=False) -> List
     return res
 
 
-def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=10000):
+def annotate_using_spacy(
+    sentences: List[List[str]],
+    tokenize: bool = False,
+    model_name: str = 'en_core_web_sm',
+    n_threads: int = 2,
+    batch_size: int = 10000
+) -> Tuple[List[List[Token]], Optional[List[List[str]]]]:
+
     try:
         import spacy
         from spacy.tokens import Doc
     except ImportError:
         logger.error(
-            'failed to import spacy. please install it by "pip install spacy".')
+            'failed to import spacy. please install it by "pip install spacy".'
+        )
         exit(1)
 
-    nlp = spacy.load('en', disable=['parser'])
+    nlp = spacy.load(model_name, disable=['parser'])
     logger.info('use spacy to annotate POS and NER infos.')
 
     if tokenize:
@@ -142,11 +159,10 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
     for _, proc in nlp.pipeline:
         docs = proc.pipe(
             docs,
-            n_threads=n_threads,
             batch_size=batch_size
         )
 
-    res = []
+    results = []
     for sentence in docs:
         tokens = []
         for token in sentence:
@@ -169,14 +185,19 @@ def annotate_using_spacy(sentences, tokenize=False, n_threads=2, batch_size=1000
                     chunk='XX'
                 )
             )
-        res.append(tokens)
+        results.append(tokens)
+
     if tokenize:
-        return res, raw_sentences
-    else:
-        return res
+        return results, raw_sentences
+
+    return results, None
 
 
-def annotate_using_janome(sentences, tokenize=False):
+def annotate_using_janome(
+    sentences: List[List[str]],
+    tokenize: bool = False
+) -> Tuple[List[List[Token]], List[List[str]]]:
+
     assert tokenize, 'no support for using janome with pre-tokenized inputs'
     try:
         from janome.tokenizer import Tokenizer
@@ -217,7 +238,12 @@ def annotate_using_janome(sentences, tokenize=False):
 jigg_cmd = "java -Xmx2g -cp \"{0}/jar/*\" jigg.pipeline.Pipeline -annotators {1} -file {2} -output {3}"
 
 
-def annotate_using_jigg(sentences, tokenize=False, pipeline='ssplit,kuromoji'):
+def annotate_using_jigg(
+    sentences: List[List[str]],
+    tokenize: bool = False,
+    pipeline: str = 'ssplit,kuromoji'
+) -> Tuple[List[List[Token]], List[List[str]]]:
+
     assert tokenize, 'no support for using jigg with pre-tokenized inputs'
     logger.info('use Jigg to tokenize and annotate POS infos.')
 
@@ -283,5 +309,5 @@ english_annotator = {
 
 japanese_annotator = {
     'janome': annotate_using_janome,
-    'jigg': annotate_using_jigg
+    'jigg': annotate_using_jigg,
 }

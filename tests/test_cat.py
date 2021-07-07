@@ -1,4 +1,26 @@
-from depccg.cat import Category, Atom, Functor, Feature, TernaryFeature, UnaryFeature
+import pytest
+from depccg.cat import Category, Atom, Functor, TernaryFeature, UnaryFeature
+
+
+en_categories = [
+    (Category.parse(text.strip()), text.strip())
+    for text in open('tests/cats.txt')
+]
+
+ja_categories = [
+    (Category.parse(text.strip()), text.strip())
+    for text in open('tests/cats.ja.txt')
+]
+
+
+@pytest.mark.parametrize("result, expect", en_categories)
+def test_parse_many_en(result, expect):
+    assert str(result) == expect
+
+
+@pytest.mark.parametrize("result, expect", en_categories)
+def test_parse_many_ja(result, expect):
+    assert str(result) == expect
 
 
 def test_parse():

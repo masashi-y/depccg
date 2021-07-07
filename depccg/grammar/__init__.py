@@ -1,7 +1,6 @@
-from typing import List, TypeVar, Tuple, Set, Dict
+from typing import Callable, List, TypeVar, Tuple, Set, Dict
 from depccg.types import Combinator, CombinatorResult
 from depccg.cat import Category
-from depccg.tree import Tree
 
 X = TypeVar('X')
 Pair = Tuple[X, X]
@@ -27,3 +26,20 @@ def apply_rules(
 
     cache[cats] = results
     return results
+
+
+def guess_combinator_by_triplet(
+    binary_rules: Callable[[Category, Category], List[Category]],
+    target: Category,
+    x: Category,
+    y: Category,
+) -> CombinatorResult:
+    for rule in binary_rules(x, y):
+        if rule.cat == target:
+            return rule
+    return CombinatorResult(
+        cat=rule.cat,
+        op_string="unk",
+        op_symbol="<unk>",
+        head_is_left=True
+    )

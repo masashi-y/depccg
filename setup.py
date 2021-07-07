@@ -65,7 +65,7 @@ def generate_cpp(options):
 
 
 COMPILE_OPTIONS = [
-    # '-O3',
+    '-O3',
     '-Wall',
     '-std=c++14'
 ]
@@ -81,15 +81,15 @@ if sys.platform == 'darwin':
 
 ext_modules = [
     Extension(
-        'morpha',
+        'depccg.morpha',
         ['depccg/morpha.pyx'],
         language='c++',
         extra_compile_args=COMPILE_OPTIONS,
-        extra_link_args=LINK_OPTIONS,
+        extra_link_args=LINK_OPTIONS + ['c/morpha.o'],
         include_dirs=['.', 'c']
     ),
     Extension(
-        'parsing',
+        'depccg._parsing',
         ['depccg/parsing.pyx'],
         language='c++',
         extra_compile_args=COMPILE_OPTIONS,
@@ -106,12 +106,12 @@ else:
 
     setup(
         name="depccg",
-        version="1.1.0",  # NOQA
+        version="2.0.0",  # NOQA
         description='A parser for natural language based on combinatory categorial grammar',
         long_description=long_description,
         long_description_content_type='text/markdown',
         author='Masashi Yoshikawa',
-        author_email='yoshikawa.masashi.yh8@is.naist.jp',
+        author_email='yoshikawa@tohoku.ac.jp',
         url='https://github.com/masashi-y/depccg',
         license='MIT License',
         packages=find_packages(),

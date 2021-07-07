@@ -138,10 +138,10 @@ def to_string(
         )
 
     with StringIO() as file:
-        for sentence_index, (trees, tokens) in enumerate(nbest_trees, 1):
+        for sentence_index, trees in enumerate(nbest_trees, 1):
             for tree, log_prob in trees:
                 print(header.format(sentence_index, log_prob), file=file)
-                print(formatter(tree, tokens), file=file)
+                print(formatter(tree), file=file)
 
         return file.getvalue()
 

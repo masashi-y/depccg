@@ -138,7 +138,7 @@ def run(
     apply_binary_rules,
     apply_unary_rules,
     list possible_root_cats,
-    dict cache,
+    dict cache = None,
     **kwargs
 ) -> List[ScoredTree]:
 
@@ -160,6 +160,9 @@ def run(
         raise RuntimeError(
             'argument `categories` cannot contain duplicate elements.'
         )
+
+    if cache is None:
+        cache = {}
 
     category_ids = {
         category: index

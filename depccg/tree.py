@@ -1,87 +1,13 @@
+from depccg.lang import GLOBAL_LANG_NAME
 from typing import NamedTuple, List, Iterator, Union
 from depccg.cat import Category
-# from depccg.combinator import UNKNOWN_COMBINATOR, guess_combinator_by_triplet
+from depccg.grammar import guess_combinator_by_triplet, en, ja
 from depccg.types import Token
-from depccg.lang import GLOBAL_LANG_NAME
-# from depccg.printer.auto import auto_of
 
-
-class _AutoLineReader(object):
-    def __init__(self, line):
-        self.line = line
-        self.index = 0
-        self.word_id = -1
-        self.binary_rules = BINARY_RULES[GLOBAL_LANG_NAME]
-        self.tokens = []
-
-    def next(self):
-        end = self.line.find(' ', self.index)
-        res = self.line[self.index:end]
-        self.index = end + 1
-        return res
-
-    def check(self, text, offset=0):
-        if self.line[self.index + offset] != text:
-            raise RuntimeError(f'failed to parse: {self.line}')
-
-    def peek(self):
-        return self.line[self.index]
-
-    def parse(self):
-        tree = self.next_node()
-        return tree, self.tokens
-
-    @property
-    def next_node(self):
-        if self.line[self.index + 2] == 'L':
-            return self.parse_leaf
-        elif self.line[self.index + 2] == 'T':
-            return self.parse_tree
-        else:
-            raise RuntimeError(f'failed to parse: {self.line}')
-
-    def parse_leaf(self):
-        self.word_id += 1
-        self.check('(')
-        self.check('<', 1)
-        self.check('L', 2)
-        self.next()
-        cat = Category.parse(self.next())
-        tag1 = self.next()  # modified POS tag
-        tag2 = self.next()  # original POS
-        word = self.next().replace('\\', '')
-        token = Token(word=word, pos=tag1, tag1=tag1, tag2=tag2)
-        self.tokens.append(token)
-        if word == '-LRB-':
-            word = "("
-        elif word == '-RRB-':
-            word = ')'
-        self.next()
-        return Tree.make_terminal(word, cat)
-
-    def parse_tree(self):
-        self.check('(')
-        self.check('<', 1)
-        self.check('T', 2)
-        self.next()
-        cat = Category.parse(self.next())
-        head_is_left = self.next() == '0'
-        self.next()
-        children = []
-        while self.peek() != ')':
-            children.append(self.next_node())
-        self.next()
-        if len(children) == 2:
-            left, right = children
-            op = guess_combinator_by_triplet(
-                self.binary_rules, cat, left.cat, right.cat)
-            op = op or UNKNOWN_COMBINATOR
-            return Tree.make_binary(
-                cat, left, right, op, head_is_left=head_is_left)
-        elif len(children) == 1:
-            return Tree.make_unary(cat, children[0])
-        else:
-            raise RuntimeError(f'failed to parse: {self.line}')
+BINARY_RULES = {
+    'en': en.apply_binary_rules,
+    'ja': ja.apply_binary_rules,
+}
 
 
 class Tree(object):
@@ -143,10 +69,6 @@ class Tree(object):
         return Tree(cat, [child], op_string, op_symbol)
 
     @staticmethod
-    def of_auto(line: str) -> 'Tree':
-        return _AutoLineReader(line).parse()
-
-    @staticmethod
     def of_nltk_tree(tree) -> 'Tree':
 
         def rec(node):
@@ -161,9 +83,12 @@ class Tree(object):
                 else:
                     assert len(children) == 2
                     left, right = children
-                    op = guess_combinator_by_triplet(cat, left.cat, right.cat)
-                    op = op or UNKNOWN_COMBINATOR
-                    return Tree.make_binary(cat, left, right, op)
+                    rule = guess_combinator_by_triplet(
+                        BINARY_RULES[GLOBAL_LANG_NAME], cat, left.cat, right.cat
+                    )
+                    return Tree.make_binary(
+                        cat, left, right, rule.op_string, rule.op_symbol, rule.head_is_left
+                    )
 
         return rec(tree)
 

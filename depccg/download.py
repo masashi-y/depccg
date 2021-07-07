@@ -1,106 +1,125 @@
-
-import sys
+from typing import Dict, Tuple, NamedTuple, Optional
 import tarfile
-from urllib.request import urlretrieve
 import logging
-import time
 from pathlib import Path
 from collections import defaultdict
+
+from depccg.chainer.supertagger import load_chainer_tagger
+from depccg.allennlp.supertagger import load_allennlp_tagger
 
 
 logger = logging.getLogger(__name__)
 
 MODEL_DIRECTORY = Path(__file__).parent / 'models'
 
-MODELS = {
-    'en': (
+
+class ModelConfig(NamedTuple):
+    framework: str
+    name: str
+    url: str
+    config: Path
+
+
+MODELS: Dict[str, ModelConfig] = {
+    'en': ModelConfig(
         'chainer',
         'tri_headfirst',
         '1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv',
-        MODEL_DIRECTORY / 'config_en.json'
+        MODEL_DIRECTORY / 'config_en.jsonnet'
     ),
-    'en[elmo]': (
+    'en[elmo]': ModelConfig(
         'allennlp',
         'lstm_parser_elmo',
         '1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr',
-        MODEL_DIRECTORY / 'config_en.json'
+        MODEL_DIRECTORY / 'config_en.jsonnet'
     ),
-    'en[rebank]': (
+    'en[rebank]': ModelConfig(
         'allennlp',
         'lstm_parser_char_rebanking',
         '1Az840uCW8QuAkNCZq_Y8VOkW5j0Vtcj9',
-        MODEL_DIRECTORY / 'config_rebank.json'
+        MODEL_DIRECTORY / 'config_rebank.jsonnet'
     ),
-    'en[elmo_rebank]': (
+    'en[elmo_rebank]': ModelConfig(
         'allennlp',
         'lstm_parser_elmo_rebanking',
         '1deyCjSgCuD16WkEhOL3IXEfQBfARh_ll',
-        MODEL_DIRECTORY / 'config_rebank.json'
+        MODEL_DIRECTORY / 'config_rebank.jsonnet'
     ),
-    'ja': (
+    'ja': ModelConfig(
         'chainer',
         'ja_headfinal',
         '1bblQ6FYugXtgNNKnbCYgNfnQRkBATSY3',
-        MODEL_DIRECTORY / 'config_ja.json'
+        MODEL_DIRECTORY / 'config_ja.jsonnet'
     )
 }
 
 
-AVAILABLE_MODEL_VARIANTS = defaultdict(list)
-for model in MODELS:
+def _lang_and_variant(model: str):
     if '[' in model and ']' in model:
         assert model[-1] == ']'
-        lang, variant = model[:-1].split('[')
-        AVAILABLE_MODEL_VARIANTS[lang].append(variant)
+        return model[:-1].split('[')
+    else:
+        return model, None
 
 
-SEMANTIC_TEMPLATES = {
+AVAILABLE_MODEL_VARIANTS = defaultdict(list)
+for model in MODELS:
+    lang, variant = _lang_and_variant(model)
+    AVAILABLE_MODEL_VARIANTS[lang].append(variant)
+
+
+SEMANTIC_TEMPLATES: Dict[str, Path] = {
     'en': MODEL_DIRECTORY / 'semantic_templates_en_event.yaml',
     'ja': MODEL_DIRECTORY / 'semantic_templates_ja_event.yaml'
 }
 
 
-def reporthook(count, block_size, total_size):
-    global start_time
-    if count == 0:
-        start_time = time.time()
-        return
-    duration = time.time() - start_time
-    progress_size = int(count * block_size)
-    speed = int(progress_size / (1024 * duration))
-    percent = min(int(count * block_size * 100 / total_size), 100)
-    sys.stdout.write("\r...%d%%, %d MB, %d KB/s, %d seconds passed" %
-                     (percent, progress_size / (1024 * 1024), speed, duration))
-    sys.stdout.flush()
+def download(lang: str, variant: Optional[str]) -> None:
+    config = MODELS[f'{lang}[{variant}]' if variant else lang]
 
-
-def download(lang, variant):
-    model_name = f'{lang}[{variant}]' if variant else lang
-    framework, basename, url, _ = MODELS[model_name]
     from google_drive_downloader import GoogleDriveDownloader as gdd
-    logging.info(f'start downloading from {url}')
-    filename = (MODEL_DIRECTORY / basename).with_suffix('.tar.gz')
-    gdd.download_file_from_google_drive(file_id=url,
-                                        dest_path=filename,
-                                        unzip=False,
-                                        overwrite=True)
-    if framework == 'chainer':
-        logging.info(f'extracting files')
+    logging.info(f'start downloading from {config.url}')
+    filename = (MODEL_DIRECTORY / config.name).with_suffix('.tar.gz')
+    gdd.download_file_from_google_drive(
+        file_id=config.url,
+        dest_path=filename,
+        unzip=False,
+        overwrite=True
+    )
+
+    if config.framework == 'chainer':
+        logging.info('extracting files')
         tf = tarfile.open(filename)
         tf.extractall(MODEL_DIRECTORY)
-    logging.info(f'finished')
+    logging.info('finished')
 
 
-def load_model_directory(model_name):
-    framework, basename, _, config = MODELS[model_name]
-    model_path = MODEL_DIRECTORY / basename
-    if framework == 'allennlp':
+def load_model_directory(model_name: str) -> Tuple[Path, ModelConfig]:
+    config = MODELS[model_name]
+    model_path = MODEL_DIRECTORY / config.name
+    if config.framework == 'allennlp':
         model_path = model_path.with_suffix('.tar.gz')
     if not model_path.exists():
-        lang, variant = model_name[:-1].split('[')
-        raise RuntimeError(f'please download the model by doing \'depccg_{lang} download VARIANT\'.')
+        lang, variant = _lang_and_variant(model_name)
+        if variant is None:
+            variant = ''
+        raise RuntimeError(
+            f'please download the model by doing \'depccg_{lang} download {variant}\'.')
     return model_path, config
 
 
-def model_is_available(model_name):
-    return model_name in list(MODELS.keys())
+def model_is_available(model_name: str) -> bool:
+    return model_name in MODELS.keys()
+
+
+def load_model(model_name: str, device: int = -1):
+    model_path, config = load_model_directory(model_name)
+    if config.framework == 'allennlp':
+        supertagger = load_allennlp_tagger(model_path, device)
+    elif config.framework == 'chainer':
+        supertagger = load_chainer_tagger(model_path, device)
+    else:
+        raise KeyError(
+            f'unsupported framework: {config.framework}'
+        )
+    return supertagger, config

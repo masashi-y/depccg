@@ -247,7 +247,7 @@ def apply_binary_rules(
         x.clear_features('X', 'nb'), y.clear_features('X', 'nb')
     )
     results = []
-    if seen_key in seen_rules:
+    if seen_rules is None or seen_key in seen_rules:
         for combinator in combinators:
             result = combinator(*key)
             if result is not None:

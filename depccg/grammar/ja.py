@@ -1,79 +1,79 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Set, TypeVar, Tuple
 from depccg.cat import Category
 from depccg.unification import Unification
 from depccg.types import Combinator, CombinatorResult
 
-
-JA_VARIABLES = {'X1', 'X2', 'X3'}
+X = TypeVar('X')
+Pair = Tuple[X, X]
 
 
 def forward_application(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("a/b", "b", JA_VARIABLES)
+    uni = Unification("a/b", "b")
     if uni(x, y):
         result = uni['a']
         return CombinatorResult(
             cat=result,
             op_string="fa",
-            op_string=">",
+            op_symbol=">",
             head_is_left=False,
         )
     return None
 
 
 def backward_application(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("b", "a\\b", JA_VARIABLES)
+    uni = Unification("b", "a\\b")
     if uni(x, y):
         result = uni['a']
         return CombinatorResult(
             cat=result,
             op_string="ba",
-            op_string="<",
+            op_symbol="<",
             head_is_left=False,
         )
     return None
 
 
 def forward_composition(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("a/b", "b/c", JA_VARIABLES)
+    uni = Unification("a/b", "b/c")
     if uni(x, y):
         result = uni['a'] / uni['c']
         return CombinatorResult(
             cat=result,
             op_string="fc",
-            op_string=">B",
+            op_symbol=">B",
             head_is_left=False,
         )
     return None
 
 
 def generalized_backward_composition1(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("b\\c", "a\\b", JA_VARIABLES)
+    uni = Unification("b\\c", "a\\b")
     if uni(x, y):
         result = uni['a'] | uni['c']
         return CombinatorResult(
             cat=result,
             op_string="bx",
-            op_string="<B1",
+            op_symbol="<B1",
             head_is_left=False,
         )
     return None
 
 
 def generalized_backward_composition2(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("(b\\c)|d", "a\\b", JA_VARIABLES)
+    uni = Unification("(b\\c)|d", "a\\b")
     if uni(x, y):
         result = x.functor(uni['a'] | uni['c'], uni['d'])
         return CombinatorResult(
             cat=result,
             op_string="bx",
-            op_string="<B2",
+            op_symbol="<B2",
             head_is_left=False,
         )
     return None
 
 
 def generalized_backward_composition3(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("((b\\c)|d)|e", "a\\b", JA_VARIABLES)
+    uni = Unification("((b\\c)|d)|e", "a\\b")
     if uni(x, y):
         result = x.functor(
             x.left.functor(uni['a'] | uni['c'], uni['d']), uni['e']
@@ -81,14 +81,14 @@ def generalized_backward_composition3(x: Category, y: Category) -> Optional[Comb
         return CombinatorResult(
             cat=result,
             op_string="bx",
-            op_string="<B3",
+            op_symbol="<B3",
             head_is_left=False,
         )
     return None
 
 
 def generalized_backward_composition4(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("(((b\\c)|d)|e)|f", "a\\b", JA_VARIABLES)
+    uni = Unification("(((b\\c)|d)|e)|f", "a\\b")
     if uni(x, y):
         result = x.functor(
             x.left.functor(
@@ -100,40 +100,40 @@ def generalized_backward_composition4(x: Category, y: Category) -> Optional[Comb
         return CombinatorResult(
             cat=result,
             op_string="bx",
-            op_string="<B4",
+            op_symbol="<B4",
             head_is_left=False,
         )
     return None
 
 
 def generalized_forward_composition1(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("a/b", "b\\c", JA_VARIABLES)
+    uni = Unification("a/b", "b\\c")
     if uni(x, y):
         result = uni['a'] | uni['c']
         return CombinatorResult(
             cat=result,
             op_string="fx",
-            op_string=">Bx1",
+            op_symbol=">Bx1",
             head_is_left=False,
         )
     return None
 
 
 def generalized_forward_composition2(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("a/b", "(b\\c)|d", JA_VARIABLES)
+    uni = Unification("a/b", "(b\\c)|d")
     if uni(x, y):
         result = y.functor(uni['a'] | uni['c'], uni['d'])
         return CombinatorResult(
             cat=result,
             op_string="fx",
-            op_string=">Bx2",
+            op_symbol=">Bx2",
             head_is_left=False,
         )
     return None
 
 
 def generalized_forward_composition3(x: Category, y: Category) -> Optional[CombinatorResult]:
-    uni = Unification("a/b", "((b\\c)|d)|e", JA_VARIABLES)
+    uni = Unification("a/b", "((b\\c)|d)|e")
     if uni(x, y):
         result = y.functor(y.left.functor(
             uni['a'] | uni['c'], uni['d']), uni['e']
@@ -141,7 +141,7 @@ def generalized_forward_composition3(x: Category, y: Category) -> Optional[Combi
         return CombinatorResult(
             cat=result,
             op_string="fx",
-            op_string=">Bx3",
+            op_symbol=">Bx3",
             head_is_left=False,
         )
     return None
@@ -193,3 +193,38 @@ combinators: List[Combinator] = [
     generalized_forward_composition3,
     conjoin,
 ]
+
+
+def apply_binary_rules(
+    x: Category,
+    y: Category,
+    seen_rules: Optional[Set[Pair[Category]]] = None,
+) -> List[CombinatorResult]:
+    key = (x, y)
+    results = []
+    if seen_rules is None or key in seen_rules:
+        for combinator in combinators:
+            result = combinator(*key)
+            if result is not None:
+                results.append(result)
+
+    return results
+
+
+def apply_unary_rules(
+    x: Category,
+    unary_rules: Dict[Category, List[Category]]
+) -> List[CombinatorResult]:
+    if x not in unary_rules:
+        return []
+    results = []
+    for result in unary_rules[x]:
+        results.append(
+            CombinatorResult(
+                cat=result,
+                op_string='tr',
+                op_symbol='<un>',
+                head_is_left=True,
+            )
+        )
+    return results

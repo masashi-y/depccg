@@ -2,19 +2,110 @@
 from typing import Tuple, List, Iterator, NamedTuple
 from depccg.tree import Tree
 from depccg.cat import Category
-from depccg.combinator import guess_combinator_by_triplet, UNKNOWN_COMBINATOR
-from depccg.lang import BINARY_RULES, GLOBAL_LANG_NAME
+from depccg.lang import GLOBAL_LANG_NAME
 from depccg.types import Token
+from depccg.grammar import guess_combinator_by_triplet
+from depccg.grammar import en, ja
 from lxml import etree
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+BINARY_RULES = {
+    'en': en.apply_binary_rules,
+    'ja': ja.apply_binary_rules,
+}
+
+
 class ReaderResult(NamedTuple):
     name: str
     tokens: List[Token]
     tree: Tree
+
+
+class _AutoLineReader(object):
+    def __init__(self, line):
+        self.line = line
+        self.index = 0
+        self.word_id = -1
+        self.binary_rules = BINARY_RULES[GLOBAL_LANG_NAME]
+        self.tokens = []
+
+    def next(self):
+        end = self.line.find(' ', self.index)
+        res = self.line[self.index:end]
+        self.index = end + 1
+        return res
+
+    def check(self, text, offset=0):
+        if self.line[self.index + offset] != text:
+            raise RuntimeError(f'failed to parse: {self.line}')
+
+    def peek(self):
+        return self.line[self.index]
+
+    def parse(self):
+        tree = self.next_node()
+        return tree, self.tokens
+
+    @property
+    def next_node(self):
+        if self.line[self.index + 2] == 'L':
+            return self.parse_leaf
+        elif self.line[self.index + 2] == 'T':
+            return self.parse_tree
+        else:
+            raise RuntimeError(f'failed to parse: {self.line}')
+
+    def parse_leaf(self):
+        self.word_id += 1
+        self.check('(')
+        self.check('<', 1)
+        self.check('L', 2)
+        self.next()
+        cat = Category.parse(self.next())
+        tag1 = self.next()  # modified POS tag
+        tag2 = self.next()  # original POS
+        word = self.next().replace('\\', '')
+        token = Token(
+            word=word,
+            pos=tag1,
+            tag1=tag1,
+            tag2=tag2
+        )
+        self.tokens.append(token)
+        if word == '-LRB-':
+            word = "("
+        elif word == '-RRB-':
+            word = ')'
+        self.next()
+        return Tree.make_terminal(token, cat)
+
+    def parse_tree(self):
+        self.check('(')
+        self.check('<', 1)
+        self.check('T', 2)
+        self.next()
+        cat = Category.parse(self.next())
+        head_is_left = self.next() == '0'
+        self.next()
+        children = []
+        while self.peek() != ')':
+            children.append(self.next_node())
+        self.next()
+        if len(children) == 2:
+            left, right = children
+            rule = guess_combinator_by_triplet(
+                self.binary_rules, cat, left.cat, right.cat
+            )
+            return Tree.make_binary(
+                cat, left, right, rule, rule.op_string, rule.op_symbol, head_is_left
+            )
+        elif len(children) == 1:
+            return Tree.make_unary(cat, children[0])
+        else:
+            raise RuntimeError(f'failed to parse: {self.line}')
 
 
 def read_auto(filename: str) -> Iterator[ReaderResult]:
@@ -42,7 +133,7 @@ def read_auto(filename: str) -> Iterator[ReaderResult]:
                     token = token[:-6]
                 tokens.append(token)
             line = ' '.join(tokens)
-            tree, tokens = Tree.of_auto(line)
+            tree, tokens = _AutoLineReader(line).parse()
             yield ReaderResult(name, tokens, tree)
 
 
@@ -69,15 +160,15 @@ def read_xml(filename: str) -> Iterator[ReaderResult]:
                 else:
                     assert len(children) == 2
                     left, right = children
-                    combinator = guess_combinator_by_triplet(
+                    rule = guess_combinator_by_triplet(
                         binary_rules, cat, left.cat, right.cat
                     )
-                    combinator = combinator or UNKNOWN_COMBINATOR
-                    return Tree.make_binary(cat, left, right, combinator)
+                    return Tree.make_binary(
+                        cat, left, right, rule.op_string, rule.op_symbol, rule.head_is_left
+                    )
             else:
                 assert node.tag == 'lf'
                 cat = Category.parse(attrib['cat'])
-                word = attrib['word']
                 token = Token(
                     word=attrib['word'],
                     pos=attrib['pos'],
@@ -86,7 +177,7 @@ def read_xml(filename: str) -> Iterator[ReaderResult]:
                     chunk=attrib['chunk']
                 )
                 tokens.append(token)
-                return Tree.make_terminal(word, cat)
+                return Tree.make_terminal(token, cat)
         tokens = []
         tree = rec(tree)
         return tokens, tree
@@ -134,11 +225,12 @@ def read_jigg_xml(filename: str) -> Iterator[ReaderResult]:
                 else:
                     assert len(children) == 2
                     left, right = children
-                    combinator = guess_combinator_by_triplet(
+                    rule = guess_combinator_by_triplet(
                         binary_rules, cat, left.cat, right.cat
                     )
-                    combinator = combinator or UNKNOWN_COMBINATOR
-                    return Tree.make_binary(cat, left, right, combinator)
+                    return Tree.make_binary(
+                        cat, left, right, rule.op_string, rule.op_symbol, rule.head_is_left
+                    )
             else:
                 cat = Category.parse(attrib['category'])
                 word = try_get_surface(tokens[attrib['terminal']])
@@ -213,7 +305,6 @@ def _parse_ptb(tree_string: str) -> Tuple[Tree, List[Token]]:
                 combinator = guess_combinator_by_triplet(
                     binary_rules, category, left.cat, right.cat
                 )
-                combinator = combinator or UNKNOWN_COMBINATOR
                 tree = Tree.make_binary(
                     category, left, right, combinator
                 )
