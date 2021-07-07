@@ -1,8 +1,8 @@
 from typing import NamedTuple, List, Iterator, Union
-from depccg.cat import Category
-from depccg.combinator import UNKNOWN_COMBINATOR, guess_combinator_by_triplet
+from depccg.py_cat import Category
+# from depccg.combinator import UNKNOWN_COMBINATOR, guess_combinator_by_triplet
 from depccg.types import Token
-from depccg.lang import BINARY_RULES, GLOBAL_LANG_NAME
+from depccg.lang import GLOBAL_LANG_NAME
 # from depccg.printer.auto import auto_of
 
 
@@ -65,7 +65,7 @@ class _AutoLineReader(object):
         self.check('T', 2)
         self.next()
         cat = Category.parse(self.next())
-        left_is_head = self.next() == '0'
+        head_is_left = self.next() == '0'
         self.next()
         children = []
         while self.peek() != ')':
@@ -77,7 +77,7 @@ class _AutoLineReader(object):
                 self.binary_rules, cat, left.cat, right.cat)
             op = op or UNKNOWN_COMBINATOR
             return Tree.make_binary(
-                cat, left, right, op, left_is_head=left_is_head)
+                cat, left, right, op, head_is_left=head_is_left)
         elif len(children) == 1:
             return Tree.make_unary(cat, children[0])
         else:
@@ -86,40 +86,13 @@ class _AutoLineReader(object):
 
 class Tree(object):
 
-    @staticmethod
-    def make_terminal(
-        word: Union[str, Token],
-        cat: Category,
-        op_string: str = 'lex'
-    ) -> 'Tree':
-
-        if isinstance(word, Token):
-            token = word
-        else:
-            token = Token(word=word)
-
-        return Tree(cat, [token], op_string)
-
-    @staticmethod
-    def make_binary(
-        cat: Category,
-        left: 'Tree',
-        right: 'Tree',
-        op_string: str,
-        left_is_head: bool = True,
-    ) -> 'Tree':
-        return Tree(cat, [left, right], op_string, left_is_head)
-
-    @staticmethod
-    def make_unary(cat: Category, child: 'Tree', op_string: str = 'lex') -> 'Tree':
-        return Tree(cat, [child], op_string)
-
     def __init__(
         self,
         cat: Category,
         children: Union[List['Tree'], List[Token]],
         op_string: str,
-        left_is_head: bool = True,
+        op_symbol: str,
+        head_is_left: bool = True,
     ) -> None:
         assert len({type(child) for child in children}) == 1, \
             "children must contain elements of a unique type"
@@ -131,7 +104,43 @@ class Tree(object):
         self.cat = cat
         self.children = children
         self.op_string = op_string
-        self.left_is_head = left_is_head
+        self.op_symbol = op_symbol
+        self.head_is_left = head_is_left
+
+    @staticmethod
+    def make_terminal(
+        word: Union[str, Token],
+        cat: Category,
+        op_string: str = 'lex',
+        op_symbol: str = '<lex>',
+    ) -> 'Tree':
+
+        if isinstance(word, Token):
+            token = word
+        else:
+            token = Token(word=word)
+
+        return Tree(cat, [token], op_string, op_symbol)
+
+    @staticmethod
+    def make_binary(
+        cat: Category,
+        left: 'Tree',
+        right: 'Tree',
+        op_string: str,
+        op_symbol: str,
+        head_is_left: bool = True,
+    ) -> 'Tree':
+        return Tree(cat, [left, right], op_string, op_symbol, head_is_left)
+
+    @staticmethod
+    def make_unary(
+        cat: Category,
+        child: 'Tree',
+        op_string: str = 'lex',
+        op_symbol: str = '<un>'
+    ) -> 'Tree':
+        return Tree(cat, [child], op_string, op_symbol)
 
     @staticmethod
     def of_auto(line: str) -> 'Tree':
@@ -157,14 +166,6 @@ class Tree(object):
                     return Tree.make_binary(cat, left, right, op)
 
         return rec(tree)
-
-    # property op_string:
-    #     """C&C-style string representing a combinator. e.g. fa, ba fx, bx"""
-
-    #     def __get__(self):
-    #         assert not self.is_leaf, "This node is leaf and does not have combinator!"
-    #         cdef const Node * c_node = &deref(self.node_)
-    #         return EnResolveCombinatorName(c_node).decode('utf-8')
 
     # property op_symbol:
     #     """standard CCG style string representing a combinator. e.g. >, <, >B"""
@@ -231,10 +232,6 @@ class Tree(object):
     @property
     def word(self, token_key='word'):
         return ' '.join(leaf.children[0][token_key] for leaf in self.leaves)
-
-    @property
-    def head_is_left(self) -> bool:
-        return True   # TODO  jderef(self.node_).HeadIsLeft()
 
     @property
     def is_unary(self) -> bool:

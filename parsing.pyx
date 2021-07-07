@@ -1,23 +1,28 @@
+from typing import List
 from cython.operator cimport dereference as deref
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.unordered_set cimport unordered_set
 cimport numpy as np
 
-from depccg.py_tree import Tree
+from depccg.py_tree import Tree, ScoredTree
+from depccg.py_cat import Category
 
 
 cdef extern from "cpp/parsing.h" namespace "parsing":
-    cdef struct agenda_item:
+    cdef struct cell_item:
         bint fin
         unsigned cat
-        agenda_item *left
-        agenda_item *right
+        cell_item *left
+        cell_item *right
         float in_score
         float out_score
         unsigned start_of_span
         unsigned span_length
         unsigned head_id
+        unsigned rule_id
+
+        float score()
 
 
 cdef extern from "cpp/parsing.h":
@@ -28,7 +33,7 @@ cdef extern from "cpp/parsing.h":
 
     ctypedef unsigned (*scaffold_type)(void *callback_func, unsigned x, unsigned y, vector[combinator_result] *results);
 
-    ctypedef void *(*finalizer_type)(agenda_item *, unsigned *, void *);
+    ctypedef void *(*finalizer_type)(cell_item *, unsigned *, void *);
 
     cdef struct config:
         unsigned num_tags
@@ -80,11 +85,20 @@ cdef init_config(config *c_config, dict kwargs):
 
 
 cdef void *retrieve_tree(
-    agenda_item *item,
+    cell_item *item,
     unsigned *token_id,
     void *c_kwargs,
 ):
+    """
+    retrieve (n-best) parsing results from cell_item.
+    they are placed in kwargs['stack']
+    """
+
     cdef object kwargs = <object>c_kwargs
+    if item.fin:
+        kwargs['scores'].append(item.score())
+        return retrieve_tree(item.left, token_id, c_kwargs)
+
     cat = kwargs['categories'][item.cat]
     stack = kwargs['stack']
     if item.left == NULL and item.right == NULL:
@@ -103,8 +117,15 @@ cdef void *retrieve_tree(
         kwargs = <object>c_kwargs
         right = stack.pop()
         left = stack.pop()
+        combinator_result = kwargs['rules'][left.cat, right.cat][item.rule_id]
         stack.append(
-            Tree.make_binary(cat, left, right, 'a')
+            Tree.make_binary(
+                cat,
+                left,
+                right,
+                combinator_result.op_string,
+                combinator_result.op_symbol,
+            )
         )
         return c_kwargs
 
@@ -119,13 +140,21 @@ def run(
     list possible_root_cats,
     dict cache,
     **kwargs
-):
+) -> List[ScoredTree]:
+
+    def failed():
+        return [
+            ScoredTree(
+                tree=Tree.make_terminal("FAILED", Category.parse("NP")),
+                score=-float('inf')
+            )
+        ]
 
     if (
         'max_length' in kwargs
         and len(tokens) > kwargs.pop('max_length')
     ):
-        return None
+        return failed()
 
     if len(set(categories)) != len(categories):
         raise RuntimeError(
@@ -150,7 +179,6 @@ def run(
         else:
             combinator_results = list(apply_binary_rules(x, y))
             cache[x, y] = combinator_results
-        print(combinator_results)
         results = []
         for rule_id, result in enumerate(combinator_results):
             cat_id = maybe_add_and_get(result.cat)
@@ -162,7 +190,7 @@ def run(
         if x in cache:
             combinator_results = cache[x]
         else:
-            combinator_results = list(apply_unary_rules(x))  # TODO
+            combinator_results = list(apply_unary_rules(x))
             cache[x] = combinator_results
 
         results = []
@@ -184,10 +212,13 @@ def run(
         c_possible_root_cat.insert(cat_id)
 
     results = []
+    scores = []
     finalizer_args = {
         'categories': categories,
         'tokens': tokens,
         'stack': results,
+        'scores': scores,
+        'rules': cache,
     }
 
     cdef unsigned status = parse_sentence(
@@ -203,5 +234,13 @@ def run(
         &c_config,
     )
     if status > 0:
-        return None
-    return results
+        return failed()
+
+    if len(results) != len(scores):
+        raise RuntimeError(
+            'unexpected behavior occured during parsing'
+        )
+    return [
+        ScoredTree(tree=tree, score=score)
+        for tree, score in zip(results, scores)
+    ]

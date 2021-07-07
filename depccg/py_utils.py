@@ -3,7 +3,7 @@ import json
 import logging
 import numpy as np
 
-from depccg.cat import Category
+from depccg.py_cat import Category
 
 
 logger = logging.getLogger(__name__)

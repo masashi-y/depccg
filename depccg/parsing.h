@@ -43,25 +43,26 @@ namespace utils
 namespace parsing
 {
 
-    struct agenda_item
+    struct cell_item
     {
 
         bool fin;
         category_id cat;
-        agenda_item *left;
-        agenda_item *right;
+        cell_item *left;
+        cell_item *right;
         float in_score;
         float out_score;
         unsigned start_of_span;
         unsigned span_length;
         unsigned head_id;
+        unsigned rule_id;
 
         float score() const { return in_score + out_score; }
 
         unsigned end_of_span() const { return start_of_span + span_length; }
     };
 
-    bool operator<(const agenda_item &left, const agenda_item &right)
+    bool operator<(const cell_item &left, const cell_item &right)
     {
         return left.score() < right.score();
     };
@@ -72,18 +73,18 @@ namespace parsing
         class cell
         {
         public:
-            using agenda_items = std::list<agenda_item>;
+            using agenda_items = std::list<cell_item>;
+
+            cell() : seen(false){};
+            cell(const cell &) = delete;
 
             bool contains(category_id cat) const { return category_ids.count(cat) > 0; }
 
-            cell(){};
-            cell(const cell &) = delete;
-
-            agenda_item &emplace(agenda_item &item)
+            cell_item &emplace(const cell_item &item)
             {
                 category_ids.emplace(item.cat);
-                items.emplace_back(item);
-                return items.back();
+                items.push_front(item);
+                return items.front();
             }
 
             unsigned size() const { return items.size(); }
@@ -92,25 +93,25 @@ namespace parsing
 
             void sort()
             {
-                auto compare = [](parsing::agenda_item &s1, parsing::agenda_item &s2)
+                auto compare = [](parsing::cell_item &s1, parsing::cell_item &s2)
                 {
                     return s1.score() > s2.score();
                 };
                 this->items.sort(compare);
             }
 
-            bool seen;
+            friend chart;
 
         private:
+            bool seen;
             std::unordered_set<category_id> category_ids;
             agenda_items items;
         };
 
         chart(unsigned length, bool nbest)
             : length_(length),
-              chart_size_(length * length),
               nbest_(nbest),
-              chart_(new cell[chart_size_]),
+              chart_(new cell[length * length]),
               ending_cells_(new std::vector<cell *>[length + 1]),
               starting_cells_(new std::vector<cell *>[length + 1]) {}
 
@@ -134,7 +135,7 @@ namespace parsing
             return cell_;
         }
 
-        agenda_item *update(unsigned row, unsigned column, agenda_item &item)
+        cell_item *update(unsigned row, unsigned column, const cell_item &item)
         {
             cell &cell_ = (*this)(row, column);
 
@@ -150,7 +151,7 @@ namespace parsing
             return final_.size();
         }
 
-        bool empty() const { return this->size() == 0; }
+        bool empty() const { return size() == 0; }
 
         std::vector<cell *> &cells_starting_at(unsigned index)
         {
@@ -164,11 +165,9 @@ namespace parsing
 
     private:
         unsigned length_;
-        unsigned chart_size_;
         bool nbest_;
         cell *chart_;
-        std::vector<cell *> *ending_cells_;
-        std::vector<cell *> *starting_cells_;
+        std::vector<cell *> *ending_cells_, *starting_cells_;
     };
 
     class matrix
@@ -198,8 +197,6 @@ namespace parsing
         }
 
         unsigned size() const { return column_ * row_; }
-        unsigned column() const { return column_; }
-        unsigned row() const { return row_; }
 
     private:
         float *data_;
@@ -234,7 +231,7 @@ namespace parsing
 
 } // namespace parsing
 
-typedef void *(*finalizer_type)(parsing::agenda_item *, unsigned *, void *);
+typedef void *(*finalizer_type)(parsing::cell_item *, unsigned *, void *);
 
 struct config
 {
@@ -281,7 +278,7 @@ unsigned parse_sentence(
     parsing::matrix tag_in_scores(tag_scores, length, config->num_tags);
     parsing::matrix dep_in_scores(dep_scores, length, length + 1);
 
-    std::priority_queue<parsing::agenda_item> agenda;
+    std::priority_queue<parsing::cell_item> agenda;
 
     std::vector<std::priority_queue<scored_category>> scored_cats(length);
 
@@ -331,8 +328,7 @@ unsigned parse_sentence(
 
     for (unsigned s = 0; s < config->max_step && goal.size() < config->nbest && agenda.size(); s++)
     {
-        parsing::agenda_item top_item = agenda.top();
-
+        parsing::cell_item top_item = agenda.top();
         agenda.pop();
         if (top_item.fin)
         {
@@ -340,7 +336,7 @@ unsigned parse_sentence(
             continue;
         }
 
-        parsing::agenda_item *item;
+        parsing::cell_item *item;
         if ((item = chart.update(top_item.start_of_span, top_item.span_length - 1, top_item)) != nullptr)
         {
 
@@ -355,7 +351,8 @@ unsigned parse_sentence(
                      0.0,
                      item->start_of_span,
                      item->span_length,
-                     item->head_id});
+                     item->head_id,
+                     item->rule_id});
             }
 
             if (length == 1 || item->span_length != length)
@@ -371,7 +368,8 @@ unsigned parse_sentence(
                          item->out_score,
                          item->start_of_span,
                          item->span_length,
-                         item->head_id});
+                         item->head_id,
+                         0});
                 }
             }
 
@@ -401,7 +399,8 @@ unsigned parse_sentence(
                              out_score,
                              start_of_span,
                              span_length,
-                             head->head_id});
+                             head->head_id,
+                             rule_result.rule_id});
                     }
                 }
             }
@@ -431,7 +430,8 @@ unsigned parse_sentence(
                              out_score,
                              start_of_span,
                              span_length,
-                             head->head_id});
+                             head->head_id,
+                             rule_result.rule_id});
                     }
                 }
             }
@@ -443,8 +443,11 @@ unsigned parse_sentence(
 
     parsing::chart::cell &cell = goal(0, 0);
     cell.sort();
-    unsigned token_id = 0;
-    finalizer_callback(&(*cell.begin()), &token_id, finalizer_args);
+    for (auto &item : cell)
+    {
+        unsigned token_id = 0;
+        finalizer_callback(&item, &token_id, finalizer_args);
+    }
 
     return 0;
 }
