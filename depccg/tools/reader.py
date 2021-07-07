@@ -1,7 +1,7 @@
 
 from typing import Tuple, List, Iterator, NamedTuple
-from depccg.py_tree import Tree
-from depccg.py_cat import Category
+from depccg.tree import Tree
+from depccg.cat import Category
 from depccg.combinator import guess_combinator_by_triplet, UNKNOWN_COMBINATOR
 from depccg.lang import BINARY_RULES, GLOBAL_LANG_NAME
 from depccg.types import Token

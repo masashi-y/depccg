@@ -5,7 +5,7 @@ import chainer
 import chainer.links as L
 import chainer.functions as F
 
-from depccg.py_utils import read_model_defs
+from depccg.utils import read_model_defs
 from depccg.chainer.biaffine import Biaffine, Bilinear
 from depccg.chainer.param import Param
 

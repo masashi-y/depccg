@@ -1,8 +1,8 @@
 
 from typing import List, Optional, Dict, Any
-from depccg.py_tree import Tree
+from depccg.tree import Tree
 from depccg.types import Token
-from depccg.py_cat import Category
+from depccg.cat import Category
 
 
 def _json_of_category(category: Category) -> Dict[str, Any]:

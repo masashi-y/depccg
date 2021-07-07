@@ -7,11 +7,10 @@ import chainer.functions as F
 from chainer import cuda
 from chainer import Variable
 from chainer.dataset.convert import _concat_arrays
-from depccg.py_utils import read_model_defs
+from depccg.utils import read_model_defs, normalize
 from .biaffine import Biaffine, Bilinear
 from depccg.chainer.param import Param
 from .fixed_length_n_step_lstm import FixedLengthNStepLSTM
-from depccg.py_utils import normalize
 
 
 UNK = "*UNKNOWN*"

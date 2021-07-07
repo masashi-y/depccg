@@ -1,8 +1,8 @@
 from typing import List, Optional
 
-from depccg.py_tree import Tree
+from depccg.tree import Tree
 from depccg.types import Token
-from depccg.py_utils import normalize
+from depccg.utils import normalize
 
 
 def ja_of(tree: Tree, tokens: Optional[List[Token]] = None) -> str:

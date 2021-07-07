@@ -1,4 +1,4 @@
-from depccg.py_cat import Category, Atom, Functor, Feature, TernaryFeature, UnaryFeature
+from depccg.cat import Category, Atom, Functor, Feature, TernaryFeature, UnaryFeature
 
 
 def test_parse():

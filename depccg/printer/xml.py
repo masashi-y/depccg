@@ -1,6 +1,6 @@
 from typing import List, Optional
 from lxml import etree
-from depccg.py_tree import Tree, ScoredTree
+from depccg.tree import Tree, ScoredTree
 from depccg.types import Token
 
 

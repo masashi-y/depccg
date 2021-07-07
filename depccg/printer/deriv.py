@@ -1,6 +1,6 @@
 
 from io import StringIO
-from depccg.py_tree import Tree
+from depccg.tree import Tree
 
 
 def deriv_of(tree: Tree) -> str:

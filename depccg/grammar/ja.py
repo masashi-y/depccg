@@ -1,5 +1,5 @@
 from typing import Optional, List
-from depccg.py_cat import Category
+from depccg.cat import Category
 from depccg.unification import Unification
 from depccg.types import Combinator, CombinatorResult
 

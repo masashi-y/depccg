@@ -1,5 +1,5 @@
 from typing import Dict, Union
-from depccg.py_cat import Category, Atom, Feature
+from depccg.cat import Category, Atom, Feature
 
 
 class Unification(object):

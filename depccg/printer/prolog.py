@@ -1,8 +1,8 @@
 from typing import List
 from io import StringIO
 
-from depccg.py_cat import Category
-from depccg.py_tree import ScoredTree, Tree
+from depccg.cat import Category
+from depccg.tree import ScoredTree, Tree
 from depccg.types import Token
 
 

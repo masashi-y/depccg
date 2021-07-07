@@ -4,7 +4,7 @@ import json
 from io import StringIO
 from lxml import etree
 
-from depccg.py_tree import ScoredTree
+from depccg.tree import ScoredTree
 from depccg.types import Token
 from depccg.download import SEMANTIC_TEMPLATES
 from depccg.semantics.ccg2lambda import parse as ccg2lambda

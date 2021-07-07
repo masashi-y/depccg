@@ -1,7 +1,7 @@
 from typing import List, TypeVar, Tuple, Set, Dict
 from depccg.types import Combinator, CombinatorResult
-from depccg.py_cat import Category
-from depccg.py_tree import Tree
+from depccg.cat import Category
+from depccg.tree import Tree
 
 X = TypeVar('X')
 Pair = Tuple[X, X]

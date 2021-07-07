@@ -1,6 +1,6 @@
 from typing import Optional, List, TypeVar, Tuple, Set, Dict
 from string import ascii_letters
-from depccg.py_cat import Category
+from depccg.cat import Category
 from depccg.unification import Unification
 from depccg.types import Combinator, CombinatorResult
 
