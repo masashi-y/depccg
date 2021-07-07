@@ -9,7 +9,7 @@ from depccg.tree import Tree, ScoredTree
 from depccg.cat import Category
 
 
-cdef extern from "cpp/parsing.h" namespace "parsing":
+cdef extern from "depccg/parsing.h" namespace "parsing":
     cdef struct cell_item:
         bint fin
         unsigned cat
@@ -25,7 +25,7 @@ cdef extern from "cpp/parsing.h" namespace "parsing":
         float score()
 
 
-cdef extern from "cpp/parsing.h":
+cdef extern from "depccg/parsing.h":
     cdef struct combinator_result:
         unsigned cat_id
         unsigned rule_id
