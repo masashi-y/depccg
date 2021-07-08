@@ -1,7 +1,8 @@
 from typing import List, Tuple, Dict, NamedTuple, Optional
 import json
 import logging
-import numpy as np
+import numpy
+from depccg.types import ScoringResult
 
 from depccg.cat import Category
 
@@ -53,7 +54,7 @@ def denormalize(word: str) -> str:
     return word
 
 
-def read_pretrained_embeddings(filepath: str) -> np.ndarray:
+def read_pretrained_embeddings(filepath: str) -> numpy.ndarray:
     nvocab = 0
     io = open(filepath)
     dim = len(io.readline().split())
@@ -61,7 +62,7 @@ def read_pretrained_embeddings(filepath: str) -> np.ndarray:
     for _ in io:
         nvocab += 1
     io.seek(0)
-    res = np.empty((nvocab, dim), dtype=np.float32)
+    res = numpy.empty((nvocab, dim), dtype=numpy.float32)
     for i, line in enumerate(io):
         line = line.strip()
         if len(line) == 0:
@@ -137,7 +138,7 @@ def maybe_split_and_join(string):
 def read_weights(filename, file_type='json'):
     assert file_type == 'json'
     categories = None
-    probs = []
+    scores = []
     for line in open(filename):
         json_dict = json.loads(line.strip())
 
@@ -147,13 +148,18 @@ def read_weights(filename, file_type='json'):
                 for cat in json_dict['categories']
             ]
 
-        dep = np.array(json_dict['heads']) \
+        dep_scores = numpy.array(json_dict['heads']) \
             .reshape(json_dict['heads_shape']) \
-            .astype(np.float32)
-        tag = np.array(json_dict['head_tags']) \
+            .astype(numpy.float32)
+        tag_scores = numpy.array(json_dict['head_tags']) \
             .reshape(json_dict['head_tags_shape']) \
-            .astype(np.float32)
+            .astype(numpy.float32)
 
-        probs.append((tag, dep))
+        scores.append(
+            ScoringResult(
+                tag_scores,
+                dep_scores
+            )
+        )
 
-    return probs, categories
+    return scores, categories

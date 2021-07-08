@@ -112,7 +112,7 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize: bool = False)
             f'stderr:\n {error}'
         )
 
-    res = []
+    results = []
     for sentence in tagged_sentences:
         words, poss = zip(*[(word, pos) for word, pos, _ in sentence])
         lemmas = stemmer.analyze(list(words), list(poss))
@@ -126,8 +126,8 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize: bool = False)
             )
             for (word, pos, ner), lemma in zip(sentence, lemmas)
         ]
-        res.append(tokens)
-    return res
+        results.append(tokens)
+    return results
 
 
 def annotate_using_spacy(
@@ -152,7 +152,6 @@ def annotate_using_spacy(
 
     if tokenize:
         docs = [nlp.tokenizer(' '.join(sentence)) for sentence in sentences]
-        raw_sentences = [[str(token) for token in doc] for doc in docs]
     else:
         docs = [Doc(nlp.vocab, sentence) for sentence in sentences]
 
@@ -187,10 +186,7 @@ def annotate_using_spacy(
             )
         results.append(tokens)
 
-    if tokenize:
-        return results, raw_sentences
-
-    return results, None
+    return results
 
 
 def annotate_using_janome(
@@ -208,8 +204,7 @@ def annotate_using_janome(
 
     logger.info('use Janome to tokenize and annotate POS infos.')
     tokenizer = Tokenizer()
-    res = []
-    raw_sentences = []
+    results = []
     for sentence in sentences:
         sentence = ''.join(sentence)
         tokenized = list(tokenizer.tokenize(sentence))
@@ -229,10 +224,8 @@ def annotate_using_janome(
                 base=token.base_form
             )
             tokens.append(token)
-        raw_sentence = [token.surface for token in tokenized]
-        res.append(tokens)
-        raw_sentences.append(raw_sentence)
-    return res, raw_sentences
+        results.append(tokens)
+    return results
 
 
 jigg_cmd = "java -Xmx2g -cp \"{0}/jar/*\" jigg.pipeline.Pipeline -annotators {1} -file {2} -output {3}"
@@ -276,8 +269,7 @@ def annotate_using_jigg(
     )
 
     proc.communicate()
-    res = []
-    raw_sentences = []
+    results = []
     for sentence in etree.parse(outfile).getroot().xpath('*//sentence'):
         tokens = []
         for token in sentence.xpath('*//token'):
@@ -295,10 +287,8 @@ def annotate_using_jigg(
                 base=attrib['base']
             )
             tokens.append(token)
-        res.append(tokens)
-        raw_sentence = [token.surf for token in tokens]
-        raw_sentences.append(raw_sentence)
-    return res, raw_sentences
+        results.append(tokens)
+    return results
 
 
 english_annotator = {

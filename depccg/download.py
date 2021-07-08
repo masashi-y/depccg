@@ -18,38 +18,49 @@ class ModelConfig(NamedTuple):
     name: str
     url: str
     config: Path
+    semantic_templates: Path
 
+
+SEMANTIC_TEMPLATES: Dict[str, Path] = {
+    'en': MODEL_DIRECTORY / 'semantic_templates_en_event.yaml',
+    'ja': MODEL_DIRECTORY / 'semantic_templates_ja_event.yaml'
+}
 
 MODELS: Dict[str, ModelConfig] = {
     'en': ModelConfig(
         'chainer',
         'tri_headfirst',
         '1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv',
-        MODEL_DIRECTORY / 'config_en.jsonnet'
+        MODEL_DIRECTORY / 'config_en.jsonnet',
+        SEMANTIC_TEMPLATES['en'],
     ),
     'en[elmo]': ModelConfig(
         'allennlp',
         'lstm_parser_elmo',
         '1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr',
-        MODEL_DIRECTORY / 'config_en.jsonnet'
+        MODEL_DIRECTORY / 'config_en.jsonnet',
+        SEMANTIC_TEMPLATES['en'],
     ),
     'en[rebank]': ModelConfig(
         'allennlp',
         'lstm_parser_char_rebanking',
         '1Az840uCW8QuAkNCZq_Y8VOkW5j0Vtcj9',
-        MODEL_DIRECTORY / 'config_rebank.jsonnet'
+        MODEL_DIRECTORY / 'config_rebank.jsonnet',
+        SEMANTIC_TEMPLATES['en'],
     ),
     'en[elmo_rebank]': ModelConfig(
         'allennlp',
         'lstm_parser_elmo_rebanking',
         '1deyCjSgCuD16WkEhOL3IXEfQBfARh_ll',
-        MODEL_DIRECTORY / 'config_rebank.jsonnet'
+        MODEL_DIRECTORY / 'config_rebank.jsonnet',
+        SEMANTIC_TEMPLATES['en'],
     ),
     'ja': ModelConfig(
         'chainer',
         'ja_headfinal',
         '1bblQ6FYugXtgNNKnbCYgNfnQRkBATSY3',
-        MODEL_DIRECTORY / 'config_ja.jsonnet'
+        MODEL_DIRECTORY / 'config_ja.jsonnet',
+        SEMANTIC_TEMPLATES['ja'],
     )
 }
 
@@ -66,12 +77,6 @@ AVAILABLE_MODEL_VARIANTS = defaultdict(list)
 for model in MODELS:
     lang, variant = _lang_and_variant(model)
     AVAILABLE_MODEL_VARIANTS[lang].append(variant)
-
-
-SEMANTIC_TEMPLATES: Dict[str, Path] = {
-    'en': MODEL_DIRECTORY / 'semantic_templates_en_event.yaml',
-    'ja': MODEL_DIRECTORY / 'semantic_templates_ja_event.yaml'
-}
 
 
 def download(lang: str, variant: Optional[str]) -> None:
