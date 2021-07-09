@@ -7,7 +7,7 @@ from lxml import etree
 from depccg.tree import ScoredTree
 from depccg.instance_models import SEMANTIC_TEMPLATES
 from depccg.semantics.ccg2lambda import parse as ccg2lambda
-from depccg.lang import GLOBAL_LANG_NAME
+from depccg.lang import get_global_language
 
 from depccg.printer.html import to_mathml
 from depccg.printer.jigg_xml import to_jigg_xml
@@ -68,10 +68,10 @@ def to_string(
         raise RuntimeError('invalid argument type for stringifying trees')
 
     if format in ('jigg_xml_ccg2lambda', 'ccg2lambda'):
-        templates = semantic_templates or SEMANTIC_TEMPLATES.get(
-            GLOBAL_LANG_NAME)
+        lang = get_global_language()
+        templates = semantic_templates or SEMANTIC_TEMPLATES.get(lang)
         assert templates is not None, \
-            f'semantic_templates must be specified for language: {GLOBAL_LANG_NAME}'
+            f'semantic_templates must be specified for language: {lang}'
 
     if format == 'conll':
         header = '# ID={}\n# log probability={:.4e}'
@@ -85,7 +85,7 @@ def to_string(
         return _process_xml(
             to_jigg_xml(
                 nbest_trees,
-                use_symbol=GLOBAL_LANG_NAME == 'ja',
+                use_symbol=get_global_language() == 'ja',
             )
         )
 
@@ -96,14 +96,14 @@ def to_string(
         return result_xml_str.decode('utf-8')
 
     elif format == 'prolog':  # print end=''
-
-        if GLOBAL_LANG_NAME == 'en':
+        lang = get_global_language()
+        if lang == 'en':
             return to_prolog_en(nbest_trees)
-        elif GLOBAL_LANG_NAME == 'ja':
+        elif lang == 'ja':
             return to_prolog_ja(nbest_trees)
         else:
             raise KeyError(
-                f'prolog format is not supported for language {GLOBAL_LANG_NAME}'
+                f'prolog format is not supported for language {lang}'
             )
 
     elif format == 'html':

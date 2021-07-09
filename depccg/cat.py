@@ -30,15 +30,6 @@ class UnaryFeature(Feature):
 
     value: Optional[str] = None
 
-    def items(self) -> Iterator[str]:
-        return iter([self.value])
-
-    def values(self) -> Iterator[str]:
-        return self.items()
-
-    def keys(self) -> Iterator[str]:
-        return iter([])
-
     def __str__(self) -> str:
         return self.value if self.value is not None else ''
 

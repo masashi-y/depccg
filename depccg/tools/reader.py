@@ -1,8 +1,7 @@
-
 from typing import Tuple, List, Iterator, NamedTuple
 from depccg.tree import Tree
 from depccg.cat import Category
-from depccg.lang import GLOBAL_LANG_NAME
+from depccg.lang import get_global_language
 from depccg.types import Token
 from depccg.grammar import guess_combinator_by_triplet
 from depccg.grammar import en, ja
@@ -29,7 +28,7 @@ class _AutoLineReader(object):
         self.line = line
         self.index = 0
         self.word_id = -1
-        self.binary_rules = BINARY_RULES[GLOBAL_LANG_NAME]
+        self.binary_rules = BINARY_RULES[get_global_language()]
         self.tokens = []
 
     def next(self):
@@ -147,7 +146,7 @@ def read_xml(filename: str) -> Iterator[ReaderResult]:
         Iterator[ReaderResult]: iterator object containing parse results
     """
 
-    binary_rules = BINARY_RULES[GLOBAL_LANG_NAME]
+    binary_rules = BINARY_RULES[get_global_language()]
 
     def parse(tree):
         def rec(node):
@@ -198,7 +197,7 @@ def read_jigg_xml(filename: str) -> Iterator[ReaderResult]:
         Iterator[ReaderResult]: iterator object containing parse results
     """
 
-    binary_rules = BINARY_RULES[GLOBAL_LANG_NAME]
+    binary_rules = BINARY_RULES[get_global_language()]
     # TODO
 
     def try_get_surface(token):
@@ -270,7 +269,7 @@ def _parse_ptb(tree_string: str) -> Tuple[Tree, List[Token]]:
     Returns:
         Tuple[Tree, List[Token]]: Tree object and tokens
     """
-    binary_rules = BINARY_RULES[GLOBAL_LANG_NAME]
+    binary_rules = BINARY_RULES[get_global_language()]
     assert tree_string.startswith('(ROOT ')
     buf = list(reversed(tree_string[6:-1].split(' ')))
     stack = []

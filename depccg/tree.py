@@ -1,4 +1,4 @@
-from depccg.lang import GLOBAL_LANG_NAME
+from depccg.lang import get_global_language
 from typing import NamedTuple, List, Iterator, Union
 from depccg.cat import Category
 from depccg.grammar import guess_combinator_by_triplet, en, ja
@@ -85,7 +85,8 @@ class Tree(object):
                     assert len(children) == 2
                     left, right = children
                     rule = guess_combinator_by_triplet(
-                        BINARY_RULES[GLOBAL_LANG_NAME], cat, left.cat, right.cat
+                        BINARY_RULES[get_global_language()],
+                        cat, left.cat, right.cat
                     )
                     return Tree.make_binary(
                         cat, left, right, rule.op_string, rule.op_symbol, rule.head_is_left

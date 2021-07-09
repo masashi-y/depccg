@@ -111,7 +111,16 @@ cdef void *retrieve_tree(
         c_kwargs = retrieve_tree(item.left, token_id, c_kwargs)
         kwargs = <object>c_kwargs
         if item.right == NULL:
-            stack.append(Tree.make_unary(cat, stack.pop()))
+            child = stack.pop()
+            combinator_result = kwargs['rules'][child.cat][item.rule_id]
+            stack.append(
+                Tree.make_unary(
+                    cat,
+                    child,
+                    combinator_result.op_string,
+                    combinator_result.op_symbol,
+                )
+            )
             return c_kwargs
         c_kwargs = retrieve_tree(item.right, token_id, c_kwargs)
         kwargs = <object>c_kwargs

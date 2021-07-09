@@ -7,7 +7,7 @@ from collections import defaultdict
 from depccg.types import GrammarConfig, ModelConfig
 from depccg.chainer.supertagger import load_chainer_tagger
 from depccg.allennlp.supertagger import load_allennlp_tagger
-from depccg.lang import GLOBAL_LANG_NAME
+from depccg.lang import get_global_language
 from depccg.grammar import en, ja
 
 logger = logging.getLogger(__name__)
@@ -78,9 +78,10 @@ def _lang_and_variant(model: str):
 
 
 def _get_model_name(variant: Optional[str]) -> str:
+    lang = get_global_language()
     if variant is None:
-        return GLOBAL_LANG_NAME
-    return f'{GLOBAL_LANG_NAME}[{variant}]'
+        return lang
+    return f'{lang}[{variant}]'
 
 
 AVAILABLE_MODEL_VARIANTS = defaultdict(list)
@@ -112,7 +113,6 @@ def download(lang: str, variant: Optional[str]) -> None:
 def load_model_directory(
     variant: Optional[str]
 ) -> Tuple[Path, ModelConfig]:
-
     config = MODELS[_get_model_name(variant)]
     model_path = MODEL_DIRECTORY / config.name
     if config.framework == 'allennlp':
@@ -120,9 +120,10 @@ def load_model_directory(
     if not model_path.exists():
         if variant is None:
             variant = ''
+        lang = get_global_language()
         raise RuntimeError(
             ('please download the model by doing '
-             f'\'depccg_{GLOBAL_LANG_NAME} download {variant}\'.')
+             f'\'depccg_{lang} download {variant}\'.')
         )
     return model_path, config
 
@@ -138,8 +139,9 @@ def load_model(variant: Optional[str], device: int = -1):
     elif config.framework == 'chainer':
         supertagger = load_chainer_tagger(model_path, device)
     else:
+        lang = get_global_language()
         raise KeyError(
             ('unsupported model for language '
-             f'({GLOBAL_LANG_NAME}): {variant}')
+             f'({lang}): {variant}')
         )
     return supertagger, config
