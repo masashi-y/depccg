@@ -4,6 +4,7 @@ from depccg.cat import Category
 from depccg.grammar import guess_combinator_by_triplet, en, ja
 from depccg.types import Token
 
+
 BINARY_RULES = {
     'en': en.apply_binary_rules,
     'ja': ja.apply_binary_rules,
@@ -91,29 +92,6 @@ class Tree(object):
                     )
 
         return rec(tree)
-
-    # property op_symbol:
-    #     """standard CCG style string representing a combinator. e.g. >, <, >B"""
-
-    #     def __get__(self):
-    #         assert not self.is_leaf, "This node is leaf and does not have combinator!"
-    #         cdef const CTree * c_node = <const CTree*> & deref(self.node_)
-    #         # tentatively put this here
-    #         if self.lang == b'ja' and self.is_unary:
-    #             child_features = self.child.cat.arg(0).features.items()
-    #             if ('mod', 'adn') in child_features:
-    #                 if self.child.cat.base == 'S':
-    #                     return 'ADNext'
-    #                 else:
-    #                     return 'ADNint'
-    #             elif ('mod', 'adv') in child_features:
-    #                 if self.cat.base == '(S\\NP)/(S\\NP)':
-    #                     return 'ADV1'
-    #                 else:
-    #                     return 'ADV0'
-    #             # else:
-    #             #     raise RuntimeError('this tree is not supported in `ja` format')
-    #         return c_node.GetRule().ToStr().decode('utf-8')
 
     def __len__(self):
         return len(self.leaves)

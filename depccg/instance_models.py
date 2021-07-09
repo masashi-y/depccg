@@ -1,29 +1,34 @@
-from typing import Dict, Tuple, NamedTuple, Optional
+from typing import Dict, Tuple, Optional
 import tarfile
 import logging
 from pathlib import Path
 from collections import defaultdict
 
+from depccg.types import GrammarConfig, ModelConfig
 from depccg.chainer.supertagger import load_chainer_tagger
 from depccg.allennlp.supertagger import load_allennlp_tagger
-
+from depccg.lang import GLOBAL_LANG_NAME
+from depccg.grammar import en, ja
 
 logger = logging.getLogger(__name__)
 
 MODEL_DIRECTORY = Path(__file__).parent / 'models'
 
 
-class ModelConfig(NamedTuple):
-    framework: str
-    name: str
-    url: str
-    config: Path
-    semantic_templates: Path
-
-
 SEMANTIC_TEMPLATES: Dict[str, Path] = {
     'en': MODEL_DIRECTORY / 'semantic_templates_en_event.yaml',
     'ja': MODEL_DIRECTORY / 'semantic_templates_ja_event.yaml'
+}
+
+GRAMMARS: Dict[str, GrammarConfig] = {
+    'en': GrammarConfig(
+        en.apply_binary_rules,
+        en.apply_unary_rules,
+    ),
+    'ja': GrammarConfig(
+        ja.apply_binary_rules,
+        ja.apply_unary_rules,
+    )
 }
 
 MODELS: Dict[str, ModelConfig] = {
@@ -69,8 +74,13 @@ def _lang_and_variant(model: str):
     if '[' in model and ']' in model:
         assert model[-1] == ']'
         return model[:-1].split('[')
-    else:
-        return model, None
+    return model, None
+
+
+def _get_model_name(variant: Optional[str]) -> str:
+    if variant is None:
+        return GLOBAL_LANG_NAME
+    return f'{GLOBAL_LANG_NAME}[{variant}]'
 
 
 AVAILABLE_MODEL_VARIANTS = defaultdict(list)
@@ -99,17 +109,21 @@ def download(lang: str, variant: Optional[str]) -> None:
     logging.info('finished')
 
 
-def load_model_directory(model_name: str) -> Tuple[Path, ModelConfig]:
-    config = MODELS[model_name]
+def load_model_directory(
+    variant: Optional[str]
+) -> Tuple[Path, ModelConfig]:
+
+    config = MODELS[_get_model_name(variant)]
     model_path = MODEL_DIRECTORY / config.name
     if config.framework == 'allennlp':
         model_path = model_path.with_suffix('.tar.gz')
     if not model_path.exists():
-        lang, variant = _lang_and_variant(model_name)
         if variant is None:
             variant = ''
         raise RuntimeError(
-            f'please download the model by doing \'depccg_{lang} download {variant}\'.')
+            ('please download the model by doing '
+             f'\'depccg_{GLOBAL_LANG_NAME} download {variant}\'.')
+        )
     return model_path, config
 
 
@@ -117,14 +131,15 @@ def model_is_available(model_name: str) -> bool:
     return model_name in MODELS.keys()
 
 
-def load_model(model_name: str, device: int = -1):
-    model_path, config = load_model_directory(model_name)
+def load_model(variant: Optional[str], device: int = -1):
+    model_path, config = load_model_directory(variant)
     if config.framework == 'allennlp':
         supertagger = load_allennlp_tagger(model_path, device)
     elif config.framework == 'chainer':
         supertagger = load_chainer_tagger(model_path, device)
     else:
         raise KeyError(
-            f'unsupported framework: {config.framework}'
+            ('unsupported model for language '
+             f'({GLOBAL_LANG_NAME}): {variant}')
         )
     return supertagger, config

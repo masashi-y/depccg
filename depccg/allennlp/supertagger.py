@@ -11,7 +11,6 @@ from depccg.allennlp.models.supertagger import Supertagger
 from allennlp.models.archival import load_archive
 
 from depccg.types import ScoringResult
-from depccg.cat import Category
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class AllennlpSupertagger(object):
         self,
         splitted,
         batchsize=32,
-    ) -> Tuple[List[ScoringResult], List[Category]]:
+    ) -> Tuple[List[ScoringResult], List[str]]:
 
         instances = (
             self.dataset_reader.text_to_instance(' '.join(sentence))
@@ -41,10 +40,7 @@ class AllennlpSupertagger(object):
         for batch in lazy_groups_of(instances, batchsize):
             for json_dict in self.predictor.predict_batch_instance(batch):
                 if categories is None:
-                    categories = [
-                        Category.parse(cat)
-                        for cat in json_dict['categories']
-                    ]
+                    categories = list(json_dict['categories'])
                 dep_scores = numpy.array(json_dict['heads']) \
                     .reshape(json_dict['heads_shape']) \
                     .astype(numpy.float32)

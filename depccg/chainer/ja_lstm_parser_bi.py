@@ -8,6 +8,7 @@ import chainer.functions as F
 from depccg.utils import read_model_defs
 from depccg.chainer.biaffine import Biaffine, Bilinear
 from depccg.chainer.param import Param
+from depccg.types import ScoringResult
 
 
 UNK = "*UNKNOWN*"
@@ -107,7 +108,7 @@ class BiaffineJaLSTMParser(chainer.Chain):
         cat_ys = [chainer.cuda.to_cpu(y) for y in cat_ys]
         dep_ys = [F.log_softmax(y[1:-1, :-1]).data for y in dep_ys]
         dep_ys = [chainer.cuda.to_cpu(y) for y in dep_ys]
-        return list(zip(cat_ys, dep_ys))
+        return list(ScoringResult(*result) for result in zip(cat_ys, dep_ys))
 
     def predict_doc(self, doc, batchsize=16, gpu=-1):
         res = []

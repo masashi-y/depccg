@@ -30,6 +30,15 @@ class UnaryFeature(Feature):
 
     value: Optional[str] = None
 
+    def items(self) -> Iterator[str]:
+        return iter([self.value])
+
+    def values(self) -> Iterator[str]:
+        return self.items()
+
+    def keys(self) -> Iterator[str]:
+        return iter([])
+
     def __str__(self) -> str:
         return self.value if self.value is not None else ''
 
@@ -190,6 +199,15 @@ class Atom(Category):
     def is_atomic(self):
         return True
 
+    @property
+    def nargs(self) -> int:
+        return 0
+
+    def arg(self, index: int) -> Optional[Category]:
+        if index == 0:
+            return self
+        return None
+
     def clear_features(self, *args) -> 'Atom':
         if self.feature in args:
             return Atom(self.base)
@@ -236,6 +254,16 @@ class Functor(Category):
     @property
     def is_functor(self):
         return True
+
+    @property
+    def nargs(self) -> int:
+        return 1 + self.left.nargs
+
+    def arg(self, index: int) -> Optional[Category]:
+        if self.nargs == index:
+            return self
+        else:
+            return self.left.arg(index)
 
     def clear_features(self, *args) -> 'Functor':
         return self.functor(

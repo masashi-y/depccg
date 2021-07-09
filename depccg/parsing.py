@@ -53,6 +53,7 @@ def run(
     pruning_size: int = 50,
     nbest: int = 1,
     max_step: int = 10000000,
+    max_length: int = 250,
     processes: int = 2,
 ) -> List[List[ScoredTree]]:
 

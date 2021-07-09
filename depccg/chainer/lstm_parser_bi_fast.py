@@ -11,6 +11,7 @@ from depccg.utils import read_model_defs, normalize
 from .biaffine import Biaffine, Bilinear
 from depccg.chainer.param import Param
 from .fixed_length_n_step_lstm import FixedLengthNStepLSTM
+from depccg.types import ScoringResult
 
 
 UNK = "*UNKNOWN*"
@@ -201,7 +202,7 @@ class FastBiaffineLSTMParser(chainer.Chain):
             ids, batch = zip(*doc[i:i + batchsize])
             pred = self._predict(batch)
             res.extend((j, y) for j, y in zip(ids, pred))
-        res = [pred for _, pred in sorted(res)]
+        res = [ScoringResult(*pred) for _, pred in sorted(res)]
         return res, self.cats
 
     def _init_state(self, batchsize):

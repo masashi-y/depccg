@@ -1,5 +1,5 @@
 import argparse
-from depccg.download import download, AVAILABLE_MODEL_VARIANTS
+from depccg.instance_models import download, AVAILABLE_MODEL_VARIANTS
 from depccg.annotator import (
     english_annotator, japanese_annotator
 )
@@ -81,7 +81,7 @@ def add_common_parser_arguments(parser, main_fun):
         help=('give up parsing a sentence that contains'
               ' more words than this value'))
     parser.add_argument(
-        '--max-steps',
+        '--max-step',
         default=10000000,
         type=int,
         help=('give up parsing when the number of times'
@@ -133,8 +133,10 @@ def parse_args(main_fun):
         help='output format')
     english_parser.add_argument(
         '--root-cats',
-        default='S[dcl],S[wq],S[q],S[qem],NP',
-        help='allow only these categories at the root of a tree.')
+        default='S[dcl]|S[wq]|S[q]|S[qem]|NP',
+        help=('"|" separated list of categories '
+              'allowed to be at the root of a tree.')
+    ),
     english_parser.add_argument(
         '--tokenize',
         action='store_true',
@@ -163,25 +165,27 @@ def parse_args(main_fun):
     japanese_parser.add_argument(
         '--root-cats',
         default=(
-            'NP[case=nc,mod=nm,fin=f],'
-            'NP[case=nc,mod=nm,fin=t],'
-            'S[mod=nm,form=attr,fin=t],'
-            'S[mod=nm,form=base,fin=f],'
-            'S[mod=nm,form=base,fin=t],'
-            'S[mod=nm,form=cont,fin=f],'
-            'S[mod=nm,form=cont,fin=t],'
-            'S[mod=nm,form=da,fin=f],'
-            'S[mod=nm,form=da,fin=t],'
-            'S[mod=nm,form=hyp,fin=t],'
-            'S[mod=nm,form=imp,fin=f],'
-            'S[mod=nm,form=imp,fin=t],'
-            'S[mod=nm,form=r,fin=t],'
-            'S[mod=nm,form=s,fin=t],'
-            'S[mod=nm,form=stem,fin=f],'
+            'NP[case=nc,mod=nm,fin=f]|'
+            'NP[case=nc,mod=nm,fin=t]|'
+            'S[mod=nm,form=attr,fin=t]|'
+            'S[mod=nm,form=base,fin=f]|'
+            'S[mod=nm,form=base,fin=t]|'
+            'S[mod=nm,form=cont,fin=f]|'
+            'S[mod=nm,form=cont,fin=t]|'
+            'S[mod=nm,form=da,fin=f]|'
+            'S[mod=nm,form=da,fin=t]|'
+            'S[mod=nm,form=hyp,fin=t]|'
+            'S[mod=nm,form=imp,fin=f]|'
+            'S[mod=nm,form=imp,fin=t]|'
+            'S[mod=nm,form=r,fin=t]|'
+            'S[mod=nm,form=s,fin=t]|'
+            'S[mod=nm,form=stem,fin=f]|'
             'S[mod=nm,form=stem,fin=t]'
 
         ),
-        help='allow only these categories at the root of a tree.')
+        help=('"|" separated list of categories '
+              'allowed to be at the root of a tree.')
+    )
     japanese_parser.add_argument(
         '--pre-tokenized',
         dest='tokenize',

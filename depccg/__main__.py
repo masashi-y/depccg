@@ -1,77 +1,127 @@
-
-from depccg.lang import set_global_language_to
-from depccg.utils import read_partial_tree, read_weights
-from depccg.lang import BINARY_RULES
-from depccg.download import download, load_model_directory, SEMANTIC_TEMPLATES, model_is_available, AVAILABLE_MODEL_VARIANTS
-import argparse
+from functools import partial
+from collections import defaultdict
 import sys
 import logging
-import json
 
-from .parser import EnglishCCGParser, JapaneseCCGParser
-from .printer import print_
-from depccg.annotator import english_annotator, japanese_annotator, annotate_XX
+from allennlp.common.params import Params
+
+import depccg.parsing
 from depccg.types import Token
-
-Parsers = {'en': EnglishCCGParser, 'ja': JapaneseCCGParser}
+from depccg.cat import Category
+from depccg.printer import print_
+from depccg.instance_models import load_model, GRAMMARS
+from depccg.argparse import parse_args
+from depccg.lang import set_global_language_to
+from depccg.annotator import (
+    english_annotator, japanese_annotator, annotate_XX
+)
 
 # disable lengthy allennlp logs
 logging.getLogger('allennlp').setLevel(logging.ERROR)
 
 
-def main(args):
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                        level=logging.CRITICAL if args.silent else logging.INFO)
+def read_params(param_path: str, args):
+    params = Params.from_file(param_path)
 
-    if args.weights is not None:
-        probs, tag_list = read_weights(args.weights)
+    unary_rules = defaultdict(list)
+    for key, value in params.pop('unary_rules'):
+        unary_rules[Category.parse(key)].append(Category.parse(value))
+
+    if args.disable_category_dictionary:
+        category_dict = None
     else:
-        probs, tag_list = None, None
+        category_dict = {
+            word: [Category.parse(cat) for cat in cats]
+            for word, cats in params.pop('cat_dict').items()
+        }
 
-    binary_rules = BINARY_RULES[args.lang]
+    if args.disable_seen_rules:
+        seen_rules = None
+    else:
+        seen_rules = [
+            (Category.parse(x), Category.parse(y))
+            for x, y in params.pop('seen_rules')
+        ]
+        if len(seen_rules) == 0:
+            seen_rules = None
+    try:
+        apply_binary_rules = partial(
+            GRAMMARS[args.lang].apply_binary_rules,
+            seen_rules=seen_rules
+        )
+        apply_unary_rules = partial(
+            GRAMMARS[args.lang].apply_unary_rules,
+            unary_rules=unary_rules
+        )
+    except KeyError:
+        raise KeyError('unsupported language: {args.lang}')
+
+    return (
+        apply_binary_rules,
+        apply_unary_rules,
+        category_dict
+    )
+
+
+def get_annotator(args):
     if args.lang == 'en':
-        assert not args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] or args.annotator, \
-            f'Specify --annotator argument in using "{args.format}" output format'
-        annotate_fun = english_annotator.get(args.annotator, annotate_XX)
+        if (
+            args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']
+            and args.annotator is None
+        ):
+            raise RuntimeError(
+                ('Specify --annotator argument in '
+                 f'using "{args.format}" output format')
+            )
+        return english_annotator.get(args.annotator, annotate_XX)
 
     elif args.lang == 'ja':
-        assert not args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda'] or args.tokenize, \
-            f'Cannot specify --pre-tokenized argument using "{args.format}" output format'
-        annotate_fun = japanese_annotator[args.annotator] if args.tokenize else annotate_XX
-    else:
-        assert False
+        if (
+            args.format in ['ccg2lambda', 'jigg_xml_ccg2lambda']
+            and not args.tokenize
+        ):
+            raise RuntimeError(
+                ('Cannot specify --pre-tokenized '
+                 f'argument using "{args.format}" output format')
+            )
+        if args.tokenize:
+            return japanese_annotator[args.annotator]
+        return annotate_XX
+
+    raise RuntimeError(f'unsupported language: {args.lang}')
+
+
+def main(args):
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+        level=logging.CRITICAL if args.silent else logging.INFO
+    )
 
     set_global_language_to(args.lang)
+    annotator_fun = get_annotator(args)
+    supertagger, config = load_model(args.model, args.gpu)
 
-    if args.root_cats is not None:
-        args.root_cats = args.root_cats.split(',')
+    apply_binary_rules, apply_unary_rules, category_dict = \
+        read_params(config.config, args)
+
+    root_categories = [
+        Category.parse(category)
+        for category in args.root_cats.split('|')
+    ]
+
+    semantic_templates = (
+        args.semantic_templates or config.semantic_templates
+    )
 
     kwargs = dict(
         unary_penalty=args.unary_penalty,
         nbest=args.nbest,
-        binary_rules=binary_rules,
-        possible_root_cats=args.root_cats,
         pruning_size=args.pruning_size,
         beta=args.beta,
         use_beta=not args.disable_beta,
-        use_seen_rules=not args.disable_seen_rules,
-        use_category_dict=not args.disable_category_dictionary,
         max_length=args.max_length,
-        max_steps=args.max_steps,
-        gpu=args.gpu
+        max_step=args.max_step,
     )
-
-    model_name = f'{args.lang}[{args.model}]'
-    if args.model and model_is_available(model_name):
-        model, config = load_model_directory(model_name)
-    else:
-        def_model, config = load_model_directory(args.lang)
-        model = args.model or def_model
-
-    parser = Parsers[args.lang].from_json(
-        args.config or config, model, **kwargs)
-
-    fin = sys.stdin if args.input is None else open(args.input)
 
     if args.input is not None:
         input_type = open(args.input)
@@ -84,51 +134,54 @@ def main(args):
         sys.stderr.flush()
         logging.getLogger().setLevel(logging.CRITICAL)
 
+    categories = None
     while True:
-        fin = [line for line in (
-            [input()] if input_type is None else input_type) if len(line.strip()) > 0]
+        fin = [
+            line for line in map(str.strip, input_type or [input()])
+            if len(line) > 0
+        ]
         if len(fin) == 0:
             break
 
         if args.input_format == 'POSandNERtagged':
-            tagged_doc = [
-                [Token.from_piped(token) for token in sent.strip().split(' ')] for sent in fin]
-            doc = [' '.join(token.word for token in sent)
-                   for sent in tagged_doc]
-            res = parser.parse_doc(doc,
-                                   probs=probs,
-                                   tag_list=tag_list,
-                                   batchsize=args.batchsize)
-        elif args.input_format == 'json':
-            doc = [json.loads(line) for line in fin]
-            tagged_doc = annotate_fun(
-                [[word for word in sent['words'].split(' ')] for sent in doc])
-            res = parser.parse_json(doc)
-        elif args.input_format == 'partial':
-            doc, constraints = zip(
-                *[read_partial_tree(l.strip()) for l in fin])
-            tagged_doc = annotate_fun(doc)
-            res = parser.parse_doc(doc,
-                                   probs=probs,
-                                   tag_list=tag_list,
-                                   batchsize=args.batchsize,
-                                   constraints=constraints)
-        else:
-            doc = [l.strip() for l in fin]
-            doc = [sentence for sentence in doc if len(sentence) > 0]
-            tagged_doc = annotate_fun([[word for word in sent.split(' ')] for sent in doc],
-                                      tokenize=args.tokenize)
-            if args.tokenize:
-                tagged_doc, doc = tagged_doc
-            res = parser.parse_doc(doc,
-                                   probs=probs,
-                                   tag_list=tag_list,
-                                   batchsize=args.batchsize)
+            doc = [
+                [
+                    Token.of_piped(token)
+                    for token in sent.split(' ')
+                ] for sent in fin
+            ]
 
-        semantic_templates = args.semantic_templates or SEMANTIC_TEMPLATES.get(
-            args.lang)
+        else:
+            doc = annotator_fun(
+                [
+                    [word for word in sentence.split(' ')]
+                    for sentence in fin
+                    if len(sentence) > 0
+                ],
+                tokenize=args.tokenize,
+            )
+
+        score_result, categories_ = supertagger.predict_doc(
+            [[token.word for token in sentence] for sentence in doc]
+        )
+        if categories is None:
+            categories = [
+                Category.parse(category) for category in categories_
+            ]
+
+        results = depccg.parsing.run(
+            doc,
+            score_result,
+            categories,
+            root_categories,
+            apply_binary_rules,
+            apply_unary_rules,
+            category_dict,
+            **kwargs,
+        )
+
         print_(
-            res, tagged_doc,
+            results,
             format=args.format,
             semantic_templates=semantic_templates
         )
@@ -139,131 +192,5 @@ def main(args):
             break
 
 
-def add_common_parser_arguments(parser):
-    parser.add_argument('-c',
-                        '--config',
-                        help='json config file specifying the set of unary rules used, etc.')
-    parser.add_argument('-m',
-                        '--model',
-                        help='path to model directory')
-    parser.add_argument('-i',
-                        '--input',
-                        default=None,
-                        help='a file with tokenized sentences in each line')
-    parser.add_argument('-w',
-                        '--weights',
-                        default=None,
-                        help='a file that contains weights (p_tag, p_dep)')
-    parser.add_argument('--gpu',
-                        type=int,
-                        default=-1,
-                        help='specify gpu id')
-    parser.add_argument('--batchsize',
-                        type=int,
-                        default=32,
-                        help='batchsize in supertagger')
-    parser.add_argument('--nbest',
-                        type=int,
-                        default=1,
-                        help='output N best parses')
-    parser.add_argument('-I',
-                        '--input-format',
-                        default='raw',
-                        choices=['raw', 'POSandNERtagged', 'json', 'partial'],
-                        help='input format')
-    parser.add_argument('--root-cats',
-                        default=None,
-                        help='allow only these categories at the root of a tree.')
-    parser.add_argument('--unary-penalty',
-                        default=0.1,
-                        type=float,
-                        help='penalty to use a unary rule')
-    parser.add_argument('--beta',
-                        default=0.00001,
-                        type=float,
-                        help='parameter used to filter categories with lower probabilities')
-    parser.add_argument('--pruning-size',
-                        default=50,
-                        type=int,
-                        help='use only the most probable supertags per word')
-    parser.add_argument('--disable-beta',
-                        action='store_true',
-                        help='disable the use of the beta value')
-    parser.add_argument('--disable-category-dictionary',
-                        action='store_true',
-                        help='disable a category dictionary that maps words to most likely supertags')
-    parser.add_argument('--disable-seen-rules',
-                        action='store_true',
-                        help='')
-    parser.add_argument('--max-length',
-                        default=250,
-                        type=int,
-                        help='give up parsing a sentence that contains more words than this value')
-    parser.add_argument('--max-steps',
-                        default=10000000,
-                        type=int,
-                        help='give up parsing when the number of times of popping agenda items exceeds this value')
-    parser.add_argument('--semantic-templates',
-                        help='semantic templates used in "ccg2lambda" format output')
-    parser.add_argument('--silent',
-                        action='store_true')
-    parser.set_defaults(func=main)
-
-    subparsers = parser.add_subparsers()
-    download_parser = subparsers.add_parser('download')
-    download_parser.add_argument('VARIANT',
-                                 nargs='?',
-                                 default=None,
-                                 choices=AVAILABLE_MODEL_VARIANTS[parser.get_default('lang')])
-    download_parser.set_defaults(
-        func=lambda args: download(args.lang, args.VARIANT))
-
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('A* CCG parser')
-    parser.set_defaults(func=lambda _: parser.print_help())
-    subparsers = parser.add_subparsers()
-
-    english_parser = subparsers.add_parser('en')
-    english_parser.set_defaults(lang='en')
-    add_common_parser_arguments(english_parser)
-    english_parser.add_argument('-a',
-                                '--annotator',
-                                default=None,
-                                help='annotate POS, named entity, and lemmas using this library',
-                                choices=english_annotator.keys())
-    english_parser.add_argument('-f',
-                                '--format',
-                                default='auto',
-                                choices=['auto', 'auto_extended', 'deriv', 'xml', 'conll', 'html', 'prolog',
-                                         'jigg_xml', 'ptb', 'ccg2lambda', 'jigg_xml_ccg2lambda', 'json'],
-                                help='output format')
-    english_parser.add_argument('--tokenize',
-                                action='store_true',
-                                help='tokenize input sentences')
-    english_parser.add_argument('--disfluency',
-                                action='store_true',
-                                help='perform disfluency detection')
-
-    japanese_parser = subparsers.add_parser('ja')
-    japanese_parser.set_defaults(lang='ja')
-    add_common_parser_arguments(japanese_parser)
-    japanese_parser.add_argument('-a',
-                                 '--annotator',
-                                 default='janome',
-                                 help='annotate POS, named entity, and lemmas using this library',
-                                 choices=japanese_annotator.keys())
-    japanese_parser.add_argument('-f',
-                                 '--format',
-                                 default='ja',
-                                 choices=['auto', 'deriv', 'ja', 'conll', 'html', 'jigg_xml', 'ptb',
-                                          'ccg2lambda', 'jigg_xml_ccg2lambda', 'json', 'prolog'],
-                                 help='output format')
-    japanese_parser.add_argument('--pre-tokenized',
-                                 dest='tokenize',
-                                 action='store_false',
-                                 help='the input is pre-tokenized (for running parsing experiments etc.)')
-    japanese_parser.set_defaults(disfluency=False)
-
-    args = parser.parse_args()
-    args.func(args)
+    parse_args(main)

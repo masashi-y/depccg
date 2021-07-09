@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from lxml import etree
 
-from depccg.download import MODEL_DIRECTORY
+from depccg.instance_models import MODEL_DIRECTORY
 from depccg.morpha import MorphaStemmer
 from depccg.types import Token
 

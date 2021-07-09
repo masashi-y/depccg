@@ -1,9 +1,6 @@
 from typing import Iterator, List, Tuple
 import re
 
-# from depccg.combinator import UnaryRule
-# from depccg.lang import ja_default_binary_rules
-from depccg.grammar.en import combinators as ja_default_binary_rules
 from depccg.cat import Category
 from depccg.tree import Tree
 from depccg.types import Token
@@ -11,17 +8,10 @@ from depccg.tools.reader import ReaderResult
 
 
 combinators = {
-    sign: rule for rule, sign in zip(
-        ja_default_binary_rules,
-        [
-            'SSEQ', '>', '<', '>B', '<B1', '<B2', '<B3', '<B4', '>Bx1', '>Bx2', '>Bx3'
-        ]
-    )
+    'SSEQ', '>', '<', '>B', '<B1', '<B2', '<B3',
+    '<B4', '>Bx1', '>Bx2', '>Bx3',
+    'ADNext', 'ADNint', 'ADV0', 'ADV1', 'ADV2'
 }
-
-# TODO
-for sign in ['ADNext', 'ADNint', 'ADV0', 'ADV1', 'ADV2']:
-    combinators[sign] = None  # UnaryRule()
 
 DEPENDENCY = re.compile(r'{.+?}')
 
@@ -90,8 +80,7 @@ class _JaCCGLineReader(object):
 
     def parse_tree(self) -> Tree:
         self.check('{')
-        op = self.next(' ')
-        op = combinators[op[1:]]
+        op_string = self.next(' ')
         cat = DEPENDENCY.sub('', self.next(' '))
         cat = Category.parse(cat)
         self.check('{')
@@ -105,9 +94,9 @@ class _JaCCGLineReader(object):
         self.next('}')
 
         if len(children) == 1:
-            return Tree.make_unary(cat, children[0])
+            return Tree.make_unary(cat, children[0], op_string, op_string)
         else:
             assert len(
                 children) == 2, f'failed to parse, invalid number of children: {self.line}'
             left, right = children
-            return Tree.make_binary(cat, left, right, op)
+            return Tree.make_binary(cat, left, right, op_string, op_string)

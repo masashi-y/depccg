@@ -169,9 +169,10 @@ _possible_root_categories = [
 
 def conjoin(x: Category, y: Category) -> Optional[CombinatorResult]:
     if (
-        x in _possible_root_categories and x == y and not x.is_functor
+        x in _possible_root_categories
+        and y in _possible_root_categories
     ):
-        result = x
+        result = y
         return CombinatorResult(
             cat=result,
             op_string="other",
@@ -211,6 +212,22 @@ def apply_binary_rules(
     return results
 
 
+def _unary_rule_symbol(x: Category) -> str:
+
+    features = set(x.arg(0).feature.items())
+    if ('mod', 'adn') in features:
+        if x.clear_features == 'S':
+            return 'ADNext'
+        return 'ADNint'
+    elif ('mod', 'adv') in features:
+        if x.clear_feature == 'S\\NP':
+            return 'ADV1'
+        elif x.clear_feature == '(S\\NP)\\NP':
+            return 'ADV2'
+        return 'ADV0'
+    return 'OTHER'
+
+
 def apply_unary_rules(
     x: Category,
     unary_rules: Dict[Category, List[Category]]
@@ -219,11 +236,12 @@ def apply_unary_rules(
         return []
     results = []
     for result in unary_rules[x]:
+        op_string = _unary_rule_symbol(x)
         results.append(
             CombinatorResult(
                 cat=result,
-                op_string='tr',
-                op_symbol='<un>',
+                op_string=op_string,
+                op_symbol=op_string,
                 head_is_left=True,
             )
         )

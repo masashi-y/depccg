@@ -3,7 +3,7 @@ import argparse
 from depccg.tools.reader import read_trees_guess_extension
 from depccg.printer import print_
 from depccg.types import english_annotator
-from depccg.download import SEMANTIC_TEMPLATES
+from depccg.instance_models import SEMANTIC_TEMPLATES
 
 LANG = 'en'
 

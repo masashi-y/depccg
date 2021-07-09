@@ -88,15 +88,14 @@ def test_spacy():
         ]
     ]
 
-    raw_sentences = [
-        ['The', 'Penn', 'Treebank', 'has', 'recently', 'implemented', 'a', 'new', 'syntactic', 'annotation', 'scheme',
-            ',', 'designed', 'to', 'highlight', 'aspects', 'of', 'predicate', '-', 'argument', 'structure', '.'],
-        ['This', 'paper', 'discusses', 'the', 'implementation', 'of', 'crucial',
-            'aspects', 'of', 'this', 'new', 'annotation', 'scheme', '.']
-    ]
+    # raw_sentences = [
+    #     ['The', 'Penn', 'Treebank', 'has', 'recently', 'implemented', 'a', 'new', 'syntactic', 'annotation', 'scheme',
+    #         ',', 'designed', 'to', 'highlight', 'aspects', 'of', 'predicate', '-', 'argument', 'structure', '.'],
+    #     ['This', 'paper', 'discusses', 'the', 'implementation', 'of', 'crucial',
+    #         'aspects', 'of', 'this', 'new', 'annotation', 'scheme', '.']
+    # ]
 
-    assert (tokens, raw_sentences) == annotate_using_spacy(
-        sentences, tokenize=True)
+    assert tokens == annotate_using_spacy(sentences, tokenize=True)
 
 
 test_spacy()
@@ -143,10 +142,9 @@ def test_janome():
         ]
     ]
 
-    raw_sentences = [
-        ['メロス', 'は', '激怒', 'し', 'た', '。'],
-        ['メロス', 'に', 'は', '政治', 'が', 'わから', 'ぬ', '。']
-    ]
+    # raw_sentences = [
+    #     ['メロス', 'は', '激怒', 'し', 'た', '。'],
+    #     ['メロス', 'に', 'は', '政治', 'が', 'わから', 'ぬ', '。']
+    # ]
 
-    assert (tokens, raw_sentences) == annotate_using_janome(
-        sentences, tokenize=True)
+    assert tokens == annotate_using_janome(sentences, tokenize=True)

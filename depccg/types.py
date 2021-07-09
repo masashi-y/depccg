@@ -1,6 +1,8 @@
-from typing import Optional, NamedTuple, Callable
-from depccg.cat import Category
+from typing import Optional, NamedTuple, Callable, List
+from pathlib import Path
 import numpy
+
+from depccg.cat import Category
 
 
 class Token(dict):
@@ -15,7 +17,7 @@ class Token(dict):
         return f'Token({res})'
 
     @classmethod
-    def from_piped(cls, string: str) -> 'Token':
+    def of_piped(cls, string: str) -> 'Token':
         # WORD|POS|NER or WORD|LEMMA|POS|NER
         # or WORD|LEMMA|POS|NER|CHUCK
         items = string.split('|')
@@ -39,12 +41,14 @@ class Token(dict):
         )
 
     @classmethod
-    def from_word(cls, word: str) -> 'Token':
-        return Token(word=word,
-                     lemma='XX',
-                     pos='XX',
-                     entity='XX',
-                     chunk='XX')
+    def of_word(cls, word: str) -> 'Token':
+        return Token(
+            word=word,
+            lemma='XX',
+            pos='XX',
+            entity='XX',
+            chunk='XX'
+        )
 
 
 class CombinatorResult(NamedTuple):
@@ -60,3 +64,19 @@ class ScoringResult(NamedTuple):
 
 
 Combinator = Callable[[Category, Category], Optional[CombinatorResult]]
+
+ApplyBinaryRules = Callable[..., List[CombinatorResult]]
+ApplyUnaryRules = Callable[..., List[CombinatorResult]]
+
+
+class GrammarConfig(NamedTuple):
+    apply_binary_rules: ApplyBinaryRules
+    apply_unary_rules: ApplyUnaryRules
+
+
+class ModelConfig(NamedTuple):
+    framework: str
+    name: str
+    url: str
+    config: Path
+    semantic_templates: Path

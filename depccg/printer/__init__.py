@@ -5,7 +5,7 @@ from io import StringIO
 from lxml import etree
 
 from depccg.tree import ScoredTree
-from depccg.download import SEMANTIC_TEMPLATES
+from depccg.instance_models import SEMANTIC_TEMPLATES
 from depccg.semantics.ccg2lambda import parse as ccg2lambda
 from depccg.lang import GLOBAL_LANG_NAME
 
