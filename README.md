@@ -83,15 +83,15 @@ ID=1, Prob=-0.0006299018859863281
 
 By default, the input is expected to be pre-tokenized. If you want to process untokenized sentences, you can pass `--tokenize` option.
 
-The POS and NER tags in the output are filled with `XX` by default. You can replace them with ones predicted using [SpaCy](https://spacy.io):
+The POS and NER tags in the output are filled with `XX` by default. You can replace them with ones predicted using [spaCy](https://spacy.io):
 ```sh
 ➜ pip install spacy
-➜ python -m spacy download en
+➜ python -m spacy download en_core_web_sm
 ➜ echo "this is a test sentence ." | depccg_en --annotator spacy
 ID=1, Prob=-0.0006299018859863281
 (<T S[dcl] 0 2> (<T S[dcl] 0 2> (<L NP DT DT this NP>) (<T S[dcl]\NP 0 2> (<L (S[dcl]\NP)/NP VBZ VBZ is (S[dcl]\NP)/NP>) (<T NP 0 2> (<L NP[nb]/N DT DT a NP[nb]/N>) (<T N 0 2> (<L N/N NN NN test N/N>) (<L N NN NN sentence N>) ) ) ) ) (<L . . . . .>) )
 ```
-The parser uses a SpaCy's model symbolic-linked to `en` (it loads a model by `spacy('en')`).
+The parser uses the spaCy model `en_core_web_sm` (it loads a model by `spacy('en_core_web_sm')`).
 
 Orelse, you can use POS/NER taggers implemented in [C&C](https://www.cl.cam.ac.uk/~sc609/candc-1.00.html), which may be useful in some sorts of parsing experiments:
 
