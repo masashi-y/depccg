@@ -34,6 +34,7 @@ def _apply_head_mask(attended_arcs: torch.Tensor, mask: torch.Tensor) -> torch.T
 
 @Model.register("supertagger")
 class Supertagger(Model):
+    default_predictor = "supertagger-predictor"
     def __init__(self,
                  vocab: Vocabulary,
                  text_field_embedder: TextFieldEmbedder,

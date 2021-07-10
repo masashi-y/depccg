@@ -56,6 +56,3 @@ class SupertaggerPredictor(Predictor):
             output_dict["heads_shape"] = list(heads.shape)
             output_dict.pop("mask")
         return output_dicts
-
-
-predictor.DEFAULT_PREDICTORS['supertagger'] = 'supertagger-predictor'
