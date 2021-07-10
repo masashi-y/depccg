@@ -67,7 +67,7 @@ def generate_cpp(options):
 COMPILE_OPTIONS = [
     '-O3',
     '-Wall',
-    '-std=c++14'
+    '-std=c++11'
 ]
 
 LINK_OPTIONS = []

@@ -18,6 +18,7 @@ from depccg.annotator import (
 
 # disable lengthy allennlp logs
 logging.getLogger('allennlp').setLevel(logging.ERROR)
+logger = logging.getLogger(__name__)
 
 
 def read_params(param_path: str, args):
@@ -161,6 +162,7 @@ def main(args):
                 tokenize=args.tokenize,
             )
 
+        logger.info("supertagging")
         score_result, categories_ = supertagger.predict_doc(
             [[token.word for token in sentence] for sentence in doc]
         )
@@ -169,6 +171,7 @@ def main(args):
                 Category.parse(category) for category in categories_
             ]
 
+        logger.info("parsing")
         results = depccg.parsing.run(
             doc,
             score_result,

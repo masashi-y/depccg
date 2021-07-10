@@ -99,7 +99,7 @@ class _AutoLineReader(object):
                 self.binary_rules, cat, left.cat, right.cat
             )
             return Tree.make_binary(
-                cat, left, right, rule, rule.op_string, rule.op_symbol, head_is_left
+                cat, left, right, rule.op_string, rule.op_symbol, head_is_left
             )
         elif len(children) == 1:
             return Tree.make_unary(cat, children[0])

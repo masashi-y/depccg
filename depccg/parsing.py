@@ -1,7 +1,7 @@
 from typing import Callable, List, Dict, Optional, Union
 # from multiprocessing import Pool
 import numpy
-
+from tqdm import tqdm
 import depccg._parsing
 from depccg.types import Token, CombinatorResult, ScoringResult
 from depccg.tree import ScoredTree
@@ -103,7 +103,7 @@ def run(
 
     results = [
         parse(tokens, tag_scores, dep_scores)
-        for tokens, (tag_scores, dep_scores) in zip(doc, score_results)
+        for tokens, (tag_scores, dep_scores) in tqdm(list(zip(doc, score_results)))
     ]
 
     return results

@@ -19,6 +19,7 @@ from pathlib import Path
 
 from depccg.tools.reader import read_auto
 from depccg import utils
+from depccg.printer.auto import auto_flattened_of
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                     level=logging.INFO)
@@ -106,8 +107,8 @@ def get_deps_from_auto(auto_file):
     tmp = tempfile.mktemp()
     print(tmp)
     with open(tmp, 'w') as f:
-        for _, tokens, tree in read_auto(auto_file):
-            print(tree.auto_flat(tokens=tokens), file=f)
+        for _, _, tree in read_auto(auto_file):
+            print(auto_flattened_of(tree), file=f)
 
     command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp}'
     proc = subprocess.Popen(command,
