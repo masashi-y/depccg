@@ -7,19 +7,36 @@
 #include <list>
 #include <limits>
 #include <cmath>
+#include <utility>
+
+struct pair_hash
+{
+    template <class T1, class T2>
+    std::size_t operator()(const std::pair<T1, T2> &p) const
+    {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+
+        return h1 ^ h2;
+    }
+};
 
 struct combinator_result
 {
     unsigned cat_id;
     unsigned rule_id;
     bool head_is_left;
+    std::string op_string;
+    std::string op_symbol;
 };
 
 using category_id = unsigned;
 
 using scored_category = std::pair<float, category_id>;
 
-typedef unsigned (*scaffold_type)(void *callback_func, unsigned x, unsigned y, std::vector<combinator_result> *results);
+using cache_type = std::unordered_map<std::pair<unsigned, unsigned>, std::vector<combinator_result>, pair_hash>;
+
+typedef void (*scaffold_type)(void *callback_func, unsigned x, unsigned y, std::vector<combinator_result> *results);
 
 namespace utils
 {
@@ -233,7 +250,7 @@ namespace parsing
 
 } // namespace parsing
 
-typedef void *(*finalizer_type)(parsing::cell_item *, unsigned *, void *);
+typedef unsigned (*finalizer_type)(parsing::cell_item *, unsigned *, cache_type *cache, void *);
 
 struct config
 {
@@ -256,20 +273,31 @@ unsigned parse_sentence(
     finalizer_type finalizer_callback,
     scaffold_type scaffold,
     void *finalizer_args,
+    cache_type *cache,
     config *config)
 {
     auto apply_binary_rules = [&](unsigned x, unsigned y)
     {
-        std::vector<combinator_result> results;
-        scaffold(binary_callback, x, y, &results);
-        return results;
+        std::pair<unsigned, unsigned> key(x, y);
+        if (cache->count(key) == 0)
+        {
+            std::vector<combinator_result> results;
+            scaffold(binary_callback, x, y, &results);
+            cache->emplace(key, results);
+        }
+        return &cache->at(key);
     };
 
     auto apply_unary_rules = [&](unsigned x)
     {
-        std::vector<combinator_result> results;
-        scaffold(unary_callback, x, -1, &results);
-        return results;
+        std::pair<unsigned, unsigned> key(x, UINT_MAX);
+        if (cache->count(key) == 0)
+        {
+            std::vector<combinator_result> results;
+            scaffold(unary_callback, x, UINT_MAX, &results);
+            cache->emplace(key, results);
+        }
+        return &cache->at(key);
     };
 
     std::vector<float> best_tag_scores(length, 0);
@@ -359,7 +387,7 @@ unsigned parse_sentence(
 
             if (length == 1 || item->span_length != length)
             {
-                for (auto &unary : apply_unary_rules(item->cat))
+                for (auto &unary : *apply_unary_rules(item->cat))
                 {
                     agenda.push(
                         {false,
@@ -383,7 +411,7 @@ unsigned parse_sentence(
                     unsigned start_of_span = item->start_of_span;
                     unsigned end_of_span = start_of_span + span_length;
 
-                    for (auto &rule_result : apply_binary_rules(item->cat, other.cat))
+                    for (auto &rule_result : *apply_binary_rules(item->cat, other.cat))
                     {
                         auto head = rule_result.head_is_left ? item : &other;
                         auto child = rule_result.head_is_left ? &other : item;
@@ -414,7 +442,7 @@ unsigned parse_sentence(
                     unsigned start_of_span = other.start_of_span;
                     unsigned end_of_span = start_of_span + span_length;
 
-                    for (auto &rule_result : apply_binary_rules(other.cat, item->cat))
+                    for (auto &rule_result : *apply_binary_rules(other.cat, item->cat))
                     {
                         auto head = rule_result.head_is_left ? &other : item;
                         auto child = rule_result.head_is_left ? item : &other;
@@ -448,7 +476,7 @@ unsigned parse_sentence(
     for (auto &item : cell)
     {
         unsigned token_id = 0;
-        finalizer_callback(&item, &token_id, finalizer_args);
+        finalizer_callback(&item, &token_id, cache, finalizer_args);
     }
 
     return 0;

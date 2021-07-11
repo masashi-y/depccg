@@ -17,6 +17,7 @@ from depccg.annotator import (
 )
 
 # disable lengthy allennlp logs
+logging.getLogger('filelock').setLevel(logging.ERROR)
 logging.getLogger('allennlp').setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 

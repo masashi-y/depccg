@@ -1,7 +1,6 @@
 from typing import Callable, List, Dict, Optional, Union
 # from multiprocessing import Pool
 import numpy
-from tqdm import tqdm
 import depccg._parsing
 from depccg.types import Token, CombinatorResult, ScoringResult
 from depccg.tree import ScoredTree
@@ -54,7 +53,7 @@ def run(
     nbest: int = 1,
     max_step: int = 10000000,
     max_length: int = 250,
-    processes: int = 2,
+    # processes: int = 2,
 ) -> List[List[ScoredTree]]:
 
     doc, score_results = _type_check(doc, score_results)
@@ -71,39 +70,30 @@ def run(
         for word, cats in category_dict.items()
     }
 
-    cache = {}
+    kwargs = {
+        'num_tags': score_results[0][0].shape[1],
+        'unary_penalty': unary_penalty,
+        'beta': beta,
+        'use_beta': use_beta,
+        'pruning_size': pruning_size,
+        'nbest': nbest,
+        'max_step': max_step,
+        'max_length': max_length
+    }
 
-    def parse(tokens, tag_scores, dep_scores):
-        kwargs = {
-            'num_tags': tag_scores.shape[1],
-            'unary_penalty': unary_penalty,
-            'beta': beta,
-            'use_beta': use_beta,
-            'pruning_size': pruning_size,
-            'nbest': nbest,
-            'max_step': max_step
-        }
-
+    for tokens, (tag_scores, _) in zip(doc, score_results):
         for index, token in enumerate(tokens):
             if token.word in category_dict:
                 tag_scores[index] += category_dict[token.word]
 
-        result = depccg._parsing.run(
-            tokens,
-            tag_scores,
-            dep_scores,
-            categories,
-            binary_fun,
-            unary_fun,
-            root_categories,
-            cache,
-            **kwargs,
-        )
-        return result
-
-    results = [
-        parse(tokens, tag_scores, dep_scores)
-        for tokens, (tag_scores, dep_scores) in tqdm(list(zip(doc, score_results)))
-    ]
+    results = depccg._parsing.run(
+        doc,
+        score_results,
+        categories,
+        binary_fun,
+        unary_fun,
+        root_categories,
+        **kwargs,
+    )
 
     return results
