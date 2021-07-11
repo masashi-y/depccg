@@ -25,10 +25,11 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 def _apply_head_mask(attended_arcs: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     # Mask the diagonal, because the head of a word can't be itself.
-    attended_arcs = attended_arcs + torch.diag(attended_arcs.new(mask.size(1)).fill_(-numpy.inf))
+    attended_arcs = attended_arcs + \
+        torch.diag(attended_arcs.new(mask.size(1)).fill_(-numpy.inf))
     # Mask padded tokens, because we only want to consider actual words as heads.
-    attended_arcs.masked_fill_((1 - mask).byte().unsqueeze(1), -numpy.inf)
-    attended_arcs.masked_fill_((1 - mask).byte().unsqueeze(2), -numpy.inf)
+    attended_arcs.masked_fill_((~mask).unsqueeze(1), -numpy.inf)
+    attended_arcs.masked_fill_((~mask).unsqueeze(2), -numpy.inf)
     return attended_arcs
 
 
@@ -78,7 +79,8 @@ class Supertagger(Model):
         self.tag_bilinear = BilinearWithBias(tag_representation_dim,
                                              tag_representation_dim,
                                              num_labels)
-        self._head_sentinel = torch.nn.Parameter(torch.randn([1, 1, encoder.get_output_dim()]))
+        self._head_sentinel = torch.nn.Parameter(
+            torch.randn([1, 1, encoder.get_output_dim()]))
 
         representation_dim = text_field_embedder.get_output_dim()
 
@@ -116,9 +118,11 @@ class Supertagger(Model):
         encoded_text = torch.cat([head_sentinel, encoded_text], 1)
         mask = torch.cat([mask.new_ones(batch_size, 1), mask], 1)
         if head_indices is not None:
-            head_indices = torch.cat([head_indices.new_zeros(batch_size, 1), head_indices], 1)
+            head_indices = torch.cat(
+                [head_indices.new_zeros(batch_size, 1), head_indices], 1)
         if head_tags is not None:
-            head_tags = torch.cat([head_tags.new_zeros(batch_size, 1), head_tags], 1)
+            head_tags = torch.cat(
+                [head_tags.new_zeros(batch_size, 1), head_tags], 1)
 
         # shape (batch_size, sequence_length, arc_representation_dim)
         head_arc_representation = self.head_arc_feedforward(encoded_text)
@@ -141,10 +145,13 @@ class Supertagger(Model):
                                      mask=mask,
                                      weight=weight)
 
-            normalised_arc_logits = _apply_head_mask(normalised_arc_logits, mask)
+            normalised_arc_logits = _apply_head_mask(
+                normalised_arc_logits, mask)
             tag_mask = self._get_unknown_tag_mask(mask, head_tags)
-            self._attachment_scores(normalised_arc_logits[:, 1:], head_indices[:, 1:], mask[:, 1:])
-            self._tagging_accuracy(normalised_head_tag_logits[:, 1:], head_tags[:, 1:], tag_mask[:, 1:])
+            self._attachment_scores(
+                normalised_arc_logits[:, 1:], head_indices[:, 1:], mask[:, 1:])
+            self._tagging_accuracy(
+                normalised_head_tag_logits[:, 1:], head_tags[:, 1:], tag_mask[:, 1:])
             predicted_heads, predicted_head_tags = None, None
         else:
             attended_arcs = _apply_head_mask(attended_arcs, mask)
@@ -167,7 +174,8 @@ class Supertagger(Model):
                                      head_tags=predicted_head_tags.long(),
                                      mask=mask,
                                      weight=weight)
-            normalised_arc_logits = _apply_head_mask(normalised_arc_logits, mask)
+            normalised_arc_logits = _apply_head_mask(
+                normalised_arc_logits, mask)
 
         output_dict = {
             "heads": normalised_arc_logits,
@@ -179,9 +187,9 @@ class Supertagger(Model):
         if predicted_heads is not None and predicted_head_tags is not None:
             output_dict['predicted_heads'] = predicted_heads[:, 1:]
             output_dict['predicted_head_tags'] = predicted_head_tags[:, 1:]
+            output_dict = self.decode(output_dict)
         return output_dict
 
-    @overrides
     def decode(self, output_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         head_tags = output_dict.pop("head_tags")
         # discard a sentinel token and padding and unknown tags
@@ -191,9 +199,11 @@ class Supertagger(Model):
         output_dict["head_tags"] = head_tags.cpu().detach().numpy()
         output_dict["heads"] = heads.cpu().detach().numpy()
         if 'predicted_heads' in output_dict:
-            output_dict['predicted_heads'] = output_dict['predicted_heads'].cpu().detach().numpy()
+            output_dict['predicted_heads'] = output_dict['predicted_heads'].cpu(
+            ).detach().numpy()
         if 'predicted_head_tags' in output_dict:
-            output_dict['predicted_head_tags'] = output_dict['predicted_head_tags'].cpu().detach().numpy()
+            output_dict['predicted_head_tags'] = output_dict['predicted_head_tags'].cpu(
+            ).detach().numpy()
         output_dict.pop('loss')
         return output_dict
 
@@ -210,7 +220,8 @@ class Supertagger(Model):
 
         batch_size, sequence_length, _ = attended_arcs.size()
         # shape (batch_size, 1)
-        range_vector = get_range_vector(batch_size, get_device_of(attended_arcs)).unsqueeze(1)
+        range_vector = get_range_vector(
+            batch_size, get_device_of(attended_arcs)).unsqueeze(1)
         # shape (batch_size, sequence_length, sequence_length)
         if self.head_temperature:
             attended_arcs /= self.head_temperature
@@ -220,15 +231,20 @@ class Supertagger(Model):
         # shape (batch_size, sequence_length, num_head_tags)
         if self.head_tag_temperature:
             attended_arcs /= self.head_tag_temperature
-        head_tag_logits = self._get_head_tags(head_tag_representation, child_tag_representation, head_indices)
+        head_tag_logits = self._get_head_tags(
+            head_tag_representation, child_tag_representation, head_indices)
         normalised_head_tag_logits = masked_log_softmax(head_tag_logits,
                                                         tag_mask.unsqueeze(-1)) * tag_mask.float().unsqueeze(-1)
         # index matrix with shape (batch, sequence_length)
-        timestep_index = get_range_vector(sequence_length, get_device_of(attended_arcs))
-        child_index = timestep_index.view(1, sequence_length).expand(batch_size, sequence_length).long()
+        timestep_index = get_range_vector(
+            sequence_length, get_device_of(attended_arcs))
+        child_index = timestep_index.view(1, sequence_length).expand(
+            batch_size, sequence_length).long()
         # shape (batch_size, sequence_length)
-        arc_loss = normalised_arc_logits[range_vector, child_index, head_indices]
-        tag_loss = normalised_head_tag_logits[range_vector, child_index, head_tags]
+        arc_loss = normalised_arc_logits[range_vector,
+                                         child_index, head_indices]
+        tag_loss = normalised_head_tag_logits[range_vector,
+                                              child_index, head_tags]
         tag_loss *= (head_tags > 1).float()
         # We don't care about predictions for the symbolic ROOT token's head,
         # so we remove it from the loss.
@@ -250,7 +266,8 @@ class Supertagger(Model):
                        head_indices: torch.Tensor) -> torch.Tensor:
         batch_size = head_tag_representation.size(0)
         # shape (batch_size,)
-        range_vector = get_range_vector(batch_size, get_device_of(head_tag_representation)).unsqueeze(1)
+        range_vector = get_range_vector(
+            batch_size, get_device_of(head_tag_representation)).unsqueeze(1)
 
         # This next statement is quite a complex piece of indexing, which you really
         # need to read the docs to understand. See here:

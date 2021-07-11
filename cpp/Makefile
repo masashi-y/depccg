@@ -1,8 +1,8 @@
 SRCS=utils.cpp cat.cpp tree.cpp combinator.cpp feat.cpp depccg.cpp chart.cpp cacheable.cpp
 OBJS=$(SRCS:.cpp=.o) morpha.o
 DEPS=$(SRCS:.cpp=.d)
-CCFLAGS=-std=c++11 -g -fpic $(OPTIONS) -Wall -march=native -O3
-CFLAGS= -g -fpic -Wall -march=native -O3
+CCFLAGS=-std=c++11 -g -fpic $(OPTIONS) -Wall -O3
+CFLAGS= -g -fpic -Wall -O3
 INCLUDES=
 
 all: $(OBJS)

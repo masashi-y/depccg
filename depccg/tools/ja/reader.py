@@ -18,6 +18,7 @@ for sign in ['ADNext', 'ADNint', 'ADV0', 'ADV1', 'ADV2']:
 
 DEPENDENCY = re.compile(r'{.+?}')
 
+
 def read_ccgbank(filepath):
     for i, line in enumerate(open(filepath)):
         line = line.strip()
@@ -74,8 +75,8 @@ class _JaCCGLineReader(object):
 
     def parse_tree(self):
         self.check('{')
-        op = self.next(' ')
-        op = combinators[op[1:]]
+        opa = self.next(' ')
+        op = combinators[opa[1:]]
         cat = DEPENDENCY.sub('', self.next(' '))
         cat = Category.parse(cat)
         self.check('{')
@@ -86,8 +87,10 @@ class _JaCCGLineReader(object):
                 self.next(' ')
         self.next('}')
         if len(children) == 1:
+            print(opa, cat, children[0].cat)
             return Tree.make_unary(cat, children[0], self.lang)
         else:
-            assert len(children) == 2, f'failed to parse, invalid number of children: {self.line}'
+            assert len(
+                children) == 2, f'failed to parse, invalid number of children: {self.line}'
             left, right = children
             return Tree.make_binary(cat, left, right, op, self.lang)
