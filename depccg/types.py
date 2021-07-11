@@ -1,8 +1,12 @@
 from typing import Optional, NamedTuple, Callable, List
 from pathlib import Path
+import re
 import numpy
 
 from depccg.cat import Category
+
+dunder_pattern = re.compile("__.*__")
+protected_pattern = re.compile("_.*")
 
 
 class Token(dict):
@@ -10,6 +14,8 @@ class Token(dict):
         super().__init__(**kwargs)
 
     def __getattr__(self, item):
+        if dunder_pattern.match(item) or protected_pattern.match(item):
+            return super().__getattr__(item)
         return self[item]
 
     def __repr__(self):

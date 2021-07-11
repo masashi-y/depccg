@@ -220,9 +220,9 @@ def _unary_rule_symbol(x: Category) -> str:
             return 'ADNext'
         return 'ADNint'
     elif ('mod', 'adv') in features:
-        if x.clear_feature == 'S\\NP':
+        if x.clear_features == 'S\\NP':
             return 'ADV1'
-        elif x.clear_feature == '(S\\NP)\\NP':
+        elif x.clear_features == '(S\\NP)\\NP':
             return 'ADV2'
         return 'ADV0'
     return 'OTHER'

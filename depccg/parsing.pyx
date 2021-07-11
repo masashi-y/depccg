@@ -6,6 +6,7 @@ from libcpp.utility cimport pair
 from libcpp.unordered_set cimport unordered_set
 from libcpp.unordered_map cimport unordered_map
 cimport numpy as np
+import copy
 
 from tqdm import tqdm
 from depccg.tree import Tree, ScoredTree
@@ -66,7 +67,7 @@ cdef extern from "depccg/parsing.h":
         scaffold_type scaffold,
         void *finalizer_args,
         cache_type *cache,
-        config *config)
+        config *config) except +
 
 
 cdef void scaffold(
@@ -168,6 +169,7 @@ def run(
     apply_binary_rules,
     apply_unary_rules,
     object possible_root_cats,
+    process_id=0,
     **kwargs
 ) -> List[ScoredTree]:
 
@@ -184,21 +186,23 @@ def run(
             'argument `categories` cannot contain duplicate elements.'
         )
 
+    categories_ = copy.copy(categories)
+
     category_ids = {
         category: index
-        for index, category in enumerate(categories)
+        for index, category in enumerate(categories_)
     }
 
     def maybe_add_and_get(cat):
-        if cat not in categories:
-            categories.append(cat)
+        if cat not in category_ids:
+            categories_.append(cat)
             category_ids[cat] = len(category_ids)
-        if len(categories) >= UINT_MAX:
+        if len(categories_) >= UINT_MAX:
             raise RuntimeError('too many categories')
         return category_ids[cat]
 
     def binary_callback(x_id, y_id):
-        x, y = categories[x_id], categories[y_id]
+        x, y = categories_[x_id], categories_[y_id]
 
         results = []
         for rule_id, result in enumerate(apply_binary_rules(x, y)):
@@ -207,7 +211,7 @@ def run(
         return results
 
     def unary_callback(x_id, _):
-        x = categories[x_id]
+        x = categories_[x_id]
 
         results = []
         for rule_id, result in enumerate(apply_unary_rules(x)):
@@ -232,7 +236,12 @@ def run(
         c_possible_root_cat.insert(cat_id)
 
     all_results = []
-    for tokens, (tag_scores, dep_scores) in tqdm(list(zip(doc, scoring_results))):
+    iter_ = tqdm(
+        list(zip(doc, scoring_results)),
+        desc=f'#{process_id:>2} ',
+        position=process_id
+    )
+    for tokens, (tag_scores, dep_scores) in iter_:
         c_tag_scores = <float*>tag_scores.data
         c_dep_scores = <float*>dep_scores.data
         length = len(tokens)
@@ -247,7 +256,7 @@ def run(
         results = []
         scores = []
         finalizer_args = {
-            'categories': categories,
+            'categories': categories_,
             'tokens': tokens,
             'stack': results,
             'scores': scores,

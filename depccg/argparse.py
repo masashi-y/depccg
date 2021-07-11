@@ -15,6 +15,12 @@ def add_common_parser_arguments(parser, main_fun):
         '--model',
         help='path to model directory')
     parser.add_argument(
+        '-p',
+        '--num-processes',
+        default=4,
+        type=int,
+        help='number of processes used for parsing')
+    parser.add_argument(
         '-i',
         '--input',
         default=None,

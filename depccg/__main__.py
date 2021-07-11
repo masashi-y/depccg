@@ -40,10 +40,11 @@ def read_params(param_path: str, args):
     if args.disable_seen_rules:
         seen_rules = None
     else:
-        seen_rules = [
-            (Category.parse(x), Category.parse(y))
+        seen_rules = {
+            (Category.parse(x).clear_features('X', 'nb'),
+             Category.parse(y).clear_features('X', 'nb'))
             for x, y in params.pop('seen_rules')
-        ]
+        }
         if len(seen_rules) == 0:
             seen_rules = None
     try:
@@ -123,6 +124,7 @@ def main(args):
         use_beta=not args.disable_beta,
         max_length=args.max_length,
         max_step=args.max_step,
+        processes=args.num_processes,
     )
 
     if args.input is not None:
@@ -172,6 +174,14 @@ def main(args):
                 Category.parse(category) for category in categories_
             ]
 
+        if category_dict is not None:
+            doc, score_result = depccg.parsing.apply_category_filters(
+                doc,
+                score_result,
+                categories,
+                category_dict,
+            )
+
         logger.info("parsing")
         results = depccg.parsing.run(
             doc,
@@ -180,7 +190,6 @@ def main(args):
             root_categories,
             apply_binary_rules,
             apply_unary_rules,
-            category_dict,
             **kwargs,
         )
 
