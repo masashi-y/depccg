@@ -4,6 +4,7 @@ from depccg.types import Token
 from depccg.tree import Tree, ScoredTree
 from depccg.printer import to_string
 from depccg.instance_models import SEMANTIC_TEMPLATES
+from depccg.lang import set_global_language_to
 
 
 @pytest.fixture()
@@ -120,6 +121,84 @@ def en_tree():
 @pytest.fixture()
 def scored_en_tree(en_tree):
     return ScoredTree(en_tree, -0.05)
+
+
+@pytest.fixture()
+def ja_tree():
+    return Tree.make_binary(
+        Category.parse("S[mod=nm,form=base,fin=t]"),
+        Tree.make_binary(
+            Category.parse("S[mod=nm,form=base,fin=f]"),
+            Tree.make_binary(
+                Category.parse(
+                    "S[mod=X1,form=X2,fin=f]/S[mod=X1,form=X2,fin=f]"),
+                Tree.make_binary(
+                    Category.parse("NP[case=nc,mod=nm,fin=f]"),
+                    Tree.make_terminal(
+                        Token(word='メロス', surf='メロス', pos='名詞', pos1='一般', pos2='*', pos3='*',
+                              nflectionForm='*', inflectionType='*', reading='*', base='メロス'),
+                        Category.parse("NP[case=nc,mod=nm,fin=f]")),
+                    Tree.make_terminal(
+                        Token(word='に', surf='に', pos='助詞', pos1='格助詞', pos2='一般', pos3='*',
+                              inflectionForm='*', inflectionType='*', reading='ニ', base='に'),
+                        Category.parse("NP[case=nc,mod=nm,fin=f]\\NP[case=nc,mod=nm,fin=f]")),
+                    "<",
+                    "<",
+                ),
+                Tree.make_terminal(
+                    Token(word='は', surf='は', pos='助詞', pos1='係助詞', pos2='*', pos3='*',
+                          nflectionForm='*', inflectionType='*', reading='ハ', base='は'),
+                    Category.parse("(S[mod=X1,form=X2,fin=f]/S[mod=X1,form=X2,fin=f])\\NP[case=nc,mod=nm,fin=f]")),
+                "<",
+                "<",
+            ),
+            Tree.make_binary(
+                Category.parse("S[mod=nm,form=base,fin=f]"),
+                Tree.make_binary(
+                    Category.parse("NP[case=ga,mod=nm,fin=f]"),
+                    Tree.make_terminal(
+                        Token(word='政治', surf='政治', pos='名詞', pos1='一般', pos2='*', pos3='*',
+                              inflectionForm='*', inflectionType='*', reading='セイジ', base='政治'),
+                        Category.parse("NP[case=nc,mod=nm,fin=f]")),
+                    Tree.make_terminal(
+                        Token(word='が', surf='が', pos='助詞', pos1='格助詞', pos2='一般', pos3='*',
+                              nflectionForm='*', inflectionType='*', reading='ガ', base='が'),
+                        Category.parse("NP[case=ga,mod=nm,fin=f]\\NP[case=nc,mod=nm,fin=f]")),
+                    "<",
+                    "<",
+                ),
+                Tree.make_binary(
+                    Category.parse(
+                        "S[mod=nm,form=base,fin=f]\\NP[case=ga,mod=nm,fin=f]"),
+                    Tree.make_terminal(
+                        Token(word='わから', surf='わから', pos='動詞', pos1='自立', pos2='*', pos3='*',
+                              inflectionForm='未然形', inflectionType='五段・ラ行', reading='ワカラ', base='わかる'),
+                        Category.parse("S[mod=nm,form=neg,fin=f]\\NP[case=ga,mod=nm,fin=f]")),
+                    Tree.make_terminal(
+                        Token(word='ぬ', surf='ぬ', pos='助動詞', pos1='*', pos2='*', pos3='*',
+                              inflectionForm='基本形', inflectionType='特殊・ヌ', reading='ヌ', base='ぬ'),
+                        Category.parse("S[mod=nm,form=base,fin=f]\\S[mod=nm,form=neg,fin=f]")),
+                    "<B1",
+                    "<B1",
+                ),
+                "<",
+                "<",
+            ),
+            ">",
+            ">",
+        ),
+        Tree.make_terminal(
+            Token(word='。', surf='。', pos='記号', pos1='句点', pos2='*', pos3='*',
+                  inflectionForm='*', inflectionType='*', reading='。', base='。'),
+            Category.parse("S[mod=nm,form=base,fin=t]\\S[mod=nm,form=base,fin=f]")),
+        "<",
+        "<",
+    )
+
+
+@pytest.fixture()
+def scored_ja_tree(ja_tree):
+    return ScoredTree(ja_tree, -0.05)
 
 
 def test_en_auto(scored_en_tree):
@@ -600,10 +679,10 @@ def test_en_ptb(scored_en_tree):
     assert to_string([scored_en_tree], format='ptb') == expected
 
 
-def test_ja_ja(scored_en_tree):
+def test_ja_ja(scored_ja_tree):
 
     expected = (
-        'ID=1, log probability=-1.488217830657959\n'
+        'ID=1, log probability=-0.05000000\n'
         '{< S[mod=nm,form=base,fin=t] {> S[mod=nm,form=base,fin=f] {< S[mod=X1,form=X2,fin=f]/S[mod=X1,form=X2,fin=f]'
         ' {< NP[case=nc,mod=nm,fin=f] {NP[case=nc,mod=nm,fin=f] メロス/メロス/名詞-一般/_}'
         ' {NP[case=nc,mod=nm,fin=f]\\NP[case=nc,mod=nm,fin=f] に/に/助詞-格助詞-一般/_}}'
@@ -612,13 +691,13 @@ def test_ja_ja(scored_en_tree):
         ' {NP[case=ga,mod=nm,fin=f]\\NP[case=nc,mod=nm,fin=f] が/が/助詞-格助詞-一般/_}}'
         ' {<B1 S[mod=nm,form=base,fin=f]\\NP[case=ga,mod=nm,fin=f] {S[mod=nm,form=neg,fin=f]\\NP[case=ga,mod=nm,fin=f]'
         ' わから/わから/動詞-自立/未然形-五段・ラ行} {S[mod=nm,form=base,fin=f]\\S[mod=nm,form=neg,fin=f]'
-        ' ぬ/ぬ/助動詞/基本形-特殊・ヌ}}}} {S[mod=nm,form=base,fin=t]\\S[mod=nm,form=base,fin=f] 。/。/記号-句点/_}}'
+        ' ぬ/ぬ/助動詞/基本形-特殊・ヌ}}}} {S[mod=nm,form=base,fin=t]\\S[mod=nm,form=base,fin=f] 。/。/記号-句点/_}}\n'
     )
 
-    assert False
+    assert to_string([scored_ja_tree], format='ja') == expected
 
 
-def test_ja_prolog(scored_en_tree):
+def test_ja_prolog(scored_ja_tree):
 
     expected = (
         ":- op(601, xfx, (/)).\n"
@@ -641,6 +720,7 @@ def test_ja_prolog(scored_en_tree):
         "    bc1((s\\np:ga),\n"
         "     t((s\\np:ga), 'わから', 'わかる', '動詞/自立/*/*', '未然形', '五段・ラ行'),\n"
         "     t((s\\s), 'ぬ', 'ぬ', '助動詞/*/*/*', '基本形', '特殊・ヌ')))),\n"
-        "  t((s\\s), '。', '。', '記号/句点/*/*', '*', '*'))).\n"
+        "  t((s\\s), '。', '。', '記号/句点/*/*', '*', '*'))).\n\n"
     )
-    assert False
+    set_global_language_to('ja')
+    assert to_string([scored_ja_tree], format='prolog') == expected

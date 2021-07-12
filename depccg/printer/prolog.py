@@ -193,7 +193,7 @@ def to_prolog_ja(
             right = traverse_cat(node.right)
             return f'({left}{node.slash}{right})'
         else:
-            feature = node.features
+            feature = dict(node.feature.items())
             base = node.base.lower()
             if 'case' not in feature:
                 return base
@@ -207,20 +207,20 @@ def to_prolog_ja(
             cat = traverse_cat(node.cat)
             token = node.token
             surf = _escape_prolog(token.get('surf', node.word))
-            base = _escape_prolog(token.get('base', 'XX'))
+            base = _escape_prolog(token.get('base', '*'))
 
             tags = [
-                token.get(key, 'XX')
+                token.get(key, '*')
                 for key in ('pos', 'pos1', 'pos2', 'pos3')
             ]
 
-            if all(tag == 'XX' for tag in tags):
-                pos = 'XX'
+            if all(tag == '*' for tag in tags):
+                pos = '*'
             else:
                 pos = '/'.join(_escape_prolog(tag) for tag in tags)
 
-            infl_form = _escape_prolog(token.get('inflectionForm', 'XX'))
-            infl_type = _escape_prolog(token.get('inflectionType', 'XX'))
+            infl_form = _escape_prolog(token.get('inflectionForm', '*'))
+            infl_type = _escape_prolog(token.get('inflectionType', '*'))
 
             output.write(
                 f"\n{whitespace}t({cat}, '{surf}', '{base}', '{pos}', '{infl_form}', '{infl_type}')"
