@@ -2,9 +2,9 @@ include bin/*
 include README.md
 include LICENSE
 include requirements.txt
-recursive-include cpp *
-recursive-include depccg *.pyx *.pxd
-exclude cpp/*.d
-exclude cpp/*.o
+recursive-include c *
+recursive-include depccg *.pyx *.pxd *.h
+exclude c/*.d
+exclude c/*.o
 exclude depccg/*.so
 exclude depccg/*.cpp
