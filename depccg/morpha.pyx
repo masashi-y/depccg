@@ -3,7 +3,7 @@ from libcpp cimport bool
 from libc.stdlib cimport malloc, free
 
 
-cdef extern from "morpha.h":
+cdef extern from "c/morpha.h":
     void morph_initialise(const char* filename)
     int morph_analyse(char* buffer, const char *str, int tag)
 

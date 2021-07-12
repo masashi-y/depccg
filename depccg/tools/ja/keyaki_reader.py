@@ -1,15 +1,16 @@
 import json
-import sys
 import logging
 import re
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from typing import NamedTuple, Union, List
 from pathlib import Path
 
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    level=logging.INFO
+)
 logger = logging.getLogger(__name__)
 
 
@@ -67,8 +68,8 @@ class Tree(NamedTuple):
 
 def drop_brackets(cat):
     if cat.startswith('<') and \
-        cat.endswith('>') and \
-        find_closing_bracket(cat) == len(cat) - 1:
+            cat.endswith('>') and \
+            find_closing_bracket(cat) == len(cat) - 1:
         return cat[1:-1]
     else:
         return cat
@@ -86,7 +87,7 @@ def find_closing_bracket(source):
 
 def find_non_nested_char(haystack, needles):
     open_brackets = 0
-    for i in range(len(haystack) -1, -1, -1):
+    for i in range(len(haystack) - 1, -1, -1):
         char = haystack[i]
         open_brackets += char == '<'
         open_brackets -= char == '>'
@@ -96,6 +97,8 @@ def find_non_nested_char(haystack, needles):
 
 
 FEATURE_PATTERN = re.compile(r'([a-z][a-z1-9]*)')
+
+
 def parse_cat(cat):
     """
     ex. PPo1\<PPs\Sm>.h --> PPo1\(PPs\Sm)
@@ -152,10 +155,10 @@ class KeyakiParser(object):
         return self.items[self.index]
 
     def peek_next(self):
-        return self.items[self.index+1]
+        return self.items[self.index + 1]
 
     def peek_prev(self):
-        return self.items[self.index-1]
+        return self.items[self.index - 1]
 
     def parse(self):
         """
@@ -224,6 +227,7 @@ def read_keyaki(keyakipath, remove_top=True):
 
 def get_leaves(tree):
     res = []
+
     def rec(tree):
         for child in tree.children:
             if isinstance(child, Tree):
@@ -249,12 +253,13 @@ class TrainingDataCreator(object):
     """
     create train & validation data
     """
+
     def __init__(self, filepath, word_freq_cut, char_freq_cut, cat_freq_cut):
         self.filepath = filepath
         # those categories whose frequency < freq_cut are discarded.
         self.word_freq_cut = word_freq_cut
         self.char_freq_cut = char_freq_cut
-        self.cat_freq_cut  = cat_freq_cut
+        self.cat_freq_cut = cat_freq_cut
         self.seen_rules = defaultdict(int)  # seen binary rules
         self.unary_rules = defaultdict(int)  # seen unary rules
         self.cats = defaultdict(int, {
@@ -307,7 +312,7 @@ class TrainingDataCreator(object):
                 children = subtree.children
                 if len(children) == 2:
                     head = rec(children[1])
-                    dep  = rec(children[0])
+                    dep = rec(children[0])
                     res[dep] = head
                 else:
                     head = rec(children[0])
@@ -317,8 +322,8 @@ class TrainingDataCreator(object):
 
         res = [-1 for _ in range(sent_len)]
         rec(tree)
-        res = [i+ 1 for i in res]
-        assert len(list(filter(lambda i:i == 0, res))) == 1, (res, str(tree))
+        res = [i + 1 for i in res]
+        assert len(list(filter(lambda i: i == 0, res))) == 1, (res, str(tree))
         return res
 
     def _to_conll(self, out):
@@ -360,17 +365,20 @@ class TrainingDataCreator(object):
         cats = {k: v for k, v in self.cats.items() if v >= self.cat_freq_cut}
         self._write(cats, args.OUT / 'target.txt')
 
-        words = {k: v for k, v in self.words.items() if v >= self.word_freq_cut}
+        words = {k: v for k, v in self.words.items() if v >=
+                 self.word_freq_cut}
         self._write(words, args.OUT / 'words.txt')
 
-        chars = {k: v for k, v in self.chars.items() if v >= self.char_freq_cut}
+        chars = {k: v for k, v in self.chars.items() if v >=
+                 self.char_freq_cut}
         self._write(chars, args.OUT / 'chars.txt')
 
         seen_rules = {f'{c1} {c2}': v for (c1, c2), v in self.seen_rules.items()
                       if c1 in cats and c2 in cats}
         self._write(seen_rules, args.OUT / 'seen_rules.txt')
 
-        unary_rules = {f'{c1} {c2}': v for (c1, c2), v in self.unary_rules.items()}
+        unary_rules = {f'{c1} {c2}': v for (
+            c1, c2), v in self.unary_rules.items()}
         self._write(unary_rules, args.OUT / 'unary_rules.txt')
 
         with open(args.OUT / 'traindata.json', 'w') as f:

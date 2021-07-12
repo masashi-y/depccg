@@ -17,9 +17,9 @@ import os
 import subprocess
 from pathlib import Path
 
-from depccg.tree import Tree
 from depccg.tools.reader import read_auto
 from depccg import utils
+from depccg.printer.auto import auto_flattened_of
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                     level=logging.INFO)
@@ -79,7 +79,8 @@ Here (S[adj]{_}\NP{Y}<1>){_} 1 0
 from (((NP{Y}\NP{Y}<1>){_}/(NP{Z}\NP{Z}){W}<3>){_}/NP{V}<2>){_} 1 0
 """
 
-IGNORE = {tuple(rule.split()) for rule in IGNORE_RULES.split('\n') if not rule.startswith('#')}
+IGNORE = {tuple(rule.split())
+          for rule in IGNORE_RULES.split('\n') if not rule.startswith('#')}
 
 
 def die(msg):
@@ -96,7 +97,8 @@ def get_deps_from_auto(auto_file):
     MARKEDUP = CANDC_DIR / 'src' / 'data' / 'ccg' / 'cats' / 'markedup'
     CATS = CANDC_DIR / 'src' / 'data' / 'ccg' / 'cats'
     if not GENERATE.exists():
-        logger.error('Currently the evalution script requires C&C parser compiled from its source.')
+        logger.error(
+            'Currently the evalution script requires C&C parser compiled from its source.')
         die('expected: $CANDC/bin/generate')
     elif not MARKEDUP.exists() or not CATS.exists:
         logger.error('The C&C directory is not configured expectedly.')
@@ -105,8 +107,8 @@ def get_deps_from_auto(auto_file):
     tmp = tempfile.mktemp()
     print(tmp)
     with open(tmp, 'w') as f:
-        for _, tokens, tree in read_auto(auto_file):
-            print(tree.auto_flat(tokens=tokens), file=f)
+        for _, _, tree in read_auto(auto_file):
+            print(auto_flattened_of(tree), file=f)
 
     command = f'{GENERATE} -j {CATS} {MARKEDUP} {tmp}'
     proc = subprocess.Popen(command,
@@ -116,7 +118,8 @@ def get_deps_from_auto(auto_file):
                             stderr=subprocess.PIPE)
     results, error = proc.communicate()
     if len(error.decode('utf-8')) > 0:
-        die(f'caught error in running $CANDC/bin/generate: {error.decode("utf-8")}')
+        die(
+            f'caught error in running $CANDC/bin/generate: {error.decode("utf-8")}')
 
     lines = iter(results.decode('utf-8').split('\n'))
     deps, udeps = set(), set()
@@ -124,7 +127,7 @@ def get_deps_from_auto(auto_file):
     line = next(lines)
     while line != '':
         line = next(lines)
-    
+
     for line in lines:
         line = line.strip()
         if len(line) == 0:
@@ -169,6 +172,8 @@ def get_pargs(file):
 
 
 DEPS_IGNORED = 0
+
+
 def ignore(pred, cat, slot, arg, rule_id):
     global DEPS_IGNORED
     res = ('rule_id', rule_id) in IGNORE or \
@@ -180,6 +185,8 @@ def ignore(pred, cat, slot, arg, rule_id):
 
 
 MARKUP = re.compile(r'<[0-9]>|\{[A-Z_]\*?\}|\[X\]')
+
+
 def strip_markup(cat):
     cat = MARKUP.sub('', cat)
     return cat[1:-1] if cat[0] == '(' else cat
@@ -193,7 +200,8 @@ def score_deps(gold_deps, test_deps, rule_ids, verbose, relations,
             print('correct: %s %s %s %s %s' % (dep + (rule_ids[dep],)))
     if relations:
         for dep in correct:
-            correct_relations[dep[1:3]] = correct_relations.setdefault(dep[1:3], 0) + 1 
+            correct_relations[dep[1:3]] = correct_relations.setdefault(
+                dep[1:3], 0) + 1
 
     incorrect = test_deps.difference(gold_deps)
     if verbose:
@@ -201,7 +209,8 @@ def score_deps(gold_deps, test_deps, rule_ids, verbose, relations,
             print('incorrect: %s %s %s %s %s' % (dep + (rule_ids[dep],)))
     if relations:
         for dep in incorrect:
-            incorrect_relations[dep[1:3]] = incorrect_relations.setdefault(dep[1:3], 0) + 1 
+            incorrect_relations[dep[1:3]] = incorrect_relations.setdefault(
+                dep[1:3], 0) + 1
 
     missing = gold_deps.difference(test_deps)
     if verbose:
@@ -209,17 +218,19 @@ def score_deps(gold_deps, test_deps, rule_ids, verbose, relations,
             print('missing:   %s %s %s %s ?' % dep)
     if relations:
         for dep in missing:
-            missing_relations[dep[1:3]] = missing_relations.setdefault(dep[1:3], 0) + 1
+            missing_relations[dep[1:3]] = missing_relations.setdefault(
+                dep[1:3], 0) + 1
 
-    if verbose: print()
+    if verbose:
+        print()
     return len(correct), len(incorrect), len(missing)
 
 
 def score_udeps(gold_deps, test_deps):
-  correct = gold_deps.intersection(test_deps)
-  incorrect = test_deps.difference(gold_deps)
-  missing = gold_deps.difference(test_deps)
-  return len(correct), len(incorrect), len(missing)
+    correct = gold_deps.intersection(test_deps)
+    incorrect = test_deps.difference(gold_deps)
+    missing = gold_deps.difference(test_deps)
+    return len(correct), len(incorrect), len(missing)
 
 
 def percentage(val, total):
@@ -237,8 +248,10 @@ def print_stats(name, correct, incorrect, missing):
     prec = percentage(correct, test)
     recall = percentage(correct, gold)
     fscore = (2 * prec * recall) / (prec + recall) if prec and recall else 0.0
-    print(f'{name[0]}p:    {prec:5.2f}% ({correct} of {test} {name} deps precision)')
-    print(f'{name[0]}r:    {recall:5.2f}% ({correct} of {gold} {name} deps recall)')
+    print(
+        f'{name[0]}p:    {prec:5.2f}% ({correct} of {test} {name} deps precision)')
+    print(
+        f'{name[0]}r:    {recall:5.2f}% ({correct} of {gold} {name} deps recall)')
     print(f'{name[0]}f:    {fscore:5.2f}% ({name} deps f-score)')
 
 
@@ -254,10 +267,14 @@ def print_rel_stats(relation, correct, incorrect, missing):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('PARG_FILENAME', type=Path, help='gold parg file in ccgbank')
-    parser.add_argument('TEST', type=Path, help='parse results in auto file format')
-    parser.add_argument('-v', '--verbose', action='store_true', help='produces verbose output')
-    parser.add_argument('-r', '--relations', action='store_true', help='produces per relation output')
+    parser.add_argument('PARG_FILENAME', type=Path,
+                        help='gold parg file in ccgbank')
+    parser.add_argument('TEST', type=Path,
+                        help='parse results in auto file format')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='produces verbose output')
+    parser.add_argument('-r', '--relations', action='store_true',
+                        help='produces per relation output')
     args = parser.parse_args()
 
     preface = f'# this file was generated by the following command(s):\n# {" ".join(sys.argv)}\n'
@@ -296,8 +313,8 @@ def main():
 
     print(f'''{preface}
 note: all these statistics are over just those sentences
-      for which the parser returned an analysis, and 
-      dependency extraction script is successful 
+      for which the parser returned an analysis, and
+      dependency extraction script is successful
 ''')
 
     if args.relations:
@@ -316,12 +333,15 @@ note: all these statistics are over just those sentences
     print_acc('cover', 'sentences evaluated  - this includes dependency extraction script errors and parse failures', nparsed, nsentences)
     print()
     print_stats('labelled', deps_correct, deps_incorrect, deps_missing)
-    print_acc('lsent', 'labelled deps sentences correct', deps_sent_correct, nparsed)
+    print_acc('lsent', 'labelled deps sentences correct',
+              deps_sent_correct, nparsed)
     print()
     print_stats('unlabelled', udeps_correct, udeps_incorrect, udeps_missing)
-    print_acc('usent', 'unlabelled deps sentences correct', udeps_sent_correct, nparsed)
+    print_acc('usent', 'unlabelled deps sentences correct',
+              udeps_sent_correct, nparsed)
     print()
-    print_acc('skip', 'ignored deps (to ensure compatibility with CCGbank)', DEPS_IGNORED, deps_correct + deps_incorrect + DEPS_IGNORED)
+    print_acc('skip', 'ignored deps (to ensure compatibility with CCGbank)',
+              DEPS_IGNORED, deps_correct + deps_incorrect + DEPS_IGNORED)
 
 
 if __name__ == '__main__':

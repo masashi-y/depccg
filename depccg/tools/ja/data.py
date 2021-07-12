@@ -19,16 +19,16 @@ IGNORE = -1
 class TrainingDataCreator(object):
     def __init__(self, filepath, word_freq_cut, char_freq_cut, cat_freq_cut):
         self.filepath = filepath
-         # those categories whose frequency < freq_cut are discarded.
+        # those categories whose frequency < freq_cut are discarded.
         self.word_freq_cut = word_freq_cut
         self.char_freq_cut = char_freq_cut
-        self.cat_freq_cut  = cat_freq_cut
-        self.seen_rules = defaultdict(int) # seen binary rules
-        self.unary_rules = defaultdict(int) # seen unary rules
+        self.cat_freq_cut = cat_freq_cut
+        self.seen_rules = defaultdict(int)  # seen binary rules
+        self.unary_rules = defaultdict(int)  # seen unary rules
         self.cats = defaultdict(int, {
             START: cat_freq_cut,
             END: cat_freq_cut
-        }) # all cats
+        })  # all cats
         self.words = defaultdict(int, {
             UNK: word_freq_cut,
             START: word_freq_cut,
@@ -70,13 +70,14 @@ class TrainingDataCreator(object):
 
     def _get_dependencies(self, tree, sent_len):
         counter = 0
+
         def rec(subtree):
             nonlocal counter
             if not subtree.is_leaf:
                 children = subtree.children
                 if len(children) == 2:
                     head = rec(children[0 if subtree.head_is_left else 1])
-                    dep  = rec(children[1 if subtree.head_is_left else 0])
+                    dep = rec(children[1 if subtree.head_is_left else 0])
                     res[dep] = head
                 else:
                     head = rec(children[0])
@@ -89,7 +90,7 @@ class TrainingDataCreator(object):
         res = [-1 for _ in range(sent_len)]
         rec(tree)
         res = [i + 1 for i in res]
-        assert len(list(filter(lambda i:i == 0, res))) == 1
+        assert len(list(filter(lambda i: i == 0, res))) == 1
         return res
 
     def _to_conll(self, out):
@@ -124,17 +125,20 @@ class TrainingDataCreator(object):
         cats = {k: v for k, v in self.cats.items() if v >= self.cat_freq_cut}
         self._write(cats, args.OUT / 'target.txt')
 
-        words = {k: v for k, v in self.words.items() if v >= self.word_freq_cut}
+        words = {k: v for k, v in self.words.items() if v >=
+                 self.word_freq_cut}
         self._write(words, args.OUT / 'words.txt')
 
-        chars = {k: v for k, v in self.chars.items() if v >= self.char_freq_cut}
+        chars = {k: v for k, v in self.chars.items() if v >=
+                 self.char_freq_cut}
         self._write(chars, args.OUT / 'chars.txt')
 
         seen_rules = {f'{c1} {c2}': v for (c1, c2), v in self.seen_rules.items()
                       if c1 in cats and c2 in cats}
         self._write(seen_rules, args.OUT / 'seen_rules.txt')
 
-        unary_rules = {f'{c1} {c2}': v for (c1, c2), v in self.unary_rules.items()}
+        unary_rules = {f'{c1} {c2}': v for (
+            c1, c2), v in self.unary_rules.items()}
         self._write(unary_rules, args.OUT / 'unary_rules.txt')
 
         with open(args.OUT / 'traindata.json', 'w') as f:
@@ -218,4 +222,3 @@ if __name__ == '__main__':
         TrainingDataCreator.create_traindata(args)
     else:
         TrainingDataCreator.create_testdata(args)
-
