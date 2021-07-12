@@ -8,3 +8,4 @@ googledrivedownloader
 requests
 allennlp
 allennlp-models
+janome

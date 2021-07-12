@@ -37,7 +37,7 @@ class SupertaggerPredictor(Predictor):
         all_categories = [token for _, token in sorted(all_categories.items())]
         categories, paddings = all_categories[2:], all_categories[:2]
         assert all(padding in [DEFAULT_PADDING_TOKEN,
-                   DEFAULT_OOV_TOKEN] for padding in paddings)
+                               DEFAULT_OOV_TOKEN] for padding in paddings)
         for output_dict in output_dicts:
             length = len(output_dict['words'].split(' '))
             output_dict['categories'] = categories
