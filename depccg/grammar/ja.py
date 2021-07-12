@@ -7,10 +7,14 @@ X = TypeVar('X')
 Pair = Tuple[X, X]
 
 
+def _is_modifier(x: Category) -> bool:
+    return x.is_functor and x.left == x.right
+
+
 def forward_application(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("a/b", "b")
     if uni(x, y):
-        result = uni['a']
+        result = y if _is_modifier(x) else uni['a']
         return CombinatorResult(
             cat=result,
             op_string="fa",
@@ -23,7 +27,7 @@ def forward_application(x: Category, y: Category) -> Optional[CombinatorResult]:
 def backward_application(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("b", "a\\b")
     if uni(x, y):
-        result = uni['a']
+        result = x if _is_modifier(y) else uni['a']
         return CombinatorResult(
             cat=result,
             op_string="ba",
@@ -36,7 +40,7 @@ def backward_application(x: Category, y: Category) -> Optional[CombinatorResult]
 def forward_composition(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("a/b", "b/c")
     if uni(x, y):
-        result = uni['a'] / uni['c']
+        result = y if _is_modifier(x) else uni['a'] / uni['c']
         return CombinatorResult(
             cat=result,
             op_string="fc",
@@ -49,7 +53,7 @@ def forward_composition(x: Category, y: Category) -> Optional[CombinatorResult]:
 def generalized_backward_composition1(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("b\\c", "a\\b")
     if uni(x, y):
-        result = uni['a'] | uni['c']
+        result = x if _is_modifier(y) else uni['a'] | uni['c']
         return CombinatorResult(
             cat=result,
             op_string="bx",
@@ -62,7 +66,7 @@ def generalized_backward_composition1(x: Category, y: Category) -> Optional[Comb
 def generalized_backward_composition2(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("(b\\c)|d", "a\\b")
     if uni(x, y):
-        result = x.functor(uni['a'] | uni['c'], uni['d'])
+        result = x if _is_modifier(y) else x.functor(uni['a'] | uni['c'], uni['d'])
         return CombinatorResult(
             cat=result,
             op_string="bx",
@@ -75,7 +79,7 @@ def generalized_backward_composition2(x: Category, y: Category) -> Optional[Comb
 def generalized_backward_composition3(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("((b\\c)|d)|e", "a\\b")
     if uni(x, y):
-        result = x.functor(
+        result = x if _is_modifier(y) else x.functor(
             x.left.functor(uni['a'] | uni['c'], uni['d']), uni['e']
         )
         return CombinatorResult(
@@ -90,7 +94,7 @@ def generalized_backward_composition3(x: Category, y: Category) -> Optional[Comb
 def generalized_backward_composition4(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("(((b\\c)|d)|e)|f", "a\\b")
     if uni(x, y):
-        result = x.functor(
+        result = x if _is_modifier(y) else x.functor(
             x.left.functor(
                 x.left.left.functor(uni['a'] | uni['c'], uni['d']),
                 uni['e']
@@ -109,7 +113,7 @@ def generalized_backward_composition4(x: Category, y: Category) -> Optional[Comb
 def generalized_forward_composition1(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("a/b", "b\\c")
     if uni(x, y):
-        result = uni['a'] | uni['c']
+        result = y if _is_modifier(x) else uni['a'] / uni['c']
         return CombinatorResult(
             cat=result,
             op_string="fx",
@@ -122,7 +126,7 @@ def generalized_forward_composition1(x: Category, y: Category) -> Optional[Combi
 def generalized_forward_composition2(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("a/b", "(b\\c)|d")
     if uni(x, y):
-        result = y.functor(uni['a'] | uni['c'], uni['d'])
+        result = y if _is_modifier(x) else y.functor(uni['a'] | uni['c'], uni['d'])
         return CombinatorResult(
             cat=result,
             op_string="fx",
@@ -135,7 +139,7 @@ def generalized_forward_composition2(x: Category, y: Category) -> Optional[Combi
 def generalized_forward_composition3(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("a/b", "((b\\c)|d)|e")
     if uni(x, y):
-        result = y.functor(y.left.functor(
+        result = y if _is_modifier(x) else y.functor(y.left.functor(
             uni['a'] | uni['c'], uni['d']), uni['e']
         )
         return CombinatorResult(
@@ -168,10 +172,11 @@ _possible_root_categories = [
 
 
 def conjoin(x: Category, y: Category) -> Optional[CombinatorResult]:
-    if (
-        x in _possible_root_categories
-        and y in _possible_root_categories
-    ):
+    # if (
+    #     x in _possible_root_categories
+    #     and y in _possible_root_categories
+    # ):
+    if x == y and x in _possible_root_categories:
         result = y
         return CombinatorResult(
             cat=result,
