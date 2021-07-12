@@ -8,6 +8,7 @@
 #include <limits>
 #include <cmath>
 #include <utility>
+#include <stdexcept>
 
 struct pair_hash
 {
@@ -36,7 +37,7 @@ using scored_category = std::pair<float, category_id>;
 
 using cache_type = std::unordered_map<std::pair<unsigned, unsigned>, std::vector<combinator_result>, pair_hash>;
 
-typedef void (*scaffold_type)(void *callback_func, unsigned x, unsigned y, std::vector<combinator_result> *results);
+typedef int (*scaffold_type)(void *callback_func, unsigned x, unsigned y, std::vector<combinator_result> *results);
 
 namespace utils
 {
@@ -282,7 +283,9 @@ unsigned parse_sentence(
         if (cache->count(key) == 0)
         {
             std::vector<combinator_result> results;
-            scaffold(binary_callback, x, y, &results);
+            if (scaffold(binary_callback, x, y, &results) == -1)
+                throw std::runtime_error(
+                    "some error has occurred in the callback Python function.");
             cache->emplace(key, results);
         }
         return &cache->at(key);
@@ -294,7 +297,9 @@ unsigned parse_sentence(
         if (cache->count(key) == 0)
         {
             std::vector<combinator_result> results;
-            scaffold(unary_callback, x, UINT_MAX, &results);
+            if (scaffold(unary_callback, x, UINT_MAX, &results) == -1)
+                throw std::runtime_error(
+                    "some error has occurred in the callback Python function.");
             cache->emplace(key, results);
         }
         return &cache->at(key);

@@ -15,7 +15,7 @@ from depccg.printer.prolog import to_prolog_en, to_prolog_ja
 from depccg.printer.xml import xml_of
 from depccg.printer.ja import ja_of
 from depccg.printer.conll import conll_of
-from depccg.printer.json import json_of
+from depccg.printer.my_json import json_of
 from depccg.printer.deriv import deriv_of
 from depccg.printer.ptb import ptb_of
 from depccg.printer.auto import auto_of, auto_extended_of
@@ -74,9 +74,9 @@ def to_string(
             f'semantic_templates must be specified for language: {lang}'
 
     if format == 'conll':
-        header = '# ID={}\n# log probability={:.4e}'
+        header = '# ID={}\n# log probability={:.8f}'
     else:
-        header = 'ID={}, log probability={:.4e}'
+        header = 'ID={}, log probability={:.8f}'
 
     if format == 'xml':
         return _process_xml(xml_of(nbest_trees))
@@ -92,7 +92,9 @@ def to_string(
     elif format == 'jigg_xml_ccg2lambda':
 
         jigg_xml = to_jigg_xml(nbest_trees)
-        result_xml_str, _ = ccg2lambda.parse(jigg_xml, str(templates))
+        result_xml_str, _ = ccg2lambda.parse(
+            jigg_xml, str(templates), ncores=1
+        )
         return result_xml_str.decode('utf-8')
 
     elif format == 'prolog':  # print end=''
@@ -117,13 +119,15 @@ def to_string(
                 tree_dict = json_of(tree)
                 tree_dict['log_prob'] = log_prob
                 results[sentence_index].append(tree_dict)
-        return json.dumps(results)
+        return json.dumps(results, indent=4)
 
     elif format == 'ccg2lambda':
 
         with StringIO() as file:
             jigg_xml = to_jigg_xml(nbest_trees)
-            _, formulas_list = ccg2lambda.parse(jigg_xml, str(templates))
+            _, formulas_list = ccg2lambda.parse(
+                jigg_xml, str(templates), ncores=1
+            )
             for sentence_index, (trees, formulas) in enumerate(zip(nbest_trees, formulas_list), 1):
                 for (tree, log_prob), formula in zip(trees, formulas):
                     print(header.format(sentence_index, log_prob), file=file)

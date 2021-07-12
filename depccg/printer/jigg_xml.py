@@ -2,6 +2,28 @@ from typing import List
 from lxml import etree
 
 from depccg.tree import ScoredTree, Tree
+from depccg.cat import Category, TernaryFeature, UnaryFeature
+
+
+def _cat_multi_valued(cat: Category) -> str:
+    def rec(x: Category):
+        if x.is_atomic:
+            if isinstance(x.feature, UnaryFeature):
+                if x.feature.value is None:
+                    return x.base
+                else:
+                    return f'{x.base}[{x.feature}=true]'
+            elif isinstance(x.feature, TernaryFeature):
+                return str(x)
+            else:
+                raise RuntimeError(
+                    f'unsupported feature type: {type(x.feature)}')
+        else:
+            return f'({_cat_multi_valued(x)})'
+
+    if cat.is_atomic:
+        return rec(cat)
+    return f'{rec(cat.left)}{cat.slash}{rec(cat.right)}'
 
 
 class _ConvertToJiggXML(object):
@@ -23,7 +45,7 @@ class _ConvertToJiggXML(object):
             nonlocal counter
             id = f's{self.sid}_sp{self.spid}'
             xml_node = etree.SubElement(res, 'span')
-            xml_node.set('category', str(node.cat.multi_valued))
+            xml_node.set('category', _cat_multi_valued(node.cat))
             xml_node.set('id', id)
             if node.is_leaf:
                 start_of_span = counter

@@ -9,7 +9,7 @@ def _prolog_category_string(cat: Category) -> str:
 
     def rec(this_cat: Category) -> str:
 
-        if not this_cat.is_functor:
+        if this_cat.is_atomic:
             base = this_cat.base.lower()
             if base == '.':
                 return "period"
@@ -19,10 +19,10 @@ def _prolog_category_string(cat: Category) -> str:
                 return "colon"
             elif base == ";":
                 return "semicolon"
-            elif len(this_cat.feature) == 0:
+            elif str(this_cat.feature) == "":
                 return base
             else:
-                return f'{base}:{this_cat.feature[1:-1]}'
+                return f'{base}:{str(this_cat.feature)}'
 
         else:
             left = rec(this_cat.left)
@@ -54,7 +54,7 @@ _op_mapping = {
 def _prolog_string(tree: Tree, sentence_index: int) -> str:
 
     position = 0
-    depth = 0
+    depth = 1
 
     def indent(output):
         output.write(" " * depth)
@@ -62,8 +62,8 @@ def _prolog_string(tree: Tree, sentence_index: int) -> str:
     def rec(node: Tree, output):
         nonlocal depth, position
 
+        indent(output)
         if node.is_leaf:
-            indent(output)
             token = node.token
             result_str = (
                 f"t({_prolog_category_string(node.cat)}, "
@@ -75,52 +75,51 @@ def _prolog_string(tree: Tree, sentence_index: int) -> str:
             )
             output.write(result_str)
             position += 1
+        elif node.is_unary:
+            this_cat = _prolog_category_string(node.cat)
+            child_cat = _prolog_category_string(node.left_child.cat)
+            output.write(f"lx({this_cat}, {child_cat},\n")
+            depth += 1
+            rec(node.child, output)
+            depth -= 1
+            output.write(")")
         else:
-            indent(output)
-            if node._is_unary:
-                output.write("lx(")
-            else:
-                op_string = _op_mapping[tree.op_string]
-                output.write(f"{op_string}(")
+            output.write(_op_mapping[node.op_string])
+            output.write(_prolog_category_string(node.cat))
+            output.write(",")
 
-            output.write(_prolog_category_string(tree.cat))
-            output.write(", ")
-
-            if tree.op_string == 'conj2':
-                cat_str = _prolog_category_string(tree.right_child.cat)
-                output.write(f"{cat_str}\\{cat_str}, \n")
+            if node.op_string == 'conj2':
+                cat_str = _prolog_category_string(node.right_child.cat)
+                output.write(f" {cat_str}\\{cat_str},\n")
                 depth += 1
                 indent(output)
-                output.write(f"conj({cat_str}\\{cat_str}, {cat_str}, ")
+                output.write(f"conj({cat_str}\\{cat_str}, {cat_str},")
 
-            if tree.op_string == 'lp':
-                cat_str = _prolog_category_string(tree.right_child.cat)
-                output.write(f"{cat_str}, \n")
+            if node.op_string == 'conj':
+                cat_str = _prolog_category_string(node.cat.left)
+                output.write(f" {cat_str},")
+
+            if node.op_string == 'lp':
+                cat_str = _prolog_category_string(node.right_child.cat)
+                output.write(f" {cat_str},\n")
                 depth += 1
                 indent(output)
-                output.write(f"lp({cat_str}, ")
-
-            if node._is_unary:
-                cat_str = _prolog_category_string(tree.left_child.cat)
-                output.write(f"{cat_str}, ")
-
-            if tree.op_string == 'conj':
-                cat_str = _prolog_category_string(tree.cat.left)
-                output.write(f"{cat_str}, ")
+                output.write(f"lp({cat_str},")
 
             output.write("\n")
-            rec(tree.left, output)
-            if not tree.is_unary:
+            depth += 1
+            rec(node.left_child, output)
+            if not node.is_unary:
                 output.write(",\n")
-                rec(tree.right, output)
+                rec(node.right_child, output)
             output.write(")")
             depth -= 1
 
-            if tree.op_string in ('conj2', 'lp'):
+            if node.op_string in ('conj2', 'lp'):
                 output.write(")")
                 depth -= 1
 
-    with StringIO as output:
+    with StringIO() as output:
         output.write(f"ccg({sentence_index},\n")
         rec(tree, output)
         output.write(").\n")

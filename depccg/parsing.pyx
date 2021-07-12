@@ -43,7 +43,7 @@ cdef extern from "depccg/parsing.h":
 
     ctypedef unordered_map[pair[unsigned, unsigned], vector[combinator_result]] cache_type
 
-    ctypedef void (*scaffold_type)(void *callback_func, unsigned x, unsigned y, vector[combinator_result] *results)
+    ctypedef int (*scaffold_type)(void *callback_func, unsigned x, unsigned y, vector[combinator_result] *results) except -1
 
     ctypedef unsigned (*finalizer_type)(cell_item *, unsigned *, cache_type *cache, void *)
 
@@ -70,12 +70,12 @@ cdef extern from "depccg/parsing.h":
         config *config) except +
 
 
-cdef void scaffold(
+cdef int scaffold(
     void *callback_func,
     unsigned x,
     unsigned y,
     vector[combinator_result] *results,
-):
+) except -1:
     cdef list py_results
     cdef cat_id, rule_id
     cdef bint head_is_left
@@ -89,6 +89,7 @@ cdef void scaffold(
         c_result.op_string = result.op_string.encode('utf-8')
         c_result.op_symbol = result.op_symbol.encode('utf-8')
         results.push_back(c_result)
+    return 0;
 
 
 cdef init_config(config *c_config, dict kwargs):

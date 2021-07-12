@@ -30,30 +30,33 @@ from .nltk2normal import remove_true
 
 logger = logging.getLogger(__name__)
 
-SEMANTIC_INDEX=None
-GOLD_TREES=True
-NBEST=0
-SENTENCES=None
-kMaxTasksPerChild=None
+SEMANTIC_INDEX = None
+GOLD_TREES = True
+NBEST = 0
+SENTENCES = None
+kMaxTasksPerChild = None
 lock = Lock()
+
 
 def parse(ccg, templates, nbest=0, ncores=3):
     global SEMANTIC_INDEX
     global SENTENCES
     global NBEST
     NBEST = nbest
-      
+
     if not os.path.exists(templates):
         print('File does not exist: {0}'.format(templates))
         sys.exit(1)
-    
+
     logger.info(templates)
     SEMANTIC_INDEX = SemanticIndex(templates)
     SENTENCES = ccg.findall('.//sentence')
+    print(SENTENCES)
     sentence_inds = range(len(SENTENCES))
     sem_nodes_lists = semantic_parse_sentences(sentence_inds, ncores)
     assert len(sem_nodes_lists) == len(SENTENCES), \
-        'Element mismatch: {0} vs {1}'.format(len(sem_nodes_lists), len(SENTENCES))
+        'Element mismatch: {0} vs {1}'.format(
+            len(sem_nodes_lists), len(SENTENCES))
     logging.info('Adding XML semantic nodes to sentences...')
     formulas_list = []
     for sentence, (sem_nodes, orig_formulas) in zip(SENTENCES, sem_nodes_lists):
@@ -70,14 +73,16 @@ def parse(ccg, templates, nbest=0, ncores=3):
     root_xml_str = serialize_tree(ccg)
     return root_xml_str, formulas_list
 
+
 def semantic_parse_sentences(sentence_inds, ncores=1):
     if ncores <= 1:
         sem_nodes_lists = semantic_parse_sentences_seq(sentence_inds)
     else:
         sem_nodes_lists = semantic_parse_sentences_par(sentence_inds, ncores)
     results = [([etree.fromstring(s) for s in sem_nodes], formulas)
-                       for sem_nodes, formulas in sem_nodes_lists]
+               for sem_nodes, formulas in sem_nodes_lists]
     return results
+
 
 def semantic_parse_sentences_par(sentence_inds, ncores=3):
     pool = Pool(processes=ncores, maxtasksperchild=kMaxTasksPerChild)
@@ -86,12 +91,14 @@ def semantic_parse_sentences_par(sentence_inds, ncores=3):
     pool.join()
     return results
 
+
 def semantic_parse_sentences_seq(sentence_inds):
     results = []
     for sentence_ind in sentence_inds:
         result = semantic_parse_sentence(sentence_ind)
         results.append(result)
     return results
+
 
 def semantic_parse_sentence(sentence_ind):
     """
@@ -106,7 +113,7 @@ def semantic_parse_sentence(sentence_ind):
     tree_indices = [int(sentence.get('gold_tree', '0')) + 1]
     if NBEST != 1:
         tree_indices = get_tree_indices(sentence, NBEST)
-    for tree_index in tree_indices: 
+    for tree_index in tree_indices:
         sem_node = etree.Element('semantics')
         try:
             sem_tree = assign_semantics_to_ccg(
@@ -115,9 +122,9 @@ def semantic_parse_sentence(sentence_ind):
             sem_node.extend(sem_tree.xpath('.//descendant-or-self::span'))
             sem_node.set('status', 'success')
             sem_node.set('ccg_id',
-                sentence.xpath('./ccg[{0}]/@id'.format(tree_index))[0])
+                         sentence.xpath('./ccg[{0}]/@id'.format(tree_index))[0])
             sem_node.set('root',
-                sentence.xpath('./ccg[{0}]/@root'.format(tree_index))[0])
+                         sentence.xpath('./ccg[{0}]/@root'.format(tree_index))[0])
             formulas.append(sem_tree.attrib['sem'])
         except Exception as e:
             sem_node.set('status', 'failed')
@@ -134,25 +141,31 @@ def semantic_parse_sentence(sentence_ind):
     sem_nodes = [etree.tostring(sem_node) for sem_node in sem_nodes]
     return sem_nodes, formulas
 
+
 def get_tree_indices(sentence, nbest):
     num_ccg_trees = int(sentence.xpath('count(./ccg)'))
     if nbest < 1:
         nbest = num_ccg_trees
     return list(range(1, min(nbest, num_ccg_trees) + 1))
 
+
 keep_attributes = set(['id', 'child', 'sem', 'type'])
+
+
 def filter_attributes(tree):
     if 'coq_type' in tree.attrib and 'child' not in tree.attrib:
         sem_type = \
             tree.attrib['coq_type'].lstrip('["Parameter ').rstrip('."]')
         if sem_type:
             tree.attrib['type'] = sem_type
-    attrib_to_delete = [a for a in tree.attrib.keys() if a not in keep_attributes]
+    attrib_to_delete = [
+        a for a in tree.attrib.keys() if a not in keep_attributes]
     for a in attrib_to_delete:
         del tree.attrib[a]
     for child in tree:
         filter_attributes(child)
     return
+
 
 def serialize_tree(tree):
     tree_str = etree.tostring(
