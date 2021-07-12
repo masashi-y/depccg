@@ -952,7 +952,6 @@ NP[case=ga,mod=nm,fin=f] S[mod=nm,form=stem,fin=f] NP[case=ga,mod=nm,fin=f]\S[mo
 NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] NP[case=X1,mod=X2,fin=f]/NP[case=X1,mod=X2,fin=f] NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f]
 NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] NP[case=nc,mod=X1,fin=X2]/NP[case=nc,mod=X1,fin=X2] NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f]
 NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] (NP[case=X1,mod=X2,fin=f]/NP[case=X1,mod=X2,fin=f])\(NP[case=X1,mod=X2,fin=f]/NP[case=X1,mod=X2,fin=f])
-NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] NP[case=X1,mod=X2,fin=f]/NP[case=X1,mod=X2,fin=f]
 NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f] NP[case=nc,mod=X1,fin=f]/NP[case=nc,mod=X1,fin=f]
 NP[case=nc,mod=adv,fin=f] NP[case=X1,mod=X2,fin=f]/NP[case=X1,mod=X2,fin=f] NP[case=nc,mod=adv,fin=f]
 NP[case=nc,mod=adv,fin=f] NP[case=nc,mod=X1,fin=X2]/NP[case=nc,mod=X1,fin=X2] NP[case=nc,mod=adv,fin=f]

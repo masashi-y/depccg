@@ -1,4 +1,4 @@
-from typing import Callable, List, Dict, Optional, Union, Tuple
+from typing import Callable, List, Dict, Union, Tuple
 from multiprocessing import Pool
 import numpy
 import depccg._parsing
@@ -7,6 +7,7 @@ import math
 from depccg.types import Token, CombinatorResult, ScoringResult
 from depccg.tree import ScoredTree
 from depccg.cat import Category
+
 
 def _chunks(list_, num_chunks):
     splits = math.ceil(len(list_) / max(num_chunks, 1))
@@ -90,7 +91,8 @@ def apply_category_filters(
     for tokens, (tag_scores, _) in zip(doc, score_results):
         for index, token in enumerate(tokens):
             if token.word in category_dict:
-                tag_scores[index, category_dict[token.word]] = large_negative_value
+                tag_scores[index, category_dict[token.word]
+                           ] = large_negative_value
 
     return doc, score_results
 

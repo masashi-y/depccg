@@ -2,10 +2,9 @@
 import json
 from depccg.tools.reader import read_auto
 from depccg import utils
-from collections import defaultdict, Counter
+from collections import defaultdict
 from pathlib import Path
 import logging
-import sys
 
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
@@ -25,9 +24,9 @@ MISS = -2
 
 def get_suffix(word):
     return [word[-1],
-           word[-2:] if len(word) > 1 else OOR2,
-           word[-3:] if len(word) > 2 else OOR3,
-           word[-4:] if len(word) > 3 else OOR4]
+            word[-2:] if len(word) > 1 else OOR2,
+            word[-3:] if len(word) > 2 else OOR3,
+            word[-4:] if len(word) > 3 else OOR4]
 
 
 def get_prefix(word):
@@ -40,19 +39,20 @@ def get_prefix(word):
 class TrainingDataCreator(object):
     def __init__(self, filepath, word_freq_cut, cat_freq_cut, afix_freq_cut):
         self.filepath = filepath
-         # those categories whose frequency < freq_cut are discarded.
+        # those categories whose frequency < freq_cut are discarded.
         self.word_freq_cut = word_freq_cut
-        self.cat_freq_cut  = cat_freq_cut
+        self.cat_freq_cut = cat_freq_cut
         self.afix_freq_cut = afix_freq_cut
-        self.seen_rules = defaultdict(int) # seen binary rules
-        self.unary_rules = defaultdict(int) # seen unary rules
-        self.cats = defaultdict(int) # all cats
+        self.seen_rules = defaultdict(int)  # seen binary rules
+        self.unary_rules = defaultdict(int)  # seen unary rules
+        self.cats = defaultdict(int)  # all cats
         self.words = defaultdict(int, {
             UNK: word_freq_cut,
             START: word_freq_cut,
             END: word_freq_cut
         })
-        afix_defaults = {key: afix_freq_cut for key in [UNK, START, END, OOR2, OOR3, OOR4]}
+        afix_defaults = {key: afix_freq_cut for key in [
+            UNK, START, END, OOR2, OOR3, OOR4]}
         self.prefixes = defaultdict(int, afix_defaults)
         self.suffixes = defaultdict(int, afix_defaults)
         self.samples = []
@@ -88,6 +88,7 @@ class TrainingDataCreator(object):
 
     def _get_dependencies(self, tree, sent_len):
         counter = 0
+
         def rec(subtree):
             nonlocal counter
             if not subtree.is_leaf:
@@ -107,14 +108,15 @@ class TrainingDataCreator(object):
         res = [-1 for _ in range(sent_len)]
         rec(tree)
         res = [i + 1 for i in res]
-        assert len(list(filter(lambda i:i == 0, res))) == 1
+        assert len(list(filter(lambda i: i == 0, res))) == 1
         return res
 
     def _to_conll(self, out):
         for sent, [cats, deps] in self.samples:
             sent = sent.split(' ')
             for i, (word, cat, dep) in enumerate(zip(sent, cats, deps), 1):
-                print(f'{i}\t{word}\t{word}\tPOS\tPOS\t_\t{dep}\tnone\t_\t{cat}', file=out)
+                print(
+                    f'{i}\t{word}\t{word}\tPOS\tPOS\t_\t{dep}\tnone\t_\t{cat}', file=out)
             print('', file=out)
 
     def _create_samples(self, trees):
@@ -134,7 +136,8 @@ class TrainingDataCreator(object):
                                    args.cat_freq_cut,
                                    args.afix_freq_cut)
 
-        trees = [tree for _, _, tree in read_auto(self.filepath) if tree.word != 'FAILED']
+        trees = [tree for _, _, tree in read_auto(
+            self.filepath) if tree.word != 'FAILED']
         logger.info(f'loaded {len(trees)} trees')
         for tree in trees:
             self._traverse(tree)
@@ -143,21 +146,25 @@ class TrainingDataCreator(object):
         cats = {k: v for k, v in self.cats.items() if v >= self.cat_freq_cut}
         self._write(cats, args.OUT / 'target.txt')
 
-        words = {k: v for k, v in self.words.items() if v >= self.word_freq_cut}
+        words = {k: v for k, v in self.words.items() if v >=
+                 self.word_freq_cut}
         self._write(words, args.OUT / 'words.txt')
 
-        suffixes = {k: v for k, v in self.suffixes.items() if v >= self.afix_freq_cut}
+        suffixes = {k: v for k, v in self.suffixes.items() if v >=
+                    self.afix_freq_cut}
         self._write(suffixes, args.OUT / 'suffixes.txt')
 
-        prefixes = {k: v for k, v in self.prefixes.items() if v >= self.afix_freq_cut}
+        prefixes = {k: v for k, v in self.prefixes.items() if v >=
+                    self.afix_freq_cut}
         self._write(prefixes, args.OUT / 'prefixes.txt')
 
         seen_rules = {f'{c1} {c2}': v for (c1, c2), v in self.seen_rules.items()
                       if c1 in cats and c2 in cats}
         self._write(seen_rules, args.OUT / 'seen_rules.txt')
 
-        unary_rules = {f'{c1} {c2}': v for (c1, c2), v in self.unary_rules.items()}
-                       
+        unary_rules = {f'{c1} {c2}': v for (
+            c1, c2), v in self.unary_rules.items()}
+
         self._write(unary_rules, args.OUT / 'unary_rules.txt')
 
         with open(args.OUT / 'traindata.json', 'w') as f:
@@ -199,7 +206,8 @@ class TrainingDataCreator(object):
     @staticmethod
     def convert_json(autopath):
         self = TrainingDataCreator(autopath, None, None, None)
-        trees = [tree for _, _, tree in read_auto(self.filepath) if tree.word != 'FAILED']
+        trees = [tree for _, _, tree in read_auto(
+            self.filepath) if tree.word != 'FAILED']
         logger.info(f'loaded {len(trees)} trees')
         self._create_samples(trees)
         return self.samples
@@ -215,30 +223,29 @@ if __name__ == '__main__':
 
     # Creating training data
     parser.add_argument('PATH',
-            type=Path,
-            help='path to conll data file')
+                        type=Path,
+                        help='path to conll data file')
     parser.add_argument('OUT',
-            type=Path,
-            help='output directory path')
+                        type=Path,
+                        help='output directory path')
     parser.add_argument('--cat-freq-cut',
-            type=int,
-            default=10,
-            help='only allow categories which appear >= freq-cut')
+                        type=int,
+                        default=10,
+                        help='only allow categories which appear >= freq-cut')
     parser.add_argument('--word-freq-cut',
-            type=int,
-            default=5,
-            help='only allow words which appear >= freq-cut')
+                        type=int,
+                        default=5,
+                        help='only allow words which appear >= freq-cut')
     parser.add_argument('--afix-freq-cut',
-            type=int,
-            default=5,
-            help='only allow afixes which appear >= freq-cut')
+                        type=int,
+                        default=5,
+                        help='only allow afixes which appear >= freq-cut')
     parser.add_argument('--mode',
-            choices=['train', 'test'],
-            default='train')
+                        choices=['train', 'test'],
+                        default='train')
 
     args = parser.parse_args()
     if args.mode == 'train':
         TrainingDataCreator.create_traindata(args)
     else:
         TrainingDataCreator.create_testdata(args)
-

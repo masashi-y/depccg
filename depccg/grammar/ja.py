@@ -66,7 +66,8 @@ def generalized_backward_composition1(x: Category, y: Category) -> Optional[Comb
 def generalized_backward_composition2(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("(b\\c)|d", "a\\b")
     if uni(x, y):
-        result = x if _is_modifier(y) else x.functor(uni['a'] | uni['c'], uni['d'])
+        result = x if _is_modifier(y) else x.functor(
+            uni['a'] | uni['c'], uni['d'])
         return CombinatorResult(
             cat=result,
             op_string="bx",
@@ -126,7 +127,8 @@ def generalized_forward_composition1(x: Category, y: Category) -> Optional[Combi
 def generalized_forward_composition2(x: Category, y: Category) -> Optional[CombinatorResult]:
     uni = Unification("a/b", "(b\\c)|d")
     if uni(x, y):
-        result = y if _is_modifier(x) else y.functor(uni['a'] | uni['c'], uni['d'])
+        result = y if _is_modifier(x) else y.functor(
+            uni['a'] | uni['c'], uni['d'])
         return CombinatorResult(
             cat=result,
             op_string="fx",
@@ -172,11 +174,11 @@ _possible_root_categories = [
 
 
 def conjoin(x: Category, y: Category) -> Optional[CombinatorResult]:
-    # if (
-    #     x in _possible_root_categories
-    #     and y in _possible_root_categories
-    # ):
-    if x == y and x in _possible_root_categories:
+    if (
+        x in _possible_root_categories
+        and y in _possible_root_categories
+    ):
+        # if x == y and x in _possible_root_categories:
         result = y
         return CombinatorResult(
             cat=result,

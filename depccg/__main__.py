@@ -1,69 +1,22 @@
-from functools import partial
-from collections import defaultdict
 import sys
 import logging
-
-from allennlp.common.params import Params
 
 import depccg.parsing
 from depccg.types import Token
 from depccg.cat import Category
 from depccg.printer import print_
-from depccg.instance_models import load_model, GRAMMARS
+from depccg.instance_models import load_model
 from depccg.argparse import parse_args
 from depccg.lang import set_global_language_to
 from depccg.annotator import (
     english_annotator, japanese_annotator, annotate_XX
 )
+from depccg.allennlp.utils import read_params
 
 # disable lengthy allennlp logs
 logging.getLogger('filelock').setLevel(logging.ERROR)
 logging.getLogger('allennlp').setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
-
-
-def read_params(param_path: str, args):
-    params = Params.from_file(param_path)
-
-    unary_rules = defaultdict(list)
-    for key, value in params.pop('unary_rules'):
-        unary_rules[Category.parse(key)].append(Category.parse(value))
-
-    if args.disable_category_dictionary:
-        category_dict = None
-    else:
-        category_dict = {
-            word: [Category.parse(cat) for cat in cats]
-            for word, cats in params.pop('cat_dict').items()
-        }
-
-    if args.disable_seen_rules:
-        seen_rules = None
-    else:
-        seen_rules = {
-            (Category.parse(x).clear_features('X', 'nb'),
-             Category.parse(y).clear_features('X', 'nb'))
-            for x, y in params.pop('seen_rules')
-        }
-        if len(seen_rules) == 0:
-            seen_rules = None
-    try:
-        apply_binary_rules = partial(
-            GRAMMARS[args.lang].apply_binary_rules,
-            seen_rules=seen_rules
-        )
-        apply_unary_rules = partial(
-            GRAMMARS[args.lang].apply_unary_rules,
-            unary_rules=unary_rules
-        )
-    except KeyError:
-        raise KeyError('unsupported language: {args.lang}')
-
-    return (
-        apply_binary_rules,
-        apply_unary_rules,
-        category_dict
-    )
 
 
 def get_annotator(args):
@@ -104,8 +57,12 @@ def main(args):
     annotator_fun = get_annotator(args)
     supertagger, config = load_model(args.model, args.gpu)
 
-    apply_binary_rules, apply_unary_rules, category_dict = \
-        read_params(config.config, args)
+    (
+        apply_binary_rules,
+        apply_unary_rules,
+        category_dict,
+        _
+    ) = read_params(config.config, args)
 
     root_categories = [
         Category.parse(category)
