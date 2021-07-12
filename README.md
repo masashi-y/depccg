@@ -7,7 +7,7 @@ Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](htt
 - Increased stability and efficiency
   - (Replaced OpenMP with multiprocessing)
 - More integration with AllenNLP
-  - The parser is now callable from within a `predictor` (see [here](train-your-own-parsing-model))
+  - The parser is now callable from within a `predictor` (see [here](#train-your-own-parsing-model))
 - More friendly way to define your own grammar (wrt. languages or treebanks)
   - See `depccg/grammar/{en,ja}.py` for example grammars.
 
