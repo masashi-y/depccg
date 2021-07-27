@@ -10,14 +10,14 @@ from chainer.links import NStepLSTM
 import chainer.functions as F
 
 from chainer import cuda
-from chainer.functions.activation import lstm
+from chainer.functions import lstm
 from chainer.functions.array import concat
 from chainer.functions.array import reshape
 from chainer.functions.array import split_axis
 from chainer.functions.array import stack
 from chainer.functions.connection import linear
 from chainer.functions.noise import dropout
-from chainer.functions.connection.n_step_lstm import NStepLSTM as NStepLSTMFunction
+from chainer.links import NStepLSTM as NStepLSTMFunction
 
 
 # if cuda.cudnn_enabled:
