@@ -93,7 +93,7 @@ namespace parsing
         class cell
         {
         public:
-            using agenda_items = std::list<cell_item>;
+            using cell_items = std::list<cell_item>;
 
             cell() : seen(false){};
             cell(const cell &) = delete;
@@ -108,8 +108,8 @@ namespace parsing
             }
 
             unsigned size() const { return items.size(); }
-            agenda_items::iterator begin() { return items.begin(); }
-            agenda_items::iterator end() { return items.end(); }
+            cell_items::iterator begin() { return items.begin(); }
+            cell_items::iterator end() { return items.end(); }
 
             void sort()
             {
@@ -125,7 +125,7 @@ namespace parsing
         private:
             bool seen;
             std::unordered_set<category_id> category_ids;
-            agenda_items items;
+            cell_items items;
         };
 
         chart(unsigned length, bool nbest)

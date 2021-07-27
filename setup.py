@@ -106,7 +106,7 @@ else:
 
     setup(
         name="depccg",
-        version="2.0.1",  # NOQA
+        version="2.0.2",  # NOQA
         description='A parser for natural language based on combinatory categorial grammar',
         long_description=long_description,
         long_description_content_type='text/markdown',
