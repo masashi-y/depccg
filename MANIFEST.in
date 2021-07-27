@@ -8,4 +8,4 @@ exclude c/*.d
 exclude c/*.o
 exclude depccg/*.so
 exclude depccg/*.cpp
-tests/*
+exclude tests/*
