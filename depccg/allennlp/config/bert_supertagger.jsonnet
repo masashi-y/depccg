@@ -5,46 +5,32 @@ local tritrain_data = std.extVar('tritrain_data');
 local test_data = std.extVar('test_data');
 local vocab = std.extVar('vocab');
 
-local char_embedding_dim = 100;
-local char_embedded_dim = 200;
 local arc_representation_dim = 300;
 local tag_representation_dim = 300;
-local hidden_dim = 300;
-local num_layers = 4;
+local transformer_model = "bert-base-cased";
+local max_length = 512;
 
 local train_dataset = utils.train_dataset_reader(train_data, tritrain_data);
 
 local token_embedder =
-  utils.glove {
-    token_indexers+: {
-      token_characters: {
-        type: 'characters',
-        character_tokenizer: {
-           end_tokens: ['@@PADDING@@', '@@PADDING@@', '@@PADDING@@', '@@PADDING@@']
-        },
-      },
+  {
+    token_indexers: {
+      tokens: {
+        type: "pretrained_transformer_mismatched",
+        model_name: transformer_model,
+        max_length: max_length,
+      }
     },
-    text_field_embedder+: {
-      token_embedders+: {
-        token_characters: {
-          type: 'character_encoding',
-          embedding: {
-            embedding_dim: char_embedding_dim,
-            sparse: true,
-            trainable: true,
-          },
-          encoder: {
-            type: 'cnn',
-            embedding_dim: char_embedding_dim,
-            num_filters: char_embedded_dim,
-            ngram_filter_sizes: [
-              5,
-            ],
-          },
-        },
-      },
+    text_field_embedder: {
+      token_embedders: {
+        tokens: {
+          type: "pretrained_transformer_mismatched",
+          model_name: transformer_model,
+          max_length: max_length
+        }
+      }
     },
-    encoder_input_dim: super.encoder_input_dim + char_embedded_dim,
+    encoder_input_dim: 768,
   };
 
 {
@@ -65,12 +51,8 @@ local token_embedder =
     type: 'supertagger',
     text_field_embedder: token_embedder.text_field_embedder,
     encoder: {
-      type: 'lstm',
-      input_size: token_embedder.encoder_input_dim,
-      hidden_size: hidden_dim,
-      num_layers: num_layers,
-      dropout: 0.32,
-      bidirectional: true,
+      type: 'pass_through',
+      input_dim: token_embedder.encoder_input_dim,
     },
     tag_representation_dim: tag_representation_dim,
     arc_representation_dim: arc_representation_dim,
@@ -82,12 +64,8 @@ local token_embedder =
         ['.*feedforward.*bias', { type: 'zero' }],
         ['.*tag_bilinear.bias', { type: 'zero' }],
         ['.*tag_bilinear.*', { type: 'xavier_uniform' }],
-        ['.*weight_ih.*', { type: 'xavier_uniform' }],
-        ['.*weight_hh.*', { type: 'orthogonal' }],
         ['arc_attention._weight_matrix', { type: 'xavier_uniform' }],
         ['arc_attention._bias', { type: 'zero' }],
-        ['.*bias_ih.*', { type: 'zero' }],
-        ['.*bias_hh.*', { type: 'lstm_hidden_bias' }],
       ]
     }
   },
@@ -100,17 +78,16 @@ local token_embedder =
   },
   trainer: {
     optimizer: {
-      type: 'dense_sparse_adam',
-      betas: [
-        0.9,
-        0.9,
-      ],
+      type: "huggingface_adamw",
+      weight_decay: 0.01,
+      parameter_groups: [[["bias", "LayerNorm\\.weight", "layer_norm\\.weight"], {"weight_decay": 0}]],
+      lr: 1e-5,
+      eps: 1e-8,
+      correct_bias: true,
     },
     learning_rate_scheduler: {
-      type: 'reduce_on_plateau',
-      mode: 'max',
-      factor: 0.5,
-      patience: 5,
+      type: "linear_with_warmup",
+      warmup_steps: 100,
     },
     validation_metric: '+harmonic_mean',
     grad_norm: 5,

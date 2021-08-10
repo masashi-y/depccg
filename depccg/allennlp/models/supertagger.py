@@ -163,9 +163,15 @@ class Supertagger(Model):
                 normalised_arc_logits, mask)
             tag_mask = self._get_unknown_tag_mask(mask, head_tags)
             self._attachment_scores(
-                normalised_arc_logits[:, 1:], head_indices[:, 1:], mask[:, 1:])
+                normalised_arc_logits[:, 1:].contiguous(),
+                head_indices[:, 1:].contiguous(),
+                mask[:, 1:].contiguous()
+            )
             self._tagging_accuracy(
-                normalised_head_tag_logits[:, 1:], head_tags[:, 1:], tag_mask[:, 1:])
+                normalised_head_tag_logits[:, 1:].contiguous(),
+                head_tags[:, 1:].contiguous(),
+                tag_mask[:, 1:].contiguous()
+            )
             predicted_heads, predicted_head_tags = None, None
         else:
             attended_arcs = _apply_head_mask(attended_arcs, mask)

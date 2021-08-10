@@ -35,10 +35,9 @@ def read_dataset_auto_or_json(file_path: str):
 class SupertaggingDatasetReader(DatasetReader):
     def __init__(
         self,
-        lazy: bool = False,
         token_indexers: Dict[str, TokenIndexer] = None
     ) -> None:
-        super().__init__(lazy)
+        super().__init__()
         self._token_indexers = token_indexers or {
             'tokens': SingleIdTokenIndexer()}
 
@@ -86,29 +85,29 @@ class SupertaggingDatasetReader(DatasetReader):
 class TritrainSupertaggingDatasetReader(SupertaggingDatasetReader):
     def __init__(
         self,
-        lazy: bool = False,
+        tritrain_path: str,
         noisy_weight: Optional[float] = 0.4,
         token_indexers: Dict[str, TokenIndexer] = None
     ) -> None:
-        super().__init__(lazy)
+        super().__init__()
+        self.tritrain_path = tritrain_path
         self.noisy_weight = noisy_weight
         self._token_indexers = token_indexers or {
             'tokens': SingleIdTokenIndexer()}
 
     @overrides
-    def _read(self, file_paths):
+    def _read(self, file_path):
         """
         read ccgbank and tritrain datasets (both in json file).
         :param file_paths: a pair of file paths
         :return:
         """
-        ccgbank, tritrain = file_paths['ccgbank'], file_paths['tritrain']
 
-        logger.info(f'Reading instances from CCGBank at: {ccgbank}')
-        ccgbank = read_dataset_auto_or_json(cached_path(ccgbank))
+        logger.info(f'Reading instances from CCGBank at: {file_path}')
+        ccgbank = read_dataset_auto_or_json(cached_path(file_path))
 
-        logger.info(f'Reading instances from tri-train dataset at: {tritrain}')
-        tritrain = read_dataset_auto_or_json(cached_path(tritrain))
+        logger.info(f'Reading instances from tri-train dataset at: {self.tritrain_path}')
+        tritrain = read_dataset_auto_or_json(cached_path(self.tritrain_path))
 
         ccgbank_size = len(ccgbank)
         tritrain_size = len(tritrain)
@@ -151,7 +150,6 @@ def dataset_times(iter, n: Union[int, float]):
 class FinetuneSupertaggingDatasetReader(SupertaggingDatasetReader):
     def __init__(
         self,
-        lazy: bool = False,
         tritrain_noisy_weight: Optional[float] = 1,
         auxiliary_noisy_weight: Optional[float] = 1,
         ccgbank_ratio: Union[int, float] = 1,
@@ -159,7 +157,7 @@ class FinetuneSupertaggingDatasetReader(SupertaggingDatasetReader):
         auxiliary_ratio: Union[int, float] = 1,
         token_indexers: Dict[str, TokenIndexer] = None
     ) -> None:
-        super().__init__(lazy)
+        super().__init__()
         self.tritrain_noisy_weight = tritrain_noisy_weight
         self.auxiliary_noisy_weight = auxiliary_noisy_weight
         self.ccgbank_ratio = ccgbank_ratio

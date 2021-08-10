@@ -5,8 +5,6 @@ local tritrain_data = std.extVar('tritrain_data');
 local test_data = std.extVar('test_data');
 local vocab = std.extVar('vocab');
 
-local char_embedding_dim = 100;
-local char_embedded_dim = 200;
 local arc_representation_dim = 300;
 local tag_representation_dim = 300;
 local hidden_dim = 300;
@@ -17,34 +15,22 @@ local train_dataset = utils.train_dataset_reader(train_data, tritrain_data);
 local token_embedder =
   utils.glove {
     token_indexers+: {
-      token_characters: {
-        type: 'characters',
-        character_tokenizer: {
-           end_tokens: ['@@PADDING@@', '@@PADDING@@', '@@PADDING@@', '@@PADDING@@']
-        },
+      elmo: {
+        type: 'elmo_characters',
       },
     },
     text_field_embedder+: {
       token_embedders+: {
-        token_characters: {
-          type: 'character_encoding',
-          embedding: {
-            embedding_dim: char_embedding_dim,
-            sparse: true,
-            trainable: true,
-          },
-          encoder: {
-            type: 'cnn',
-            embedding_dim: char_embedding_dim,
-            num_filters: char_embedded_dim,
-            ngram_filter_sizes: [
-              5,
-            ],
-          },
+        elmo: {
+          type: 'elmo_token_embedder',
+          options_file: 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_options.json',
+          weight_file: 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5',
+          do_layer_norm: false,
+          dropout: 0.1,
         },
       },
     },
-    encoder_input_dim: super.encoder_input_dim + char_embedded_dim,
+    encoder_input_dim: super.encoder_input_dim + 1024,
   };
 
 {

@@ -13,9 +13,6 @@ from depccg.annotator import (
 )
 from depccg.allennlp.utils import read_params
 
-# disable lengthy allennlp logs
-logging.getLogger('filelock').setLevel(logging.ERROR)
-logging.getLogger('allennlp').setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
@@ -163,4 +160,7 @@ def main(args):
 
 
 if __name__ == '__main__':
+    # disable lengthy allennlp logs
+    logging.getLogger('filelock').setLevel(logging.ERROR)
+    logging.getLogger('allennlp').setLevel(logging.ERROR)
     parse_args(main)
