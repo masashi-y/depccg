@@ -156,8 +156,11 @@ class Category(object):
 
         if len(stack) == 1:
             return stack[0]
-        x, f, y = stack
-        return Functor(x, f, y)
+        try:
+            x, f, y = stack
+            return Functor(x, f, y)
+        except ValueError:
+            raise RuntimeError(f'falied to parse category: {text}')
 
 
 @dataclass(frozen=True, repr=False)

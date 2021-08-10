@@ -181,7 +181,8 @@ local Encoder =
 // main config
 {
   vocabulary: {
-    directory_path: vocab,
+    type: 'from_files',
+    directory: vocab,
   },
   dataset_reader: {
     type: 'supertagging_dataset',
@@ -203,29 +204,27 @@ local Encoder =
     arc_representation_dim: arc_representation_dim,
     dropout: 0.32,
     input_dropout: 0.5,
-    initializer: [
-      ['.*feedforward.*weight', { type: 'xavier_uniform' }],
-      ['.*feedforward.*bias', { type: 'zero' }],
-      ['.*tag_bilinear.bias', { type: 'zero' }],
-      ['.*tag_bilinear.*', { type: 'xavier_uniform' }],
-      ['.*weight_ih.*', { type: 'xavier_uniform' }],
-      ['.*weight_hh.*', { type: 'orthogonal' }],
-      ['arc_attention._weight_matrix', { type: 'xavier_uniform' }],
-      ['arc_attention._bias', { type: 'zero' }],
-      ['.*bias_ih.*', { type: 'zero' }],
-      ['.*bias_hh.*', { type: 'lstm_hidden_bias' }],
-    ],
+    initializer: {
+      regexes: [
+        ['.*feedforward.*weight', { type: 'xavier_uniform' }],
+        ['.*feedforward.*bias', { type: 'zero' }],
+        ['.*tag_bilinear.bias', { type: 'zero' }],
+        ['.*tag_bilinear.*', { type: 'xavier_uniform' }],
+        ['.*weight_ih.*', { type: 'xavier_uniform' }],
+        ['.*weight_hh.*', { type: 'orthogonal' }],
+        ['arc_attention._weight_matrix', { type: 'xavier_uniform' }],
+        ['arc_attention._bias', { type: 'zero' }],
+        ['.*bias_ih.*', { type: 'zero' }],
+        ['.*bias_hh.*', { type: 'lstm_hidden_bias' }],
+      ]
+    }
   },
-  iterator: {
-    type: 'bucket',
-    cache_instances: false,
-    batch_size: 32,
-    sorting_keys: [
-      [
-        'words',
-        'num_tokens',
-      ],
-    ],
+  data_loader: {
+    batch_sampler: {
+      type: 'bucket',
+      batch_size: 32,
+      // sorting_keys: [ 'words', 'num_tokens' ],
+    },
   },
   trainer: {
     optimizer: {

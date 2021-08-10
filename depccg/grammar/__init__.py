@@ -36,9 +36,9 @@ def guess_combinator_by_triplet(
 ) -> CombinatorResult:
     for rule in binary_rules(x, y):
         if rule.cat == target:
-            return rule
+            rule
     return CombinatorResult(
-        cat=rule.cat,
+        cat=target,
         op_string="unk",
         op_symbol="<unk>",
         head_is_left=True

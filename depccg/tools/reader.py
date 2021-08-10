@@ -119,6 +119,17 @@ def read_auto(filename: str) -> Iterator[ReaderResult]:
         Iterator[ReaderResult]: iterator object containing parse results
     """
 
+    __fix = {
+        '((S[b]\\NP)/NP)/': '(S[b]\\NP)/NP',
+    }
+    def _fix(cat):
+        if cat in __fix:
+            return __fix[cat]
+        if cat.endswith(')[conj]') or cat.endswith('][conj]'):
+            return cat[:-6]
+        return cat
+
+
     for line in open(filename):
         line = line.strip()
         if len(line) == 0:
@@ -126,12 +137,9 @@ def read_auto(filename: str) -> Iterator[ReaderResult]:
         if line.startswith("ID"):
             name = line
         else:
-            tokens = []
-            for token in line.split(' '):
-                if token.endswith(')[conj]'):
-                    token = token[:-6]
-                tokens.append(token)
-            line = ' '.join(tokens)
+            line = ' '.join(
+                _fix(token) for token in line.split(' ')
+            )
             tree, tokens = _AutoLineReader(line).parse()
             yield ReaderResult(name, tokens, tree)
 
