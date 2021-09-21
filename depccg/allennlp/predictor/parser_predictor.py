@@ -32,7 +32,11 @@ class ParserPredictor(SupertaggerPredictor):
             self.apply_unary_rules,
             self.category_dict,
             self.root_categories,
-        ) = read_params(grammar_json_path, disable_category_dictionary, disable_seen_rules)
+        ) = read_params(
+            grammar_json_path,
+            disable_category_dictionary,
+            disable_seen_rules
+        )
         self.parsing_kwargs = parsing_kwargs or {}
 
     def _make_json(self, output_dicts: List[Dict[str, Any]]) -> List[JsonDict]:
