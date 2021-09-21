@@ -5,7 +5,7 @@ import re
 X = TypeVar('X')
 Pair = Tuple[X, X]
 
-cat_split = re.compile(r'([\[\]\(\)/\\|])')
+cat_split = re.compile(r'([\[\]\(\)/\\|<>])')
 punctuations = [',', '.', ';', ':', 'LRB', 'RRB', 'conj', '*START*', '*END*']
 
 
@@ -134,16 +134,16 @@ class Category(object):
             item = buffer.pop()
             if item in punctuations:
                 stack.append(Atom(item))
-            elif item == '(':
+            elif item in '(<':
                 pass
-            elif item == ')':
+            elif item in ')>':
                 y = stack.pop()
                 if len(stack) == 0:
                     return y
                 f = stack.pop()
                 x = stack.pop()
                 stack.append(Functor(x, f, y))
-            elif item in ('/', '\\', '|'):
+            elif item in '/\\|':
                 stack.append(item)
             else:
                 if len(buffer) >= 3 and buffer[-1] == '[':
