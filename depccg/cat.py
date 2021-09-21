@@ -143,7 +143,7 @@ class Category(object):
                 f = stack.pop()
                 x = stack.pop()
                 stack.append(Functor(x, f, y))
-            elif item in ('/', '\\', '|'):
+            elif item in '/\\|':
                 stack.append(item)
             else:
                 if len(buffer) >= 3 and buffer[-1] == '[':
