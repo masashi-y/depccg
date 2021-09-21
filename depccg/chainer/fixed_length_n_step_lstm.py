@@ -416,7 +416,7 @@ def fixed_length_n_step_lstm(
                 lstm_in = linear.linear(x, xws[layer], xbs[layer]) + \
                           linear.linear(h, hws[layer], hbs[layer])
 
-                c_bar, h_bar = lstm.lstm(c, lstm_in)
+                c_bar, h_bar = lstm(c, lstm_in)
                 if h_rest is not None:
                     h = concat.concat([h_bar, h_rest], axis=0)
                     c = concat.concat([c_bar, c_rest], axis=0)
