@@ -22,6 +22,8 @@ class ParserPredictor(SupertaggerPredictor):
         model: Model,
         dataset_reader: DatasetReader,
         grammar_json_path: str,
+        disable_category_dictionary: bool = False,
+        disable_seen_rules: bool = False,
         parsing_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         super().__init__(model, dataset_reader)
@@ -30,7 +32,11 @@ class ParserPredictor(SupertaggerPredictor):
             self.apply_unary_rules,
             self.category_dict,
             self.root_categories,
-        ) = read_params(grammar_json_path)
+        ) = read_params(
+            grammar_json_path,
+            disable_category_dictionary,
+            disable_seen_rules
+        )
         self.parsing_kwargs = parsing_kwargs or {}
 
     def _make_json(self, output_dicts: List[Dict[str, Any]]) -> List[JsonDict]:
