@@ -5,7 +5,6 @@ from allennlp.data import DatasetReader, Instance
 from allennlp.data.vocabulary import DEFAULT_OOV_TOKEN, DEFAULT_PADDING_TOKEN
 from allennlp.models import Model
 from allennlp.predictors.predictor import Predictor
-from overrides import overrides
 
 
 @Predictor.register("supertagger-predictor")
@@ -16,17 +15,14 @@ class SupertaggerPredictor(Predictor):
     def predict(self, sentence: str) -> JsonDict:
         return self.predict_json({"sentence": sentence})
 
-    @overrides
     def _json_to_instance(self, json_dict: JsonDict) -> Instance:
         return self._dataset_reader.text_to_instance(json_dict["sentence"])
 
-    @overrides
     def predict_instance(self, instance: Instance) -> JsonDict:
         outputs = self._model.forward_on_instance(instance)
         [result] = self._make_json([outputs])
         return result
 
-    @overrides
     def predict_batch_instance(self, instances: List[Instance]) -> List[JsonDict]:
         outputs = self._model.forward_on_instances(instances)
         return self._make_json(outputs)

@@ -21,7 +21,6 @@ from allennlp.nn.util import (
 )
 from allennlp.training.metrics import CategoricalAccuracy
 from depccg.allennlp.nn.bilinear import BilinearWithBias
-from overrides import overrides
 from torch.nn.modules import Dropout
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -121,7 +120,6 @@ class Supertagger(Model):
         self.head_temperature = head_temperature
         initializer(self)
 
-    @overrides
     def forward(
         self,  # type: ignore
         words: Dict[str, torch.LongTensor],
@@ -360,7 +358,6 @@ class Supertagger(Model):
         new_mask = new_mask * (1 - oov_mask)
         return new_mask
 
-    @overrides
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         dependency = self._attachment_scores.get_metric(reset)
         tagging = self._tagging_accuracy.get_metric(reset)

@@ -17,7 +17,6 @@ from allennlp.data.token_indexers import SingleIdTokenIndexer, TokenIndexer
 from allennlp.data.tokenizers import Token
 from depccg import utils
 from depccg.tools.ja.data import convert_ccgbank_to_json
-from overrides import overrides
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -41,7 +40,6 @@ class JaSupertaggingDatasetReader(DatasetReader):
         super().__init__()
         self._token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
-    @overrides
     def _read(self, file_path):
 
         json_data = read_dataset_ccgbank_or_json(cached_path(file_path))
@@ -50,7 +48,6 @@ class JaSupertaggingDatasetReader(DatasetReader):
             tags, deps = labels
             yield self.text_to_instance(sentence, tags, deps)
 
-    @overrides
     def text_to_instance(
         self,
         sentence: str,

@@ -1,5 +1,3 @@
-
-from overrides import overrides
 from allennlp_models.structured_prediction.dataset_readers.penn_tree_bank import \
     PennTreeBankConstituencySpanDatasetReader
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
@@ -21,7 +19,6 @@ def ccg_to_nltk_tree(tree):
 
 @DatasetReader.register("ccgbank_as_ptb")
 class CCGBankAsConstituencyReader(PennTreeBankConstituencySpanDatasetReader):
-    @overrides
     def _read(self, file_path):
         for _, _, ccg_tree in read_auto(file_path):
             tree = ccg_to_nltk_tree(ccg_tree)

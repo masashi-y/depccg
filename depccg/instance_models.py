@@ -42,14 +42,14 @@ MODELS: Dict[str, ModelConfig] = {
     'en[elmo]': ModelConfig(
         'allennlp',
         'lstm_parser_elmo',
-        '1UldQDigVq4VG2pJx9yf3krFjV0IYOwLr',
+        '1r2EsAtg47gFXDwMjmDdIw69akRo8oBXh',
         MODEL_DIRECTORY / 'config_en.jsonnet',
         SEMANTIC_TEMPLATES['en'],
     ),
     'en[rebank]': ModelConfig(
         'allennlp',
         'lstm_parser_char_rebanking',
-        '1Az840uCW8QuAkNCZq_Y8VOkW5j0Vtcj9',
+        '1N5B4t40OEUxPyWZWwpO02MEqDyWQVYUa',
         MODEL_DIRECTORY / 'config_rebank.jsonnet',
         SEMANTIC_TEMPLATES['en'],
     ),

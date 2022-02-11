@@ -13,7 +13,6 @@ from allennlp.data.token_indexers import SingleIdTokenIndexer, TokenIndexer
 from allennlp.data.tokenizers import Token
 from depccg import utils
 from depccg.tools.data import convert_auto_to_json
-from overrides import overrides
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -32,11 +31,10 @@ def read_dataset_auto_or_json(file_path: str):
 
 @DatasetReader.register("supertagging_dataset")
 class SupertaggingDatasetReader(DatasetReader):
-    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None) -> None:
+    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, lazy=False) -> None:
         super().__init__()
         self._token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
-    @overrides
     def _read(self, file_path):
         json_data = read_dataset_auto_or_json(cached_path(file_path))
         for instance in json_data:
@@ -44,7 +42,6 @@ class SupertaggingDatasetReader(DatasetReader):
             tags, deps = labels
             yield self.text_to_instance(sentence, tags, deps)
 
-    @overrides
     def text_to_instance(
         self,
         sentence: str,
@@ -91,7 +88,6 @@ class TritrainSupertaggingDatasetReader(SupertaggingDatasetReader):
         self.noisy_weight = noisy_weight
         self._token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
-    @overrides
     def _read(self, file_path):
         """
         read ccgbank and tritrain datasets (both in json file).
@@ -163,7 +159,6 @@ class FinetuneSupertaggingDatasetReader(SupertaggingDatasetReader):
         self.auxiliary_ratio = auxiliary_ratio
         self._token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
-    @overrides
     def _read(self, file_paths):
         ccgbank, aux_data = file_paths["ccgbank"], file_paths["auxiliary"]
         logger.info(f"Reading instances from CCGBank at: {ccgbank}")
