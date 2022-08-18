@@ -137,6 +137,8 @@ class Category(object):
             elif item in '(<':
                 pass
             elif item in ')>':
+                if len(buffer) >= 1 and buffer[-1] in ')>':
+                    buffer.pop()
                 y = stack.pop()
                 if len(stack) == 0:
                     return y
