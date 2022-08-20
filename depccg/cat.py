@@ -135,24 +135,35 @@ class Category(object):
             if item in punctuations:
                 stack.append(Atom(item))
             elif item in '(<':
-                pass
+                stack.append(item)
             elif item in ')>':
-                if len(buffer) >= 1 and buffer[-1] in ')>':
-                    buffer.pop()
                 y = stack.pop()
-                if len(stack) == 0:
-                    return y
-                f = stack.pop()
-                x = stack.pop()
-                stack.append(Functor(x, f, y))
+                # case like: stack = ["(", S/NP], buffer = [")"]
+                # which can occur when parsing eg., "((S/NP))"
+                assert len(stack) > 0
+                if (
+                    stack[-1] == '(' and item == ')'
+                    or stack[-1] == '<' and item == '>'
+                ):
+                    assert stack.pop() in "(<"
+                    stack.append(y)
+                # case like: stack = ["(", S, /, NP], buffer = [")"]
+                else:
+                    f = stack.pop()
+                    x = stack.pop()
+                    assert stack.pop() in "(<"
+                    stack.append(Functor(x, f, y))
             elif item in '/\\|':
                 stack.append(item)
             else:
+                # cases to process atomic category
+                # 1. when there is a feature eg., buffer = ["[", "dcl", "]"]
                 if len(buffer) >= 3 and buffer[-1] == '[':
                     buffer.pop()
                     feature = Feature.parse(buffer.pop())
                     assert buffer.pop() == ']'
                     stack.append(Atom(item, feature))
+                # 2. case with no feature
                 else:
                     stack.append(Atom(item))
 
