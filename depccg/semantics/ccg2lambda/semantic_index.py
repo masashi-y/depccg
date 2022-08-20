@@ -137,7 +137,7 @@ def load_semantic_rules(fn):
     semantic_rules = []
     loaded = None
     with codecs.open(fn, 'r', 'utf-8') as infile:
-        loaded = yaml.load(infile)
+        loaded = yaml.safe_load(infile)
     if not loaded: raise ValueError("couldn't load file: " + fn)
 
     for attributes in loaded:
