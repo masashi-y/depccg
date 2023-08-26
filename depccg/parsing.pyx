@@ -107,7 +107,7 @@ cdef unsigned retrieve_tree(
     unsigned *token_id,
     cache_type *cache,
     void *c_kwargs,
-):
+) noexcept:
     """
     retrieve (n-best) parsing results from cell_item.
     they are placed in kwargs['stack']
