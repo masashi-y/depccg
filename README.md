@@ -1,4 +1,4 @@
-# depccg v3
+# depccg
 
 Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](https://arxiv.org/abs/1704.06936)
 
