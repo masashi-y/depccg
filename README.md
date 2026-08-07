@@ -25,11 +25,13 @@ Using pip:
 
 ### Using a pretrained English parser
 
-The `basic` model is available for English in PyTorch format:
+The following English models run on PyTorch without Chainer or AllenNLP:
 
 |Name| Description | unlabeled/labeled F1 on CCGbank| Download |
 |:-|:-|:-|:-|
 | basic |model trained on the combination of CCGbank and tri-training dataset (Yoshikawa et al., 2017)|94.0%/88.8%| [link](https://drive.google.com/file/d/19ksMKnW6ExoRzn88HkbBH-Yy41FwUomu/view?usp=sharing) (189M) |
+| `elmo` | basic model with its embeddings replaced with ELMo (Peters et al., 2018) |94.98%/90.51%| [link](https://drive.google.com/file/d/1r2EsAtg47gFXDwMjmDdIw69akRo8oBXh/view?usp=sharing) (649M) |
+| `rebank` | basic model trained on Rebanked CCGbank (Honnibal et al., 2010) | - | [link](https://drive.google.com/file/d/1N5B4t40OEUxPyWZWwpO02MEqDyWQVYUa/view?usp=sharing) (337M) |
 
 The basic model is available by:
 
@@ -48,7 +50,18 @@ ID=1, Prob=-0.0006299018859863281
 (<T S[dcl] 0 2> (<T S[dcl] 0 2> (<L NP XX XX this NP>) (<T S[dcl]\NP 0 2> (<L (S[dcl]\NP)/NP XX XX is (S[dcl]\NP)/NP>) (<T NP 0 2> (<L NP[nb]/N XX XX a NP[nb]/N>) (<T N 0 2> (<L N/N XX XX test N/N>) (<L N XX XX sentence N>) ) ) ) ) (<L . XX XX . .>) )
 ```
 
-You can pass a PyTorch model directory with `--model`.
+The ELMo and Rebank models can be downloaded and selected by name:
+
+```sh
+➜ depccg_en download elmo
+➜ echo "this is a test sentence ." | depccg_en --model elmo
+
+➜ depccg_en download rebank
+➜ echo "this is a test sentence ." | depccg_en --model rebank
+```
+
+The old `elmo_rebank` file is no longer available and is not included in v3.
+You can also pass a PyTorch model directory with `--model`.
 
 Using a GPU (by `--gpu` option) is recommended if possible.
 

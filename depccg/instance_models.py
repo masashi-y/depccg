@@ -11,6 +11,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from depccg.lang import get_global_language
+from depccg.torch_allennlp import load_allennlp_tagger
 from depccg.torch_supertagger import MODEL_FILENAME, load_torch_tagger
 from depccg.types import ModelConfig
 
@@ -38,10 +39,26 @@ MODELS: dict[str, ModelConfig] = {
         RESOURCE_DIRECTORY / "grammar_ja.json",
         SEMANTIC_TEMPLATES["ja"],
     ),
+    "en[elmo]": ModelConfig(
+        "lstm_parser_elmo",
+        "1r2EsAtg47gFXDwMjmDdIw69akRo8oBXh",
+        RESOURCE_DIRECTORY / "grammar_en.json",
+        SEMANTIC_TEMPLATES["en"],
+    ),
+    "en[rebank]": ModelConfig(
+        "lstm_parser_char_rebanking",
+        "1N5B4t40OEUxPyWZWwpO02MEqDyWQVYUa",
+        RESOURCE_DIRECTORY / "grammar_en_rebank.json",
+        SEMANTIC_TEMPLATES["en"],
+    ),
 }
 
 AVAILABLE_MODEL_VARIANTS = defaultdict(list)
-AVAILABLE_MODEL_VARIANTS.update({"en": [None], "ja": [None]})
+AVAILABLE_MODEL_VARIANTS.update({"en": [None, "elmo", "rebank"], "ja": [None]})
+
+
+def _model_key(lang: str, variant: str | None) -> str:
+    return f"{lang}[{variant}]" if variant else lang
 
 
 def _safe_extract(archive: tarfile.TarFile, destination: Path) -> None:
@@ -77,16 +94,26 @@ def _download_from_google_drive(file_id: str, destination: Path) -> None:
 
 
 def download(lang: str, variant: str | None = None) -> None:
-    if variant is not None:
-        raise ValueError("model variants are no longer supported")
-    config = MODELS[lang]
+    config = MODELS[_model_key(lang, variant)]
     MODEL_DIRECTORY.mkdir(parents=True, exist_ok=True)
     archive_path = MODEL_DIRECTORY / f"{config.name}.tar.gz"
     logger.info("downloading %s model", lang)
     _download_from_google_drive(config.url, archive_path)
     try:
         with tarfile.open(archive_path) as archive:
-            _safe_extract(archive, MODEL_DIRECTORY)
+            roots = {
+                Path(member.name).parts[0]
+                for member in archive.getmembers()
+                if Path(member.name).parts
+                and not Path(member.name).parts[0].startswith("._")
+                and Path(member.name).parts[0] != "__MACOSX"
+            }
+            if roots == {config.name}:
+                destination = MODEL_DIRECTORY
+            else:
+                destination = MODEL_DIRECTORY / config.name
+                destination.mkdir(parents=True, exist_ok=True)
+            _safe_extract(archive, destination)
     finally:
         archive_path.unlink(missing_ok=True)
     logger.info("downloaded %s PyTorch model", lang)
@@ -94,13 +121,25 @@ def download(lang: str, variant: str | None = None) -> None:
 
 def load_model_directory(model: str | None) -> tuple[Path, ModelConfig]:
     lang = get_global_language()
-    config = MODELS[lang]
-    if model is None:
+    key = _model_key(lang, model)
+    if model is None or key in MODELS:
+        config = MODELS[key]
         model_path = MODEL_DIRECTORY / config.name
     else:
         model_path = Path(model).expanduser()
-    if not (model_path / MODEL_FILENAME).exists():
-        raise RuntimeError(f"model is not available; run 'depccg_{lang} download'")
+        config = (
+            MODELS["en[rebank]"]
+            if lang == "en" and "rebank" in model_path.name
+            else MODELS[lang]
+        )
+    if (
+        not (model_path / MODEL_FILENAME).exists()
+        and not (model_path / "weights.th").exists()
+    ):
+        variant = f" {model}" if model and key in MODELS else ""
+        raise RuntimeError(
+            f"model is not available; run 'depccg_{lang} download{variant}'"
+        )
     return model_path, config
 
 
@@ -110,4 +149,8 @@ def model_is_available(model_name: str) -> bool:
 
 def load_model(model: str | None, device: int = -1):
     model_path, config = load_model_directory(model)
-    return load_torch_tagger(model_path, device), config
+    if (model_path / MODEL_FILENAME).exists():
+        tagger = load_torch_tagger(model_path, device)
+    else:
+        tagger = load_allennlp_tagger(model_path, device)
+    return tagger, config

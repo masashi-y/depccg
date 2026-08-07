@@ -24,7 +24,7 @@ def read_params(config_path: Path, args):
     if not args.disable_category_dictionary:
         category_dict = {
             word: [Category.parse(category) for category in categories]
-            for word, categories in params["cat_dict"].items()
+            for word, categories in params.get("cat_dict", {}).items()
         }
 
     seen_rules = None

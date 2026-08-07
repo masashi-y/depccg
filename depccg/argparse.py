@@ -13,7 +13,7 @@ def add_common_parser_arguments(parser, main_fun):
     parser.add_argument(
         '-m',
         '--model',
-        help='path to model directory')
+        help='model variant name or path to a model directory')
     parser.add_argument(
         '-p',
         '--num-processes',
