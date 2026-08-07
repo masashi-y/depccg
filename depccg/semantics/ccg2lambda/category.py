@@ -38,7 +38,7 @@ class Category(object):
             return False
         # TODO: Ideally these substitutions should be precomputed for speed-up.
         types = re.sub(r'\\', r'\\\\', self.types)
-        types = types.replace('|', '[/\\\]')
+        types = types.replace('|', r'[/\\]')
         types = types.replace('(', '\\(').replace(')', '\\)')
         if not re.fullmatch(types, other.types):
             return False
