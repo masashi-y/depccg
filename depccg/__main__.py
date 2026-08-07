@@ -11,7 +11,7 @@ from depccg.lang import set_global_language_to
 from depccg.annotator import (
     english_annotator, japanese_annotator, annotate_XX
 )
-from depccg.allennlp.utils import read_params
+from depccg.config import read_params
 
 logger = logging.getLogger(__name__)
 
@@ -159,8 +159,20 @@ def main(args):
             break
 
 
-if __name__ == '__main__':
-    # disable lengthy allennlp logs
+def cli():
     logging.getLogger('filelock').setLevel(logging.ERROR)
-    logging.getLogger('allennlp').setLevel(logging.ERROR)
     parse_args(main)
+
+
+def cli_en():
+    sys.argv.insert(1, "en")
+    cli()
+
+
+def cli_ja():
+    sys.argv.insert(1, "ja")
+    cli()
+
+
+if __name__ == '__main__':
+    cli()

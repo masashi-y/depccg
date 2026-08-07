@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel", "Cython>=3.0", "numpy>=1.26"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "depccg"
+version = "3.0.0"
+description = "A CCG parser with supertag and dependency factored models"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "Masashi Yoshikawa"}]
+dependencies = [
+  "janome",
+  "lxml",
+  "nltk",
+  "numpy>=1.26",
+  "pyyaml",
+  "requests",
+  "simplejson",
+  "torch>=2.0",
+  "tqdm",
+]
+
+[project.scripts]
+depccg = "depccg.__main__:cli"
+depccg_en = "depccg.__main__:cli_en"
+depccg_ja = "depccg.__main__:cli_ja"
+
+[project.urls]
+Repository = "https://github.com/masashi-y/depccg"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+depccg = ["models/*.json", "models/*.yaml", "models/*.list"]
+
+[tool.setuptools.packages.find]
+include = ["depccg*"]

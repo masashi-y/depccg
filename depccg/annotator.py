@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from lxml import etree
 
-from depccg.instance_models import MODEL_DIRECTORY
+from depccg.instance_models import RESOURCE_DIRECTORY
 from depccg.morpha import MorphaStemmer
 from depccg.types import Token
 
@@ -73,7 +73,7 @@ def try_annotate_using_candc(sentences: List[List[str]], tokenize: bool = False)
     logger.info('use C&C pipeline to annotate POS and NER infos.')
     logger.info(f'C&C models: [{candc_model_pos}, {candc_model_ner}]')
 
-    stemmer = MorphaStemmer(str(MODEL_DIRECTORY / 'verbstem.list'))
+    stemmer = MorphaStemmer(str(RESOURCE_DIRECTORY / 'verbstem.list'))
 
     tmpfile = tempfile.mktemp()
     with open(tmpfile, 'w') as f:

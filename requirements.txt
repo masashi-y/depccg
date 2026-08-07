@@ -3,9 +3,7 @@ cython
 lxml
 pyyaml
 nltk
-chainer>=2.0.0
-googledrivedownloader
 requests
-allennlp
-allennlp-models
 janome
+torch>=2.0
+tqdm

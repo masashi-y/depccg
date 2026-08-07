@@ -1,8 +1,12 @@
+import pytest
+
 from depccg.annotator import annotate_using_janome, annotate_using_spacy
 from depccg.types import Token
 
 
 def test_spacy():
+    pytest.importorskip("spacy")
+    pytest.importorskip("en_core_web_sm")
     sentences = [
         ["The Penn Treebank has recently implemented a new syntactic annotation scheme,",
          "designed to highlight aspects of predicate-argument structure."],
@@ -96,9 +100,6 @@ def test_spacy():
     # ]
 
     assert tokens == annotate_using_spacy(sentences, tokenize=True)
-
-
-test_spacy()
 
 
 def test_janome():
