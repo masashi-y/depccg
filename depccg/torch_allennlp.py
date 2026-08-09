@@ -19,8 +19,9 @@ from depccg.types import ScoringResult
 
 
 def _read_vocabulary(path: Path) -> dict[str, int]:
-    # AllenNLP padded namespaces reserve 0 for padding and 1 for OOV.
-    return {token.rstrip("\n"): index + 2 for index, token in enumerate(path.open())}
+    # AllenNLP padded namespaces reserve 0 for padding.  The vocabulary file
+    # itself starts with @@UNKNOWN@@ at index 1.
+    return {token.rstrip("\n"): index + 1 for index, token in enumerate(path.open())}
 
 
 class Highway(nn.Module):
@@ -148,9 +149,9 @@ class CharacterCNN(nn.Module):
         self.convolution = nn.Conv1d(100, 200, 5)
 
     def forward(self, characters: Tensor) -> Tensor:
-        return F.relu(
-            self.convolution(self.embedding(characters).transpose(1, 2)).amax(dim=-1)
-        )
+        embedded = self.embedding(characters)
+        embedded = embedded * characters.ne(0).unsqueeze(-1)
+        return F.relu(self.convolution(embedded.transpose(1, 2))).amax(dim=-1)
 
 
 class AllenNLPParser(nn.Module):
@@ -189,7 +190,9 @@ class AllenNLPParser(nn.Module):
             assert self.character_cnn is not None and characters is not None
             contextual = self.character_cnn(characters)
         encoded, _ = self.encoder(
-            torch.cat((embedded, contextual), dim=-1).unsqueeze(0)
+            # BasicTextFieldEmbedder concatenates embedders by sorted key:
+            # elmo/token_characters first, then tokens.
+            torch.cat((contextual, embedded), dim=-1).unsqueeze(0)
         )
         encoded = torch.cat((self.head_sentinel, encoded), dim=1)
         head_arc = F.elu(self.head_arc(encoded))
@@ -206,12 +209,12 @@ class AllenNLPParser(nn.Module):
 
         head_tags = F.elu(self.head_tag(encoded))[0, heads[0]]
         child_tags = F.elu(self.child_tag(encoded))[0]
-        tags = (
-            torch.einsum("ni,oij,nj->no", head_tags, self.tag_weight, child_tags)
-            + head_tags @ self.tag_weight1.T
-            + child_tags @ self.tag_weight2.T
-            + self.tag_bias
-        )
+        # Preserve the operation order used by the original BilinearWithBias.
+        # Besides being equivalent mathematically, this avoids changing close
+        # parser decisions through floating-point accumulation differences.
+        tags = F.bilinear(head_tags, child_tags, self.tag_weight, self.tag_bias)
+        tags += F.linear(head_tags, self.tag_weight1)
+        tags += F.linear(child_tags, self.tag_weight2)
         normalized_tags = F.log_softmax(tags, dim=-1)
         # AllenNLP masks a token when its greedy label is the OOV label (1),
         # then depccg discards the padding and OOV columns.
