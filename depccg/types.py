@@ -81,7 +81,6 @@ class GrammarConfig(NamedTuple):
 
 
 class ModelConfig(NamedTuple):
-    framework: str
     name: str
     url: str
     config: Path

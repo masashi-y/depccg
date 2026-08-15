@@ -7,7 +7,9 @@ result
 __pycache__
 model_all
 tmp
-models
+/models
+depccg/models/tri_headfirst/
+depccg/models/ja_headfinal/
 *.d
 *.o
 data

@@ -16,7 +16,7 @@ def _chunks(list_, num_chunks):
 
 
 def _binarize(indices, length):
-    result = numpy.ones(length, dtype=numpy.bool)
+    result = numpy.ones(length, dtype=bool)
     result[indices] = 0
     return result
 

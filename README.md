@@ -1,19 +1,16 @@
-# depccg v2
+# depccg
 
 Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](https://arxiv.org/abs/1704.06936)
 
-## 2021/07/12 Updates (v2)
+## Changes in v3
 
-- Increased stability and efficiency
-  - (Replaced OpenMP with multiprocessing)
-- More integration with AllenNLP
-  - The parser is now callable from within a `predictor` (see [here](#train-your-own-parsing-model))
-- More friendly way to define your own grammar (wrt. languages or treebanks)
-  - See `depccg/grammar/{en,ja}.py` for example grammars.
+- The English and Japanese pretrained models run on PyTorch.
+- Chainer and AllenNLP are no longer runtime dependencies.
+- The package supports Python 3.10 and newer.
 
 ## Requirements
 
-- Python >= 3.6.0
+- Python >= 3.10
 - A C++ compiler supporting [C++11 standard](https://en.wikipedia.org/wiki/C%2B%2B11) (in case of gcc, must be >= 4.8)
 
 ## Installation
@@ -21,27 +18,29 @@ Codebase for [A\* CCG Parsing with a Supertag and Dependency Factored Model](htt
 Using pip:
 
 ```sh
-➜ pip install cython numpy depccg
+➜ pip install depccg
 ```
 
 ## Usage
 
 ### Using a pretrained English parser
 
-Currently following models are available for English:
+The following English models run on PyTorch without Chainer or AllenNLP:
 
 |Name| Description | unlabeled/labeled F1 on CCGbank| Download |
 |:-|:-|:-|:-|
-| basic |model trained on the combination of CCGbank and tri-training dataset (Yoshikawa et al., 2017)|94.0%/88.8%| [link](https://drive.google.com/file/d/1mxl1HU99iEQcUYhWhvkowbE4WOH0UKxv/view?usp=sharing) (189M) |
+| basic |model trained on the combination of CCGbank and tri-training dataset (Yoshikawa et al., 2017)|94.0%/88.8%| [link](https://drive.google.com/file/d/19ksMKnW6ExoRzn88HkbBH-Yy41FwUomu/view?usp=sharing) (189M) |
 | `elmo` | basic model with its embeddings replaced with ELMo (Peters et al., 2018) |94.98%/90.51%| [link](https://drive.google.com/file/d/1r2EsAtg47gFXDwMjmDdIw69akRo8oBXh/view?usp=sharing) (649M) |
 | `rebank` | basic model trained on Rebanked CCGbank (Honnibal et al., 2010) | - | [link](https://drive.google.com/file/d/1N5B4t40OEUxPyWZWwpO02MEqDyWQVYUa/view?usp=sharing) (337M) |
-| `elmo_rebank` |ELMo model trained on Rebanked CCGbank | - | [link](https://drive.google.com/open?id=1deyCjSgCuD16WkEhOL3IXEfQBfARh_ll) (1G) |
 
 The basic model is available by:
 
 ```sh
 ➜ depccg_en download
 ```
+
+Downloaded models are stored under `~/.cache/depccg` by default. Set
+`DEPCCG_HOME` to use a different directory.
 
 To use:
 
@@ -51,19 +50,18 @@ ID=1, Prob=-0.0006299018859863281
 (<T S[dcl] 0 2> (<T S[dcl] 0 2> (<L NP XX XX this NP>) (<T S[dcl]\NP 0 2> (<L (S[dcl]\NP)/NP XX XX is (S[dcl]\NP)/NP>) (<T NP 0 2> (<L NP[nb]/N XX XX a NP[nb]/N>) (<T N 0 2> (<L N/N XX XX test N/N>) (<L N XX XX sentence N>) ) ) ) ) (<L . XX XX . .>) )
 ```
 
-You can download other models by specifying their names:
+The ELMo and Rebank models can be downloaded and selected by name:
 
 ```sh
 ➜ depccg_en download elmo
-```
-
-To use, make sure to install [allennlp](https://github.com/allenai/allennlp):
-
-```sh
 ➜ echo "this is a test sentence ." | depccg_en --model elmo
+
+➜ depccg_en download rebank
+➜ echo "this is a test sentence ." | depccg_en --model rebank
 ```
 
-You can also specify in the `--model` option the path of a model file (in tar.gz) that is available from links above.
+The old `elmo_rebank` file is no longer available and is not included in v3.
+You can also pass a PyTorch model directory with `--model`.
 
 Using a GPU (by `--gpu` option) is recommended if possible.
 
@@ -125,7 +123,7 @@ The best performing model is available by:
 ➜ depccg_ja download
 ```
 
-It can be downloaded directly [here](https://drive.google.com/file/d/1bblQ6FYugXtgNNKnbCYgNfnQRkBATSY3/view?usp=sharing) (56M).
+It can be downloaded directly [here](https://drive.google.com/file/d/1KjG9iSUGAZvR13vJls5nZ_NQRG5_dxuh/view?usp=sharing) (56M).
 
 The parser provides the almost same interface as with the English one, with slight differences including the default output format, which is now one compatible with the Japanese CCGbank:
 
@@ -162,46 +160,6 @@ ID=1, Prob=-53.98793411254883
 ### Programmatic Usage
 
 Please look into `depccg/__main__.py`.
-
-## Train your own parsing model
-
-You can use my [allennlp](https://allennlp.org/)-based supertagger and extend it.
-
-To train a supertagger, prepare [the English CCGbank](https://catalog.ldc.upenn.edu/LDC2005T13) and download [vocab](https://drive.google.com/file/d/1_rX5UAxVjjcXpRM6EoWee4XprYjEonwl/view?usp=sharing):
-
-```sh
-➜ cat ccgbank/data/AUTO/{0[2-9],1[0-9],20,21}/* > wsj_02-21.auto
-➜ cat ccgbank/data/AUTO/00/* > wsj_00.auto
-```
-
-```sh
-➜ wget http://cl.naist.jp/~masashi-y/resources/depccg/vocabulary.tar.gz
-➜ tar xvf vocabulary.tar.gz
-```
-
-then,
-
-```sh
-➜ vocab=vocabulary train_data=wsj_02-21.auto test_data=wsj_00.auto gpu=0 \
-  encoder_type=lstm token_embedding_type=char \
-  allennlp train --include-package depccg --serialization-dir results depccg/allennlp/configs/supertagger.jsonnet
-```
-
-The training configs are passed either through environmental variables or directly writing to jsonnet config files, which are available in [supertagger.jsonnet](depccg/allennlp/config/supertagger.jsonnet) or [supertagger_tritrain.jsonnet](depccg/allennlp/config/supertagger_tritrain.jsonnet).
-The latter is a config file for using [tri-training silver data](http://cl.naist.jp/~masashi-y/resources/depccg/headfirst_parsed.conll.stagged.gz) (309M) constructed in (Yoshikawa et al., 2017), on top of the English CCGbank.
-
-To use the trained supertagger,
-
-```sh
-➜ echo '{"sentence": "this is a test sentence ."}' > input.jsonl
-➜ allennlp predict results/model.tar.gz --include-package depccg --output-file weights.json input.jsonl
-```
-
-or alternatively, you can perform CCG parsing:
-
-```sh
-➜ allennlp predict --include-package depccg --predictor parser-predictor --predictor-args '{"grammar_json_path": "depccg/models/config_en.jsonnet"}' model.tar.gz input.jsonl
-```
 
 ### Evaluation in terms of predicate-argument dependencies
 
