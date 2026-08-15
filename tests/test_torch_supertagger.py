@@ -15,6 +15,11 @@ def test_biaffine_matches_explicit_matrix_product():
 
 def test_bilinear_matches_component_formula():
     layer = Bilinear(2, 2, 3)
+    with torch.no_grad():
+        layer.weight.copy_(torch.arange(12, dtype=torch.float32).reshape(2, 2, 3))
+        layer.weight1.copy_(torch.arange(6, dtype=torch.float32).reshape(2, 3))
+        layer.weight2.copy_(torch.arange(6, 12, dtype=torch.float32).reshape(2, 3))
+        layer.bias.copy_(torch.tensor([1.0, 2.0, 3.0]))
     left = torch.tensor([[1.0, 2.0]])
     right = torch.tensor([[3.0, 4.0]])
     expected = (
