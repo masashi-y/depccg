@@ -22,6 +22,9 @@ dependencies = [
   "tqdm",
 ]
 
+[dependency-groups]
+dev = ["pytest>=8"]
+
 [project.scripts]
 depccg = "depccg.__main__:cli"
 depccg_en = "depccg.__main__:cli_en"
