@@ -42,6 +42,8 @@ jobs:
         with:
           enable-cache: true
           save-cache: false
+          # Build release artifacts on the newest supported Python; the test
+          # matrix above covers runtime compatibility with every other version.
           python-version: "3.14"
       - name: Build sdist and wheel
         run: uv build
