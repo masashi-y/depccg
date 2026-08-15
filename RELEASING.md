@@ -3,8 +3,9 @@
 Releases are published to PyPI by `.github/workflows/publish.yml` when a version
 tag is pushed. The workflow tests the tagged revision and builds a source
 distribution plus wheels for Python 3.10 through 3.14 on Linux x86_64/aarch64
-and macOS x86_64/arm64. It publishes with PyPI Trusted Publishing and does not
-use a stored API token.
+and macOS arm64. Intel macOS wheels cover Python 3.10 through 3.12, matching the
+versions for which PyTorch provides Intel macOS wheels. The workflow publishes
+with PyPI Trusted Publishing and does not use a stored API token.
 
 ## One-time setup
 

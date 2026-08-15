@@ -70,15 +70,24 @@ jobs:
           - platform: Linux
             arch: x86_64
             runner: ubuntu-latest
+            pr_build: cp314-*
+            release_build: cp3{10,11,12,13,14}-*
           - platform: Linux
             arch: aarch64
             runner: ubuntu-24.04-arm
+            pr_build: cp314-*
+            release_build: cp3{10,11,12,13,14}-*
           - platform: macOS
             arch: x86_64
             runner: macos-15-intel
+            # PyTorch does not provide Intel Mac wheels after Python 3.12.
+            pr_build: cp312-*
+            release_build: cp3{10,11,12}-*
           - platform: macOS
             arch: arm64
             runner: macos-14
+            pr_build: cp314-*
+            release_build: cp3{10,11,12,13,14}-*
 
     steps:
       - uses: actions/checkout@v7
@@ -90,7 +99,7 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
           # PRs exercise one wheel per platform. Release tags build the full
           # supported Python matrix configured in pyproject.toml.
-          CIBW_BUILD: ${{ github.event_name == 'pull_request' && 'cp314-*' || 'cp3{10,11,12,13,14}-*' }}
+          CIBW_BUILD: ${{ github.event_name == 'pull_request' && matrix.pr_build || matrix.release_build }}
         with:
           output-dir: wheelhouse
       - uses: actions/upload-artifact@v7.0.1
