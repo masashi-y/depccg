@@ -45,7 +45,7 @@ jobs:
           DEPCCG_HOME: ${{ runner.temp }}/depccg-models
         run: |
           uv run --frozen depccg_en download
-          output="$(echo "this is a test sentence ." | uv run --frozen depccg_en --format deriv --silent)"
+          output="$(echo "A quiet moon shines over the old temple ." | uv run --frozen depccg_en --format deriv --silent)"
           printf '%s\n' "$output"
           grep -q '^ID=1' <<<"$output"
           grep -q 'S\[dcl\]' <<<"$output"
@@ -55,7 +55,7 @@ jobs:
           DEPCCG_HOME: ${{ runner.temp }}/depccg-models
         run: |
           uv run --frozen depccg_ja download
-          output="$(echo "これはテストの文です。" | uv run --frozen depccg_ja --silent)"
+          output="$(echo "春の月が静かな海を照らしています。" | uv run --frozen depccg_ja --silent)"
           printf '%s\n' "$output"
           grep -q '^ID=1' <<<"$output"
           grep -q 'S\[mod=' <<<"$output"
@@ -83,7 +83,7 @@ jobs:
           DEPCCG_HOME: ${{ runner.temp }}/depccg-models
         run: |
           uv run --frozen depccg_en download "${{ matrix.model }}"
-          output="$(echo "this is a test sentence ." | uv run --frozen depccg_en --model "${{ matrix.model }}" --format deriv --silent)"
+          output="$(echo "A quiet moon shines over the old temple ." | uv run --frozen depccg_en --model "${{ matrix.model }}" --format deriv --silent)"
           printf '%s\n' "$output"
           grep -q '^ID=1' <<<"$output"
           grep -q 'S\[dcl\]' <<<"$output"
