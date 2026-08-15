@@ -21,6 +21,25 @@ Using pip:
 ➜ pip install depccg
 ```
 
+### Development
+
+Project metadata and dependencies are defined in `pyproject.toml` and locked in
+`uv.lock`. To create a reproducible development environment and run the tests:
+
+```sh
+➜ uv sync --frozen
+➜ uv run --frozen pytest
+```
+
+To build the source distribution and wheel:
+
+```sh
+➜ uv build
+```
+
+`setup.py` is retained only for the native Cython/C++ extension definitions;
+package metadata and dependencies must be changed in `pyproject.toml`.
+
 ## Usage
 
 ### Using a pretrained English parser
