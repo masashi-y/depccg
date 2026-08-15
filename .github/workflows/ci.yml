@@ -41,6 +41,7 @@ jobs:
       - uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
+          save-cache: false
           python-version: "3.14"
       - name: Build sdist and wheel
         run: uv build
