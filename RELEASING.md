@@ -1,9 +1,10 @@
 # Releasing depccg
 
 Releases are published to PyPI by `.github/workflows/publish.yml` when a version
-tag is pushed. The workflow tests the tagged revision, builds a source
-distribution, and publishes with PyPI Trusted Publishing. It does not use a
-stored API token.
+tag is pushed. The workflow tests the tagged revision and builds a source
+distribution plus wheels for Python 3.10 through 3.14 on Linux x86_64/aarch64
+and macOS x86_64/arm64. It publishes with PyPI Trusted Publishing and does not
+use a stored API token.
 
 ## One-time setup
 
@@ -36,7 +37,5 @@ stored API token.
 
 The workflow rejects a tag whose name does not exactly match the version in
 `pyproject.toml`. Published PyPI files are immutable, so never reuse a released
-version number. depccg has historically published source distributions because
-it contains a native extension. Do not publish a wheel produced directly on a
-GitHub-hosted runner; add a platform-wheel build using a compatible toolchain
-first.
+version number. Windows wheels are not currently built because the native
+extension build uses Unix `make`.

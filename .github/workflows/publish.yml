@@ -1,6 +1,14 @@
-name: Publish to PyPI
+name: Build and publish distributions
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/publish.yml
+      - pyproject.toml
+      - setup.py
+      - c/**
+      - depccg/*.pyx
+      - depccg/*.h
   push:
     tags: ["v*"]
 
@@ -8,17 +16,20 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Test and build distributions
+  validate:
+    name: Validate release
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
           python-version: "3.14"
       - name: Verify tag matches package version
+        if: github.event_name == 'push'
         run: |
           package_version="$(python -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
           test "$GITHUB_REF_NAME" = "v$package_version"
@@ -26,20 +37,73 @@ jobs:
         run: |
           uv sync --frozen
           uv run --frozen pytest
-      # depccg contains a native extension. Build platform wheels separately
-      # with a manylinux-compatible toolchain before publishing any wheels.
-      - name: Build source distribution
-        run: uv build --sdist
+
+  sdist:
+    name: Build source distribution
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - run: uv build --sdist
       - uses: actions/upload-artifact@v7.0.1
         with:
-          name: python-distributions
+          name: distributions-sdist
           path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  wheels:
+    name: Wheel (${{ matrix.platform }}, ${{ matrix.arch }})
+    needs: validate
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Linux
+            arch: x86_64
+            runner: ubuntu-latest
+          - platform: Linux
+            arch: aarch64
+            runner: ubuntu-24.04-arm
+          - platform: macOS
+            arch: x86_64
+            runner: macos-15-intel
+          - platform: macOS
+            arch: arm64
+            runner: macos-14
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build and test wheels
+        uses: pypa/cibuildwheel@v4.1.0
+        env:
+          CIBW_ARCHS: ${{ matrix.arch }}
+          # PRs exercise one wheel per platform. Release tags build the full
+          # supported Python matrix configured in pyproject.toml.
+          CIBW_BUILD: ${{ github.event_name == 'pull_request' && 'cp314-*' || 'cp3{10,11,12,13,14}-*' }}
+        with:
+          output-dir: wheelhouse
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: distributions-${{ matrix.platform }}-${{ matrix.arch }}
+          path: wheelhouse/*.whl
           if-no-files-found: error
           retention-days: 7
 
   publish:
     name: Publish distributions
-    needs: build
+    if: github.event_name == 'push'
+    needs: [sdist, wheels]
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -50,8 +114,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8.0.1
         with:
-          name: python-distributions
+          pattern: distributions-*
           path: dist/
+          merge-multiple: true
       - name: Publish distributions to PyPI
         uses: pypa/gh-action-pypi-publish@v1.14.2
         with:

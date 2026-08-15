@@ -36,6 +36,11 @@ Repository = "https://github.com/masashi-y/depccg"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.cibuildwheel]
+build = "cp3{10,11,12,13,14}-*"
+skip = "*-musllinux_*"
+test-command = "python -c 'import depccg._parsing, depccg.morpha' && depccg_en --help >/dev/null && depccg_ja --help >/dev/null"
+
 [tool.setuptools.package-data]
 depccg = ["models/*.json", "models/*.yaml", "models/*.list"]
 
