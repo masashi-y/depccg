@@ -1,7 +1,6 @@
 include bin/*
 include README.md
 include LICENSE
-include requirements.txt
 recursive-include c *
 recursive-include depccg *.pyx *.pxd *.h
 exclude c/*.d

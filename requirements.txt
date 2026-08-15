@@ -1,9 +1,0 @@
-simplejson
-cython
-lxml
-pyyaml
-nltk
-requests
-janome
-torch>=2.0
-tqdm
