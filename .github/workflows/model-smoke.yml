@@ -1,0 +1,89 @@
+name: Pretrained model smoke tests
+
+on:
+  # Run when this workflow changes so the checks themselves are reviewable.
+  pull_request:
+    paths: [.github/workflows/model-smoke.yml]
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      include_large_models:
+        description: Also test the English ELMo and Rebank models
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  basic-models:
+    name: ${{ matrix.language }} basic model
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [English, Japanese]
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - name: Install depccg
+        run: uv sync --frozen
+      - name: Download and test English basic model
+        if: matrix.language == 'English'
+        env:
+          DEPCCG_HOME: ${{ runner.temp }}/depccg-models
+        run: |
+          uv run --frozen depccg_en download
+          output="$(echo "A quiet moon shines over the old temple ." | uv run --frozen depccg_en --format deriv --silent)"
+          printf '%s\n' "$output"
+          grep -q '^ID=1' <<<"$output"
+          grep -q 'S\[dcl\]' <<<"$output"
+      - name: Download and test Japanese basic model
+        if: matrix.language == 'Japanese'
+        env:
+          DEPCCG_HOME: ${{ runner.temp }}/depccg-models
+        run: |
+          uv run --frozen depccg_ja download
+          output="$(echo "春の月が静かな海を照らしています。" | uv run --frozen depccg_ja --silent)"
+          printf '%s\n' "$output"
+          grep -q '^ID=1' <<<"$output"
+          grep -q 'S\[mod=' <<<"$output"
+
+  large-english-models:
+    if: github.event_name == 'workflow_dispatch' && inputs.include_large_models
+    name: English ${{ matrix.model }} model
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [elmo, rebank]
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - name: Install depccg
+        run: uv sync --frozen
+      - name: Download and test model
+        env:
+          DEPCCG_HOME: ${{ runner.temp }}/depccg-models
+        run: |
+          uv run --frozen depccg_en download "${{ matrix.model }}"
+          output="$(echo "A quiet moon shines over the old temple ." | uv run --frozen depccg_en --model "${{ matrix.model }}" --format deriv --silent)"
+          printf '%s\n' "$output"
+          grep -q '^ID=1' <<<"$output"
+          grep -q 'S\[dcl\]' <<<"$output"
