@@ -2,7 +2,7 @@
 
 This changelog covers depccg v3 and later releases.
 
-## [3.0.0] - Unreleased
+## [3.0.0] - 2026-08-15
 
 ### Added
 
